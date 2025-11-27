@@ -9,6 +9,10 @@ namespace KamPay.Views;
 public partial class AddProductPage : ContentPage
 {
     private readonly AddProductViewModel _viewModel;
+    
+    // Default location (Ankara, Turkey center)
+    private static readonly Location DefaultLocation = new Location(39.9334, 32.8597);
+    private static readonly double DefaultZoomKilometers = 100;
 
     public AddProductPage(AddProductViewModel viewModel)
     {
@@ -99,7 +103,7 @@ public partial class AddProductPage : ContentPage
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Harita güncelleme hatası: {ex.Message}");
+            Console.WriteLine($"Harita güncelleme hatası: {ex.Message}");
         }
     }
 
@@ -118,19 +122,17 @@ public partial class AddProductPage : ContentPage
             }
             else
             {
-                // Varsayılan konum (Türkiye merkezine yakın)
-                var defaultPosition = new Location(39.9334, 32.8597); // Ankara
-                var mapSpan = MapSpan.FromCenterAndRadius(defaultPosition, Distance.FromKilometers(100));
+                // Varsayılan konum
+                var mapSpan = MapSpan.FromCenterAndRadius(DefaultLocation, Distance.FromKilometers(DefaultZoomKilometers));
                 ProductMap.MoveToRegion(mapSpan);
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Harita başlatma hatası: {ex.Message}");
+            Console.WriteLine($"Harita başlatma hatası: {ex.Message}");
             
             // Hata durumunda varsayılan konum
-            var defaultPosition = new Location(39.9334, 32.8597); // Ankara
-            var mapSpan = MapSpan.FromCenterAndRadius(defaultPosition, Distance.FromKilometers(100));
+            var mapSpan = MapSpan.FromCenterAndRadius(DefaultLocation, Distance.FromKilometers(DefaultZoomKilometers));
             ProductMap.MoveToRegion(mapSpan);
         }
     }
