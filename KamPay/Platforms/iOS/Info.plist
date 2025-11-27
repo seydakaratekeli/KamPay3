@@ -28,5 +28,9 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KamPay ürün konumunu belirlemek için konumunuza erişim izni istemektedir.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>KamPay ürün konumunu belirlemek için konumunuza erişim izni istemektedir.</string>
 </dict>
 </plist>

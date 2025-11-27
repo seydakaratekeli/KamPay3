@@ -18,7 +18,7 @@ namespace KamPay
 
             builder
                 .UseMauiApp<App>()
-
+                .UseMauiMaps()
                 .UseBarcodeReader()
                 .UseMauiCommunityToolkit()
                             .UseFFImageLoading() // ✅ BURAYA EKLE

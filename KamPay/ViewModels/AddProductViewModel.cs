@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
+using KamPay.Models.Messages;
 using KamPay.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -76,6 +78,12 @@ namespace KamPay.ViewModels
 
         public bool IsDonationTypeSelected => SelectedType == ProductType.Bagis;
 
+        // HasLocation property - checks if a valid location is set
+        public bool HasLocation => !string.IsNullOrEmpty(Location) && 
+                                   Location != "Konum alınıyor..." &&
+                                   Latitude.HasValue && 
+                                   Longitude.HasValue;
+
         public ObservableCollection<Category> Categories { get; } = new();
         public ObservableCollection<string> ImagePaths { get; } = new();
 
@@ -145,7 +153,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 OPTİMİZE: Konum alma - Daha hızlı timeout
+        // 🔥 OPTİMİZE: Konum alma - Harita ile entegre
         [RelayCommand]
         private async Task UseCurrentLocationAsync()
         {
@@ -155,6 +163,7 @@ namespace KamPay.ViewModels
                 IsLoading = true;
                 ErrorMessage = string.Empty;
                 Location = "Konum alınıyor...";
+                OnPropertyChanged(nameof(HasLocation));
 
                 var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
                 if (status != PermissionStatus.Granted)
@@ -165,6 +174,7 @@ namespace KamPay.ViewModels
                 if (status != PermissionStatus.Granted)
                 {
                     Location = string.Empty;
+                    OnPropertyChanged(nameof(HasLocation));
                     await Shell.Current.DisplayAlert("İzin Gerekli", "Konum almak için izin vermeniz gerekmektedir.", "Tamam");
                     return;
                 }
@@ -181,36 +191,56 @@ namespace KamPay.ViewModels
                     Latitude = deviceLocation.Latitude;
                     Longitude = deviceLocation.Longitude;
 
-                    // 🔥 Adres çözümleme arka planda
-                    _ = Task.Run(async () =>
-                    {
-                        var address = await _reverseGeocodeService.GetAddressForLocation(deviceLocation);
-                        MainThread.BeginInvokeOnMainThread(() => Location = address);
-                    });
+                    // Harita güncelleme mesajı gönder
+                    WeakReferenceMessenger.Default.Send(new MapLocationUpdateMessage(
+                        deviceLocation.Latitude, 
+                        deviceLocation.Longitude));
 
-                    Location = $"{deviceLocation.Latitude:F2}, {deviceLocation.Longitude:F2}";
+                    await UpdateLocationFromCoordinatesAsync(deviceLocation.Latitude, deviceLocation.Longitude);
                 }
                 else
                 {
                     Location = "Konum alınamadı. GPS'inizi kontrol edin.";
+                    OnPropertyChanged(nameof(HasLocation));
                 }
             }
             catch (FeatureNotSupportedException)
             {
                 Location = "Konum servisi desteklenmiyor.";
+                OnPropertyChanged(nameof(HasLocation));
             }
             catch (PermissionException)
             {
                 Location = "Konum izni verilmedi.";
+                OnPropertyChanged(nameof(HasLocation));
             }
             catch (Exception ex)
             {
                 Location = "Konum alınırken hata oluştu.";
+                OnPropertyChanged(nameof(HasLocation));
                 Console.WriteLine($"❌ Konum Hatası: {ex.Message}");
             }
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        // Yeni metod: Koordinatlardan adres çözümleme
+        public async Task UpdateLocationFromCoordinatesAsync(double latitude, double longitude)
+        {
+            try
+            {
+                var location = new Location(latitude, longitude);
+                var address = await _reverseGeocodeService.GetAddressForLocation(location);
+                Location = address;
+                OnPropertyChanged(nameof(HasLocation));
+            }
+            catch (Exception ex)
+            {
+                Location = $"{latitude:F4}, {longitude:F4}";
+                OnPropertyChanged(nameof(HasLocation));
+                Console.WriteLine($"Adres çözümleme hatası: {ex.Message}");
             }
         }
 

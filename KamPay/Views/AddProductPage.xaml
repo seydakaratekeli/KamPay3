@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:conv="clr-namespace:KamPay.Converters"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="KamPay.Views.AddProductPage"
              x:DataType="vm:AddProductViewModel"
              Title="Ürün Ekle"
@@ -175,30 +176,76 @@
                        FontAttributes="Bold"
                        TextColor="#666" />
 
-                <Grid ColumnDefinitions="*,Auto"
-                      ColumnSpacing="10">
-                    <Frame Grid.Column="0"
-                           Padding="10"
-                           BorderColor="#E0E0E0"
-                           CornerRadius="8">
-                        <Label Text="{Binding Location, TargetNullValue='Anlık konumu almak için 📍 butonuna dokunun'}"
-                               VerticalOptions="Center"
-                               TextColor="#666"
-                               LineBreakMode="TailTruncation"/>
-                    </Frame>
+                <!-- Etkileşimli Harita -->
+                <Border StrokeShape="RoundRectangle 12" 
+                        StrokeThickness="0"
+                        HeightRequest="250"
+                        Margin="0,8,0,0">
+                    <Grid>
+                        <maps:Map x:Name="ProductMap"
+                                  IsShowingUser="True"
+                                  MapClicked="OnMapClicked"
+                                  VerticalOptions="FillAndExpand"
+                                  HorizontalOptions="FillAndExpand">
+                        </maps:Map>
+                        
+                        <!-- Harita üzerindeki kontrol butonları -->
+                        <VerticalStackLayout HorizontalOptions="End" 
+                                            VerticalOptions="Start"
+                                            Margin="12"
+                                            Spacing="8">
+                            <!-- Mevcut konuma git butonu -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="White"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    Padding="0">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                </Border.Shadow>
+                                <Button Text="📍"
+                                        Command="{Binding UseCurrentLocationCommand}"
+                                        FontSize="18"
+                                        BackgroundColor="Transparent"
+                                        TextColor="#4CAF50"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        Padding="0"/>
+                            </Border>
+                        </VerticalStackLayout>
+                        
+                        <!-- Seçili konum bilgisi -->
+                        <Border StrokeShape="RoundRectangle 12"
+                                BackgroundColor="#F5F5F5"
+                                Padding="12,8"
+                                Margin="12"
+                                VerticalOptions="End"
+                                HorizontalOptions="FillAndExpand"
+                                IsVisible="{Binding HasLocation}">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                            </Border.Shadow>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="📌" 
+                                       FontSize="16"
+                                       VerticalOptions="Center"/>
+                                <Label Text="{Binding Location}"
+                                       FontSize="12"
+                                       TextColor="#333"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"
+                                       HorizontalOptions="FillAndExpand"/>
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                </Border>
 
-                    <Button Grid.Column="1"
-                            Text="📍"
-                            Command="{Binding UseCurrentLocationCommand}"
-                            BackgroundColor="#4CAF50"
-                            TextColor="White"
-                            CornerRadius="25"
-                            WidthRequest="50"
-                            HeightRequest="50"
-                            FontSize="20"
-                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
-                            SemanticProperties.Hint="Anlık konumunuzu almak için dokunun"/>
-                </Grid>
+                <!-- Konum bilgi metni -->
+                <Label Text="Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın"
+                       FontSize="12"
+                       TextColor="{StaticResource Gray600}"
+                       Margin="0,4,0,0"/>
 
                 <!-- Görseller -->
                 <Label Text="Ürün Görselleri (Maksimum 5) *" 
