@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:conv="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.AddProductPage"
+             x:DataType="vm:AddProductViewModel"
+             Title="Ürün Ekle"
+             Shell.BackgroundColor="#4CAF50">
+
+    <!-- 🔥 Ana Grid: ScrollView + Loading Overlay -->
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+
+                <!-- Hata Mesajı -->
+                <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+                       BackgroundColor="#FFEBEE"
+                       BorderColor="#F44336"
+                       Padding="10"
+                       CornerRadius="8">
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="#C62828"
+                           FontSize="14" />
+                </Frame>
+
+                <!-- 🔥 Upload Progress -->
+                <Frame IsVisible="{Binding IsLoading}"
+                       BackgroundColor="#E3F2FD"
+                       BorderColor="#2196F3"
+                       Padding="15"
+                       CornerRadius="8">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{Binding UploadProgress}"
+                               TextColor="#1976D2"
+                               FontSize="14"
+                               FontAttributes="Bold" />
+                        <ProgressBar Progress="{Binding UploadPercentage}"
+                                     ProgressColor="#2196F3"
+                                     HeightRequest="8" />
+                        <Label Text="{Binding UploadPercentage, StringFormat='{0:P0}'}"
+                               TextColor="#1976D2"
+                               FontSize="12"
+                               HorizontalTextAlignment="End" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Başlık -->
+                <Label Text="Ürün Bilgileri" 
+                       FontSize="20" 
+                       FontAttributes="Bold"
+                       TextColor="#333" />
+
+                <!-- Ürün Başlığı -->
+                <Frame Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Entry Placeholder="Ürün Başlığı *"
+                           Text="{Binding Title}"
+                           MaxLength="100"
+                           FontSize="16" />
+                </Frame>
+
+                <!-- Açıklama -->
+                <Frame Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Editor Placeholder="Ürün Açıklaması *"
+                            Text="{Binding Description}"
+                            HeightRequest="120"
+                            MaxLength="1000"
+                            FontSize="16"
+                            AutoSize="TextChanges" />
+                </Frame>
+
+                <!-- Kategori Seçimi -->
+                <Label Text="Kategori *" 
+                       FontSize="16" 
+                       FontAttributes="Bold"
+                       TextColor="#666" />
+
+                <Frame Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Picker ItemsSource="{Binding Categories}"
+                            SelectedItem="{Binding SelectedCategory}"
+                            ItemDisplayBinding="{Binding Name}"
+                            FontSize="16"
+                            Title="Kategori Seçin" />
+                </Frame>
+
+                <!-- Ürün Tipi -->
+                <Label Text="Ürün Tipi *" 
+                       FontSize="16" 
+                       FontAttributes="Bold"
+                       TextColor="#666" />
+
+                <Frame Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Picker ItemsSource="{Binding ProductTypes}"
+                            SelectedItem="{Binding SelectedType}"
+                            FontSize="16"
+                            Title="Tip Seçin" />
+                </Frame>
+
+                <!-- Sürpriz Kutu Switch -->
+                <StackLayout Orientation="Horizontal" 
+                             Padding="5,10" 
+                             IsVisible="{Binding IsDonationTypeSelected}">
+                    <Label Text="Bu ürünü Sürpriz Kutu'ya bağışla" 
+                           VerticalOptions="Center"
+                           TextColor="#333"/>
+                    <Switch IsToggled="{Binding IsForSurpriseBox}" 
+                            HorizontalOptions="EndAndExpand"
+                            OnColor="#4CAF50"/>
+                </StackLayout>
+
+                <!-- Fiyat (Satış ise) -->
+                <Frame IsVisible="{Binding ShowPriceField}"
+                       Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <HorizontalStackLayout Padding="10">
+                        <Entry Placeholder="Fiyat"
+                               Text="{Binding Price}"
+                               Keyboard="Numeric"
+                               FontSize="16"
+                               HorizontalOptions="FillAndExpand" />
+                        <Label Text="₺" 
+                               VerticalOptions="Center"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#4CAF50" />
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Takas Tercihi (Takas ise) -->
+                <Frame IsVisible="{Binding ShowExchangeField}"
+                       Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Entry Placeholder="Ne ile takas yapmak istersiniz?"
+                           Text="{Binding ExchangePreference}"
+                           FontSize="16" />
+                </Frame>
+
+                <!-- Durum -->
+                <Label Text="Ürün Durumu *" 
+                       FontSize="16" 
+                       FontAttributes="Bold"
+                       TextColor="#666" />
+
+                <Frame Padding="0" 
+                       BorderColor="#E0E0E0"
+                       CornerRadius="8">
+                    <Picker ItemsSource="{Binding Conditions}"
+                            SelectedItem="{Binding SelectedCondition}"
+                            FontSize="16"
+                            Title="Durum Seçin">
+                        <Picker.ItemDisplayBinding>
+                            <Binding>
+                                <Binding.Converter>
+                                    <conv:ProductConditionConverter />
+                                </Binding.Converter>
+                            </Binding>
+                        </Picker.ItemDisplayBinding>
+                    </Picker>
+                </Frame>
+
+                <!-- Konum -->
+                <Label Text="Konum *"
+                       FontSize="16" 
+                       FontAttributes="Bold"
+                       TextColor="#666" />
+
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                    <Frame Grid.Column="0"
+                           Padding="10"
+                           BorderColor="#E0E0E0"
+                           CornerRadius="8">
+                        <Label Text="{Binding Location, TargetNullValue='Anlık konumu almak için 📍 butonuna dokunun'}"
+                               VerticalOptions="Center"
+                               TextColor="#666"
+                               LineBreakMode="TailTruncation"/>
+                    </Frame>
+
+                    <Button Grid.Column="1"
+                            Text="📍"
+                            Command="{Binding UseCurrentLocationCommand}"
+                            BackgroundColor="#4CAF50"
+                            TextColor="White"
+                            CornerRadius="25"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            FontSize="20"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                            SemanticProperties.Hint="Anlık konumunuzu almak için dokunun"/>
+                </Grid>
+
+                <!-- Görseller -->
+                <Label Text="Ürün Görselleri (Maksimum 5) *" 
+                       FontSize="16" 
+                       FontAttributes="Bold"
+                       TextColor="#666" />
+
+                <Button Text="📷 Görsel Ekle"
+                        Command="{Binding PickImagesCommand}"
+                        BackgroundColor="#2196F3"
+                        TextColor="White"
+                        CornerRadius="8"
+                        HeightRequest="50" />
+
+                <!-- Seçili Görseller -->
+                <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
+                            Wrap="Wrap"
+                            JustifyContent="Start"
+                            AlignItems="Start">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Padding="5"
+                                   Margin="5"
+                                   CornerRadius="8"
+                                   WidthRequest="100"
+                                   HeightRequest="100">
+                                <Grid>
+                                    <Image Source="{Binding .}"
+                                           Aspect="AspectFill" />
+                                    <Button Text="✕"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AddProductViewModel}}, Path=RemoveImageCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#F44336"
+                                            TextColor="White"
+                                            WidthRequest="30"
+                                            HeightRequest="30"
+                                            CornerRadius="15"
+                                            HorizontalOptions="End"
+                                            VerticalOptions="Start"
+                                            Margin="5" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+                <!-- Butonlar -->
+                <Grid ColumnDefinitions="*,*" 
+                      ColumnSpacing="10"
+                      Margin="0,20,0,0">
+                    <Button Grid.Column="0"
+                            Text="İptal"
+                            Command="{Binding CancelCommand}"
+                            BackgroundColor="#757575"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="50" />
+
+                    <Button Grid.Column="1"
+                            Text="Kaydet"
+                            Command="{Binding SaveProductCommand}"
+                            BackgroundColor="#4CAF50"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="50" />
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- 🔥 Loading Overlay - En üstte, tam ekran -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="#80000000"
+              InputTransparent="False">
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="15">
+                <ActivityIndicator IsRunning="True"
+                                   Color="White"
+                                   WidthRequest="50"
+                                   HeightRequest="50" />
+                <Label Text="{Binding UploadProgress}"
+                       TextColor="White"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       IsVisible="{Binding UploadProgress, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.App">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:UnreadToIconConverter x:Key="UnreadToIconConverter" />
+
+            
+            <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter" />
+            <converters:FirstCharConverter x:Key="FirstCharConverter" />
+
+            <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter" />
+            <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter" />
+            <converters:ProductTypeConverter x:Key="ProductTypeConverter" />
+            <converters:ProductConditionConverter x:Key="ProductConditionConverter" />
+            <converters:MessageBubbleColorConverter x:Key="MessageBubbleColorConverter" />
+            <converters:MessageBubbleAlignmentConverter x:Key="MessageBubbleAlignmentConverter" />
+            <converters:MessageTextColorConverter x:Key="MessageTextColorConverter" />
+            <converters:MessageTimeColorConverter x:Key="MessageTimeColorConverter" />
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:ColorToLightConverter x:Key="ColorToLightConverter" />
+            <converters:PostTypeToIconConverter x:Key="PostTypeToIconConverter" />
+            <converters:PostTypeToTextConverter x:Key="PostTypeToTextConverter" />
+            <converters:ServiceCategoryToIconConverter x:Key="ServiceCategoryToIconConverter" />
+            <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
+            <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter" />
+            <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
+            <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
+            <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
+            <converters:BoolToColorConverter x:Key="LikeColorConverter"
+                                 TrueColor="{StaticResource Danger}"
+                FalseColor="{StaticResource Gray400}" />
+
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

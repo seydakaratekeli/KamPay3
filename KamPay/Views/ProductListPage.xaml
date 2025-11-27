@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             x:DataType="vm:ProductListViewModel"
+             x:Class="KamPay.Views.ProductListPage"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
+            <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
+            <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
+            <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto, Auto, *">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="15,10" BackgroundColor="White">
+            <Label Text="KamPay" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource Primary}" VerticalOptions="Center" />
+            <Grid Grid.Column="1" VerticalOptions="Center">
+                <Button Text="🔔" FontSize="24" BackgroundColor="Transparent" BorderColor="Transparent" TextColor="{StaticResource Gray600}" Command="{Binding GoToNotificationsCommand}" />
+                <Border StrokeThickness="0" BackgroundColor="Red" HeightRequest="10" WidthRequest="10" HorizontalOptions="End" VerticalOptions="Start" Margin="0,5,10,0" IsVisible="{Binding HasUnreadNotifications}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="5" />
+                    </Border.StrokeShape>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" BackgroundColor="#F5F5F5">
+
+            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0,0,0,15">
+                <Border Grid.Column="0" 
+                        StrokeShape="RoundRectangle 10" 
+                        StrokeThickness="1"
+                        Stroke="{StaticResource Gray300}"
+                        BackgroundColor="White"
+                        HeightRequest="50"
+                        Padding="5,0">
+                    <SearchBar Placeholder="Ürün ara..." 
+                               Text="{Binding SearchText}"
+                               VerticalTextAlignment="Center"
+                               BackgroundColor="Transparent"
+                               CancelButtonColor="{StaticResource Primary}"/>
+                </Border>
+
+                <Button Grid.Column="1" 
+                        Text="🔽"
+                        FontSize="15"
+                        TextColor="White"
+                        BackgroundColor="{StaticResource Primary}"
+                        CornerRadius="10"
+                        HeightRequest="50"
+                        WidthRequest="50"
+                        Command="{Binding ToggleFilterPanelCommand}"/>
+            </Grid>
+
+            <CollectionView ItemsSource="{Binding Categories}"
+                            ItemsLayout="HorizontalList"
+                            SelectionMode="None"
+                            HeightRequest="50"
+                            Margin="0,0,0,10">
+
+                <CollectionView.Header>
+                    <Frame Padding="15,10" 
+                           CornerRadius="20" 
+                           HasShadow="False"
+                           Margin="0,0,10,0"
+                           BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
+                           BorderColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
+                        <Label Text="Tümü"
+                               VerticalOptions="Center"
+                               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding CategoryTappedCommand}" CommandParameter="{x:Null}"/>
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                </CollectionView.Header>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Category">
+                        <Frame Padding="15,10" 
+                               CornerRadius="20" 
+                               HasShadow="False"
+                               Margin="5,0"
+                               BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={Binding CategoryId}}"
+                               BorderColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={Binding CategoryId}}">
+                            <Label Text="{Binding Name}"
+                                   VerticalOptions="Center"
+                                   TextColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={Binding CategoryId}}"/>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=CategoryTappedCommand}" CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="2" BackgroundColor="#F5F5F5">
+
+            <RefreshView Command="{Binding RefreshProductsCommand}"
+                         IsRefreshing="{Binding IsRefreshing}">
+
+                <CollectionView ItemsSource="{Binding Products}"
+                                SelectionMode="None"
+                                EmptyView="{Binding EmptyMessage}"
+                                RemainingItemsThreshold="5"
+                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}">
+
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="2" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Product">
+                            <Frame Padding="8"
+                                   CornerRadius="15"
+                                   Margin="6"
+                                   WidthRequest="180"
+                                   HeightRequest="250"
+                                   HasShadow="True"
+                                   HorizontalOptions="Center">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" 
+                                                          CommandParameter="{Binding .}"/>
+                                </Frame.GestureRecognizers>
+
+                                <Grid RowDefinitions="Auto,*,Auto">
+                                    <ffimageloading:CachedImage Grid.Row="0"
+                                                                Source="{Binding ThumbnailUrl}"
+                                                                Aspect="AspectFill"
+                                                                HeightRequest="130"
+                                                                LoadingPlaceholder="loading_image.png"
+                                                                ErrorPlaceholder="error_image.png"
+                                                                DownsampleToViewSize="True"
+                                                                CacheDuration="7"
+                                                                RetryCount="3"
+                                                                RetryDelay="250"
+                                                                FadeAnimationEnabled="True"
+                                                                FadeAnimationDuration="300"/>
+
+                                    <Border IsVisible="{Binding StatusText, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+                                            BackgroundColor="{Binding StatusColor}"
+                                            Opacity="0.9"
+                                            Padding="6,2"
+                                            HorizontalOptions="Start"
+                                            VerticalOptions="Start"
+                                            StrokeThickness="0"
+                                            Margin="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="0,0,10,0" />
+                                        </Border.StrokeShape>
+                                        <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                    </Border>
+
+                                    <VerticalStackLayout Grid.Row="1" Padding="5,5" Spacing="4">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="14" LineBreakMode="TailTruncation" TextColor="{StaticResource Gray900}"/>
+                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                            <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" Aspect="AspectFill" HeightRequest="30" WidthRequest="30" DownsampleToViewSize="True" LoadingPlaceholder="person_icon.svg" ErrorPlaceholder="person_icon.svg" FadeAnimationEnabled="True" FadeAnimationDuration="300" VerticalOptions="Center">
+                                                <ffimageloading:CachedImage.Clip>
+                                                    <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
+                                                </ffimageloading:CachedImage.Clip>
+                                            </ffimageloading:CachedImage>
+                                            <Label Text="{Binding UserName}" FontSize="12" TextColor="{StaticResource Gray600}" VerticalOptions="Center" LineBreakMode="TailTruncation"/>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+
+                                    <HorizontalStackLayout Grid.Row="2" Spacing="5" Padding="0,5">
+                                        <Label Text="⭐" FontSize="12"/>
+                                        <Label Text="❤️" FontSize="12" Margin="5,0,0,0"/>
+                                        <Label Text="{Binding FavoriteCount}" FontSize="12"/>
+                                        <Label Text="👁️" FontSize="12" Margin="5,0,0,0"/>
+                                        <Label Text="{Binding ViewCount}" FontSize="12"/>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <VerticalStackLayout VerticalOptions="End" HorizontalOptions="End" Spacing="15" Margin="25">
+                <Grid HorizontalOptions="End">
+                    <Button Text="🎁"
+                            Command="{Binding GoToSurpriseBoxCommand}"
+                            BackgroundColor="#FF9800"
+                            TextColor="White"
+                            FontSize="22"
+                            CornerRadius="25"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            Padding="0">
+                        <Button.Shadow>
+                            <Shadow Brush="Black" Offset="0,4" Opacity="0.3" Radius="5"/>
+                        </Button.Shadow>
+                    </Button>
+                </Grid>
+
+                <Button Text="+"
+                        Command="{Binding GoToAddProductCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontSize="32"
+                        CornerRadius="30"
+                        WidthRequest="60"
+                        HeightRequest="60"
+                        Padding="0">
+                    <Button.Shadow>
+                        <Shadow Brush="Black" Offset="0,5" Opacity="0.4" Radius="8"/>
+                    </Button.Shadow>
+                </Button>
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" 
+                               IsVisible="{Binding IsLoading}" 
+                               Color="{StaticResource Primary}" 
+                               VerticalOptions="Center" 
+                               HorizontalOptions="Center"/>
+        </Grid>
+
+        <Grid Grid.RowSpan="3" 
+              BackgroundColor="#80000000" 
+              IsVisible="{Binding ShowFilterPanel}"
+              ZIndex="99">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ToggleFilterPanelCommand}" />
+            </Grid.GestureRecognizers>
+
+            <Border BackgroundColor="White" 
+                    VerticalOptions="End" 
+                    StrokeShape="RoundRectangle 20,20,0,0"
+                    Padding="20">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Border.GestureRecognizers>
+
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Filtrele ve Sırala" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                    <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
+
+                    <Label Text="Ürün Tipi" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                        <Button Text="Tümü" Grid.Column="0" Command="{Binding SetProductTypeCommand}" CommandParameter="" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Satılık" Grid.Column="1" Command="{Binding SetProductTypeCommand}" CommandParameter="Satis" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Satis">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Bağış" Grid.Column="2" Command="{Binding SetProductTypeCommand}" CommandParameter="Bagis" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Takas" Grid.Column="3" Command="{Binding SetProductTypeCommand}" CommandParameter="Takas" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Takas">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+
+                    <Label Text="Sıralama" FontAttributes="Bold" Margin="0,10,0,0" />
+                    <Picker Title="Sıralama Seçin" 
+                            ItemsSource="{Binding SortOptions}"
+                            SelectedItem="{Binding SelectedSortOption}"
+                            ItemDisplayBinding="{Binding .}" 
+                            BackgroundColor="{StaticResource Gray100}"
+                            TitleColor="{StaticResource Gray600}"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,20,0,10">
+                        <Button Text="Temizle" BackgroundColor="{StaticResource Gray400}" TextColor="White" Command="{Binding ClearFiltersCommand}"/>
+                        <Button Text="Uygula" BackgroundColor="{StaticResource Primary}" TextColor="White" Command="{Binding ApplyFiltersCommand}"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

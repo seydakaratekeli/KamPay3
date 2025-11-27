@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Style x:Key="SectionTitleStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+        <Setter Property="Margin" Value="0,15,0,5" />
+    </Style>
+
+    <Style x:Key="InputFrameStyle" TargetType="Frame">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="BorderColor" Value="{StaticResource Gray300}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Gray100}" />
+        <Setter Property="HasShadow" Value="False" />
+    </Style>
+
+    <Style x:Key="CircleButtonStyle" TargetType="Button">
+        <Setter Property="WidthRequest" Value="55" />
+        <Setter Property="HeightRequest" Value="55" />
+        <Setter Property="CornerRadius" Value="27" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+    
+    <Style TargetType="Button">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="TitleLabel">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="SubtitleLabel">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource Gray}" />
+    </Style>
+
+
+
+
+
+</ResourceDictionary>

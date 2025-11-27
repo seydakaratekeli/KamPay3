@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:KamPay.Models"
+             x:Class="KamPay.Views.ChatPage"
+             Title="{Binding OtherUserName}">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- 🔥 Mesaj Listesi (Pull-to-Refresh ile) -->
+        <RefreshView Grid.Row="0"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshMessagesCommand}"
+                     IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+
+            <CollectionView x:Name="MessagesCollectionView"
+                            ItemsSource="{Binding Messages}"
+                            ItemsLayout="VerticalList"
+                            VerticalScrollBarVisibility="Never"
+                            SelectionMode="None"
+                            ItemsUpdatingScrollMode="KeepLastItemInView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Message">
+                        <Grid Padding="10,5">
+                            <Frame Padding="12"
+                                   CornerRadius="15"
+                                   BorderColor="Transparent"
+                                   HasShadow="False"
+                                   MaximumWidthRequest="280">
+                                <Frame.Style>
+                                    <Style TargetType="Frame">
+                                        <Setter Property="HorizontalOptions" Value="Start" />
+                                        <Setter Property="BackgroundColor" Value="#E0E0E0" />
+                                        <Style.Triggers>
+                                            <DataTrigger TargetType="Frame"
+                                                         Binding="{Binding IsSentByMe}"
+                                                         Value="True">
+                                                <Setter Property="HorizontalOptions" Value="End" />
+                                                <Setter Property="BackgroundColor"
+                                                        Value="{StaticResource Primary}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Frame.Style>
+
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="{Binding Content}"
+                                           LineBreakMode="WordWrap">
+                                        <Label.Style>
+                                            <Style TargetType="Label">
+                                                <Setter Property="TextColor" Value="Black" />
+                                                <Style.Triggers>
+                                                    <DataTrigger TargetType="Label"
+                                                                 Binding="{Binding IsSentByMe}"
+                                                                 Value="True">
+                                                        <Setter Property="TextColor" Value="White" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Label.Style>
+                                    </Label>
+
+                                    <!-- Zaman ve Durum -->
+                                    <HorizontalStackLayout Spacing="5" HorizontalOptions="End">
+                                        <Label Text="{Binding TimeText}"
+                                               FontSize="10">
+                                            <Label.Style>
+                                                <Style TargetType="Label">
+                                                    <Setter Property="TextColor" Value="{StaticResource Gray}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding IsSentByMe}"
+                                                                     Value="True">
+                                                            <Setter Property="TextColor" Value="#B2DFDB" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Label.Style>
+                                        </Label>
+
+                                        <!-- Gönderim durumu (sadece kendi mesajlarında) -->
+                                        <Label FontSize="12"
+                                               IsVisible="{Binding IsSentByMe}"
+                                               TextColor="#B2DFDB">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" 
+                                                            Binding="{Binding IsDelivered}" 
+                                                            Value="False">
+                                                    <Setter Property="Text" Value="⏱" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" 
+                                                            Binding="{Binding IsDelivered}" 
+                                                            Value="True">
+                                                    <Setter Property="Text" Value="✓✓" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <!-- 🔥 Boş görünüm -->
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="40"
+                                         VerticalOptions="Center"
+                                         HorizontalOptions="Center">
+                        <Label Text="💬"
+                               FontSize="60"
+                               HorizontalTextAlignment="Center"
+                               Opacity="0.3" />
+                        <Label Text="Henüz mesaj yok"
+                               FontSize="16"
+                               TextColor="#757575"
+                               HorizontalTextAlignment="Center"
+                               Margin="0,10,0,0" />
+                        <Label Text="İlk mesajı gönderin!"
+                               FontSize="12"
+                               TextColor="#BDBDBD"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Mesaj Gönderme Alanı -->
+        <Frame Grid.Row="1"
+               Padding="10"
+               CornerRadius="0"
+               BorderColor="#E0E0E0"
+               BackgroundColor="White"
+               HasShadow="True">
+            <Grid ColumnDefinitions="*,Auto"
+                  ColumnSpacing="10">
+                <Frame Grid.Column="0"
+                       Padding="12,8"
+                       CornerRadius="20"
+                       BorderColor="#E0E0E0"
+                       BackgroundColor="#F5F5F5"
+                       HasShadow="False">
+                    <Entry Placeholder="Mesajınızı yazın..."
+                           Text="{Binding MessageText}"
+                           ReturnCommand="{Binding SendMessageCommand}"
+                           MaxLength="1000"
+                           VerticalOptions="Center"
+                           BackgroundColor="Transparent" />
+                </Frame>
+
+                <Button Grid.Column="1"
+                        Text="📤"
+                        Command="{Binding SendMessageCommand}"
+                        IsEnabled="{Binding IsSending, Converter={StaticResource InvertedBoolConverter}}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        CornerRadius="25"
+                        WidthRequest="50"
+                        HeightRequest="50"
+                        Padding="0"
+                        FontSize="20" />
+            </Grid>
+        </Frame>
+
+        <!-- 🔥 Skeleton Loader (İlk Yükleme) -->
+        <Grid Grid.RowSpan="2"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="White"
+              InputTransparent="False">
+
+            <VerticalStackLayout Padding="15" Spacing="10">
+                <!-- Skeleton Message 1 (Alıcı) -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Start">
+                    <Frame Padding="12" 
+                           CornerRadius="15" 
+                           BackgroundColor="#E0E0E0"
+                           BorderColor="Transparent"
+                           MaximumWidthRequest="250">
+                        <VerticalStackLayout Spacing="5">
+                            <BoxView HeightRequest="14" WidthRequest="180" BackgroundColor="#D0D0D0" CornerRadius="3"/>
+                            <BoxView HeightRequest="14" WidthRequest="150" BackgroundColor="#D0D0D0" CornerRadius="3"/>
+                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#C0C0C0" CornerRadius="2" HorizontalOptions="End"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </HorizontalStackLayout>
+
+                <!-- Skeleton Message 2 (Gönderici) -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
+                    <Frame Padding="12" 
+                           CornerRadius="15" 
+                           BackgroundColor="#B2DFDB"
+                           BorderColor="Transparent"
+                           MaximumWidthRequest="250">
+                        <VerticalStackLayout Spacing="5">
+                            <BoxView HeightRequest="14" WidthRequest="200" BackgroundColor="#A0CFC9" CornerRadius="3"/>
+                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#90BFB9" CornerRadius="2" HorizontalOptions="End"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </HorizontalStackLayout>
+
+                <!-- Skeleton Message 3 (Alıcı) -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Start">
+                    <Frame Padding="12" 
+                           CornerRadius="15" 
+                           BackgroundColor="#E0E0E0"
+                           BorderColor="Transparent"
+                           MaximumWidthRequest="250">
+                        <VerticalStackLayout Spacing="5">
+                            <BoxView HeightRequest="14" WidthRequest="120" BackgroundColor="#D0D0D0" CornerRadius="3"/>
+                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#C0C0C0" CornerRadius="2" HorizontalOptions="End"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Loading Overlay -->
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="10"
+                                 Margin="0,-150,0,0">
+                <ActivityIndicator IsRunning="True"
+                                   Color="{StaticResource Primary}"
+                                   WidthRequest="40"
+                                   HeightRequest="40" />
+                <Label Text="Mesajlar yükleniyor..."
+                       TextColor="{StaticResource Primary}"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

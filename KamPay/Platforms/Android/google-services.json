@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "318032592267",
+    "firebase_url": "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "kampay-b006d",
+    "storage_bucket": "kampay-b006d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318032592267:android:5b20fecc96edddf6ab838e",
+        "android_client_info": {
+          "package_name": "com.seyda.appKamPay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXHE-YxYohUsbq0QpAz6MJwKpwArHROH8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="KamPay.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:KamPay.Views"
+    xmlns:converters="clr-namespace:KamPay.Converters"
+    Shell.FlyoutBehavior="Disabled"
+    x:Name="shell">
+
+    <Shell.Resources>
+        <ResourceDictionary>
+            <converters:UnreadToIconConverter x:Key="UnreadToIconConverter" />
+
+            <Style TargetType="TabBar">
+                <Setter Property="Shell.BackgroundColor" Value="White" />
+                <Setter Property="Shell.ForegroundColor" Value="#4CAF50" />
+                <Setter Property="Shell.TitleColor" Value="#4CAF50" />
+                <Setter Property="Shell.UnselectedColor" Value="#757575" />
+            </Style>
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <ShellContent
+        Title="Giriş"
+        ContentTemplate="{DataTemplate views:LoginPage}"
+        Route="LoginPage" />
+
+    <TabBar Route="MainApp">
+
+        <Tab Title="Ana Sayfa" Icon="home_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:ProductListPage}" Route="ProductListPage" />
+        </Tab>
+
+        <Tab Title="Pano" Icon="good_board.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
+        </Tab>
+
+        <Tab Title="Mesajlar"
+             Icon="{Binding BindingContext.HasUnreadMessages, Source={x:Reference shell}, Converter={StaticResource UnreadToIconConverter}}">
+            <ShellContent ContentTemplate="{DataTemplate views:MessagesPage}" Route="MessagesPage" />
+        </Tab>
+
+        <Tab Title="Hizmet" Icon="briefcase.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:ServiceSharingPage}" Route="ServiceSharingPage" />
+        </Tab>
+        
+        <Tab Title="Profil" Icon="person_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:ProfilePage}" Route="ProfilePage" />
+        </Tab>
+
+        <Tab Title="Favoriler" Icon="heart_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate views:FavoritesPage}" Route="FavoritesPage" />
+        </Tab>
+        
+    </TabBar>
+
+</Shell>

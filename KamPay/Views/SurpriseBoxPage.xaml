@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             x:DataType="vm:SurpriseBoxViewModel"
+             x:Class="KamPay.Views.SurpriseBoxPage"
+             Title="Sürpriz Kutu"
+             Shell.BackgroundColor="#4CAF50">
+
+    <Grid>
+        <ScrollView>
+            <Grid RowDefinitions="Auto,*,Auto" 
+                  Padding="20" 
+                  RowSpacing="20">
+
+                <!-- 🔥 ÜST BÖLÜM: Puan Göstergesi -->
+                <Frame Grid.Row="0"
+                       BackgroundColor="#4CAF50" 
+                       CornerRadius="20" 
+                       Padding="20,15"
+                       HasShadow="True"
+                       HorizontalOptions="Center">
+                    <HorizontalStackLayout Spacing="15">
+                        <Label Text="💰" 
+                               FontSize="32"
+                               VerticalOptions="Center"/>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Mevcut Puanınız" 
+                                   FontSize="12" 
+                                   TextColor="White"
+                                   Opacity="0.9"/>
+                            <Label Text="{Binding UserPoints}" 
+                                   FontSize="28" 
+                                   FontAttributes="Bold"
+                                   TextColor="White"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- 🔥 ORTA BÖLÜM: Ana İçerik -->
+                <VerticalStackLayout Grid.Row="1"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="25">
+
+                    <!-- Kutu Resmi -->
+                    <Frame Padding="20"
+                           CornerRadius="100"
+                           BackgroundColor="White"
+                           HasShadow="True"
+                           HorizontalOptions="Center">
+                        <Image x:Name="BoxImage"
+                               Source="gift_box.png" 
+                               WidthRequest="150"
+                               HeightRequest="150">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding RedeemBoxCommand}" />
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Frame>
+
+                    <!-- Başlık -->
+                    <Label Text="🎁 Sürpriz Kutu!"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="#333"/>
+
+                    <!-- Açıklama -->
+                    <Frame BackgroundColor="#FFF3E0"
+                           BorderColor="#FF9800"
+                           CornerRadius="15"
+                           Padding="20"
+                           Margin="0">
+                        <Label FontSize="16"
+                               HorizontalTextAlignment="Center"
+                               TextColor="#F57C00"
+                               LineHeight="1.5">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="100 puan" FontAttributes="Bold"/>
+                                    <Span Text=" karşılığında bir sürpriz kutu açarak "/>
+                                    <Span Text="bağışlanmış ürünlerden " FontAttributes="Bold"/>
+                                    <Span Text="birini kazanma şansı yakala!"/>
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </Frame>
+
+                    <!-- 🔥 Sonuç Frame'i (Dinamik) -->
+                    <Frame x:Name="ResultFrame"
+                           IsVisible="False"
+                           Opacity="0"
+                           Padding="20"
+                           CornerRadius="20"
+                           BorderColor="#4CAF50"
+                           BackgroundColor="White"
+                           HasShadow="True"
+                           Margin="0,10">
+                        <VerticalStackLayout Spacing="15">
+                            <!-- Tebrik Başlığı -->
+                            <Label Text="🎉 Tebrikler! 🎉"
+                                   FontSize="28"
+                                   FontAttributes="Bold"
+                                   TextColor="#4CAF50"
+                                   HorizontalTextAlignment="Center"/>
+
+                            <!-- Ürün Resmi -->
+                            <Frame Padding="0"
+                                   CornerRadius="15"
+                                   IsClippedToBounds="True"
+                                   HasShadow="False"
+                                   BorderColor="#E0E0E0">
+                                <Image Source="{Binding RedemptionResult.ThumbnailUrl}"
+                                       HeightRequest="200"
+                                       Aspect="AspectFill"/>
+                            </Frame>
+
+                            <!-- Ürün Adı -->
+                            <Label Text="{Binding RedemptionResult.Title}"
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="#333"/>
+
+                            <!-- Başarı Mesajı -->
+                            <Label Text="{Binding SuccessMessage}"
+                                   FontSize="14"
+                                   TextColor="#666"
+                                   HorizontalTextAlignment="Center"
+                                   LineHeight="1.4"
+                                   Margin="10,0"/>
+
+                            <!-- Buton -->
+                            <Button Text="🎁 Ürünümü Görmek İstiyorum"
+                                    Clicked="CloseResult_Clicked"
+                                    BackgroundColor="#4CAF50"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    CornerRadius="25"
+                                    HeightRequest="50"
+                                    Margin="0,10,0,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                </VerticalStackLayout>
+
+                <!-- 🔥 ALT BÖLÜM: Hata ve Buton -->
+                <VerticalStackLayout Grid.Row="2" 
+                                     Spacing="15">
+
+                    <!-- Hata Mesajı -->
+                    <Frame IsVisible="{Binding HasError}"
+                           BackgroundColor="#FFEBEE"
+                           BorderColor="#F44336"
+                           CornerRadius="10"
+                           Padding="15"
+                           Margin="0">
+                        <HorizontalStackLayout Spacing="10">
+                            <Label Text="⚠️" 
+                                   FontSize="20"
+                                   VerticalOptions="Center"/>
+                            <Label Text="{Binding ErrorMessage}"
+                                   FontSize="14"
+                                   TextColor="#C62828"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="FillAndExpand"
+                                   LineBreakMode="WordWrap"/>
+                        </HorizontalStackLayout>
+                    </Frame>
+
+                    <!-- Yetersiz Puan Uyarısı -->
+                    <Frame IsVisible="{Binding UserPoints, Converter={StaticResource LessThan100Converter}}"
+                           BackgroundColor="#FFF3E0"
+                           BorderColor="#FF9800"
+                           CornerRadius="10"
+                           Padding="15"
+                           Margin="0">
+                        <HorizontalStackLayout Spacing="10">
+                            <Label Text="💡" 
+                                   FontSize="20"
+                                   VerticalOptions="Center"/>
+                            <Label Text="Yetersiz puan! Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz."
+                                   FontSize="13"
+                                   TextColor="#F57C00"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="FillAndExpand"
+                                   LineBreakMode="WordWrap"/>
+                        </HorizontalStackLayout>
+                    </Frame>
+
+                    <!-- 🔥 Ana Buton (HasShadow kaldırıldı) -->
+                    <Frame HasShadow="True"
+                           CornerRadius="30"
+                           Padding="0"
+                           BackgroundColor="Transparent"
+                           BorderColor="Transparent">
+                        <Button Command="{Binding RedeemBoxCommand}"
+                                Text="🎁 100 Puana Kutu Aç!"
+                                IsEnabled="{Binding CanRedeem}"
+                                HeightRequest="60"
+                                BackgroundColor="#4CAF50"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                CornerRadius="30" />
+                    </Frame>
+
+                </VerticalStackLayout>
+
+            </Grid>
+        </ScrollView>
+
+        <!-- 🔥 Loading Overlay -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="#80000000"
+              InputTransparent="False">
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="20">
+                <ActivityIndicator IsRunning="True"
+                                   Color="White"
+                                   WidthRequest="60"
+                                   HeightRequest="60" />
+                <Label Text="Sürpriz kutunuz açılıyor..."
+                       TextColor="White"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>

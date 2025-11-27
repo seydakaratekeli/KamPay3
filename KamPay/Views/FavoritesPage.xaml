@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             x:Class="KamPay.Views.FavoritesPage"
+             x:DataType="vm:FavoritesViewModel"
+             Title="Favoriler"
+             Shell.BackgroundColor="{StaticResource Primary}">
+
+    <Grid BackgroundColor="#FAFAFA">
+
+        <!-- 🔄 RefreshView -->
+        <RefreshView Command="{Binding RefreshFavoritesCommand}"
+                     IsRefreshing="{Binding IsLoading}">
+
+            <CollectionView ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
+
+                <!-- 1. EmptyView tanımı (doğru) -->
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="40"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center">
+                        <Label Text="❤️"
+                   FontSize="60"
+                   HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding EmptyMessage}"
+                   FontSize="16"
+                   TextColor="{StaticResource Gray600}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,10,0,0" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+              
+      
+
+
+            <!-- 💖 Favori Ürün Şablonu -->
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Favorite">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Çıkar"
+                                               BackgroundColor="{StaticResource Danger}"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FavoritesViewModel}}, Path=RemoveFavoriteCommand}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Frame Margin="5"
+                                   Padding="0"
+                                   CornerRadius="20"
+                                   BorderColor="#E0E0E0"
+                                   BackgroundColor="White"
+                                   HasShadow="True">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FavoritesViewModel}}, Path=GoToProductDetailCommand}"
+                      CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="120,*">
+                                    <!-- 📷 Ürün Görseli -->
+                                    <Image Grid.Column="0"
+                                           Source="{Binding ProductThumbnail}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="120"
+                                           WidthRequest="120">
+                                        <Image.Clip>
+                                            <RoundRectangleGeometry Rect="0,0,120,120"
+                                                                    CornerRadius="20,0,0,20" />
+                                        </Image.Clip>
+                                    </Image>
+
+                                    <!-- 📋 Ürün Detayları -->
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Padding="15,10"
+                                                         Spacing="6">
+                                        <Label Text="{Binding ProductTitle}"
+                                               FontAttributes="Bold"
+                                               FontSize="15"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2"
+                                               TextColor="#212121" />
+
+                                        <Label Text="{Binding PriceText}"
+                                               FontAttributes="Bold"
+                                               FontSize="18"
+                                               TextColor="{StaticResource Primary}" />
+
+                                        <Label Text="{Binding TimeAgoText}"
+                                               FontSize="11"
+                                               TextColor="#757575" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+        <!-- ⏳ Yükleme Overlay -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="#80000000"
+              InputTransparent="False">
+            <ActivityIndicator IsRunning="True"
+                               Color="White"
+                               WidthRequest="50"
+                               HeightRequest="50"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center" />
+        </Grid>
+    </Grid>
+</ContentPage>

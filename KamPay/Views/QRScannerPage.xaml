@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             x:Class="KamPay.Views.QRScannerPage"
+             Title="QR Kod Tara">
+    <Grid>
+        <zxing:CameraBarcodeReaderView
+            x:Name="barcodeReader"
+            BarcodesDetected="BarcodesDetected"
+            Options="{Binding BarcodeOptions}"
+            IsDetecting="True"/>
+
+        <Label Text="Teslimatı onaylamak için QR kodu kameraya okutun."
+               TextColor="White"
+               BackgroundColor="#80000000"
+               Padding="20"
+               VerticalOptions="End"
+               HorizontalTextAlignment="Center"/>
+    </Grid>
+</ContentPage>

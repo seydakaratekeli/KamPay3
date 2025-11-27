@@ -1,0 +1,28 @@
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="KamPay.Views.MainPage"
+    Title="KamPay">
+
+    <VerticalStackLayout Padding="20" Spacing="15">
+        <Label Text="Hoş geldiniz 👋"
+               FontSize="24"
+               FontAttributes="Bold"
+               HorizontalOptions="Center" />
+
+        <Button Text="Ürün Listesi"
+                Command="{Binding NavigateProductListCommand}" />
+
+        <Button Text="Favoriler"
+                Command="{Binding NavigateFavoritesCommand}" />
+
+        <Button Text="Mesajlar"
+                Command="{Binding NavigateMessagesCommand}" />
+
+        <Button Text="Profil"
+                Command="{Binding NavigateProfileCommand}" />
+
+        <Button Text="Çıkış Yap"
+                Command="{Binding LogoutCommand}" />
+    </VerticalStackLayout>
+</ContentPage>

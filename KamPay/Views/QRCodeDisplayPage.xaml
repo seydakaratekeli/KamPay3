@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             x:Class="KamPay.Views.QRCodeDisplayPage"
+             x:DataType="vm:QRCodeViewModel"
+             Title="{Binding PageTitle}">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15" VerticalOptions="Center">
+
+            <Label Text="{Binding PageTitle}" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,10"/>
+            <Label Text="{Binding InstructionText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray600}"/>
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto, Auto, Auto" Margin="0,20,0,0" ColumnSpacing="15">
+                <Label Grid.Row="0" Grid.Column="0" Text="Benim Ürünüm" HorizontalOptions="Center" FontAttributes="Bold"/>
+                <Frame Grid.Row="1" Grid.Column="0" CornerRadius="10" Padding="10" BorderColor="{StaticResource Gray200}" HasShadow="True">
+                    <Grid>
+                        <zxing:BarcodeGeneratorView 
+            x:Name="barcodeGenerator"
+            Format="QrCode"  
+            Value="{Binding MyDelivery.QRCodeData}"
+            IsVisible="{Binding MyDelivery.IsUsed, Converter={StaticResource InverseBoolConverter}}"
+            ForegroundColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+            BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"/>
+
+                        <Label Text="TESLİM EDİLDİ ✔️"
+               IsVisible="{Binding MyDelivery.IsUsed}"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               FontSize="Large"
+               FontAttributes="Bold"/>
+                    </Grid>
+                </Frame>
+
+                <Label Grid.Row="2" Grid.Column="0" Text="{Binding MyDelivery.ProductTitle}" HorizontalOptions="Center" FontSize="12"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="Diğer Ürün" HorizontalOptions="Center" FontAttributes="Bold"/>
+                <Frame Grid.Row="1" Grid.Column="1" HeightRequest="150" WidthRequest="150" Padding="10" HorizontalOptions="Center" BorderColor="{StaticResource Gray300}">
+
+                    <Label HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label.Style>
+                            <Style TargetType="Label">
+                                <Setter Property="Text" Value="ONAY BEKLİYOR..."/>
+                                <Setter Property="TextColor" Value="{StaticResource Gray500}"/>
+                                <Setter Property="FontAttributes" Value="None"/>
+
+                                <Style.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                 Binding="{Binding OtherUserDelivery.IsUsed}"
+                                 Value="True">
+                                        <Setter Property="Text" Value="TESLİM ALINDI ✔️"/>
+                                        <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                        <Setter Property="FontAttributes" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>
+
+                </Frame>
+                <Label Grid.Row="2" Grid.Column="1" Text="{Binding OtherUserDelivery.ProductTitle}" HorizontalOptions="Center" FontSize="12"/>
+            </Grid>
+
+            <Button Text="Karşı Tarafın Kodunu Tara" 
+                    Command="{Binding ScanQRCodeCommand}" 
+                    Margin="0,30,0,0"
+                    IsEnabled="{Binding OtherUserDelivery.IsUsed, Converter={StaticResource InverseBoolConverter}}"/>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

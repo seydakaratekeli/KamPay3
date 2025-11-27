@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="KamPay.Views.RegisterPage"
+    Title="KamPay - Kayıt">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+
+            <Label Text="Kayıt Ol" FontSize="24" HorizontalOptions="Center" />
+
+            <Entry Placeholder="Ad" Text="{Binding FirstName}" />
+            <Entry Placeholder="Soyad" Text="{Binding LastName}" />
+            <Entry Placeholder="Üniversite E-posta" Text="{Binding Email}" Keyboard="Email" />
+            <Entry Placeholder="Şifre" Text="{Binding Password}" IsPassword="True" />
+            <Entry Placeholder="Şifre Tekrar" Text="{Binding PasswordConfirm}" IsPassword="True" />
+
+            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage}" TextColor="Red" />
+
+            <Button Text="Kayıt Ol" Command="{Binding RegisterCommand}" />
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+
+            <Button Text="Zaten hesabınız var? Giriş Yap" Command="{Binding GoToLoginCommand}" BackgroundColor="Transparent" TextColor="Blue" />
+
+            <!-- Doğrulama bölümü -->
+            <Frame IsVisible="{Binding ShowVerificationSection}" Padding="12" BorderColor="#DDD" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="E-posta doğrulama" FontAttributes="Bold" />
+                    <Label Text="E-postanıza gönderilen 6 haneli kodu girin." FontSize="12" />
+                    <Entry Placeholder="Doğrulama Kodu" Text="{Binding VerificationCode}" Keyboard="Numeric" />
+                    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage}" TextColor="Red" />
+                    <Button Text="Doğrula" Command="{Binding VerifyEmailCommand}" />
+                    <Button Text="Kodu Tekrar Gönder" Command="{Binding ResendVerificationCommand}" />
+                    <Button Text="İptal" Command="{Binding CancelVerificationCommand}" BackgroundColor="Transparent" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

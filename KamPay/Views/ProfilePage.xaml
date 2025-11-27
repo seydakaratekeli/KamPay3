@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.ProfilePage"
+             x:DataType="vm:ProfileViewModel"
+             Title="Profil"
+             Shell.BackgroundColor="#4CAF50">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:ColorToLightConverter x:Key="ColorToLightConverter" />
+            <converters:FirstCharConverter x:Key="FirstCharConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Spacing="0" Padding="0,0,0,15">
+
+                <!-- 🔹 Header Section with Edit Button -->
+                <Frame Padding="20" CornerRadius="0" BackgroundColor="#4CAF50" BorderColor="Transparent">
+                    <VerticalStackLayout Spacing="15">
+
+                        <!-- 🔹 Profile Image with Edit Icon - DÜZELTİLDİ -->
+                        <Grid HorizontalOptions="Center">
+                            <Frame Padding="0" WidthRequest="100" HeightRequest="100" 
+                                   CornerRadius="50" IsClippedToBounds="True" 
+                                   BackgroundColor="White">
+
+                                <!-- Profil fotoğrafı varsa göster, yoksa placeholder -->
+                                <Grid>
+                                    <Image Source="{Binding CurrentUser.ProfileImageUrl}" 
+                                           Aspect="AspectFill"
+                                           IsVisible="{Binding HasProfileImage}"/>
+
+                                    <!-- Placeholder - fotoğraf yoksa göster -->
+                                    <Label Text="{Binding CurrentUser.FullName, Converter={StaticResource FirstCharConverter}}" 
+                                           FontSize="40" FontAttributes="Bold" TextColor="#4CAF50" 
+                                           HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                           IsVisible="{Binding HasProfileImage, Converter={StaticResource InvertedBoolConverter}}" />
+                                </Grid>
+                            </Frame>
+
+                            <!-- Edit Icon on Profile Picture -->
+                            <Frame Padding="5" WidthRequest="32" HeightRequest="32" 
+                                   CornerRadius="16" BackgroundColor="White"
+                                   BorderColor="#4CAF50" HasShadow="True"
+                                   HorizontalOptions="End" VerticalOptions="End"
+                                   Margin="0,0,0,0">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
+                                </Frame.GestureRecognizers>
+                                <Label Text="✏️" FontSize="16" 
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Frame>
+                        </Grid>
+
+                        <Label Text="{Binding CurrentUser.FullName}" 
+                               FontSize="24" FontAttributes="Bold" 
+                               TextColor="White" HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding CurrentUser.Email}" 
+                               FontSize="14" TextColor="White" Opacity="0.9" 
+                               HorizontalTextAlignment="Center" />
+
+                        <!-- 🔹 Edit Profile Button -->
+                        <Button Text="Profili Düzenle"
+                                Command="{Binding EditProfileCommand}"
+                                BackgroundColor="White"
+                                TextColor="#4CAF50"
+                                FontAttributes="Bold"
+                                CornerRadius="20"
+                                HeightRequest="40"
+                                Margin="20,10,20,0" />
+
+                        <!-- Stats Grid -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,15,0,0">
+                            <Frame Grid.Column="0" Padding="15" CornerRadius="15" BackgroundColor="White">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                                    <Label Text="{Binding UserStats.TotalProducts}" 
+                                           FontSize="24" FontAttributes="Bold" 
+                                           TextColor="#4CAF50" HorizontalTextAlignment="Center" />
+                                    <Label Text="Ürün" FontSize="12" TextColor="#666" 
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
+                            <Frame Grid.Column="1" Padding="15" CornerRadius="15" BackgroundColor="White">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                                    <Label Text="{Binding UserStats.Points}" 
+                                           FontSize="24" FontAttributes="Bold" 
+                                           TextColor="#FF9800" HorizontalTextAlignment="Center" />
+                                    <Label Text="Puan" FontSize="12" TextColor="#666" 
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
+                            <Frame Grid.Column="2" Padding="15" CornerRadius="15" BackgroundColor="White">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                                    <Label Text="{Binding MyBadges.Count}" 
+                                           FontSize="24" FontAttributes="Bold" 
+                                           TextColor="#2196F3" HorizontalTextAlignment="Center" />
+                                    <Label Text="Rozet" FontSize="12" TextColor="#666" 
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Badges Section -->
+                <Frame Margin="15,15,15,0" Padding="15" CornerRadius="15" 
+                       BorderColor="#E0E0E0" BackgroundColor="White">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="🏆 Rozetlerim" 
+                                   FontSize="18" FontAttributes="Bold" />
+                            <Button Grid.Column="1" Text="Tümü" 
+                                    Command="{Binding ViewAllBadgesCommand}" 
+                                    BackgroundColor="Transparent" TextColor="#4CAF50" 
+                                    FontSize="14" Padding="0" />
+                        </Grid>
+                        <FlexLayout BindableLayout.ItemsSource="{Binding MyBadges}" 
+                                    Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:UserBadge">
+                                    <Frame Padding="10" Margin="5" CornerRadius="10" 
+                                           BorderColor="{Binding BadgeColor}" 
+                                           BackgroundColor="{Binding BadgeColor, Converter={StaticResource ColorToLightConverter}}">
+                                        <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                                            <Label Text="🏅" FontSize="32" 
+                                                   HorizontalTextAlignment="Center" />
+                                            <Label Text="{Binding BadgeName}" FontSize="10" 
+                                                   FontAttributes="Bold" HorizontalTextAlignment="Center" 
+                                                   MaxLines="2" LineBreakMode="TailTruncation" />
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                            <BindableLayout.EmptyView>
+                                <Label Text="Henüz rozet kazanmadınız" FontSize="14" 
+                                       TextColor="#757575" HorizontalTextAlignment="Center" 
+                                       Margin="0,10" />
+                            </BindableLayout.EmptyView>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Products Section -->
+                <Frame Margin="15" Padding="15" CornerRadius="15" 
+                       BorderColor="#E0E0E0" BackgroundColor="White">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="📦 Ürünlerim" 
+                                   FontSize="18" FontAttributes="Bold" />
+                            <Button Grid.Column="1" Text="Tümü" 
+                                    Command="{Binding ViewAllProductsCommand}" 
+                                    BackgroundColor="Transparent" TextColor="#4CAF50" 
+                                    FontSize="14" Padding="0" />
+                        </Grid>
+                        <CollectionView ItemsSource="{Binding MyProducts}" 
+                                        SelectionMode="None" HeightRequest="200">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:Product">
+                                    <Frame Padding="0" CornerRadius="15" WidthRequest="150" 
+                                           BorderColor="#E0E0E0" BackgroundColor="White">
+                                        <Frame.GestureRecognizers>
+                                            <TapGestureRecognizer 
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}, Path=ProductTappedCommand}" 
+                                                CommandParameter="{Binding .}" />
+                                        </Frame.GestureRecognizers>
+                                        <VerticalStackLayout>
+                                            <Image Source="{Binding ThumbnailUrl}" 
+                                                   Aspect="AspectFill" HeightRequest="120">
+                                                <Image.Clip>
+                                                    <RoundRectangleGeometry Rect="0,0,150,120" 
+                                                                            CornerRadius="15,15,0,0" />
+                                                </Image.Clip>
+                                            </Image>
+                                            <VerticalStackLayout Padding="10" Spacing="5">
+                                                <Label Text="{Binding Title}" FontSize="14" 
+                                                       FontAttributes="Bold" LineBreakMode="TailTruncation" 
+                                                       MaxLines="1" />
+                                                <Label Text="{Binding PriceText}" FontSize="14" 
+                                                       TextColor="#4CAF50" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <Label Text="Henüz ürün eklemediniz" FontSize="14" 
+                                       TextColor="#757575" HorizontalTextAlignment="Center" 
+                                       VerticalTextAlignment="Center" />
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Actions Section -->
+                <Frame Margin="15,0,15,0" Padding="15" CornerRadius="15" 
+                       BorderColor="#E0E0E0" BackgroundColor="White">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="📜 İşlemlerim" FontSize="18" FontAttributes="Bold" />
+                        <Button Text="Tekliflerim" 
+                                Command="{Binding GoToOffersCommand}" 
+                                BackgroundColor="#4CAF50" TextColor="White" />
+                        <Button Text="Hizmet Taleplerim" 
+                                Command="{Binding GoToServiceRequestsCommand}"
+                                BackgroundColor="#2196F3" TextColor="White" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Logout Button -->
+                <Button Text="Çıkış Yap"
+                        Command="{Binding LogoutCommand}"
+                        BackgroundColor="#F44336"
+                        TextColor="White"
+                        CornerRadius="10"
+                        HeightRequest="50"
+                        Margin="15,15,15,0" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading Indicator -->
+        <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#80000000">
+            <ActivityIndicator IsRunning="True" Color="White" 
+                               VerticalOptions="Center" HorizontalOptions="Center" />
+        </Grid>
+
+    </Grid>
+</ContentPage>
