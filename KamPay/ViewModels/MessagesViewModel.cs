@@ -139,7 +139,8 @@ namespace KamPay.ViewModels
                     });
         }
 
-        // 🔥 Metot ASYNC yapıldı ve Profil Çekme kodu eklendi
+        // ProcessConversationBatchAsync metodunu bulun (satır 143 civarı) ve güncelleyin:
+
         private async Task ProcessConversationBatchAsync(IList<Firebase.Database.Streaming.FirebaseEvent<Conversation>> events)
         {
             bool hasChanges = false;
@@ -204,6 +205,12 @@ namespace KamPay.ViewModels
                         }
                         break;
                 }
+            }
+
+            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            if (hasChanges && IsLoading)
+            {
+                IsLoading = false;
             }
 
             if (hasChanges)

@@ -1,44 +1,58 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
              x:Class="KamPay.Views.FavoritesPage"
              x:DataType="vm:FavoritesViewModel"
              Title="Favoriler"
-             Shell.BackgroundColor="{StaticResource Primary}">
+             BackgroundColor="#FAFAFA">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid BackgroundColor="#FAFAFA">
 
-        <!-- 🔄 RefreshView -->
+        <!-- REFRESH VIEW -->
         <RefreshView Command="{Binding RefreshFavoritesCommand}"
-                     IsRefreshing="{Binding IsLoading}">
+                     IsRefreshing="{Binding IsRefreshing}"
+                     RefreshColor="{StaticResource Primary}"
+                     IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
 
-            <CollectionView ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
+            <CollectionView ItemsSource="{Binding FavoriteItems}"
+                            SelectionMode="None">
 
-                <!-- 1. EmptyView tanımı (doğru) -->
+                <!-- EMPTY VIEW -->
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="40"
-                             VerticalOptions="Center"
-                             HorizontalOptions="Center">
+                                         VerticalOptions="Center"
+                                         HorizontalOptions="Center"
+                                         Spacing="15">
                         <Label Text="❤️"
-                   FontSize="60"
-                   HorizontalTextAlignment="Center" />
-                        <Label Text="{Binding EmptyMessage}"
-                   FontSize="16"
-                   TextColor="{StaticResource Gray600}"
-                   HorizontalTextAlignment="Center"
-                   Margin="0,10,0,0" />
+                               FontSize="60"
+                               HorizontalTextAlignment="Center"
+                               Opacity="0.3"/>
+                        <Label Text="Henüz favori ürününüz yok"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray600}"
+                               HorizontalTextAlignment="Center"/>
+                        <Label Text="Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz."
+                               FontSize="13"
+                               TextColor="{StaticResource Gray400}"
+                               HorizontalTextAlignment="Center"
+                               Margin="20,5,20,0"/>
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
 
-              
-      
-
-
-            <!-- 💖 Favori Ürün Şablonu -->
+                <!-- FAVORİ ÜRÜN ŞABLONU -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Favorite">
+
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
@@ -49,7 +63,7 @@
                                 </SwipeItems>
                             </SwipeView.RightItems>
 
-                            <Frame Margin="5"
+                            <Frame Margin="10,5"
                                    Padding="0"
                                    CornerRadius="20"
                                    BorderColor="#E0E0E0"
@@ -58,11 +72,12 @@
 
                                 <Frame.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FavoritesViewModel}}, Path=GoToProductDetailCommand}"
-                      CommandParameter="{Binding .}" />
+                                                          CommandParameter="{Binding .}" />
                                 </Frame.GestureRecognizers>
 
                                 <Grid ColumnDefinitions="120,*">
-                                    <!-- 📷 Ürün Görseli -->
+
+                                    <!-- ÜRÜN FOTO -->
                                     <Image Grid.Column="0"
                                            Source="{Binding ProductThumbnail}"
                                            Aspect="AspectFill"
@@ -70,14 +85,15 @@
                                            WidthRequest="120">
                                         <Image.Clip>
                                             <RoundRectangleGeometry Rect="0,0,120,120"
-                                                                    CornerRadius="20,0,0,20" />
+                                                                    CornerRadius="20" />
                                         </Image.Clip>
                                     </Image>
 
-                                    <!-- 📋 Ürün Detayları -->
+                                    <!-- DETAYLAR -->
                                     <VerticalStackLayout Grid.Column="1"
                                                          Padding="15,10"
                                                          Spacing="6">
+
                                         <Label Text="{Binding ProductTitle}"
                                                FontAttributes="Bold"
                                                FontSize="15"
@@ -96,23 +112,33 @@
                                     </VerticalStackLayout>
                                 </Grid>
                             </Frame>
+
                         </SwipeView>
+
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 
             </CollectionView>
+
         </RefreshView>
 
-        <!-- ⏳ Yükleme Overlay -->
+        <!-- LOADING -->
         <Grid IsVisible="{Binding IsLoading}"
-              BackgroundColor="#80000000"
-              InputTransparent="False">
-            <ActivityIndicator IsRunning="True"
-                               Color="White"
-                               WidthRequest="50"
-                               HeightRequest="50"
-                               VerticalOptions="Center"
-                               HorizontalOptions="Center" />
+              BackgroundColor="#FAFAFA">
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="15">
+                <ActivityIndicator IsRunning="True"
+                                   Color="{StaticResource Primary}"
+                                   WidthRequest="50"
+                                   HeightRequest="50"/>
+                <Label Text="Favoriler yükleniyor..."
+                       TextColor="{StaticResource Gray600}"
+                       FontSize="14"
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
         </Grid>
+
     </Grid>
+
 </ContentPage>

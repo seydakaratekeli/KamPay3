@@ -33,9 +33,17 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isRefreshing;
 
+        [ObservableProperty]
+        private bool isIncomingSelected = true;
+
+        [ObservableProperty]
+        private bool isOutgoingSelected = false;
+
         public ObservableCollection<ServiceRequest> IncomingRequests { get; } = new();
         public ObservableCollection<ServiceRequest> OutgoingRequests { get; } = new();
         public ObservableCollection<PaymentOption> PaymentMethods { get; }
+
+ 
 
         public ServiceRequestsViewModel(IServiceSharingService serviceService, IAuthenticationService authService)
         {
@@ -132,7 +140,6 @@ namespace KamPay.ViewModels
                     });
         }
 
-        // 🔥 YENİ: Batch processing - Clear() YOK
         private void ProcessRequestBatch(IList<FirebaseEvent<ServiceRequest>> events)
         {
             bool hasIncomingChanges = false;
@@ -143,7 +150,7 @@ namespace KamPay.ViewModels
                 var request = e.Object;
                 request.RequestId = e.Key;
 
-                // Gelen talep mi? (ben hizmet sağlayıcıyım)
+                // Gelen talep mi?  (ben hizmet sağlayıcıyım)
                 if (request.ProviderId == _currentUserId)
                 {
                     if (UpdateRequestInCollection(IncomingRequests, _incomingRequestIds, request, e.EventType))
@@ -159,6 +166,12 @@ namespace KamPay.ViewModels
                         hasOutgoingChanges = true;
                     }
                 }
+            }
+
+            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            if ((hasIncomingChanges || hasOutgoingChanges) && IsLoading)
+            {
+                IsLoading = false;
             }
 
             // 🔥 Sadece değişenler için sıralama
@@ -319,6 +332,20 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
+        private void SelectIncoming()
+        {
+            IsIncomingSelected = true;
+            IsOutgoingSelected = false;
+        }
+
+        [RelayCommand]
+        private void SelectOutgoing()
+        {
+            IsIncomingSelected = false;
+            IsOutgoingSelected = true;
+        }
+
+        [RelayCommand]
         private async Task CompleteRequestAsync(ServiceRequest request)
         {
             if (request == null || request.Status != ServiceRequestStatus.Accepted)
@@ -379,7 +406,7 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
-
+    
         public void Dispose()
         {
             Console.WriteLine("🧹 ServiceRequestsViewModel dispose ediliyor...");

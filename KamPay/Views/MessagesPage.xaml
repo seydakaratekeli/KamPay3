@@ -12,12 +12,15 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
+            <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto, *">
+    <Grid RowDefinitions="Auto,*">
 
+        <!-- ARAMA ÇUBUĞU -->
         <Grid Grid.Row="0" Padding="15,10">
             <Border StrokeShape="RoundRectangle 10" 
                     StrokeThickness="1"
@@ -25,10 +28,12 @@
                     BackgroundColor="{StaticResource Gray100}"
                     HeightRequest="45"
                     Padding="10,0">
-                <Grid ColumnDefinitions="Auto, *">
+                <Grid ColumnDefinitions="Auto,*">
                     <Image Source="search_icon.svg" 
-                           HeightRequest="20" WidthRequest="20" 
-                           VerticalOptions="Center" Opacity="0.5"/>
+                           HeightRequest="20" 
+                           WidthRequest="20" 
+                           VerticalOptions="Center" 
+                           Opacity="0.5"/>
                     <Entry Grid.Column="1" 
                            Placeholder="Sohbetlerde ara..." 
                            TextColor="{StaticResource Gray900}"
@@ -39,90 +44,148 @@
             </Border>
         </Grid>
 
-        <RefreshView Grid.Row="1" 
-                     Command="{Binding RefreshConversationsCommand}"
-                     IsRefreshing="{Binding IsRefreshing}"
-                     RefreshColor="{StaticResource Primary}">
+        <!-- ANA İÇERİK GRID -->
+        <Grid Grid.Row="1">
 
-            <CollectionView ItemsSource="{Binding Conversations}"
-                            SelectionMode="Single"
-                            SelectedItem="{Binding SelectedConversation}"
-                            SelectionChangedCommand="{Binding ConversationTappedCommand}"
-                            SelectionChangedCommandParameter="{Binding SelectedConversation}">
+            <!-- REFRESH VIEW -->
+            <RefreshView Command="{Binding RefreshConversationsCommand}"
+                         IsRefreshing="{Binding IsRefreshing}"
+                         RefreshColor="{StaticResource Primary}"
+                         IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
-                <CollectionView.EmptyView>
-                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
-                        <Image Source="message_icon.svg" HeightRequest="60" Opacity="0.3"/>
-                        <Label Text="Henüz mesajınız yok." TextColor="{StaticResource Gray500}"/>
-                    </StackLayout>
-                </CollectionView.EmptyView>
+                <CollectionView ItemsSource="{Binding Conversations}"
+                                SelectionMode="Single"
+                                SelectedItem="{Binding SelectedConversation}"
+                                SelectionChangedCommand="{Binding ConversationTappedCommand}"
+                                SelectionChangedCommandParameter="{Binding SelectedConversation}">
 
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Conversation">
-                        <Grid Padding="15,10" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15" BackgroundColor="White">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
-                                                      CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
+                    <!-- EMPTY VIEW -->
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" 
+                                             HorizontalOptions="Center" 
+                                             Spacing="15" 
+                                             Padding="30">
+                            <Label Text="💬" 
+                                   FontSize="60" 
+                                   HorizontalTextAlignment="Center" 
+                                   Opacity="0.3"/>
+                            <Label Text="Henüz mesajınız yok." 
+                                   TextColor="{StaticResource Gray500}"
+                                   FontSize="16"
+                                   HorizontalTextAlignment="Center"/>
+                            <Label Text="Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz." 
+                                   TextColor="{StaticResource Gray400}"
+                                   FontSize="13"
+                                   HorizontalTextAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
 
-                            <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
-                                <ffimageloading:CachedImage Source="{Binding OtherUserPhotoUrl}" 
-                                                            Aspect="AspectFill"
-                                                            HeightRequest="55" 
-                                                            WidthRequest="55"
-                                                            LoadingPlaceholder="default_avatar.png"
-                                                            ErrorPlaceholder="default_avatar.png"
-                                                            DownsampleToViewSize="True"
-                                                            VerticalOptions="Center"
-                                                            HorizontalOptions="Center">
-                                    <ffimageloading:CachedImage.Clip>
-                                        <EllipseGeometry Center="27.5,27.5" RadiusX="27.5" RadiusY="27.5" />
-                                    </ffimageloading:CachedImage.Clip>
-                                </ffimageloading:CachedImage>
+                    <!-- ITEM TEMPLATE -->
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Conversation">
+
+                            <Grid Padding="15,10" 
+                                  ColumnDefinitions="Auto,*,Auto" 
+                                  ColumnSpacing="15" 
+                                  BackgroundColor="White">
+
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+
+                                <!-- PROFİL FOTO -->
+                                <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
+                                    <ffimageloading:CachedImage 
+                                        Source="{Binding OtherUserPhotoUrl}" 
+                                        Aspect="AspectFill"
+                                        HeightRequest="55" 
+                                        WidthRequest="55"
+                                        LoadingPlaceholder="default_avatar.png"
+                                        ErrorPlaceholder="default_avatar.png"
+                                        DownsampleToViewSize="True"
+                                        VerticalOptions="Center"
+                                        HorizontalOptions="Center">
+                                        <ffimageloading:CachedImage.Clip>
+                                            <EllipseGeometry Center="27.5,27.5" RadiusX="27.5" RadiusY="27.5"/>
+                                        </ffimageloading:CachedImage.Clip>
+                                    </ffimageloading:CachedImage>
+                                </Grid>
+
+                                <!-- KULLANICI BİLGİSİ -->
+                                <VerticalStackLayout Grid.Column="1" 
+                                                     VerticalOptions="Center" 
+                                                     Spacing="2">
+                                    <Label Text="{Binding OtherUserName}" 
+                                           FontSize="16" 
+                                           FontAttributes="Bold" 
+                                           TextColor="{StaticResource Gray900}"
+                                           LineBreakMode="TailTruncation"/>
+
+                                    <Label Text="{Binding LastMessage}" 
+                                           FontSize="14" 
+                                           TextColor="{StaticResource Gray500}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"/>
+                                </VerticalStackLayout>
+
+                                <!-- ZAMAN – BADGE -->
+                                <VerticalStackLayout Grid.Column="2" 
+                                                     VerticalOptions="Center" 
+                                                     HorizontalOptions="End" 
+                                                     Spacing="5">
+
+                                    <Label Text="{Binding LastMessageTimeText}" 
+                                           FontSize="12" 
+                                           TextColor="{StaticResource Gray500}"
+                                           HorizontalOptions="End"/>
+
+                                    <Border BackgroundColor="{StaticResource Primary}" 
+                                            StrokeThickness="0"
+                                            HeightRequest="22" 
+                                            WidthRequest="22" 
+                                            StrokeShape="RoundRectangle 11"
+                                            HorizontalOptions="End"
+                                            IsVisible="{Binding UnreadCount, Converter={StaticResource IsNotZeroConverter}}">
+                                        <Label Text="{Binding UnreadCount}" 
+                                               TextColor="White" 
+                                               FontSize="11" 
+                                               FontAttributes="Bold"
+                                               HorizontalOptions="Center" 
+                                               VerticalOptions="Center"/>
+                                    </Border>
+
+                                </VerticalStackLayout>
+
+                                <!-- ALT ÇİZGİ -->
+                                <BoxView Grid.ColumnSpan="3"
+                                         HeightRequest="1"
+                                         Color="{StaticResource Gray200}"
+                                         VerticalOptions="End"
+                                         Margin="60,0,0,0"/>
                             </Grid>
 
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                <Label Text="{Binding OtherUserName}" 
-                                       FontSize="16" 
-                                       FontAttributes="Bold" 
-                                       TextColor="{StaticResource Gray900}"
-                                       LineBreakMode="TailTruncation"/>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
 
-                                <Label Text="{Binding LastMessage}" 
-                                       FontSize="14" 
-                                       TextColor="{StaticResource Gray500}"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="1"/>
-                            </VerticalStackLayout>
+            <!-- LOADING EKRANI -->
+            <Grid IsVisible="{Binding IsLoading}" BackgroundColor="White">
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
+                    <ActivityIndicator IsRunning="True" 
+                                       Color="{StaticResource Primary}"
+                                       WidthRequest="50" 
+                                       HeightRequest="50"/>
+                    <Label Text="Mesajlar yükleniyor..." 
+                           TextColor="{StaticResource Gray600}"
+                           FontSize="14"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </Grid>
 
-                            <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" HorizontalOptions="End" Spacing="5">
-                                <Label Text="{Binding LastMessageTimeText}" 
-                                       FontSize="12" 
-                                       TextColor="{StaticResource Gray500}"
-                                       HorizontalOptions="End"/>
-
-                                <Border BackgroundColor="{StaticResource Primary}" 
-                                        StrokeThickness="0"
-                                        HeightRequest="22" 
-                                        WidthRequest="22" 
-                                        StrokeShape="RoundRectangle 11"
-                                        HorizontalOptions="End"
-                                        IsVisible="{Binding UnreadCount}">
-
-                                    <Label Text="{Binding UnreadCount}" 
-                                           TextColor="White" 
-                                           FontSize="11" 
-                                           FontAttributes="Bold"
-                                           HorizontalOptions="Center" 
-                                           VerticalOptions="Center"/>
-                                </Border>
-                            </VerticalStackLayout>
-
-                            <BoxView Grid.ColumnSpan="3" HeightRequest="1" Color="{StaticResource Gray200}" VerticalOptions="End" Margin="60,0,0,0"/>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+        </Grid>
     </Grid>
 </ContentPage>

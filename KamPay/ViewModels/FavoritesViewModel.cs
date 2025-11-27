@@ -34,6 +34,9 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string emptyMessage = "Henüz favori ürününüz yok";
 
+        [ObservableProperty]
+        private bool isRefreshing; // Bunu ekleyin (mevcut değilse)
+
         public ObservableCollection<Favorite> FavoriteItems { get; } = new();
 
         public FavoritesViewModel(IFavoriteService favoriteService, IProductService productService, IAuthenticationService authService)
@@ -127,9 +130,12 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Batch processing - Clear() YOK
+        // ProcessFavoriteBatch metodunu bulun (satır 131 civarı) ve güncelleyin:
+
         private void ProcessFavoriteBatch(IList<FirebaseEvent<Favorite>> events)
         {
+            bool hasChanges = false;
+
             foreach (var e in events)
             {
                 if (e.Object == null) continue;
@@ -157,6 +163,7 @@ namespace KamPay.ViewModels
                                 _favoriteIds.Add(favorite.FavoriteId);
                             }
                         }
+                        hasChanges = true;
                         break;
 
                     case FirebaseEventType.Delete:
@@ -164,14 +171,21 @@ namespace KamPay.ViewModels
                         {
                             FavoriteItems.Remove(existing);
                             _favoriteIds.Remove(favorite.FavoriteId);
+                            hasChanges = true;
                         }
                         break;
                 }
             }
 
-            EmptyMessage = FavoriteItems.Any() ? string.Empty : "Henüz favori ürününüz yok.";
-        }
+            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            if (hasChanges && IsLoading)
+            {
+                IsLoading = false;
+                _isInitialized = true;
+            }
 
+            EmptyMessage = FavoriteItems.Any() ? string.Empty : "Henüz favori ürününüz yok. ";
+        }
         [RelayCommand]
         private async Task ProductTappedAsync(Favorite favorite)
         {
@@ -218,12 +232,21 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Refresh command
         [RelayCommand]
         private async Task RefreshFavoritesAsync()
         {
-            // Listener zaten çalışıyor, sadece UI'ı güncellemek için kısa bir delay
-            await Task.Delay(300);
+            if (isRefreshing) return;
+
+            try
+            {
+                isRefreshing = true;
+                // Listener zaten çalışıyor, sadece UI'ı güncellemek için kısa bir delay
+                await Task.Delay(500);
+            }
+            finally
+            {
+                isRefreshing = false;
+            }
         }
 
         public void Dispose()

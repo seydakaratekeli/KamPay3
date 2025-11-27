@@ -52,22 +52,22 @@ namespace KamPay.Services
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
 
                 if (transaction == null) return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
-                if (transaction.Status != TransactionStatus.Pending) return ServiceResult<Transaction>.SuccessResult(transaction, "Bu teklif zaten yanıtlanmış.");
+                if (transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<Transaction>.SuccessResult(transaction, "Bu teklif zaten yanıtlanmış.");
 
                 transaction.Status = accept ? TransactionStatus.Accepted : TransactionStatus.Rejected;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
                 await transactionNode.PutAsync(transaction);
 
-                // Alıcıya bildirim gönder (mevcut kod)
+                // Alıcıya bildirim gönder
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = transaction.BuyerId,
                     Type = accept ? NotificationType.OfferAccepted : NotificationType.OfferRejected,
                     Title = accept ? "Teklifin Kabul Edildi!" : "Teklifin Reddedildi",
-                    // *** SATIŞ MODÜLÜ İÇİN MESAJ GÜNCELLENDİ ***
-                    Message = $"'{transaction.SellerName}', '{transaction.ProductTitle}' ürünü için yaptığın teklifi {(accept ? "kabul etti. Şimdi ödemeyi tamamlayabilirsin." : "reddetti.")}",
-                    ActionUrl = nameof(Views.OffersPage) // Giden Tekliflerim'e yönlendirsin
+                    Message = $"'{transaction.SellerName}', '{transaction.ProductTitle}' ürünü için yaptığın teklifi {(accept ? "kabul etti." : "reddetti.")}",
+                    ActionUrl = nameof(Views.OffersPage)
                 });
 
                 if (accept)
@@ -78,13 +78,44 @@ namespace KamPay.Services
                     if (transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductId))
                     {
                         await _productService.MarkAsReservedAsync(transaction.OfferedProductId, true);
+
+                        // 🔥 KRİTİK: TAKAS İÇİN QR KODLARI OLUŞTUR
+                        Console.WriteLine($"✅ Takas kabul edildi.  QR kodlar oluşturuluyor: {transactionId}");
+
+                        // Satıcının ürünü için QR kod
+                        var qrCode1 = await _qrCodeService.GenerateDeliveryQRCodeAsync(
+                            transactionId,
+                            transaction.ProductId,
+                            transaction.ProductTitle,
+                            transaction.SellerId,
+                            transaction.BuyerId
+                        );
+
+                        // Alıcının ürünü için QR kod
+                        var qrCode2 = await _qrCodeService.GenerateDeliveryQRCodeAsync(
+                            transactionId,
+                            transaction.OfferedProductId,
+                            transaction.OfferedProductTitle,
+                            transaction.BuyerId, // Teklif veren alıcı, bu ürünün sahibi
+                            transaction.SellerId // Satıcı bu ürünü alacak
+                        );
+
+                        if (!qrCode1.Success || !qrCode2.Success)
+                        {
+                            Console.WriteLine($"❌ QR kod oluşturma hatası!");
+                            return ServiceResult<Transaction>.FailureResult($"Takas kabul edildi ancak QR kodlar oluşturulamadı.");
+                        }
+
+                        Console.WriteLine($"✅ QR kodlar başarıyla oluşturuldu!");
                     }
                 }
-                return ServiceResult<Transaction>.SuccessResult(transaction, "Teklif yanıtlandı.");
+
+                return ServiceResult<Transaction>.SuccessResult(transaction, "İşlem başarılı.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<Transaction>.FailureResult("İşlem sırasında hata oluştu.", ex.Message);
+                Console.WriteLine($"❌ RespondToOfferAsync hatası: {ex.Message}");
+                return ServiceResult<Transaction>.FailureResult("Hata", ex.Message);
             }
         }
 

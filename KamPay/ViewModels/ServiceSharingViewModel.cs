@@ -74,17 +74,21 @@ namespace KamPay.ViewModels
             _ = InitializeAsync();
         }
 
+        // InitializeAsync metodunu güncelleyin (satır 77-86):
+
         private async Task InitializeAsync()
         {
             IsLoading = true;
             StartListeningForServices();
 
-            // 🔥 GÜVENLİK: Eğer 3 saniye içinde veri gelmezse (boşsa) loading'i kapat
-            // Bu sayede ekranın sonsuza kadar "Yükleniyor"da kalmasını engelleriz.
-            await Task.Delay(3000);
-            if (IsLoading) IsLoading = false;
+            // 🔥 TIMEOUT: Eğer 4 saniye içinde veri gelmezse loading'i kapat
+            await Task.Delay(4000);
+            if (IsLoading && !_initialLoadComplete)
+            {
+                IsLoading = false;
+                Console.WriteLine("⚠️ Timeout: Hizmet bulunamadı veya yavaş bağlantı");
+            }
         }
-
         // 🔥 YENİ: Paneli Aç
         [RelayCommand]
         private void OpenPostForm() => IsPostFormVisible = true;
@@ -94,6 +98,8 @@ namespace KamPay.ViewModels
         private void ClosePostForm() => IsPostFormVisible = false;
 
         // 🔥 OPTİMİZE: Real-time listener + batch processing
+        // StartListeningForServices metodunu güncelleyin (satır 97-138):
+
         private void StartListeningForServices()
         {
             if (_servicesSubscription != null) return;
@@ -119,25 +125,21 @@ namespace KamPay.ViewModels
                             {
                                 Console.WriteLine($"❌ Service batch hatası: {ex.Message}");
                             }
-                            finally
-                            {
-                                if (!_initialLoadComplete)
-                                {
-                                    _initialLoadComplete = true;
-                                    IsLoading = false;
-                                    Console.WriteLine("✅ Hizmetler yüklendi");
-                                }
-                            }
+                            // 🔥 FINALLY BLOĞU KALDIRILDI - ProcessServiceBatch içinde kontrol var
                         });
                     },
                     error =>
                     {
                         Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
-                        MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            IsLoading = false;
+                            _initialLoadComplete = true;
+                        });
                     });
         }
 
-        // 🔥 YENİ: Batch processing - Clear() YOK
+
         private void ProcessServiceBatch(IList<FirebaseEvent<ServiceOffer>> events)
         {
             bool hasChanges = false;
@@ -181,12 +183,21 @@ namespace KamPay.ViewModels
                 }
             }
 
+            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            if (hasChanges && IsLoading)
+            {
+                IsLoading = false;
+                _initialLoadComplete = true;
+                Console.WriteLine("✅ Hizmetler yüklendi (ilk veri geldi)");
+            }
+
             // 🔥 Sadece değişiklik varsa sırala
             if (hasChanges)
             {
                 SortServicesInPlace();
             }
         }
+
 
         // 🔥 YENİ: Sıralı insert (en yeni üstte)
         private void InsertServiceSorted(ServiceOffer service)

@@ -161,10 +161,15 @@ namespace KamPay.ViewModels
                 }
             }
 
+            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            if ((hasIncomingChanges || hasOutgoingChanges) && IsLoading)
+            {
+                IsLoading = false;
+            }
+
             if (hasIncomingChanges) SortOffersInPlace(IncomingOffers);
             if (hasOutgoingChanges) SortOffersInPlace(OutgoingOffers);
         }
-
         private bool UpdateOfferInCollection(ObservableCollection<Transaction> collection, HashSet<string> idTracker, Transaction transaction, FirebaseEventType eventType)
         {
             var existing = collection.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
