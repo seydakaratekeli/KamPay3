@@ -110,22 +110,21 @@ namespace KamPay.ViewModels
                 .Child(Constants.ServiceOffersCollection)
                 .AsObservable<ServiceOffer>()
                 .Where(e => e.Object != null && e.Object.IsAvailable)
-                .Buffer(TimeSpan.FromMilliseconds(350)) // 🔥 350ms batch
-                .Where(batch => batch.Any())
+                // 🔥 BUFFER KALDIRILDI - Her event anında işlenecek
                 .Subscribe(
-                    events =>
+                    e =>
                     {
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             try
                             {
-                                ProcessServiceBatch(events);
+                                // Tek event işle
+                                ProcessSingleServiceEvent(e);
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"❌ Service batch hatası: {ex.Message}");
+                                Console.WriteLine($"❌ Service event hatası: {ex.Message}");
                             }
-                            // 🔥 FINALLY BLOĞU KALDIRILDI - ProcessServiceBatch içinde kontrol var
                         });
                     },
                     error =>
@@ -139,6 +138,51 @@ namespace KamPay.ViewModels
                     });
         }
 
+        // 🔥 YENİ METOD: Tek event işleme
+        private void ProcessSingleServiceEvent(Firebase.Database.Streaming.FirebaseEvent<ServiceOffer> e)
+        {
+            var service = e.Object;
+            service.ServiceId = e.Key;
+
+            var existingService = Services.FirstOrDefault(s => s.ServiceId == service.ServiceId);
+
+            switch (e.EventType)
+            {
+                case Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate:
+                    if (existingService != null)
+                    {
+                        // Güncelleme
+                        var index = Services.IndexOf(existingService);
+                        Services[index] = service;
+                    }
+                    else
+                    {
+                        // 🔥 Yeni ekleme - duplicate check
+                        if (!_serviceIds.Contains(service.ServiceId))
+                        {
+                            InsertServiceSorted(service);
+                            _serviceIds.Add(service.ServiceId);
+
+                            // 🔥 İLK HİZMET EKLENDİĞİNDE LOADING'İ KAPAT
+                            if (IsLoading)
+                            {
+                                IsLoading = false;
+                                _initialLoadComplete = true;
+                                Console.WriteLine("✅ İlk hizmet yüklendi, loading kapatıldı");
+                            }
+                        }
+                    }
+                    break;
+
+                case Firebase.Database.Streaming.FirebaseEventType.Delete:
+                    if (existingService != null)
+                    {
+                        Services.Remove(existingService);
+                        _serviceIds.Remove(service.ServiceId);
+                    }
+                    break;
+            }
+        }
 
         private void ProcessServiceBatch(IList<FirebaseEvent<ServiceOffer>> events)
         {

@@ -16,6 +16,8 @@
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
             <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter"/>
+            <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
+
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -36,29 +38,47 @@
         <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" BackgroundColor="#F5F5F5">
 
             <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0,0,0,15">
-                <Border Grid.Column="0" 
-                        StrokeShape="RoundRectangle 10" 
-                        StrokeThickness="1"
-                        Stroke="{StaticResource Gray300}"
-                        BackgroundColor="White"
-                        HeightRequest="50"
-                        Padding="5,0">
-                    <SearchBar Placeholder="Ürün ara..." 
-                               Text="{Binding SearchText}"
-                               VerticalTextAlignment="Center"
-                               BackgroundColor="Transparent"
-                               CancelButtonColor="{StaticResource Primary}"/>
+
+                <Border Grid.Column="0"
+        Margin="0,0,10,0"
+        StrokeShape="RoundRectangle 10"
+        StrokeThickness="1"
+        Stroke="{StaticResource Gray300}"
+        BackgroundColor="White"
+        HeightRequest="50"
+        Padding="10,0">
+
+                    <Grid ColumnDefinitions="Auto,*"
+          VerticalOptions="Center">
+
+                        <Image Source="search_icon.png"
+               HeightRequest="18"
+               WidthRequest="18"
+               VerticalOptions="Center"
+               Opacity="0.4"/>
+
+                        <Entry Grid.Column="1"
+               Text="{Binding SearchText}"
+               Placeholder="Ürün ara..."
+               FontSize="14"
+               TextColor="{StaticResource Gray900}"
+               PlaceholderColor="{StaticResource Gray500}"
+               BackgroundColor="Transparent"
+               VerticalOptions="Center"
+               Margin="10,0,0,0"/>
+                    </Grid>
+
                 </Border>
 
                 <Button Grid.Column="1" 
-                        Text="🔽"
-                        FontSize="15"
-                        TextColor="White"
-                        BackgroundColor="{StaticResource Primary}"
-                        CornerRadius="10"
-                        HeightRequest="50"
-                        WidthRequest="50"
-                        Command="{Binding ToggleFilterPanelCommand}"/>
+            Text="🔽"
+            FontSize="15"
+            TextColor="White"
+            BackgroundColor="{StaticResource Primary}"
+            CornerRadius="10"
+            HeightRequest="50"
+            WidthRequest="50"
+            Command="{Binding ToggleFilterPanelCommand}"/>
             </Grid>
 
             <CollectionView ItemsSource="{Binding Categories}"
@@ -121,12 +141,11 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Product">
                             <Frame Padding="8"
-                                   CornerRadius="15"
-                                   Margin="6"
-                                   WidthRequest="180"
+                                    CornerRadius="15"
+                                   Margin="3"
                                    HeightRequest="250"
                                    HasShadow="True"
-                                   HorizontalOptions="Center">
+                                   HorizontalOptions="Fill">
 
                                 <Frame.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" 
@@ -242,7 +261,9 @@
                     <TapGestureRecognizer />
                 </Border.GestureRecognizers>
 
-                <VerticalStackLayout Spacing="15">
+                <VerticalStackLayout Spacing="15"
+                     HorizontalOptions="FillAndExpand">
+
                     <Label Text="Filtrele ve Sırala" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
                     <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
 
@@ -282,17 +303,42 @@
                         </Button>
                     </Grid>
 
+                    <!-- Filter Panel içinde sadece Picker'ı değiştirin: -->
                     <Label Text="Sıralama" FontAttributes="Bold" Margin="0,10,0,0" />
                     <Picker Title="Sıralama Seçin" 
-                            ItemsSource="{Binding SortOptions}"
-                            SelectedItem="{Binding SelectedSortOption}"
-                            ItemDisplayBinding="{Binding .}" 
-                            BackgroundColor="{StaticResource Gray100}"
-                            TitleColor="{StaticResource Gray600}"/>
+        ItemsSource="{Binding SortOptions}"
+        SelectedItem="{Binding SelectedSortOption}"
+        BackgroundColor="{StaticResource Gray100}"
+        TitleColor="{StaticResource Gray600}">
+                        <Picker.ItemDisplayBinding>
+                            <Binding Converter="{StaticResource ProductSortOptionToTextConverter}" />
+                            </Picker.ItemDisplayBinding>
+                    </Picker>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,20,0,10">
-                        <Button Text="Temizle" BackgroundColor="{StaticResource Gray400}" TextColor="White" Command="{Binding ClearFiltersCommand}"/>
-                        <Button Text="Uygula" BackgroundColor="{StaticResource Primary}" TextColor="White" Command="{Binding ApplyFiltersCommand}"/>
+                    <Grid ColumnDefinitions="*,*" 
+      ColumnSpacing="15" 
+      Margin="0,20,0,10"
+      HorizontalOptions="FillAndExpand">
+
+                        <Button Text="Uygula" 
+         Grid.Column="1"
+         BackgroundColor="{StaticResource Primary}" 
+         TextColor="White" 
+         CornerRadius="10"
+         Command="{Binding ApplyFiltersCommand}"/>
+                        
+                        <Button Text="Temizle" 
+            Grid.Column="0"
+            BackgroundColor="White" 
+            TextColor="{StaticResource Gray600}" 
+            BorderColor="{StaticResource Gray300}"
+            BorderWidth="1"
+            CornerRadius="10"
+            Command="{Binding ClearFiltersCommand}"/>
+    
+   
+                    
+                    
                     </Grid>
                 </VerticalStackLayout>
             </Border>
