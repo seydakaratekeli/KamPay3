@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:KamPay.ViewModels"
     xmlns:models="clr-namespace:KamPay.Models"
+    xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
     x:Class="KamPay.Views.ProductDetailPage"
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     Title="Ürün Detayı"
@@ -93,20 +94,52 @@
                         <Label Text="Açıklama" FontSize="17" FontAttributes="Bold" />
                         <Label Text="{Binding Product.Description}" FontSize="14.5" LineBreakMode="WordWrap" TextColor="#333" />
 
-                        <!-- Konum -->
-                        <Frame IsVisible="{Binding Product.Location, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
-                               Padding="12" CornerRadius="10" BorderColor="#E0E0E0" BackgroundColor="#F5F5F5">
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding OpenLocationCommand}" />
-                            </Frame.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
-                                <Label Grid.Column="0" Text="📍" FontSize="18" VerticalOptions="Center" />
-                                <VerticalStackLayout Grid.Column="1">
-                                    <Label Text="Konum" FontSize="11" TextColor="#757575" />
-                                    <Label Text="{Binding Product.Location}" FontSize="13" FontAttributes="Bold" LineBreakMode="WordWrap" />
-                                </VerticalStackLayout>
+                        <!-- Konum Harita Görünümü -->
+                        <Border StrokeShape="RoundRectangle 12" 
+                                StrokeThickness="0"
+                                HeightRequest="200"
+                                IsVisible="{Binding HasLocation}">
+                            <Grid>
+                                <mapsui:MapControl x:Name="ProductMap"
+                                                   VerticalOptions="FillAndExpand"
+                                                   HorizontalOptions="FillAndExpand" />
+                                
+                                <!-- Konum bilgi kartı ve harita aç butonu -->
+                                <Border StrokeShape="RoundRectangle 12"
+                                        BackgroundColor="#F5F5F5"
+                                        Padding="12,8"
+                                        Margin="12"
+                                        VerticalOptions="End"
+                                        HorizontalOptions="FillAndExpand">
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                    </Border.Shadow>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" 
+                                               Text="📌" 
+                                               FontSize="16"
+                                               VerticalOptions="Center"/>
+                                        <Label Grid.Column="1"
+                                               Text="{Binding Product.Location}"
+                                               FontSize="12"
+                                               TextColor="#333"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2"/>
+                                        <Button Grid.Column="2"
+                                                Text="🗺️"
+                                                Command="{Binding OpenLocationCommand}"
+                                                FontSize="18"
+                                                BackgroundColor="#4CAF50"
+                                                TextColor="White"
+                                                WidthRequest="40"
+                                                HeightRequest="40"
+                                                CornerRadius="20"
+                                                Padding="0"/>
+                                    </Grid>
+                                </Border>
                             </Grid>
-                        </Frame>
+                        </Border>
 
                         <!-- Takas Tercihi -->
                         <Frame IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
