@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:conv="clr-namespace:KamPay.Converters"
-             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              x:Class="KamPay.Views.AddProductPage"
              x:DataType="vm:AddProductViewModel"
              Title="Ürün Ekle"
@@ -182,12 +182,9 @@
                         HeightRequest="250"
                         Margin="0,8,0,0">
                     <Grid>
-                        <maps:Map x:Name="ProductMap"
-                                  IsShowingUser="True"
-                                  MapClicked="OnMapClicked"
-                                  VerticalOptions="FillAndExpand"
-                                  HorizontalOptions="FillAndExpand">
-                        </maps:Map>
+                        <mapsui:MapControl x:Name="ProductMap"
+                                           VerticalOptions="FillAndExpand"
+                                           HorizontalOptions="FillAndExpand" />
                         
                         <!-- Harita üzerindeki kontrol butonları -->
                         <VerticalStackLayout HorizontalOptions="End" 

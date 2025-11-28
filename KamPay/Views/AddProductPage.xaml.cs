@@ -1,8 +1,13 @@
 ﻿using KamPay.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models.Messages;
-using Microsoft.Maui.Controls.Maps;
-using Microsoft.Maui.Maps;
+using Mapsui;
+using Mapsui.Projections;
+using Mapsui.Tiling;
+using Mapsui.UI.Maui;
+using Mapsui.Layers;
+using Mapsui.Styles;
+using Mapsui.Nts;
 
 namespace KamPay.Views;
 
@@ -11,8 +16,13 @@ public partial class AddProductPage : ContentPage
     private readonly AddProductViewModel _viewModel;
     
     // Default location (Ankara, Turkey center)
-    private static readonly Location DefaultLocation = new Location(39.9334, 32.8597);
-    private static readonly double DefaultZoomKilometers = 100;
+    private const double DefaultLatitude = 39.9334;
+    private const double DefaultLongitude = 32.8597;
+    private const double DefaultZoomResolution = 10000; // Higher means more zoomed out
+    private const double SelectedZoomResolution = 200; // Zoom level when location is selected
+    
+    // Pin layer for markers
+    private WritableLayer? _pinLayer;
 
     public AddProductPage(AddProductViewModel viewModel)
     {
@@ -28,6 +38,9 @@ public partial class AddProductPage : ContentPage
                 UpdateMapLocation(message.Latitude, message.Longitude);
             });
         });
+        
+        // Setup map click handler
+        ProductMap.Map.Info += OnMapInfo;
     }
 
     // 🔥 Sayfa açıldığında kategorileri yükle ve haritayı başlat
@@ -48,36 +61,55 @@ public partial class AddProductPage : ContentPage
         
         // Mesaj dinleyicisini kaldır
         WeakReferenceMessenger.Default.Unregister<MapLocationUpdateMessage>(this);
+        
+        // Clean up map event
+        if (ProductMap?.Map != null)
+        {
+            ProductMap.Map.Info -= OnMapInfo;
+        }
     }
 
-    // Harita tıklama olayı
-    private async void OnMapClicked(object sender, MapClickedEventArgs e)
+    // Harita tıklama olayı (Mapsui Info event)
+    private async void OnMapInfo(object? sender, MapInfoEventArgs e)
     {
-        if (BindingContext is AddProductViewModel viewModel)
+        if (BindingContext is AddProductViewModel viewModel && e.MapInfo?.WorldPosition != null)
         {
-            var position = e.Location;
+            var worldPosition = e.MapInfo.WorldPosition;
             
-            // Pin'i güncelle
-            ProductMap.Pins.Clear();
-            var pin = new Pin
-            {
-                Label = "Seçili Konum",
-                Type = PinType.Place,
-                Location = position
-            };
-            ProductMap.Pins.Add(pin);
+            // Convert from Spherical Mercator to Lat/Lon
+            var lonLat = SphericalMercator.ToLonLat(worldPosition.X, worldPosition.Y);
+            
+            // Update pin on map
+            UpdatePinOnMap(worldPosition.X, worldPosition.Y);
             
             // ViewModel'i güncelle
-            viewModel.Latitude = position.Latitude;
-            viewModel.Longitude = position.Longitude;
+            viewModel.Latitude = lonLat.lat;
+            viewModel.Longitude = lonLat.lon;
             
             // Adres çözümleme (reverse geocoding)
-            await viewModel.UpdateLocationFromCoordinatesAsync(position.Latitude, position.Longitude);
+            await viewModel.UpdateLocationFromCoordinatesAsync(lonLat.lat, lonLat.lon);
             
             // Haritayı seçilen noktaya ortala
-            var mapSpan = MapSpan.FromCenterAndRadius(position, Distance.FromKilometers(0.5));
-            ProductMap.MoveToRegion(mapSpan);
+            ProductMap.Map?.Navigator.CenterOn(worldPosition);
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution);
         }
+    }
+    
+    // Update or add pin on the map
+    private void UpdatePinOnMap(double x, double y)
+    {
+        if (_pinLayer == null || ProductMap?.Map == null) return;
+        
+        // Clear existing pins
+        _pinLayer.Clear();
+        
+        // Create a point feature for the pin
+        var point = new MPoint(x, y);
+        var feature = new PointFeature(point);
+        
+        // Add the feature to the layer
+        _pinLayer.Add(feature);
+        _pinLayer.DataHasChanged();
     }
 
     // Harita konumunu güncelle (mesaj ile)
@@ -85,21 +117,15 @@ public partial class AddProductPage : ContentPage
     {
         try
         {
-            var position = new Location(latitude, longitude);
+            // Convert to Spherical Mercator
+            var sphericalMercator = SphericalMercator.FromLonLat(longitude, latitude);
             
-            // Pin'i güncelle
-            ProductMap.Pins.Clear();
-            var pin = new Pin
-            {
-                Label = "Mevcut Konum",
-                Type = PinType.Place,
-                Location = position
-            };
-            ProductMap.Pins.Add(pin);
+            // Update pin on map
+            UpdatePinOnMap(sphericalMercator.x, sphericalMercator.y);
             
             // Haritayı konuma götür
-            var mapSpan = MapSpan.FromCenterAndRadius(position, Distance.FromKilometers(0.5));
-            ProductMap.MoveToRegion(mapSpan);
+            ProductMap.Map?.Navigator.CenterOn(new MPoint(sphericalMercator.x, sphericalMercator.y));
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution);
         }
         catch (Exception ex)
         {
@@ -112,19 +138,40 @@ public partial class AddProductPage : ContentPage
     {
         try
         {
+            // OpenStreetMap tile layer ekle
+            var map = ProductMap.Map;
+            if (map == null) return;
+            
+            map.Layers.Add(OpenStreetMap.CreateTileLayer());
+            
+            // Create and add a writable layer for pins
+            _pinLayer = new WritableLayer("Pins")
+            {
+                Style = new SymbolStyle
+                {
+                    SymbolScale = 1.0,
+                    Fill = new Brush(Mapsui.Styles.Color.FromString("#F44336")),
+                    Outline = new Pen(Mapsui.Styles.Color.White, 2),
+                    SymbolType = SymbolType.Ellipse
+                }
+            };
+            map.Layers.Add(_pinLayer);
+            
+            // Kullanıcının konumunu al
             var location = await Geolocation.GetLastKnownLocationAsync();
             
             if (location != null)
             {
-                var position = new Location(location.Latitude, location.Longitude);
-                var mapSpan = MapSpan.FromCenterAndRadius(position, Distance.FromKilometers(1));
-                ProductMap.MoveToRegion(mapSpan);
+                var sphericalMercator = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
+                map.Navigator.CenterOn(new MPoint(sphericalMercator.x, sphericalMercator.y));
+                map.Navigator.ZoomTo(SelectedZoomResolution * 5); // Initial zoom slightly more zoomed out
             }
             else
             {
-                // Varsayılan konum
-                var mapSpan = MapSpan.FromCenterAndRadius(DefaultLocation, Distance.FromKilometers(DefaultZoomKilometers));
-                ProductMap.MoveToRegion(mapSpan);
+                // Varsayılan konum (Ankara)
+                var sphericalMercator = SphericalMercator.FromLonLat(DefaultLongitude, DefaultLatitude);
+                map.Navigator.CenterOn(new MPoint(sphericalMercator.x, sphericalMercator.y));
+                map.Navigator.ZoomTo(DefaultZoomResolution);
             }
         }
         catch (Exception ex)
@@ -132,8 +179,12 @@ public partial class AddProductPage : ContentPage
             Console.WriteLine($"Harita başlatma hatası: {ex.Message}");
             
             // Hata durumunda varsayılan konum
-            var mapSpan = MapSpan.FromCenterAndRadius(DefaultLocation, Distance.FromKilometers(DefaultZoomKilometers));
-            ProductMap.MoveToRegion(mapSpan);
+            if (ProductMap?.Map != null)
+            {
+                var sphericalMercator = SphericalMercator.FromLonLat(DefaultLongitude, DefaultLatitude);
+                ProductMap.Map.Navigator.CenterOn(new MPoint(sphericalMercator.x, sphericalMercator.y));
+                ProductMap.Map.Navigator.ZoomTo(DefaultZoomResolution);
+            }
         }
     }
 }
