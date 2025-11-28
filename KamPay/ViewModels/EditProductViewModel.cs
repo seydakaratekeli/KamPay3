@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
+using KamPay.Models.Messages;
 using KamPay.Services;
 using System.Collections.ObjectModel;
 
@@ -10,21 +12,56 @@ namespace KamPay.ViewModels
     public partial class EditProductViewModel : ObservableObject
     {
         private readonly IProductService _productService;
+        private readonly IReverseGeocodeService _reverseGeocodeService;
         private string _productId;
 
         [ObservableProperty]
         private string title;
-        [ObservableProperty] private string description;
-        [ObservableProperty] private Category selectedCategory;
-        [ObservableProperty] private ProductCondition selectedCondition;
-        [ObservableProperty] private ProductType selectedType;
-        [ObservableProperty] private decimal price;
-        [ObservableProperty] private string location;
-        [ObservableProperty] private string exchangePreference;
-        [ObservableProperty] private bool isLoading;
-        [ObservableProperty] private string errorMessage;
-        [ObservableProperty] private bool showPriceField;
-        [ObservableProperty] private bool showExchangeField;
+
+        [ObservableProperty]
+        private string description;
+
+        [ObservableProperty]
+        private Category selectedCategory;
+
+        [ObservableProperty]
+        private ProductCondition selectedCondition;
+
+        [ObservableProperty]
+        private ProductType selectedType;
+
+        [ObservableProperty]
+        private decimal price;
+
+        [ObservableProperty]
+        private string location;
+
+        [ObservableProperty]
+        private string exchangePreference;
+
+        [ObservableProperty]
+        private bool isLoading;
+
+        [ObservableProperty]
+        private string errorMessage;
+
+        [ObservableProperty]
+        private bool showPriceField;
+
+        [ObservableProperty]
+        private bool showExchangeField;
+
+        [ObservableProperty]
+        private double? latitude;
+
+        [ObservableProperty]
+        private double? longitude;
+
+        // HasLocation property - checks if a valid location is set
+        public bool HasLocation => !string.IsNullOrEmpty(Location) &&
+                                   Location != "Konum alÄ±nÄ±yor..." &&
+                                   Latitude.HasValue &&
+                                   Longitude.HasValue;
 
         public ObservableCollection<Category> Categories { get; } = new();
         public ObservableCollection<string> ImagePaths { get; } = new();
@@ -44,9 +81,10 @@ namespace KamPay.ViewModels
             }
         }
 
-        public EditProductViewModel(IProductService productService)
+        public EditProductViewModel(IProductService productService, IReverseGeocodeService reverseGeocodeService)
         {
             _productService = productService;
+            _reverseGeocodeService = reverseGeocodeService;
         }
 
         private async void LoadProductForEdit()
@@ -65,122 +103,226 @@ namespace KamPay.ViewModels
                 Price = product.Price;
                 Location = product.Location;
                 ExchangePreference = product.ExchangePreference;
+                Latitude = product.Latitude;
+                Longitude = product.Longitude;
 
-               
-  ShowPriceField = product.Type == ProductType.Satis;
-  ShowExchangeField = product.Type == ProductType.Takas;
+                ShowPriceField = product.Type == ProductType.Satis;
+                ShowExchangeField = product.Type == ProductType.Takas;
 
+                ImagePaths.Clear();
+                foreach (var imageUrl in product.ImageUrls)
+                {
+                    ImagePaths.Add(imageUrl);
+                }
 
-ImagePaths.Clear();
-foreach (var imageUrl in product.ImageUrls)
-{
-    ImagePaths.Add(imageUrl);
-}
-}
-else
-{
-ErrorMessage = "Düzenlenecek ürün yüklenemedi.";
-}
-IsLoading = false;
-}
+                OnPropertyChanged(nameof(HasLocation));
+            }
+            else
+            {
+                ErrorMessage = "DÃ¼zenlenecek Ã¼rÃ¼n yÃ¼klenemedi.";
+            }
+            IsLoading = false;
+        }
 
-partial void OnSelectedTypeChanged(ProductType value)
-{
-ShowPriceField = value == ProductType.Satis;
-ShowExchangeField = value == ProductType.Takas;
-if (value != ProductType.Satis) Price = 0;
-}
+        partial void OnSelectedTypeChanged(ProductType value)
+        {
+            ShowPriceField = value == ProductType.Satis;
+            ShowExchangeField = value == ProductType.Takas;
+            if (value != ProductType.Satis) Price = 0;
+        }
 
-private async Task LoadCategoriesAsync()
-{
-var result = await _productService.GetCategoriesAsync();
-if (result.Success && result.Data != null)
-{
-Categories.Clear();
-foreach (var cat in result.Data) Categories.Add(cat);
-}
-}
+        partial void OnLocationChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLocation));
+        }
 
-[RelayCommand]
-private async Task SaveProductAsync()
-{
-IsLoading = true;
-var request = new ProductRequest
-{
-Title = Title,
-Description = Description,
-CategoryId = SelectedCategory?.CategoryId,
-Condition = SelectedCondition,
-Type = SelectedType,
-Price = Price,
-Location = Location,
-ExchangePreference = ExchangePreference,
-ImagePaths = ImagePaths.ToList()
-};
+        partial void OnLatitudeChanged(double? value)
+        {
+            OnPropertyChanged(nameof(HasLocation));
+        }
 
-var result = await _productService.UpdateProductAsync(ProductId, request);
+        partial void OnLongitudeChanged(double? value)
+        {
+            OnPropertyChanged(nameof(HasLocation));
+        }
 
-if (result.Success)
-{
-await Application.Current.MainPage.DisplayAlert("Baþarýlý", "Ürün güncellendi.", "Tamam");
-await Shell.Current.GoToAsync("..");
-}
-else
-{
-ErrorMessage = result.Message;
-}
-IsLoading = false;
-}
+        private async Task LoadCategoriesAsync()
+        {
+            var result = await _productService.GetCategoriesAsync();
+            if (result.Success && result.Data != null)
+            {
+                Categories.Clear();
+                foreach (var cat in result.Data) Categories.Add(cat);
+            }
+        }
 
-[RelayCommand]
-private async Task CancelAsync()
-{
-await Shell.Current.GoToAsync("..");
-}
+        // Konum alma komutu - Harita ile entegre
+        [RelayCommand]
+        private async Task UseCurrentLocationAsync()
+        {
+            if (IsLoading) return;
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = string.Empty;
+                Location = "Konum alÄ±nÄ±yor...";
+                OnPropertyChanged(nameof(HasLocation));
 
-[RelayCommand]
-private async Task PickImagesAsync()
-{
-try
-{
-var photos = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
-{
-    Title = "Ürün Görseli Seçin"
-});
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                if (status != PermissionStatus.Granted)
+                {
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                }
 
-if (photos != null)
-{
-    // Maksimum görsel sayýsý kontrolü
-    if (ImagePaths.Count >= 5)
-    {
-        await Application.Current.MainPage.DisplayAlert(
-            "Uyarý",
-            "En fazla 5 görsel ekleyebilirsiniz",
-            "Tamam"
-        );
-        return;
+                if (status != PermissionStatus.Granted)
+                {
+                    Location = string.Empty;
+                    OnPropertyChanged(nameof(HasLocation));
+                    await Shell.Current.DisplayAlert("Ä°zin Gerekli", "Konum almak iÃ§in izin vermeniz gerekmektedir.", "Tamam");
+                    return;
+                }
+
+                var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(5));
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                var deviceLocation = await Geolocation.GetLocationAsync(request, cts.Token);
+
+                if (deviceLocation != null)
+                {
+                    Latitude = deviceLocation.Latitude;
+                    Longitude = deviceLocation.Longitude;
+
+                    // Harita gÃ¼ncelleme mesajÄ± gÃ¶nder
+                    WeakReferenceMessenger.Default.Send(new MapLocationUpdateMessage(
+                        deviceLocation.Latitude,
+                        deviceLocation.Longitude));
+
+                    await UpdateLocationFromCoordinatesAsync(deviceLocation.Latitude, deviceLocation.Longitude);
+                }
+                else
+                {
+                    Location = "Konum alÄ±namadÄ±. GPS'inizi kontrol edin.";
+                    OnPropertyChanged(nameof(HasLocation));
+                }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                Location = "Konum servisi desteklenmiyor.";
+                OnPropertyChanged(nameof(HasLocation));
+            }
+            catch (PermissionException)
+            {
+                Location = "Konum izni verilmedi.";
+                OnPropertyChanged(nameof(HasLocation));
+            }
+            catch (Exception ex)
+            {
+                Location = "Konum alÄ±nÄ±rken hata oluÅŸtu.";
+                OnPropertyChanged(nameof(HasLocation));
+                Console.WriteLine($"âŒ Konum HatasÄ±: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // Koordinatlardan adres Ã§Ã¶zÃ¼mleme
+        public async Task UpdateLocationFromCoordinatesAsync(double latitude, double longitude)
+        {
+            try
+            {
+                var location = new Location(latitude, longitude);
+                var address = await _reverseGeocodeService.GetAddressForLocation(location);
+                Location = address;
+                OnPropertyChanged(nameof(HasLocation));
+            }
+            catch (Exception ex)
+            {
+                Location = $"{latitude:F4}, {longitude:F4}";
+                OnPropertyChanged(nameof(HasLocation));
+                Console.WriteLine($"Adres Ã§Ã¶zÃ¼mleme hatasÄ±: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task SaveProductAsync()
+        {
+            IsLoading = true;
+            var request = new ProductRequest
+            {
+                Title = Title,
+                Description = Description,
+                CategoryId = SelectedCategory?.CategoryId,
+                Condition = SelectedCondition,
+                Type = SelectedType,
+                Price = Price,
+                Location = Location,
+                Latitude = Latitude,
+                Longitude = Longitude,
+                ExchangePreference = ExchangePreference,
+                ImagePaths = ImagePaths.ToList()
+            };
+
+            var result = await _productService.UpdateProductAsync(ProductId, request);
+
+            if (result.Success)
+            {
+                await Application.Current.MainPage.DisplayAlert("BaÅŸarÄ±lÄ±", "ÃœrÃ¼n gÃ¼ncellendi.", "Tamam");
+                await Shell.Current.GoToAsync("..");
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+            }
+            IsLoading = false;
+        }
+
+        [RelayCommand]
+        private async Task CancelAsync()
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+
+        [RelayCommand]
+        private async Task PickImagesAsync()
+        {
+            try
+            {
+                var photos = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+                {
+                    Title = "ÃœrÃ¼n GÃ¶rseli SeÃ§in"
+                });
+
+                if (photos != null)
+                {
+                    // Maksimum gÃ¶rsel sayÄ±sÄ± kontrolÃ¼
+                    if (ImagePaths.Count >= 5)
+                    {
+                        await Application.Current.MainPage.DisplayAlert(
+                            "UyarÄ±",
+                            "En fazla 5 gÃ¶rsel ekleyebilirsiniz",
+                            "Tamam"
+                        );
+                        return;
+                    }
+
+                    // GÃ¶rseli listeye ekle
+                    ImagePaths.Add(photos.FullPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"GÃ¶rsel seÃ§ilirken hata oluÅŸtu: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        private void RemoveImage(string imagePath)
+        {
+            if (ImagePaths.Contains(imagePath))
+            {
+                ImagePaths.Remove(imagePath);
+            }
+        }
     }
-
-    // Görseli listeye ekle
-    ImagePaths.Add(photos.FullPath);
-}
-}
-catch (Exception ex)
-{
-ErrorMessage = $"Görsel seçilirken hata oluþtu: {ex.Message}";
-}
-}
-
-[RelayCommand]
-private void RemoveImage(string imagePath)
-{
-if (ImagePaths.Contains(imagePath))
-{
-ImagePaths.Remove(imagePath);
-}
-}
-
-
-
-}
 }

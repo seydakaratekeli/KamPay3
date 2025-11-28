@@ -51,6 +51,12 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isFavorite;
 
+        // HasLocation property - checks if product has valid location
+        public bool HasLocation => Product != null && 
+                                   !string.IsNullOrEmpty(Product.Location) &&
+                                   Product.Latitude.HasValue && 
+                                   Product.Longitude.HasValue;
+
         public ObservableCollection<string> ProductImages { get; } = new();
 
         public ProductDetailViewModel(
@@ -74,6 +80,11 @@ namespace KamPay.ViewModels
                 _lastLoadedProductId = value;
                 _ = LoadProductAsync();
             }
+        }
+
+        partial void OnProductChanged(Product value)
+        {
+            OnPropertyChanged(nameof(HasLocation));
         }
 
         [RelayCommand]
