@@ -20,9 +20,15 @@ public partial class AddProductPage : ContentPage
     private const double DefaultLongitude = 32.8597;
     private const double DefaultZoomResolution = 10000; // Higher means more zoomed out
     private const double SelectedZoomResolution = 200; // Zoom level when location is selected
+    private const double InitialZoomMultiplier = 5; // Multiplier for initial zoom level
+    
+    // Pin styling constants
+    private const string PinFillColor = "#F44336";
+    private const string PinOutlineColor = "#FFFFFF";
     
     // Pin layer for markers
     private WritableLayer? _pinLayer;
+    private bool _isMapInfoSubscribed;
 
     public AddProductPage(AddProductViewModel viewModel)
     {
@@ -38,15 +44,19 @@ public partial class AddProductPage : ContentPage
                 UpdateMapLocation(message.Latitude, message.Longitude);
             });
         });
-        
-        // Setup map click handler
-        ProductMap.Map.Info += OnMapInfo;
     }
 
     // 🔥 Sayfa açıldığında kategorileri yükle ve haritayı başlat
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to map info event if not already subscribed
+        if (!_isMapInfoSubscribed && ProductMap?.Map != null)
+        {
+            ProductMap.Map.Info += OnMapInfo;
+            _isMapInfoSubscribed = true;
+        }
 
         // Kategoriler cache'de yoksa yükle
         await _viewModel.LoadCategoriesCommand.ExecuteAsync(null);
@@ -63,9 +73,10 @@ public partial class AddProductPage : ContentPage
         WeakReferenceMessenger.Default.Unregister<MapLocationUpdateMessage>(this);
         
         // Clean up map event
-        if (ProductMap?.Map != null)
+        if (_isMapInfoSubscribed && ProductMap?.Map != null)
         {
             ProductMap.Map.Info -= OnMapInfo;
+            _isMapInfoSubscribed = false;
         }
     }
 
@@ -150,8 +161,8 @@ public partial class AddProductPage : ContentPage
                 Style = new SymbolStyle
                 {
                     SymbolScale = 1.0,
-                    Fill = new Brush(Mapsui.Styles.Color.FromString("#F44336")),
-                    Outline = new Pen(Mapsui.Styles.Color.White, 2),
+                    Fill = new Brush(Mapsui.Styles.Color.FromString(PinFillColor)),
+                    Outline = new Pen(Mapsui.Styles.Color.FromString(PinOutlineColor), 2),
                     SymbolType = SymbolType.Ellipse
                 }
             };
@@ -164,7 +175,7 @@ public partial class AddProductPage : ContentPage
             {
                 var sphericalMercator = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
                 map.Navigator.CenterOn(new MPoint(sphericalMercator.x, sphericalMercator.y));
-                map.Navigator.ZoomTo(SelectedZoomResolution * 5); // Initial zoom slightly more zoomed out
+                map.Navigator.ZoomTo(SelectedZoomResolution * InitialZoomMultiplier);
             }
             else
             {
