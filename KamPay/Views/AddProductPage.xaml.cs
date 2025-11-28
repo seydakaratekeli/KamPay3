@@ -51,16 +51,32 @@ public partial class AddProductPage : ContentPage
     {
         base.OnAppearing();
 
-        if (!_isMapInfoSubscribed && ProductMap?.Map != null)
+        try
         {
-            ProductMap.Map.Info += OnMapInfo;
-            _isMapInfoSubscribed = true;
+            if (!_isMapInfoSubscribed && ProductMap?.Map != null)
+            {
+                ProductMap.Map.Info += OnMapInfo;
+                _isMapInfoSubscribed = true;
+            }
+
+            Console.WriteLine("📍 Kategoriler yükleniyor...");
+            await _viewModel.LoadCategoriesCommand.ExecuteAsync(null);
+            Console.WriteLine("✅ Kategoriler yüklendi");
+
+            Console.WriteLine("📍 Harita başlatılıyor...");
+            await InitializeMapAsync();
+            Console.WriteLine("✅ Harita başlatıldı");
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ OnAppearing Hatası: {ex.Message}");
+            Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
 
-        await _viewModel.LoadCategoriesCommand.ExecuteAsync(null);
-        await InitializeMapAsync();
+            await DisplayAlert("Hata",
+                $"Sayfa yüklenirken bir sorun oluştu: {ex.Message}",
+                "Tamam");
+        }
     }
-
     protected override void OnDisappearing()
     {
         base.OnDisappearing();

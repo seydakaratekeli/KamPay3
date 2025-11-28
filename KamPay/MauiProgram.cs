@@ -7,6 +7,7 @@ using KamPay.Views;
 using Microsoft.Extensions.Logging;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace KamPay
 {
@@ -18,6 +19,7 @@ namespace KamPay
 
             builder
                 .UseMauiApp<App>()
+                .UseSkiaSharp()
                 .UseBarcodeReader()
                 .UseMauiCommunityToolkit()
                             .UseFFImageLoading() // ✅ BURAYA EKLE
