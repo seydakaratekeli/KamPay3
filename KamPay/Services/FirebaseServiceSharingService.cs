@@ -224,7 +224,7 @@ namespace KamPay.Services
                 return ServiceResult<(List<ServiceRequest>, List<ServiceRequest>)>.FailureResult("Talepler getirilirken bir hata oluştu.", ex.Message);
             }
         }
-      
+
 
         // 3.1 Ödeme başlat (simülasyon)
         public async Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string requestId, string method)
@@ -445,7 +445,7 @@ namespace KamPay.Services
                 return ServiceResult<bool>.FailureResult("İşlem sırasında hata oluştu.", ex.Message);
             }
         }
-    }
+    
 
         /// <summary>
         /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
@@ -480,4 +480,5 @@ namespace KamPay.Services
                 return ServiceResult<bool>.FailureResult("Hizmetler güncellenemedi", ex.Message);
             }
         }
+    }
 }
