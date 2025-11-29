@@ -260,28 +260,76 @@ namespace KamPay.ViewModels
 
         public void StartListeningForPosts()
         {
-            if (_postsSubscription != null) return;
-            if (!IsRefreshing) IsLoading = !Posts.Any();
+            try
+            {
+                if (_postsSubscription != null) return;
+                if (!IsRefreshing) IsLoading = !Posts.Any();
 
-            _postsSubscription = _firebaseClient
-                .Child("good_deed_posts")
-                .AsObservable<GoodDeedPost>()
-                .Where(e => e.Object != null)
-                .Buffer(TimeSpan.FromMilliseconds(400))
-                .Where(batch => batch.Any())
-                .Subscribe(async events =>
+                // 🔥 Loading timeout mekanizması - 5 saniye içinde veri gelmezse loading'i kapat
+                _ = Task.Delay(5000).ContinueWith(_ =>
                 {
-                    var currentUser = await _authService.GetCurrentUserAsync();
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        try { ProcessPostBatch(events, currentUser); }
-                        catch (Exception ex) { Debug.WriteLine($"❌ Post batch hatası: {ex.Message}"); }
-                        finally { if (!_initialLoadComplete) { _initialLoadComplete = true; IsLoading = false; } }
+                        if (IsLoading && !_initialLoadComplete)
+                        {
+                            IsLoading = false;
+                            Debug.WriteLine("⚠️ Loading timeout - veri yüklenemedi (5 saniye)");
+                        }
                     });
                 });
 
-            // 🔥 EKSTRA GÜVENLİK: Eğer liste boşsa ve veri gelmezse loading'i kapatmak için
-            // (Gerçek projede timeout eklenebilir ama şimdilik bu yeterli)
+                _postsSubscription = _firebaseClient
+                    .Child("good_deed_posts")
+                    .AsObservable<GoodDeedPost>()
+                    .Where(e => e.Object != null)
+                    .Buffer(TimeSpan.FromMilliseconds(400))
+                    .Where(batch => batch.Any())
+                    .Subscribe(
+                        onNext: async events =>
+                        {
+                            try
+                            {
+                                var currentUser = await _authService.GetCurrentUserAsync();
+                                // 🔥 Null kontrolü: currentUser null olabilir
+                                if (currentUser == null)
+                                {
+                                    Debug.WriteLine("⚠️ CurrentUser null - kullanıcı oturumu yok");
+                                }
+
+                                await MainThread.InvokeOnMainThreadAsync(() =>
+                                {
+                                    try { ProcessPostBatch(events, currentUser); }
+                                    catch (Exception ex) { Debug.WriteLine($"❌ Post batch hatası: {ex.Message}"); }
+                                    finally { if (!_initialLoadComplete) { _initialLoadComplete = true; IsLoading = false; } }
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"❌ Firebase event işleme hatası: {ex.Message}");
+                                MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                            }
+                        },
+                        onError: ex =>
+                        {
+                            // 🔥 Firebase subscription error handler
+                            Debug.WriteLine($"❌ Firebase bağlantı hatası: {ex.Message}");
+                            Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                IsLoading = false;
+                                _initialLoadComplete = false;
+                            });
+                        }
+                    );
+            }
+            catch (Exception ex)
+            {
+                // 🔥 Kapsamlı hata yönetimi - network hataları dahil
+                Debug.WriteLine($"❌ StartListeningForPosts hatası: {ex.Message}");
+                Debug.WriteLine($"❌ Exception type: {ex.GetType().Name}");
+                Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+                IsLoading = false;
+            }
         }
 
         private void ProcessPostBatch(IList<FirebaseEvent<GoodDeedPost>> events, User currentUser)
