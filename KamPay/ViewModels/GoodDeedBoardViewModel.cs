@@ -18,6 +18,7 @@ namespace KamPay.ViewModels
         private readonly IGoodDeedService _goodDeedService;
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _userProfileService;
+        private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient;
 
         private IDisposable _postsSubscription;
@@ -58,12 +59,40 @@ namespace KamPay.ViewModels
         public GoodDeedBoardViewModel(
             IGoodDeedService goodDeedService,
             IAuthenticationService authService,
-            IUserProfileService userProfileService)
+            IUserProfileService userProfileService,
+            IUserStateService userStateService)
         {
             _goodDeedService = goodDeedService;
             _authService = authService;
             _userProfileService = userProfileService;
+            _userStateService = userStateService;
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Kullanıcıya ait postların bilgilerini güncelle
+                foreach (var post in Posts.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    post.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
+                }
+
+                // Cache'deki postları da güncelle
+                foreach (var kvp in _postsCache.Where(p => p.Value.UserId == updatedUser.UserId))
+                {
+                    kvp.Value.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    kvp.Value.UserProfileImageUrl = updatedUser.ProfileImageUrl;
+                }
+            });
         }
 
         [RelayCommand]
@@ -363,6 +392,10 @@ namespace KamPay.ViewModels
             _postsCache.Clear();
             _initialLoadComplete = false;
         }
-        public void Dispose() => StopListening();
+        public void Dispose()
+        {
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
+            StopListening();
+        }
     }
 }

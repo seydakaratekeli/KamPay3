@@ -21,6 +21,7 @@ namespace KamPay.ViewModels
     {
         private readonly ITransactionService _transactionService;
         private readonly IAuthenticationService _authService;
+        private readonly IUserStateService _userStateService;
         private IDisposable _allOffersSubscription;
         private readonly FirebaseClient _firebaseClient;
 
@@ -55,13 +56,38 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string emptyMessage = "Teklifler yükleniyor...";
 
-        public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService)
+        public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService, IUserStateService userStateService)
         {
             _transactionService = transactionService;
             _authService = authService;
+            _userStateService = userStateService;
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
 
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+
             _ = InitializeAsync();
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Gelen tekliflerdeki kullanıcı bilgilerini güncelle (alıcı bilgisi)
+                foreach (var offer in IncomingOffers.Where(o => o.BuyerId == updatedUser.UserId))
+                {
+                    offer.BuyerName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                }
+
+                // Giden tekliflerdeki satıcı bilgilerini güncelle
+                foreach (var offer in OutgoingOffers.Where(o => o.SellerId == updatedUser.UserId))
+                {
+                    offer.SellerName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                }
+            });
         }
 
         public async Task InitializeAsync()
@@ -387,6 +413,7 @@ namespace KamPay.ViewModels
             Console.WriteLine("🧹 OffersViewModel dispose ediliyor...");
             _allOffersSubscription?.Dispose();
             _allOffersSubscription = null;
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _incomingIds.Clear();
             _outgoingIds.Clear();
             _isInitialized = false;

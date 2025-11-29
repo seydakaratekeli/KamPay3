@@ -23,6 +23,7 @@ namespace KamPay.ViewModels
         private readonly IProductService _productService;
         private readonly IAuthenticationService _authService;
         private readonly ICategoryService _categoryService; // DOĞRU SERVİS EKLENDİ
+        private readonly IUserStateService _userStateService;
         private IDisposable _notificationSubscription;
         private IDisposable _productSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
@@ -55,12 +56,16 @@ namespace KamPay.ViewModels
 
         public List<ProductSortOption> SortOptions { get; } = Enum.GetValues(typeof(ProductSortOption)).Cast<ProductSortOption>().ToList();
 
-        public ProductListViewModel(IProductService productService, IAuthenticationService authService, ICategoryService categoryService) // ICategoryService'i buraya ekleyin)
+        public ProductListViewModel(IProductService productService, IAuthenticationService authService, ICategoryService categoryService, IUserStateService userStateService)
         {
             _productService = productService;
             _authService = authService;
-            _categoryService = categoryService; // Gelen servisi atayın
+            _categoryService = categoryService;
+            _userStateService = userStateService;
             SelectedSortOption = ProductSortOption.Newest;
+
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             // ProductListViewModel.cs içindeki mevcut register bloğunu bununla değiştirin:
 
@@ -587,6 +592,29 @@ namespace KamPay.ViewModels
             });
         }
 
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Ana listedeki kullanıcıya ait tüm ürünlerin bilgilerini güncelle
+                foreach (var product in _allProducts.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                }
+
+                // Observable koleksiyondaki ürünleri güncelle
+                foreach (var product in Products.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                }
+            });
+        }
+
         public string GetSortOptionText(ProductSortOption option)
         {
             return option switch { ProductSortOption.Newest => "En Yeni", ProductSortOption.Oldest => "En Eski", ProductSortOption.PriceAsc => "Fiyat (Artan)", ProductSortOption.PriceDesc => "Fiyat (Azalan)", ProductSortOption.MostViewed => "En Çok Görüntülenen", ProductSortOption.MostFavorited => "En Çok Favorilenen", _ => "Sırala" };
@@ -596,6 +624,7 @@ namespace KamPay.ViewModels
         {
             _notificationSubscription?.Dispose();
             _productSubscription?.Dispose();
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
             WeakReferenceMessenger.Default.UnregisterAll(this);
         }
         #endregion

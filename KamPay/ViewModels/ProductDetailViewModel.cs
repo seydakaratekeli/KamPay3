@@ -20,7 +20,7 @@ namespace KamPay.ViewModels
         }
     }
     [QueryProperty(nameof(ProductId), "ProductId")]
-    public partial class ProductDetailViewModel : ObservableObject
+    public partial class ProductDetailViewModel : ObservableObject, IDisposable
     {
         // Gerekli tüm servisleri tanımlıyoruz
         private readonly IProductService _productService;
@@ -28,7 +28,9 @@ namespace KamPay.ViewModels
         private readonly IFavoriteService _favoriteService;
         private readonly IMessagingService _messagingService;
         private readonly ITransactionService _transactionService;
+        private readonly IUserStateService _userStateService;
         private string _lastLoadedProductId;
+        private bool _disposed = false;
 
         [ObservableProperty]
         private string productId;
@@ -64,13 +66,50 @@ namespace KamPay.ViewModels
             IAuthenticationService authService,
             IFavoriteService favoriteService,
             IMessagingService messagingService,
-            ITransactionService transactionService)
+            ITransactionService transactionService,
+            IUserStateService userStateService)
         {
             _productService = productService;
             _authService = authService;
             _favoriteService = favoriteService;
             _messagingService = messagingService;
             _transactionService = transactionService;
+            _userStateService = userStateService;
+            
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            // Eğer gösterilen ürün bu kullanıcıya aitse güncelle
+            if (Product != null && updatedUser != null && Product.UserId == updatedUser.UserId)
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    Product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                    OnPropertyChanged(nameof(Product));
+                });
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _userStateService.UserProfileChanged -= OnUserProfileChanged;
+                }
+                _disposed = true;
+            }
         }
 
         partial void OnProductIdChanged(string value)

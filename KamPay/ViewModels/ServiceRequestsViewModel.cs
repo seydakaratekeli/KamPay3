@@ -18,6 +18,7 @@ namespace KamPay.ViewModels
     {
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
+        private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient;
         private IDisposable _requestsSubscription;
 
@@ -43,12 +44,13 @@ namespace KamPay.ViewModels
         public ObservableCollection<ServiceRequest> OutgoingRequests { get; } = new();
         public ObservableCollection<PaymentOption> PaymentMethods { get; }
 
- 
 
-        public ServiceRequestsViewModel(IServiceSharingService serviceService, IAuthenticationService authService)
+
+        public ServiceRequestsViewModel(IServiceSharingService serviceService, IAuthenticationService authService, IUserStateService userStateService)
         {
             _serviceService = serviceService;
             _authService = authService;
+            _userStateService = userStateService;
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
 
             PaymentMethods = new ObservableCollection<PaymentOption>
@@ -57,7 +59,25 @@ namespace KamPay.ViewModels
                 new PaymentOption { Method = PaymentMethodType.BankTransferSim, DisplayName = "EFT / Havale (Simülasyon)" }
             };
 
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+
             _ = InitializeAsync();
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Gelen taleplerdeki talep eden kişi bilgilerini güncelle
+                foreach (var request in IncomingRequests.Where(r => r.RequesterId == updatedUser.UserId))
+                {
+                    request.RequesterName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                }
+            });
         }
 
         public class PaymentOption
@@ -412,6 +432,7 @@ namespace KamPay.ViewModels
             Console.WriteLine("🧹 ServiceRequestsViewModel dispose ediliyor...");
             _requestsSubscription?.Dispose();
             _requestsSubscription = null;
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _incomingRequestIds.Clear();
             _outgoingRequestIds.Clear();
         }
