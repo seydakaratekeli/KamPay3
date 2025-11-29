@@ -1,6 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Firebase.Database;
+using Firebase.Database.Query;
+using Firebase.Database.Streaming;
+using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Services;
 using KamPay.Views;
@@ -11,9 +15,6 @@ using System.Diagnostics; // Hata ayıklama için eklendi
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Firebase.Database;
-using Firebase.Database.Query;
-using KamPay.Helpers;
 
 namespace KamPay.ViewModels
 {
@@ -35,6 +36,12 @@ namespace KamPay.ViewModels
 
         // Tüm ürünlerin tutulduğu ana liste (filtreleme için)
         private List<Product> _allProducts = new();
+
+        private RealtimeSnapshotService<Product> _loader;
+        private IDisposable _listener;
+
+        [ObservableProperty]
+        private bool isSkeletonVisible = true;
 
         // Arayüze bağlanan ve sadece filtrelenmiş ürünleri gösteren liste
         public ObservableCollection<Product> Products { get; } = new();
@@ -63,6 +70,8 @@ namespace KamPay.ViewModels
             _categoryService = categoryService;
             _userStateService = userStateService;
             SelectedSortOption = ProductSortOption.Newest;
+
+            _loader = new RealtimeSnapshotService<Product>(Constants.FirebaseRealtimeDbUrl);
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -100,18 +109,82 @@ namespace KamPay.ViewModels
             });
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) => { HasUnreadNotifications = m.Value; });
 
-            InitializeViewModel();
+            _ = InitializeViewModel();
         }
 
+        public async Task UltraFastLoadAsync()
+        {
+            try
+            {
+                // 1- SNAPSHOT (Hızlı yükleme)
+                var snapshot = await _loader.LoadSnapshotAsync(Constants.ProductsCollection);
 
-        public async void InitializeViewModel()
+                if (snapshot.Any())
+                {
+                    _allProducts = snapshot
+                        .Select(s =>
+                        {
+                            s.Value.ProductId = s.Key;
+                            return s.Value;
+                        })
+                        .OrderByDescending(p => p.CreatedAt)
+                        .ToList();
+
+                    ExecuteFiltering();
+
+                    IsSkeletonVisible = false;
+                    IsLoading = false;
+                }
+
+                // 2- REALTIME (Canlı veri akışı)
+                _listener = _loader.Listen(Constants.ProductsCollection, evt =>
+                {
+                    MainThread.BeginInvokeOnMainThread(() => ApplyRealtimeEvent(evt));
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Product UltraFastLoad hata: {ex.Message}");
+                IsSkeletonVisible = false;
+                IsLoading = false;
+            }
+        }
+        private void ApplyRealtimeEvent(FirebaseEvent<Product> evt)
+        {
+            var product = evt.Object;
+            product.ProductId = evt.Key;
+
+            var existing = _allProducts.FirstOrDefault(p => p.ProductId == product.ProductId);
+
+            if (evt.EventType == FirebaseEventType.InsertOrUpdate)
+            {
+                if (existing != null)
+                {
+                    int index = _allProducts.IndexOf(existing);
+                    _allProducts[index] = product;
+                }
+                else
+                {
+                    _allProducts.Insert(0, product);
+                }
+            }
+            else if (evt.EventType == FirebaseEventType.Delete)
+            {
+                if (existing != null)
+                    _allProducts.Remove(existing);
+            }
+
+            ExecuteFiltering();
+        }
+
+        public async Task InitializeViewModel()
         {
             await LoadCategoriesAsync();
             StartListeningForNotifications();
 
             if (string.IsNullOrEmpty(UserId))
             {
-                StartListeningForProducts();
+                await UltraFastLoadAsync();
             }
         }
 
@@ -138,8 +211,9 @@ namespace KamPay.ViewModels
             else
             {
                 EmptyMessage = "Arama kriterlerinize uygun ürün bulunamadı";
-                StartListeningForProducts();
+                await UltraFastLoadAsync();
             }
+
         }
 
         private void StartListeningForProducts()

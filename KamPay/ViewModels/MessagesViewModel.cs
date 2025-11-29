@@ -29,6 +29,7 @@ namespace KamPay.ViewModels
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private User _currentUser;
         private bool _isInitialized = false;
+        private readonly Dictionary<string, User> _profileCache = new();
 
         // Cache: Conversation ID tracker
         private readonly HashSet<string> _conversationIds = new();

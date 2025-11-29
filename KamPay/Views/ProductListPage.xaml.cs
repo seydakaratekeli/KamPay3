@@ -12,9 +12,11 @@ public partial class ProductListPage : ContentPage
         BindingContext = vm;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await(BindingContext as ProductListViewModel).UltraFastLoadAsync();
+
         if (BindingContext is ProductListViewModel vm)
         {
             // Bu kontrol, sayfa ilk oluþturulduðunda metodun iki kez
