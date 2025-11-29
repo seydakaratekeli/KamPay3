@@ -21,6 +21,7 @@ namespace KamPay.ViewModels
     {
         private readonly IMessagingService _messagingService;
         private readonly IAuthenticationService _authService;
+        private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
         // 🔥 CACHE: Her konuşma için ayrı state
@@ -64,10 +65,14 @@ namespace KamPay.ViewModels
 
         private User _currentUser;
 
-        public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService)
+        public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService, IUserStateService userStateService)
         {
             _messagingService = messagingService;
             _authService = authService;
+            _userStateService = userStateService;
+
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             // 🔥 Static timer başlat (sadece bir kez)
             if (_cacheCleanupTimer == null)
@@ -76,6 +81,40 @@ namespace KamPay.ViewModels
                 _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
                 _cacheCleanupTimer.Start();
             }
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Diğer kullanıcının bilgilerini güncelle
+                if (Conversation != null)
+                {
+                    var otherUserId = Conversation.GetOtherUserId(_currentUser?.UserId);
+                    if (otherUserId == updatedUser.UserId)
+                    {
+                        OtherUserName = updatedUser.FullName;
+                        OtherUserPhoto = updatedUser.ProfileImageUrl;
+                    }
+                }
+
+                // Mesajlardaki kullanıcı bilgilerini güncelle
+                foreach (var message in Messages.Where(m => m.SenderId == updatedUser.UserId || m.ReceiverId == updatedUser.UserId))
+                {
+                    if (message.SenderId == updatedUser.UserId)
+                    {
+                        message.SenderName = updatedUser.FullName;
+                    }
+                    if (message.ReceiverId == updatedUser.UserId)
+                    {
+                        message.ReceiverName = updatedUser.FullName;
+                        message.ReceiverPhotoUrl = updatedUser.ProfileImageUrl;
+                    }
+                }
+            });
         }
 
         partial void OnConversationIdChanged(string value)
@@ -542,6 +581,9 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             Console.WriteLine("🧹 ChatViewModel dispose ediliyor...");
+
+            // Event subscription'ı temizle
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
 
             if (!string.IsNullOrEmpty(_activeConversationId))
             {

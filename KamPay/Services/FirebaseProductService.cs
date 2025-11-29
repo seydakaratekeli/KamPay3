@@ -812,7 +812,39 @@ public class FirebaseProductService : IProductService
         }
     }
 
+    /// <summary>
+    /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
+    /// </summary>
+    public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string newName, string newPhotoUrl)
+    {
+        try
+        {
+            var allProducts = await _firebaseClient
+                .Child(Constants.ProductsCollection)
+                .OrderBy("UserId")
+                .EqualTo(userId)
+                .OnceAsync<Product>();
 
+            foreach (var productEntry in allProducts)
+            {
+                var product = productEntry.Object;
+                product.ProductId = productEntry.Key;
+                product.UserName = newName;
+                product.UserPhotoUrl = newPhotoUrl;
+
+                await _firebaseClient
+                    .Child(Constants.ProductsCollection)
+                    .Child(productEntry.Key)
+                    .PutAsync(product);
+            }
+
+            return ServiceResult<bool>.SuccessResult(true, $"{allProducts.Count()} ürün güncellendi");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<bool>.FailureResult("Ürünler güncellenemedi", ex.Message);
+        }
+    }
 
 
 }

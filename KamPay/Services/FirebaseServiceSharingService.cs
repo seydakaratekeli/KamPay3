@@ -447,9 +447,37 @@ namespace KamPay.Services
         }
     }
 
+        /// <summary>
+        /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
+        /// </summary>
+        public async Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl)
+        {
+            try
+            {
+                var allServices = await _firebaseClient
+                    .Child(Constants.ServiceOffersCollection)
+                    .OrderBy("ProviderId")
+                    .EqualTo(userId)
+                    .OnceAsync<ServiceOffer>();
 
+                foreach (var serviceEntry in allServices)
+                {
+                    var service = serviceEntry.Object;
+                    service.ServiceId = serviceEntry.Key;
+                    service.ProviderName = newName;
+                    service.ProviderPhotoUrl = newPhotoUrl;
 
+                    await _firebaseClient
+                        .Child(Constants.ServiceOffersCollection)
+                        .Child(serviceEntry.Key)
+                        .PutAsync(service);
+                }
 
-
-
+                return ServiceResult<bool>.SuccessResult(true, $"{allServices.Count()} hizmet güncellendi");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Hizmetler güncellenemedi", ex.Message);
+            }
+        }
 }

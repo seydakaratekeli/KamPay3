@@ -15,6 +15,15 @@ namespace KamPay.Services
         IDisposable SubscribeToConversations(string userId, Action<List<Conversation>> onConversationsChanged);
         IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged);
 
+        /// <summary>
+        /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
+        /// </summary>
+        Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string newName, string newPhotoUrl);
+
+        /// <summary>
+        /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
+        /// </summary>
+        Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string newName, string newPhotoUrl);
 
     }
 }

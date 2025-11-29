@@ -11,4 +11,9 @@ public interface IGoodDeedService
     Task<ServiceResult<Comment>> AddCommentAsync(string postId, Comment comment);
     Task<ServiceResult<List<Comment>>> GetCommentsAsync(string postId);
 
+    /// <summary>
+    /// Kullanıcının tüm panolarındaki isim ve profil fotoğrafı bilgilerini günceller
+    /// </summary>
+    Task<ServiceResult<bool>> UpdateUserInfoInPostsAsync(string userId, string newName, string newPhotoUrl);
+
 }

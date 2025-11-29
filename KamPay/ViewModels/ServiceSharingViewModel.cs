@@ -23,6 +23,7 @@ namespace KamPay.ViewModels
         private IDisposable _servicesSubscription;
 
         private readonly IUserProfileService _userProfileService;
+        private readonly IUserStateService _userStateService;
 
         // 🔥 CACHE: Service tracking
         private readonly HashSet<string> _serviceIds = new();
@@ -63,15 +64,36 @@ namespace KamPay.ViewModels
         public ServiceSharingViewModel(
             IServiceSharingService serviceService,
             IAuthenticationService authService,
-            IUserProfileService userProfileService) // <-- Parametre eklendi
+            IUserProfileService userProfileService,
+            IUserStateService userStateService)
         {
             _serviceService = serviceService ?? throw new ArgumentNullException(nameof(serviceService));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService)); // <-- Atama yapıldı
+            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
+            _userStateService = userStateService ?? throw new ArgumentNullException(nameof(userStateService));
 
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
 
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+
             _ = InitializeAsync();
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Kullanıcının hizmetlerinin bilgilerini güncelle
+                foreach (var service in Services.Where(s => s.ProviderId == updatedUser.UserId))
+                {
+                    service.ProviderName = updatedUser.FullName;
+                    service.ProviderPhotoUrl = updatedUser.ProfileImageUrl;
+                }
+            });
         }
 
         // InitializeAsync metodunu güncelleyin (satır 77-86):
@@ -448,6 +470,7 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             Console.WriteLine("🧹 ServiceSharingViewModel dispose ediliyor...");
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _servicesSubscription?.Dispose();
             _servicesSubscription = null;
             _serviceIds.Clear();
