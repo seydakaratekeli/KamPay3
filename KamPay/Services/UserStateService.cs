@@ -16,11 +16,8 @@ namespace KamPay.Services
             private set
             {
                 _currentUser = value;
-                // Only fire event when user is not null to prevent null reference exceptions
-                if (_currentUser != null)
-                {
-                    UserProfileChanged?.Invoke(this, _currentUser);
-                }
+                // Fire event for all changes including null (for logout scenarios)
+                UserProfileChanged?.Invoke(this, _currentUser);
             }
         }
 
@@ -103,7 +100,9 @@ namespace KamPay.Services
                 if (!string.IsNullOrWhiteSpace(profileImageUrl))
                     CurrentUser.ProfileImageUrl = profileImageUrl;
 
-                // Explicitly trigger event after property updates to notify all listeners
+                // Explicitly trigger event after property updates to notify all listeners.
+                // Note: This is NOT redundant - modifying properties on CurrentUser (e.g., CurrentUser.FirstName = x)
+                // does not trigger the CurrentUser setter, only full reassignment (CurrentUser = newUser) does.
                 UserProfileChanged?.Invoke(this, CurrentUser);
 
                 return ServiceResult<bool>.SuccessResult(true, "Profil güncellendi");
