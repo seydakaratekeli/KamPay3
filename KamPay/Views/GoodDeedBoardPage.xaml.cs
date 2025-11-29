@@ -14,7 +14,7 @@ public partial class GoodDeedBoardPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        // Sayfa her göründüğünde, ViewModel'deki dinleyiciyi başlat.
+        // Sayfa her gÃ¶rÃ¼ntÃ¼lendiÄŸinde, ViewModel'deki dinleyiciyi gÃ¼venli ÅŸekilde baÅŸlat.
         if (BindingContext is GoodDeedBoardViewModel vm)
         {
             vm.StartListeningForPosts();
@@ -24,10 +24,11 @@ public partial class GoodDeedBoardPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        // Sayfa her gizlendiğinde, kaynakları boşa harcamamak için dinleyiciyi durdur.
-        if (BindingContext is IDisposable disposable)
+        // Sayfa gizlendiÄŸinde sadece dinleyicileri durdur, Dispose Ã§aÄŸÄ±rma.
+        // Bu sayede sayfa tekrar gÃ¶rÃ¼ndÃ¼ÄŸÃ¼nde listener'lar yeniden baÅŸlatÄ±labilir.
+        if (BindingContext is GoodDeedBoardViewModel vm)
         {
-            disposable.Dispose(); // Bu, ViewModel'deki StopListening'i çağırır
+            vm.StopListening();
         }
     }
 }

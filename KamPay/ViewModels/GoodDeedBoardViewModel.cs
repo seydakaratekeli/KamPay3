@@ -26,6 +26,10 @@ namespace KamPay.ViewModels
         private readonly SemaphoreSlim _commentLock = new(1, 1);
         private readonly Dictionary<string, GoodDeedPost> _postsCache = new();
         private bool _initialLoadComplete = false;
+        private CancellationTokenSource _loadingTimeoutCts;
+        
+        // Loading timeout süresi (milisaniye cinsinden)
+        private const int LoadingTimeoutMs = 5000;
 
         [ObservableProperty]
         private bool isPostFormVisible;
@@ -260,28 +264,87 @@ namespace KamPay.ViewModels
 
         public void StartListeningForPosts()
         {
-            if (_postsSubscription != null) return;
-            if (!IsRefreshing) IsLoading = !Posts.Any();
+            try
+            {
+                if (_postsSubscription != null) return;
+                if (!IsRefreshing) IsLoading = !Posts.Any();
 
-            _postsSubscription = _firebaseClient
-                .Child("good_deed_posts")
-                .AsObservable<GoodDeedPost>()
-                .Where(e => e.Object != null)
-                .Buffer(TimeSpan.FromMilliseconds(400))
-                .Where(batch => batch.Any())
-                .Subscribe(async events =>
+                // 🔥 Önceki timeout task'ı iptal et ve kaynağı serbest bırak
+                _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts?.Dispose();
+                _loadingTimeoutCts = new CancellationTokenSource();
+                var timeoutToken = _loadingTimeoutCts.Token;
+
+                // 🔥 Loading timeout mekanizması - belirlenen süre içinde veri gelmezse loading'i kapat
+                Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
                 {
-                    var currentUser = await _authService.GetCurrentUserAsync();
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    if (t.IsCanceled) return;
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        try { ProcessPostBatch(events, currentUser); }
-                        catch (Exception ex) { Debug.WriteLine($"❌ Post batch hatası: {ex.Message}"); }
-                        finally { if (!_initialLoadComplete) { _initialLoadComplete = true; IsLoading = false; } }
+                        if (IsLoading && !_initialLoadComplete)
+                        {
+                            IsLoading = false;
+                            Debug.WriteLine($"⚠️ Loading timeout - veri yüklenemedi ({LoadingTimeoutMs}ms)");
+                        }
                     });
-                });
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
-            // 🔥 EKSTRA GÜVENLİK: Eğer liste boşsa ve veri gelmezse loading'i kapatmak için
-            // (Gerçek projede timeout eklenebilir ama şimdilik bu yeterli)
+                _postsSubscription = _firebaseClient
+                    .Child("good_deed_posts")
+                    .AsObservable<GoodDeedPost>()
+                    .Where(e => e.Object != null)
+                    .Buffer(TimeSpan.FromMilliseconds(400))
+                    .Where(batch => batch.Any())
+                    .Subscribe(
+                        onNext: async events =>
+                        {
+                            try
+                            {
+                                // 🔥 Veri geldiğinde timeout task'ı iptal et
+                                _loadingTimeoutCts?.Cancel();
+
+                                var currentUser = await _authService.GetCurrentUserAsync();
+                                // 🔥 Null kontrolü: currentUser null olabilir, ancak post listesi yine de gösterilebilir
+                                if (currentUser == null)
+                                {
+                                    Debug.WriteLine("⚠️ CurrentUser null - kullanıcı oturumu yok, postlar salt-okunur modda gösterilecek");
+                                }
+
+                                await MainThread.InvokeOnMainThreadAsync(() =>
+                                {
+                                    try { ProcessPostBatch(events, currentUser); }
+                                    catch (Exception ex) { Debug.WriteLine($"❌ Post batch hatası: {ex.Message}"); }
+                                    finally { if (!_initialLoadComplete) { _initialLoadComplete = true; IsLoading = false; } }
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"❌ Firebase event işleme hatası: {ex.Message}");
+                                MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                            }
+                        },
+                        onError: ex =>
+                        {
+                            // 🔥 Firebase subscription error handler
+                            Debug.WriteLine($"❌ Firebase bağlantı hatası: {ex.Message}");
+                            Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                IsLoading = false;
+                                // Not: _initialLoadComplete değerini değiştirmiyoruz çünkü bu 
+                                // hata sonrası tekrar deneme davranışını bozabilir
+                            });
+                        }
+                    );
+            }
+            catch (Exception ex)
+            {
+                // 🔥 Kapsamlı hata yönetimi - network hataları dahil
+                Debug.WriteLine($"❌ StartListeningForPosts hatası: {ex.Message}");
+                Debug.WriteLine($"❌ Exception type: {ex.GetType().Name}");
+                Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+                IsLoading = false;
+            }
         }
 
         private void ProcessPostBatch(IList<FirebaseEvent<GoodDeedPost>> events, User currentUser)
@@ -385,6 +448,7 @@ namespace KamPay.ViewModels
 
         public void StopListening()
         {
+            _loadingTimeoutCts?.Cancel();
             _postsSubscription?.Dispose();
             _postsSubscription = null;
             foreach (var sub in _commentSubscriptions.Values) sub.Dispose();
@@ -395,6 +459,8 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts?.Dispose();
             StopListening();
         }
     }
