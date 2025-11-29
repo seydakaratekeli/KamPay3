@@ -16,7 +16,11 @@ namespace KamPay.Services
             private set
             {
                 _currentUser = value;
-                UserProfileChanged?.Invoke(this, _currentUser);
+                // Only fire event when user is not null to prevent null reference exceptions
+                if (_currentUser != null)
+                {
+                    UserProfileChanged?.Invoke(this, _currentUser);
+                }
             }
         }
 
@@ -99,7 +103,7 @@ namespace KamPay.Services
                 if (!string.IsNullOrWhiteSpace(profileImageUrl))
                     CurrentUser.ProfileImageUrl = profileImageUrl;
 
-                // Event tetikle - tüm sayfalar güncellenecek
+                // Explicitly trigger event after property updates to notify all listeners
                 UserProfileChanged?.Invoke(this, CurrentUser);
 
                 return ServiceResult<bool>.SuccessResult(true, "Profil güncellendi");

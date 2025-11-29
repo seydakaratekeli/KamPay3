@@ -7,13 +7,14 @@ using KamPay.Views;
 
 namespace KamPay.ViewModels;
 
-public partial class ProfileViewModel : ObservableObject
+public partial class ProfileViewModel : ObservableObject, IDisposable
 {
     private readonly IUserStateService _userStateService;
     private readonly IAuthenticationService _authService;
     private readonly IProductService _productService;
     private readonly IUserProfileService _profileService;
     private readonly IStorageService _storageService;
+    private bool _disposed = false;
 
     // 🔥 YENİ: Cache flag - Sadece bir kez yükle
     private bool _isDataLoaded = false;
@@ -62,6 +63,28 @@ public partial class ProfileViewModel : ObservableObject
         OnPropertyChanged(nameof(CurrentUser));
     }
 
+    /// <summary>
+    /// Cleanup method to unsubscribe from events and prevent memory leaks
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Unsubscribe from event to prevent memory leaks
+                _userStateService.UserProfileChanged -= OnUserProfileChanged;
+            }
+            _disposed = true;
+        }
+    }
+
     // 🔥 YENİ: Public initialize metodu - Sayfa OnAppearing'den çağrılacak
     public async Task InitializeAsync()
     {
@@ -86,6 +109,8 @@ public partial class ProfileViewModel : ObservableObject
             var userResult = await _userStateService.RefreshCurrentUserAsync();
             if (!userResult.Success || userResult.Data == null)
             {
+                // Fallback: If UserStateService fails (e.g., network issues with profile service),
+                // use direct auth service to ensure basic user info is available for this session
                 CurrentUser = await _authService.GetCurrentUserAsync();
             }
             else
