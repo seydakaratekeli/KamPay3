@@ -75,7 +75,7 @@ namespace KamPay.ViewModels
                 // Gelen taleplerdeki talep eden kişi bilgilerini güncelle
                 foreach (var request in IncomingRequests.Where(r => r.RequesterId == updatedUser.UserId))
                 {
-                    request.RequesterName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    request.RequesterName = updatedUser.FullName;
                 }
             });
         }

@@ -87,7 +87,7 @@ namespace KamPay.ViewModels
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    Product.UserName = updatedUser.FullName;
                     Product.UserPhotoUrl = updatedUser.ProfileImageUrl;
                     OnPropertyChanged(nameof(Product));
                 });

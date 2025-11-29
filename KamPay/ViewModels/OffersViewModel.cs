@@ -79,13 +79,13 @@ namespace KamPay.ViewModels
                 // Gelen tekliflerdeki kullanıcı bilgilerini güncelle (alıcı bilgisi)
                 foreach (var offer in IncomingOffers.Where(o => o.BuyerId == updatedUser.UserId))
                 {
-                    offer.BuyerName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    offer.BuyerName = updatedUser.FullName;
                 }
 
                 // Giden tekliflerdeki satıcı bilgilerini güncelle
                 foreach (var offer in OutgoingOffers.Where(o => o.SellerId == updatedUser.UserId))
                 {
-                    offer.SellerName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    offer.SellerName = updatedUser.FullName;
                 }
             });
         }

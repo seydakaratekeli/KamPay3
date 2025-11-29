@@ -82,14 +82,14 @@ namespace KamPay.ViewModels
                 // Kullanıcıya ait postların bilgilerini güncelle
                 foreach (var post in Posts.Where(p => p.UserId == updatedUser.UserId))
                 {
-                    post.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    post.UserName = updatedUser.FullName;
                     post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
                 }
 
                 // Cache'deki postları da güncelle
                 foreach (var kvp in _postsCache.Where(p => p.Value.UserId == updatedUser.UserId))
                 {
-                    kvp.Value.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+                    kvp.Value.UserName = updatedUser.FullName;
                     kvp.Value.UserProfileImageUrl = updatedUser.ProfileImageUrl;
                 }
             });

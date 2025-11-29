@@ -599,20 +599,19 @@ namespace KamPay.ViewModels
             // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Ana listedeki kullanıcıya ait tüm ürünlerin bilgilerini güncelle
-                foreach (var product in _allProducts.Where(p => p.UserId == updatedUser.UserId))
-                {
-                    product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
-                    product.UserPhotoUrl = updatedUser.ProfileImageUrl;
-                }
-
-                // Observable koleksiyondaki ürünleri güncelle
-                foreach (var product in Products.Where(p => p.UserId == updatedUser.UserId))
-                {
-                    product.UserName = $"{updatedUser.FirstName} {updatedUser.LastName}";
-                    product.UserPhotoUrl = updatedUser.ProfileImageUrl;
-                }
+                // Tüm listelerdeki kullanıcıya ait ürünlerin bilgilerini güncelle
+                UpdateUserInfoInProducts(_allProducts, updatedUser);
+                UpdateUserInfoInProducts(Products, updatedUser);
             });
+        }
+
+        private void UpdateUserInfoInProducts(IEnumerable<Product> products, User updatedUser)
+        {
+            foreach (var product in products.Where(p => p.UserId == updatedUser.UserId))
+            {
+                product.UserName = updatedUser.FullName;
+                product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+            }
         }
 
         public string GetSortOptionText(ProductSortOption option)
