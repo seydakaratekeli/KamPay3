@@ -20,6 +20,9 @@
     <Color x:Key="Gray400">#BDBDBD</Color>
     <Color x:Key="Gray500">#9E9E9E</Color>
     <Color x:Key="Gray600">#757575</Color>
+    <Color x:Key="Gray700">#75767B</Color>
+
+    <Color x:Key="Gray800">#55565B</Color>
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 

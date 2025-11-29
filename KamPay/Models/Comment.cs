@@ -1,7 +1,11 @@
 ﻿// KamPay/Models/Comment.cs
+using FFImageLoading;
+
+using MauiPreserve = Microsoft.Maui.Controls.Internals.PreserveAttribute;
 
 namespace KamPay.Models
 {
+    [Preserve(AllMembers = true)]
     public class Comment
     {
         public string CommentId { get; set; } = Guid.NewGuid().ToString();

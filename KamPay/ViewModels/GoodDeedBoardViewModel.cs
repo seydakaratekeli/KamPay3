@@ -10,9 +10,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using Firebase.Database.Streaming;
-
+using MauiPreserve = Microsoft.Maui.Controls.Internals.PreserveAttribute; // Alias tanımla
 namespace KamPay.ViewModels
 {
+    [MauiPreserve(AllMembers = true)] // 🔥 BU SATIRI EKLEYİN
+
     public partial class GoodDeedBoardViewModel : ObservableObject, IDisposable
     {
         private readonly IGoodDeedService _goodDeedService;

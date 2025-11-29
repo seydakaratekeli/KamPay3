@@ -8,10 +8,12 @@ using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Models;
 using Newtonsoft.Json;
+// Aşağıdaki namespace'i ekleyin
+using Microsoft.Maui.Controls.Internals;
 
 namespace KamPay.Models;
 
-
+[Preserve(AllMembers = true)]
 public partial class GoodDeedPost : ObservableObject
 {
     public string PostId { get; set; }
@@ -40,31 +42,34 @@ public partial class GoodDeedPost : ObservableObject
     [JsonIgnore] // <-- Bu attribute, özelliğin Firebase'e kaydedilmesini engeller.
     public bool IsOwner { get; set; }
 
-    //🔥 YENİ: Beğeni Durumu(UI İçin)
         [ObservableProperty]
     [property: JsonIgnore]
     private bool isLiked;
 
-    // 🔥 YENİ: Yorumlar genişletildi mi?
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VisibleComments))] // Bu değişince listeyi de güncelle
     [NotifyPropertyChangedFor(nameof(ShowMoreButtonText))]
     [property: JsonIgnore]
     private bool isCommentsExpanded;
 
-    // 🔥 YENİ: Ekranda Görünen Yorumlar
     // Eğer genişletildiyse hepsini, değilse son 2 tanesini göster
-    public IEnumerable<Comment> VisibleComments =>
-        IsCommentsExpanded
-            ? Comments.Values.OrderBy(c => c.CreatedAt)
-            : Comments.Values.OrderBy(c => c.CreatedAt).Take(2);
+    // 🔥 GÜNCELLENMİŞ VE GÜVENLİ KOD
+    public IEnumerable<Comment> VisibleComments
+    {
+        get
+        {
+            // Eğer Comments null ise boş bir liste döndür, çökmesini engelle.
+            if (Comments == null) return Enumerable.Empty<Comment>();
 
-    // 🔥 YENİ: Buton Metni
+            return IsCommentsExpanded
+                ? Comments.Values.OrderBy(c => c.CreatedAt)
+                : Comments.Values.OrderBy(c => c.CreatedAt).Take(2);
+        }
+    }
     public string ShowMoreButtonText => IsCommentsExpanded
         ? "Yorumları Gizle"
         : $"Tüm Yorumları Gör ({CommentCount})";
 
-    // 🔥 YENİ: "Daha Fazla Göster" butonu görünsün mü?
     public bool ShowExpandButton => CommentCount > 2;
 
     public GoodDeedPost()
@@ -79,6 +84,9 @@ public partial class GoodDeedPost : ObservableObject
     // Yorum listesi güncellendiğinde UI'ı tetiklemek için yardımcı metod
     public void RefreshCommentsUI()
     {
+        // Comments null ise işlem yapma
+        if (Comments == null) Comments = new Dictionary<string, Comment>();
+
         OnPropertyChanged(nameof(VisibleComments));
         OnPropertyChanged(nameof(ShowExpandButton));
         OnPropertyChanged(nameof(ShowMoreButtonText));
