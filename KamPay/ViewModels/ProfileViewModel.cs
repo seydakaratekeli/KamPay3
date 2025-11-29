@@ -7,12 +7,14 @@ using KamPay.Views;
 
 namespace KamPay.ViewModels;
 
-public partial class ProfileViewModel : ObservableObject
+public partial class ProfileViewModel : ObservableObject, IDisposable
 {
+    private readonly IUserStateService _userStateService;
     private readonly IAuthenticationService _authService;
     private readonly IProductService _productService;
     private readonly IUserProfileService _profileService;
     private readonly IStorageService _storageService;
+    private bool _disposed = false;
 
     // 🔥 YENİ: Cache flag - Sadece bir kez yükle
     private bool _isDataLoaded = false;
@@ -37,18 +39,50 @@ public partial class ProfileViewModel : ObservableObject
     public ObservableCollection<Product> MyProducts { get; } = new();
     public ObservableCollection<UserBadge> MyBadges { get; } = new();
 
-    public ProfileViewModel(IAuthenticationService authService,
+    public ProfileViewModel(
+        IUserStateService userStateService,
+        IAuthenticationService authService,
         IProductService productService,
         IUserProfileService profileService,
         IStorageService storageService)
     {
+        _userStateService = userStateService;
         _authService = authService;
         _productService = productService;
         _profileService = profileService;
         _storageService = storageService;
 
-        // ❌ KALDIR: Constructor'da yükleme yapma
-        // _ = LoadProfileAsync();
+        // Global state değişikliklerini dinle
+        _userStateService.UserProfileChanged += OnUserProfileChanged;
+    }
+
+    private void OnUserProfileChanged(object sender, User updatedUser)
+    {
+        CurrentUser = updatedUser;
+        HasProfileImage = !string.IsNullOrWhiteSpace(updatedUser?.ProfileImageUrl);
+        OnPropertyChanged(nameof(CurrentUser));
+    }
+
+    /// <summary>
+    /// Cleanup method to unsubscribe from events and prevent memory leaks
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Unsubscribe from event to prevent memory leaks
+                _userStateService.UserProfileChanged -= OnUserProfileChanged;
+            }
+            _disposed = true;
+        }
     }
 
     // 🔥 YENİ: Public initialize metodu - Sayfa OnAppearing'den çağrılacak
@@ -71,34 +105,36 @@ public partial class ProfileViewModel : ObservableObject
         {
             IsLoading = true;
 
-            CurrentUser = await _authService.GetCurrentUserAsync();
+            // UserStateService üzerinden kullanıcı bilgilerini yükle
+            var userResult = await _userStateService.RefreshCurrentUserAsync();
+            if (!userResult.Success || userResult.Data == null)
+            {
+                // Fallback: If UserStateService fails (e.g., network issues with profile service),
+                // use direct auth service to ensure basic user info is available for this session
+                CurrentUser = await _authService.GetCurrentUserAsync();
+            }
+            else
+            {
+                CurrentUser = userResult.Data;
+            }
+            
             if (CurrentUser == null) return;
 
-            // 🔥 PARALEL YÜKLEME: 4 işlemi aynı anda başlat
-            var profileTask = _profileService.GetUserProfileAsync(CurrentUser.UserId);
+            // 🔥 PARALEL YÜKLEME: 3 işlemi aynı anda başlat (profil artık UserStateService'den geliyor)
             var statsTask = _profileService.GetUserStatsAsync(CurrentUser.UserId);
             var productsTask = _productService.GetUserProductsAsync(CurrentUser.UserId);
             var badgesTask = _profileService.GetUserBadgesAsync(CurrentUser.UserId);
 
             // Tüm işlemleri paralel bekle
-            await Task.WhenAll(profileTask, statsTask, productsTask, badgesTask);
+            await Task.WhenAll(statsTask, productsTask, badgesTask);
 
             // Sonuçları al
-            var profileResult = await profileTask;
             var statsResult = await statsTask;
             var productsResult = await productsTask;
             var badgesResult = await badgesTask;
 
             // Profil bilgilerini güncelle
-            if (profileResult.Success)
-            {
-                var userProfile = profileResult.Data;
-                CurrentUser.FirstName = userProfile.FirstName;
-                CurrentUser.LastName = userProfile.LastName;
-                CurrentUser.ProfileImageUrl = userProfile.ProfileImageUrl;
-                CurrentUser.Email = userProfile.Email;
-                HasProfileImage = !string.IsNullOrWhiteSpace(userProfile.ProfileImageUrl);
-            }
+            HasProfileImage = !string.IsNullOrWhiteSpace(CurrentUser.ProfileImageUrl);
 
             // İstatistikler
             UserStats = statsResult.Success ? statsResult.Data : new UserStats();
@@ -221,8 +257,8 @@ public partial class ProfileViewModel : ObservableObject
 
         try
         {
-            var result = await _profileService.UpdateUserProfileAsync(
-                CurrentUser.UserId,
+            // UserStateService üzerinden profil güncelle - tüm sayfalara bildirim yapılır
+            var result = await _userStateService.UpdateUserProfileAsync(
                 firstName: newFirstName,
                 lastName: newLastName,
                 username: newUsername,
@@ -231,16 +267,7 @@ public partial class ProfileViewModel : ObservableObject
 
             if (result.Success)
             {
-                CurrentUser.FirstName = newFirstName;
-                CurrentUser.LastName = newLastName;
-
-                if (!string.IsNullOrWhiteSpace(uploadedImageUrl))
-                {
-                    CurrentUser.ProfileImageUrl = uploadedImageUrl;
-                    HasProfileImage = true;
-                }
-
-                OnPropertyChanged(nameof(CurrentUser));
+                HasProfileImage = !string.IsNullOrWhiteSpace(CurrentUser?.ProfileImageUrl);
 
                 await Application.Current.MainPage.DisplayAlert("Başarılı", "Profil güncellendi!", "Tamam");
 
@@ -317,6 +344,8 @@ public partial class ProfileViewModel : ObservableObject
 
         try
         {
+            // Global user state'i temizle
+            _userStateService.ClearUser();
             await _authService.LogoutAsync();
             await Shell.Current.GoToAsync("//LoginPage");
         }

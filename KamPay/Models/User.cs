@@ -16,14 +16,15 @@ namespace KamPay.Models
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; }
 
-        // Güven puaný (ilerde kullanýlacak)
+        // Gï¿½ven puanï¿½ (ilerde kullanï¿½lacak)
         public int TrustScore { get; set; }
 
         // Profil bilgileri
         public string PhoneNumber { get; set; }
         public string ProfileImageUrl { get; set; }
+        public string Username { get; set; }
 
-        // Baðýþ puanlarý (ilerde oyunlaþtýrma için)
+        // Baï¿½ï¿½ï¿½ puanlarï¿½ (ilerde oyunlaï¿½tï¿½rma iï¿½in)
         public int DonationPoints { get; set; }
 
         public User()
@@ -32,14 +33,14 @@ namespace KamPay.Models
             CreatedAt = DateTime.UtcNow;
             IsEmailVerified = false;
             IsActive = true;
-            TrustScore = 100; // Baþlangýç puaný
+            TrustScore = 100; // Baï¿½langï¿½ï¿½ puanï¿½
             DonationPoints = 0;
         }
 
         public string FullName => $"{FirstName} {LastName}";
     }
 
-    // Kayýt için DTO
+    // Kayï¿½t iï¿½in DTO
     public class RegisterRequest
     {
         public string FirstName { get; set; }
@@ -49,7 +50,7 @@ namespace KamPay.Models
         public string PasswordConfirm { get; set; }
     }
 
-    // Giriþ için DTO
+    // Giriï¿½ iï¿½in DTO
     public class LoginRequest
     {
         public string Email { get; set; }
@@ -57,7 +58,7 @@ namespace KamPay.Models
         public bool RememberMe { get; set; }
     }
 
-    // Doðrulama için DTO
+    // Doï¿½rulama iï¿½in DTO
     public class VerificationRequest
     {
         public string Email { get; set; }

@@ -71,6 +71,13 @@ namespace KamPay
                 new FirebaseQRCodeService(sp.GetRequiredService<IUserProfileService>())
             );
 
+            // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
+            builder.Services.AddSingleton<IUserStateService>(sp =>
+                new UserStateService(
+                    sp.GetRequiredService<IAuthenticationService>(),
+                    sp.GetRequiredService<IUserProfileService>())
+            );
+
             // ✅ SERVICES BÖLÜMÜNE EKLE (mevcut satırlardan sonra)
             builder.Services.AddSingleton<IFirebaseObserverService, FirebaseObserverService>();
             builder.Services.AddSingleton<IProductCacheService, ProductCacheService>();
