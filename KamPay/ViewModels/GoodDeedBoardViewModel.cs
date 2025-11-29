@@ -26,6 +26,10 @@ namespace KamPay.ViewModels
         private readonly SemaphoreSlim _commentLock = new(1, 1);
         private readonly Dictionary<string, GoodDeedPost> _postsCache = new();
         private bool _initialLoadComplete = false;
+        private CancellationTokenSource _loadingTimeoutCts;
+        
+        // Loading timeout süresi (milisaniye cinsinden)
+        private const int LoadingTimeoutMs = 5000;
 
         [ObservableProperty]
         private bool isPostFormVisible;
@@ -265,18 +269,23 @@ namespace KamPay.ViewModels
                 if (_postsSubscription != null) return;
                 if (!IsRefreshing) IsLoading = !Posts.Any();
 
-                // 🔥 Loading timeout mekanizması - 5 saniye içinde veri gelmezse loading'i kapat
-                _ = Task.Delay(5000).ContinueWith(_ =>
+                // 🔥 Önceki timeout task'ı iptal et
+                _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts = new CancellationTokenSource();
+                var timeoutToken = _loadingTimeoutCts.Token;
+
+                // 🔥 Loading timeout mekanizması - belirlenen süre içinde veri gelmezse loading'i kapat
+                _ = Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(_ =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         if (IsLoading && !_initialLoadComplete)
                         {
                             IsLoading = false;
-                            Debug.WriteLine("⚠️ Loading timeout - veri yüklenemedi (5 saniye)");
+                            Debug.WriteLine($"⚠️ Loading timeout - veri yüklenemedi ({LoadingTimeoutMs}ms)");
                         }
                     });
-                });
+                }, TaskContinuationOptions.NotOnCanceled);
 
                 _postsSubscription = _firebaseClient
                     .Child("good_deed_posts")
@@ -289,11 +298,14 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
+                                // 🔥 Veri geldiğinde timeout task'ı iptal et
+                                _loadingTimeoutCts?.Cancel();
+
                                 var currentUser = await _authService.GetCurrentUserAsync();
-                                // 🔥 Null kontrolü: currentUser null olabilir
+                                // 🔥 Null kontrolü: currentUser null olabilir, ancak post listesi yine de gösterilebilir
                                 if (currentUser == null)
                                 {
-                                    Debug.WriteLine("⚠️ CurrentUser null - kullanıcı oturumu yok");
+                                    Debug.WriteLine("⚠️ CurrentUser null - kullanıcı oturumu yok, postlar salt-okunur modda gösterilecek");
                                 }
 
                                 await MainThread.InvokeOnMainThreadAsync(() =>
@@ -317,7 +329,8 @@ namespace KamPay.ViewModels
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
                                 IsLoading = false;
-                                _initialLoadComplete = false;
+                                // Not: _initialLoadComplete değerini değiştirmiyoruz çünkü bu 
+                                // hata sonrası tekrar deneme davranışını bozabilir
                             });
                         }
                     );
@@ -433,6 +446,7 @@ namespace KamPay.ViewModels
 
         public void StopListening()
         {
+            _loadingTimeoutCts?.Cancel();
             _postsSubscription?.Dispose();
             _postsSubscription = null;
             foreach (var sub in _commentSubscriptions.Values) sub.Dispose();
@@ -443,6 +457,8 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts?.Dispose();
             StopListening();
         }
     }
