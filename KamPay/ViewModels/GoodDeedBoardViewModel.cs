@@ -349,51 +349,83 @@ namespace KamPay.ViewModels
 
         private void ProcessPostBatch(IList<FirebaseEvent<GoodDeedPost>> events, User currentUser)
         {
+            if (events == null || !events.Any())
+            {
+                Debug.WriteLine("⚠️ Boş event batch alındı");
+                return;
+            }
+
             bool hasChanges = false;
             foreach (var e in events)
             {
-                var post = e.Object;
-                post.PostId = e.Key;
-                if (currentUser != null) post.IsOwner = post.UserId == currentUser.UserId;
-
-                var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
-
-                if (e.EventType == FirebaseEventType.InsertOrUpdate)
+                try
                 {
-                    if (existingPost != null)
+                    if (e?.Object == null)
                     {
-                        var index = Posts.IndexOf(existingPost);
-                        post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
-                        if (existingPost.Comments != null && post.Comments == null)
+                        Debug.WriteLine("⚠️ Null post objesi atlandı");
+                        continue;
+                    }
+
+                    var post = e.Object;
+                    post.PostId = e.Key;
+                    if (currentUser != null) post.IsOwner = post.UserId == currentUser.UserId;
+
+                    var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
+
+                    if (e.EventType == FirebaseEventType.InsertOrUpdate)
+                    {
+                        if (existingPost != null)
                         {
-                            post.Comments = existingPost.Comments;
-                            post.CommentCount = existingPost.CommentCount;
+                            var index = Posts.IndexOf(existingPost);
+                            post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
+                            if (existingPost.Comments != null && post.Comments == null)
+                            {
+                                post.Comments = existingPost.Comments;
+                                post.CommentCount = existingPost.CommentCount;
+                            }
+                            post.RefreshCommentsUI();
+                            Posts[index] = post;
+                            _postsCache[post.PostId] = post;
                         }
-                        post.RefreshCommentsUI();
-                        Posts[index] = post;
-                        _postsCache[post.PostId] = post;
+                        else
+                        {
+                            InsertPostSorted(post);
+                            _postsCache[post.PostId] = post;
+                            StartListeningForComments(post);
+                        }
+                        hasChanges = true;
                     }
-                    else
+                    else if (e.EventType == FirebaseEventType.Delete && existingPost != null)
                     {
-                        InsertPostSorted(post);
-                        _postsCache[post.PostId] = post;
-                        StartListeningForComments(post);
+                        Posts.Remove(existingPost);
+                        _postsCache.Remove(post.PostId);
+                        if (_commentSubscriptions.ContainsKey(post.PostId))
+                        {
+                            _commentSubscriptions[post.PostId].Dispose();
+                            _commentSubscriptions.Remove(post.PostId);
+                        }
+                        hasChanges = true;
                     }
-                    hasChanges = true;
                 }
-                else if (e.EventType == FirebaseEventType.Delete && existingPost != null)
+                catch (Exception ex)
                 {
-                    Posts.Remove(existingPost);
-                    _postsCache.Remove(post.PostId);
-                    if (_commentSubscriptions.ContainsKey(post.PostId))
-                    {
-                        _commentSubscriptions[post.PostId].Dispose();
-                        _commentSubscriptions.Remove(post.PostId);
-                    }
-                    hasChanges = true;
+                    Debug.WriteLine($"❌ Post işleme hatası: {ex}");
+                    // Hata olsa bile devam et
+                    continue;
                 }
             }
-            if (hasChanges) SortPostsInPlace();
+            
+            if (hasChanges)
+            {
+                try
+                {
+                    SortPostsInPlace();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"❌ Sort hatası: {ex.Message}");
+                }
+            }
         }
 
         private void InsertPostSorted(GoodDeedPost post)
@@ -448,20 +480,60 @@ namespace KamPay.ViewModels
 
         public void StopListening()
         {
-            _loadingTimeoutCts?.Cancel();
-            _postsSubscription?.Dispose();
-            _postsSubscription = null;
-            foreach (var sub in _commentSubscriptions.Values) sub.Dispose();
-            _commentSubscriptions.Clear();
-            _postsCache.Clear();
-            _initialLoadComplete = false;
+            try
+            {
+                Debug.WriteLine("🛑 Listener durduruluyor...");
+                
+                _loadingTimeoutCts?.Cancel();
+                _postsSubscription?.Dispose();
+                _postsSubscription = null;
+                
+                foreach (var sub in _commentSubscriptions.Values) 
+                {
+                    sub?.Dispose();
+                }
+                _commentSubscriptions.Clear();
+                
+                // Cache ve _initialLoadComplete durumu korunur
+                // Böylece sayfa tekrar açıldığında veriler hızlıca gösterilebilir
+                
+                Debug.WriteLine("✅ Listener başarıyla durduruldu");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ StopListening hatası: {ex.Message}");
+            }
         }
         public void Dispose()
         {
-            _userStateService.UserProfileChanged -= OnUserProfileChanged;
-            _loadingTimeoutCts?.Cancel();
-            _loadingTimeoutCts?.Dispose();
-            StopListening();
+            try
+            {
+                Debug.WriteLine("🧹 GoodDeedBoardViewModel dispose ediliyor...");
+                
+                _userStateService.UserProfileChanged -= OnUserProfileChanged;
+                _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts?.Dispose();
+                
+                // Listener'ları durdur
+                _postsSubscription?.Dispose();
+                _postsSubscription = null;
+                
+                foreach (var sub in _commentSubscriptions.Values)
+                {
+                    sub?.Dispose();
+                }
+                _commentSubscriptions.Clear();
+                
+                // Dispose'da cache'i temizle (tam temizlik)
+                _postsCache.Clear();
+                _initialLoadComplete = false;
+                
+                Debug.WriteLine("✅ Dispose tamamlandı");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ Dispose hatası: {ex.Message}");
+            }
         }
     }
 }

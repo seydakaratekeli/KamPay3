@@ -1,5 +1,6 @@
 // KamPay/Views/GoodDeedBoardPage.xaml.cs
 using KamPay.ViewModels;
+using System.Diagnostics;
 
 namespace KamPay.Views;
 
@@ -17,7 +18,18 @@ public partial class GoodDeedBoardPage : ContentPage
         // Sayfa her görüntülendiğinde, ViewModel'deki dinleyiciyi güvenli şekilde başlat.
         if (BindingContext is GoodDeedBoardViewModel vm)
         {
-            vm.StartListeningForPosts();
+            try
+            {
+                vm.StartListeningForPosts();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ GoodDeedBoardPage OnAppearing hatası: {ex.Message}");
+                _ = MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await DisplayAlert("Hata", "Sayfa yüklenirken bir hata oluştu.", "Tamam");
+                });
+            }
         }
     }
 
