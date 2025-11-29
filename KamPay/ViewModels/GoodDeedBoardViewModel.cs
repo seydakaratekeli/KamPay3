@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Firebase.Database;
 using Firebase.Database.Query;
+using Firebase.Database.Streaming;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Services;
@@ -9,12 +10,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using Firebase.Database.Streaming;
+using System.Threading;
+using System.Threading.Tasks;
 using MauiPreserve = Microsoft.Maui.Controls.Internals.PreserveAttribute; // Alias tanımla
+
 namespace KamPay.ViewModels
 {
-    [MauiPreserve(AllMembers = true)] // 🔥 BU SATIRI EKLEYİN
-
+    [MauiPreserve(AllMembers = true)]
     public partial class GoodDeedBoardViewModel : ObservableObject, IDisposable
     {
         private readonly IGoodDeedService _goodDeedService;
@@ -27,11 +29,12 @@ namespace KamPay.ViewModels
         private readonly Dictionary<string, IDisposable> _commentSubscriptions = new();
         private readonly SemaphoreSlim _commentLock = new(1, 1);
         private readonly Dictionary<string, GoodDeedPost> _postsCache = new();
+
         private bool _initialLoadComplete = false;
         private CancellationTokenSource _loadingTimeoutCts;
-        
-        // Loading timeout süresi (milisaniye cinsinden)
-        private const int LoadingTimeoutMs = 5000;
+
+        // Loading timeout süresi (ms)
+        private const int LoadingTimeoutMs = 6000;
 
         [ObservableProperty]
         private bool isPostFormVisible;
@@ -43,12 +46,18 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isLoading;
 
-        // 🔥 YENİ: Paylaşım yapılıyor mu? (Butonu kontrol eder)
+        // Skeleton placeholder gösterilsin mi?
+        [ObservableProperty]
+        private bool isSkeletonVisible;
+
+        // Paylaşım yapılıyor mu? (Butonu kontrol eder)
         [ObservableProperty]
         private bool isPosting;
 
         [ObservableProperty]
         private bool isRefreshing;
+
+      
 
         [ObservableProperty]
         private string title;
@@ -72,6 +81,7 @@ namespace KamPay.ViewModels
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
+
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
 
             // Kullanıcı profil değişikliklerini dinle
@@ -82,7 +92,6 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 // Kullanıcıya ait postların bilgilerini güncelle
@@ -123,10 +132,16 @@ namespace KamPay.ViewModels
             {
                 StopListening();
                 Posts.Clear();
+                _postsCache.Clear();
+                _initialLoadComplete = false;
+
                 StartListeningForPosts();
-                await Task.Delay(500);
+                await Task.Delay(400);
             }
-            finally { IsRefreshing = false; }
+            finally
+            {
+                IsRefreshing = false;
+            }
         }
 
         [RelayCommand]
@@ -140,12 +155,9 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // 🔥 DÜZELTME 1: Listeyi değil, Posting durumunu aktif et
                 IsPosting = true;
 
                 var currentUser = await _authService.GetCurrentUserAsync();
-
-                // 🔥 DÜZELTME 2: Null kontrolü (Veritabanı silinince oturum düşebilir)
                 if (currentUser == null)
                 {
                     await Application.Current.MainPage.DisplayAlert("Hata", "Oturum açılmamış.", "Tamam");
@@ -182,7 +194,7 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                IsPosting = false; // İşlem bitince butonu tekrar aç
+                IsPosting = false;
             }
         }
 
@@ -190,6 +202,7 @@ namespace KamPay.ViewModels
         private async Task LikePostAsync(GoodDeedPost post)
         {
             if (post == null) return;
+
             bool previousState = post.IsLiked;
             post.IsLiked = !post.IsLiked;
             post.LikeCount = post.IsLiked ? post.LikeCount + 1 : Math.Max(0, post.LikeCount - 1);
@@ -197,10 +210,13 @@ namespace KamPay.ViewModels
             try
             {
                 var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
                 await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
             }
             catch
             {
+                // Hata durumunda geri al
                 post.IsLiked = previousState;
                 post.LikeCount = post.IsLiked ? post.LikeCount + 1 : Math.Max(0, post.LikeCount - 1);
             }
@@ -209,12 +225,16 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task DeletePostAsync(GoodDeedPost post)
         {
+            if (post == null) return;
+
             try
             {
                 var confirm = await Application.Current.MainPage.DisplayAlert("Sil", "Emin misiniz?", "Evet", "Hayır");
                 if (!confirm) return;
 
                 var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
                 var result = await _goodDeedService.DeletePostAsync(post.PostId, currentUser.UserId);
 
                 if (result.Success && _commentSubscriptions.ContainsKey(post.PostId))
@@ -223,7 +243,10 @@ namespace KamPay.ViewModels
                     _commentSubscriptions.Remove(post.PostId);
                 }
             }
-            catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
         }
 
         [RelayCommand]
@@ -248,6 +271,7 @@ namespace KamPay.ViewModels
             };
 
             NewCommentText = string.Empty;
+
             post.Comments ??= new Dictionary<string, Comment>();
             post.Comments[comment.CommentId] = comment;
             post.CommentCount++;
@@ -264,33 +288,54 @@ namespace KamPay.ViewModels
             }
         }
 
+        // 🚀 GERÇEK POST GELDİ Mİ? Yalnızca gerçek veri için true döner
+        private bool ContainsRealPost(IList<FirebaseEvent<GoodDeedPost>> events)
+        {
+            return events.Any(e =>
+                e.Object != null &&
+                !string.IsNullOrWhiteSpace(e.Key) &&
+                !string.IsNullOrWhiteSpace(e.Object?.Title)
+            );
+        }
+
         public void StartListeningForPosts()
         {
             try
             {
                 if (_postsSubscription != null) return;
-                if (!IsRefreshing) IsLoading = !Posts.Any();
 
-                // 🔥 Önceki timeout task'ı iptal et ve kaynağı serbest bırak
+                if (!IsRefreshing && !Posts.Any())
+                {
+                    IsLoading = true;
+                    IsSkeletonVisible = true; // XAML'de skeleton için kullan
+                }
+               
+                // Eski timeout CTS'i iptal et
                 _loadingTimeoutCts?.Cancel();
                 _loadingTimeoutCts?.Dispose();
                 _loadingTimeoutCts = new CancellationTokenSource();
                 var timeoutToken = _loadingTimeoutCts.Token;
 
+                // 🔥 Snapshot ile hızlı ilk yükleme (listeyi hemen doldur)
+                _ = LoadInitialSnapshotAsync(timeoutToken);
+
                 // 🔥 Loading timeout mekanizması - belirlenen süre içinde veri gelmezse loading'i kapat
                 Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
                 {
                     if (t.IsCanceled) return;
+
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        if (IsLoading && !_initialLoadComplete)
+                        if (!_initialLoadComplete)
                         {
+                            Debug.WriteLine("⏳ Loading timeout - veri gelmedi.");
                             IsLoading = false;
-                            Debug.WriteLine($"⚠️ Loading timeout - veri yüklenemedi ({LoadingTimeoutMs}ms)");
+                            IsSkeletonVisible = false;
                         }
                     });
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
+                // 🔥 Realtime listener
                 _postsSubscription = _firebaseClient
                     .Child("good_deed_posts")
                     .AsObservable<GoodDeedPost>()
@@ -302,50 +347,120 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
-                                // 🔥 Veri geldiğinde timeout task'ı iptal et
+                                // Veri geldi → timeout'u iptal et
                                 _loadingTimeoutCts?.Cancel();
 
                                 var currentUser = await _authService.GetCurrentUserAsync();
-                                // 🔥 Null kontrolü: currentUser null olabilir, ancak post listesi yine de gösterilebilir
                                 if (currentUser == null)
                                 {
-                                    Debug.WriteLine("⚠️ CurrentUser null - kullanıcı oturumu yok, postlar salt-okunur modda gösterilecek");
+                                    Debug.WriteLine("⚠️ CurrentUser null - postlar salt-okunur modda.");
                                 }
 
                                 await MainThread.InvokeOnMainThreadAsync(() =>
                                 {
-                                    try { ProcessPostBatch(events, currentUser); }
-                                    catch (Exception ex) { Debug.WriteLine($"❌ Post batch hatası: {ex.Message}"); }
-                                    finally { if (!_initialLoadComplete) { _initialLoadComplete = true; IsLoading = false; } }
+                                    try
+                                    {
+                                        ProcessPostBatch(events, currentUser);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug.WriteLine($"❌ Post batch hatası: {ex.Message}");
+                                    }
+
+                                    // SADECE GERÇEK VERİ GELİNCE loading kapat
+                                    if (!_initialLoadComplete && ContainsRealPost(events))
+                                    {
+                                        _initialLoadComplete = true;
+                                        IsLoading = false;
+                                        IsSkeletonVisible = false;
+                                        Debug.WriteLine("✅ İlk gerçek realtime post geldi — loading kapatıldı.");
+                                    }
                                 });
                             }
                             catch (Exception ex)
                             {
                                 Debug.WriteLine($"❌ Firebase event işleme hatası: {ex.Message}");
-                                MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                                MainThread.BeginInvokeOnMainThread(() =>
+                                {
+                                    IsLoading = false;
+                                    IsSkeletonVisible = false;
+                                });
                             }
                         },
                         onError: ex =>
                         {
-                            // 🔥 Firebase subscription error handler
                             Debug.WriteLine($"❌ Firebase bağlantı hatası: {ex.Message}");
                             Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
                                 IsLoading = false;
-                                // Not: _initialLoadComplete değerini değiştirmiyoruz çünkü bu 
-                                // hata sonrası tekrar deneme davranışını bozabilir
+                                IsSkeletonVisible = false;
                             });
                         }
                     );
             }
             catch (Exception ex)
             {
-                // 🔥 Kapsamlı hata yönetimi - network hataları dahil
                 Debug.WriteLine($"❌ StartListeningForPosts hatası: {ex.Message}");
                 Debug.WriteLine($"❌ Exception type: {ex.GetType().Name}");
                 Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                 IsLoading = false;
+                IsSkeletonVisible = false;
+            }
+        }
+
+        // 🔥 Snapshot ile hızlı ilk yükleme
+        private async Task LoadInitialSnapshotAsync(CancellationToken token)
+        {
+            try
+            {
+                // Zaten doldurulmuşsa snapshot’a gerek olmayabilir
+                if (token.IsCancellationRequested) return;
+
+                var snapshot = await _firebaseClient
+                    .Child("good_deed_posts")
+                    .OnceAsync<GoodDeedPost>();
+
+                if (token.IsCancellationRequested) return;
+
+                var posts = snapshot
+                    .Where(s => s.Object != null && !string.IsNullOrWhiteSpace(s.Object.Title))
+                    .Select(s =>
+                    {
+                        var p = s.Object;
+                        p.PostId = s.Key;
+                        return p;
+                    })
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToList();
+
+                if (!posts.Any()) return;
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    foreach (var post in posts)
+                    {
+                        var existing = Posts.FirstOrDefault(p => p.PostId == post.PostId);
+                        if (existing == null)
+                        {
+                            InsertPostSorted(post);
+                            _postsCache[post.PostId] = post;
+                            StartListeningForComments(post);
+                        }
+                    }
+
+                    if (!_initialLoadComplete)
+                    {
+                        _initialLoadComplete = true;
+                        IsLoading = false;
+                        IsSkeletonVisible = false;
+                        Debug.WriteLine("✅ Snapshot yüklendi — loading kapatıldı.");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
             }
         }
 
@@ -357,20 +472,29 @@ namespace KamPay.ViewModels
                 return;
             }
 
+            // BOŞ VE GEÇERSİZ VERİLERİ FİLTRELE
+            var validEvents = events.Where(e =>
+                e.Object != null &&
+                !string.IsNullOrWhiteSpace(e.Key) &&
+                !string.IsNullOrWhiteSpace(e.Object?.Title)
+            ).ToList();
+
+            if (!validEvents.Any())
+            {
+                Debug.WriteLine("⚠️ Henüz gerçek veri gelmedi — loading devam ediyor.");
+                return;
+            }
+
             bool hasChanges = false;
-            foreach (var e in events)
+
+            foreach (var e in validEvents)
             {
                 try
                 {
-                    if (e?.Object == null)
-                    {
-                        Debug.WriteLine("⚠️ Null post objesi atlandı");
-                        continue;
-                    }
-
                     var post = e.Object;
                     post.PostId = e.Key;
-                    if (currentUser != null) post.IsOwner = post.UserId == currentUser.UserId;
+                    if (currentUser != null)
+                        post.IsOwner = post.UserId == currentUser.UserId;
 
                     var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
 
@@ -379,12 +503,15 @@ namespace KamPay.ViewModels
                         if (existingPost != null)
                         {
                             var index = Posts.IndexOf(existingPost);
+
+                            // UI state koru
                             post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
                             if (existingPost.Comments != null && post.Comments == null)
                             {
                                 post.Comments = existingPost.Comments;
                                 post.CommentCount = existingPost.CommentCount;
                             }
+
                             post.RefreshCommentsUI();
                             Posts[index] = post;
                             _postsCache[post.PostId] = post;
@@ -401,6 +528,7 @@ namespace KamPay.ViewModels
                     {
                         Posts.Remove(existingPost);
                         _postsCache.Remove(post.PostId);
+
                         if (_commentSubscriptions.ContainsKey(post.PostId))
                         {
                             _commentSubscriptions[post.PostId].Dispose();
@@ -412,11 +540,10 @@ namespace KamPay.ViewModels
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"❌ Post işleme hatası: {ex}");
-                    // Hata olsa bile devam et
                     continue;
                 }
             }
-            
+
             if (hasChanges)
             {
                 try
@@ -432,33 +559,69 @@ namespace KamPay.ViewModels
 
         private void InsertPostSorted(GoodDeedPost post)
         {
-            if (Posts.Count == 0) { Posts.Add(post); return; }
-            if (Posts[0].CreatedAt <= post.CreatedAt) { Posts.Insert(0, post); return; }
-            for (int i = 0; i < Posts.Count; i++) { if (Posts[i].CreatedAt < post.CreatedAt) { Posts.Insert(i, post); return; } }
+            if (Posts.Count == 0)
+            {
+                Posts.Add(post);
+                return;
+            }
+
+            if (Posts[0].CreatedAt <= post.CreatedAt)
+            {
+                Posts.Insert(0, post);
+                return;
+            }
+
+            for (int i = 0; i < Posts.Count; i++)
+            {
+                if (Posts[i].CreatedAt < post.CreatedAt)
+                {
+                    Posts.Insert(i, post);
+                    return;
+                }
+            }
+
             Posts.Add(post);
         }
 
         private void SortPostsInPlace()
         {
             var sorted = Posts.OrderByDescending(p => p.CreatedAt).ToList();
+
             for (int i = 0; i < sorted.Count; i++)
             {
                 var currentIndex = Posts.IndexOf(sorted[i]);
-                if (currentIndex != i) Posts.Move(currentIndex, i);
+                if (currentIndex != i)
+                    Posts.Move(currentIndex, i);
             }
         }
 
         public void StartListeningForComments(GoodDeedPost post)
         {
             if (_commentSubscriptions.ContainsKey(post.PostId)) return;
-            var subscription = _firebaseClient.Child("good_deed_posts").Child(post.PostId).Child("Comments")
-                .AsObservable<Comment>().Where(e => e.Object != null).Buffer(TimeSpan.FromMilliseconds(300)).Where(batch => batch.Any())
+
+            var subscription = _firebaseClient
+                .Child("good_deed_posts")
+                .Child(post.PostId)
+                .Child("Comments")
+                .AsObservable<Comment>()
+                .Where(e => e.Object != null)
+                .Buffer(TimeSpan.FromMilliseconds(300))
+                .Where(batch => batch.Any())
                 .Subscribe(async events =>
                 {
                     await _commentLock.WaitAsync();
-                    try { await MainThread.InvokeOnMainThreadAsync(() => ProcessCommentBatch(post, events)); }
-                    finally { _commentLock.Release(); }
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                            ProcessCommentBatch(post, events)
+                        );
+                    }
+                    finally
+                    {
+                        _commentLock.Release();
+                    }
                 });
+
             _commentSubscriptions[post.PostId] = subscription;
         }
 
@@ -466,17 +629,31 @@ namespace KamPay.ViewModels
         {
             post.Comments ??= new Dictionary<string, Comment>();
             bool hasChanges = false;
+
             foreach (var e in events)
             {
-                if (e.EventType == FirebaseEventType.InsertOrUpdate) { post.Comments[e.Key] = e.Object; hasChanges = true; }
-                else if (e.EventType == FirebaseEventType.Delete && post.Comments.ContainsKey(e.Key)) { post.Comments.Remove(e.Key); hasChanges = true; }
+                if (e.EventType == FirebaseEventType.InsertOrUpdate)
+                {
+                    post.Comments[e.Key] = e.Object;
+                    hasChanges = true;
+                }
+                else if (e.EventType == FirebaseEventType.Delete && post.Comments.ContainsKey(e.Key))
+                {
+                    post.Comments.Remove(e.Key);
+                    hasChanges = true;
+                }
             }
+
             if (hasChanges)
             {
                 post.CommentCount = post.Comments.Count;
                 post.RefreshCommentsUI();
+
                 var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
-                if (existingPost != null) Posts[Posts.IndexOf(existingPost)] = post;
+                if (existingPost != null)
+                {
+                    Posts[Posts.IndexOf(existingPost)] = post;
+                }
             }
         }
 
@@ -485,20 +662,16 @@ namespace KamPay.ViewModels
             try
             {
                 Debug.WriteLine("🛑 Listener durduruluyor...");
-                
+
                 _loadingTimeoutCts?.Cancel();
                 _postsSubscription?.Dispose();
                 _postsSubscription = null;
-                
-                foreach (var sub in _commentSubscriptions.Values) 
-                {
+
+                foreach (var sub in _commentSubscriptions.Values)
                     sub?.Dispose();
-                }
+
                 _commentSubscriptions.Clear();
-                
-                // Cache ve _initialLoadComplete durumu korunur
-                // Böylece sayfa tekrar açıldığında veriler hızlıca gösterilebilir
-                
+
                 Debug.WriteLine("✅ Listener başarıyla durduruldu");
             }
             catch (Exception ex)
@@ -506,30 +679,28 @@ namespace KamPay.ViewModels
                 Debug.WriteLine($"❌ StopListening hatası: {ex.Message}");
             }
         }
+
         public void Dispose()
         {
             try
             {
                 Debug.WriteLine("🧹 GoodDeedBoardViewModel dispose ediliyor...");
-                
+
                 _userStateService.UserProfileChanged -= OnUserProfileChanged;
+
                 _loadingTimeoutCts?.Cancel();
                 _loadingTimeoutCts?.Dispose();
-                
-                // Listener'ları durdur
+
                 _postsSubscription?.Dispose();
                 _postsSubscription = null;
-                
+
                 foreach (var sub in _commentSubscriptions.Values)
-                {
                     sub?.Dispose();
-                }
+
                 _commentSubscriptions.Clear();
-                
-                // Dispose'da cache'i temizle (tam temizlik)
                 _postsCache.Clear();
                 _initialLoadComplete = false;
-                
+
                 Debug.WriteLine("✅ Dispose tamamlandı");
             }
             catch (Exception ex)

@@ -18,13 +18,101 @@
             <converters:BoolToColorConverter x:Key="LikeColorConverter"
                                              TrueColor="#F44336"
                                              FalseColor="{StaticResource Gray400}"/>
+
+            <!-- Skeleton için sahte item listesi -->
+            <x:Array x:Key="SkeletonItems" Type="{x:Type x:Int32}">
+                <x:Int32>1</x:Int32>
+                <x:Int32>2</x:Int32>
+                <x:Int32>3</x:Int32>
+            </x:Array>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid>
+
+        <!-- 🦴 SKELETON LISTESI (VERİ YÜKLENİRKEN) -->
+        <CollectionView ItemsSource="{StaticResource SkeletonItems}"
+                        IsVisible="{Binding IsSkeletonVisible}"
+                        Margin="10,0">
+            <CollectionView.Header>
+                <Label Text="Topluluk Paylaşımları"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}"
+                       Margin="10,15"/>
+            </CollectionView.Header>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5"
+                           Padding="15"
+                           CornerRadius="15"
+                           HasShadow="True"
+                           BackgroundColor="White">
+                        <VerticalStackLayout Spacing="10">
+
+                            <!-- Başlık ve chip skeleton -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <BoxView HeightRequest="18"
+                                         CornerRadius="4"
+                                         Color="{StaticResource Gray200}"
+                                         Margin="0,0,40,0"/>
+
+                                <BoxView Grid.Column="1"
+                                         HeightRequest="18"
+                                         WidthRequest="70"
+                                         CornerRadius="9"
+                                         Color="{StaticResource Gray200}"/>
+                            </Grid>
+
+                            <!-- Açıklama skeleton -->
+                            <BoxView HeightRequest="40"
+                                     CornerRadius="4"
+                                     Color="{StaticResource Gray200}"/>
+
+                            <!-- Kullanıcı + tarih skeleton -->
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  Margin="0,10,0,0">
+                                <BoxView HeightRequest="40"
+                                         WidthRequest="40"
+                                         CornerRadius="20"
+                                         Color="{StaticResource Gray200}"/>
+
+                                <VerticalStackLayout Spacing="4"
+                                                     VerticalOptions="Center">
+                                    <BoxView HeightRequest="12"
+                                             CornerRadius="4"
+                                             Color="{StaticResource Gray200}"
+                                             Margin="0,0,60,0"/>
+                                    <BoxView HeightRequest="10"
+                                             CornerRadius="4"
+                                             Color="{StaticResource Gray200}"
+                                             Margin="0,0,90,0"/>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- Alt çizgi -->
+                            <BoxView HeightRequest="1"
+                                     Color="{StaticResource Gray200}"
+                                     Margin="0,5"/>
+
+                            <!-- Yorum/satır skeleton -->
+                            <BoxView HeightRequest="20"
+                                     CornerRadius="4"
+                                     Color="{StaticResource Gray200}"
+                                     Margin="0,5,60,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- 📜 GERÇEK LISTE (VERİ GELİNCE) -->
         <RefreshView Grid.Row="0" 
                      Command="{Binding RefreshPostsCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
+                     IsVisible="{Binding IsSkeletonVisible, Converter={StaticResource InverseBoolConverter}}"
                      RefreshColor="{StaticResource Primary}">
 
             <CollectionView ItemsSource="{Binding Posts}" Margin="10,0">
@@ -149,12 +237,14 @@
             </CollectionView>
         </RefreshView>
 
+        <!-- ➕ FAB -->
         <Button Text="+" Command="{Binding OpenPostFormCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="32" CornerRadius="30" WidthRequest="60" HeightRequest="60" Padding="0" VerticalOptions="End" HorizontalOptions="End" Margin="20">
             <Button.Shadow>
                 <Shadow Brush="Black" Offset="0,5" Opacity="0.4" Radius="8"/>
             </Button.Shadow>
         </Button>
 
+        <!-- 📄 Yeni post formu -->
         <Grid IsVisible="{Binding IsPostFormVisible}" BackgroundColor="#80000000" ZIndex="99">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
@@ -188,18 +278,24 @@
                     </Border>
 
                     <Button Text="Paylaş" 
-        Command="{Binding CreatePostCommand}" 
-        BackgroundColor="{StaticResource Primary}" 
-        TextColor="White" 
-        CornerRadius="10" 
-        HeightRequest="50" 
-        FontAttributes="Bold"
-        IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}" 
-        Margin="0,10,0,10"/>
+                            Command="{Binding CreatePostCommand}" 
+                            BackgroundColor="{StaticResource Primary}" 
+                            TextColor="White" 
+                            CornerRadius="10" 
+                            HeightRequest="50" 
+                            FontAttributes="Bold"
+                            IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}" 
+                            Margin="0,10,0,10"/>
                 </VerticalStackLayout>
             </Border>
         </Grid>
 
-        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" Color="{StaticResource Primary}"/>
+        <!-- 🔄 Orta ActivityIndicator (isteğe bağlı, kalsın) -->
+        <ActivityIndicator IsRunning="{Binding IsLoading}" 
+                           IsVisible="{Binding IsLoading}" 
+                           VerticalOptions="Center" 
+                           HorizontalOptions="Center" 
+                           Color="{StaticResource Primary}"/>
+
     </Grid>
 </ContentPage>
