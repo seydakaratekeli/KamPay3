@@ -269,14 +269,16 @@ namespace KamPay.ViewModels
                 if (_postsSubscription != null) return;
                 if (!IsRefreshing) IsLoading = !Posts.Any();
 
-                // 🔥 Önceki timeout task'ı iptal et
+                // 🔥 Önceki timeout task'ı iptal et ve kaynağı serbest bırak
                 _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts?.Dispose();
                 _loadingTimeoutCts = new CancellationTokenSource();
                 var timeoutToken = _loadingTimeoutCts.Token;
 
                 // 🔥 Loading timeout mekanizması - belirlenen süre içinde veri gelmezse loading'i kapat
-                _ = Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(_ =>
+                Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
                 {
+                    if (t.IsCanceled) return;
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         if (IsLoading && !_initialLoadComplete)
@@ -285,7 +287,7 @@ namespace KamPay.ViewModels
                             Debug.WriteLine($"⚠️ Loading timeout - veri yüklenemedi ({LoadingTimeoutMs}ms)");
                         }
                     });
-                }, TaskContinuationOptions.NotOnCanceled);
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
                 _postsSubscription = _firebaseClient
                     .Child("good_deed_posts")
