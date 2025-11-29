@@ -421,5 +421,132 @@ namespace KamPay.Services
                 }
             });
         }
+
+        /// <summary>
+        /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
+        /// </summary>
+        public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string newName, string newPhotoUrl)
+        {
+            try
+            {
+                // Not: Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor.
+                // İdeal senaryoda User1Id veya User2Id üzerinde ayrı sorgular yapılmalı,
+                // ancak mevcut veri yapısı ve diğer metotlarla tutarlılık için client-side filtreleme kullanılıyor.
+                // Bu yaklaşım GetUserConversationsAsync ile aynı pattern'i takip eder.
+                var allConversations = await _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .OnceAsync<Conversation>();
+
+                // Kullanıcının dahil olduğu konuşmaları filtrele
+                var userConversations = allConversations
+                    .Where(c => c.Object.User1Id == userId || c.Object.User2Id == userId)
+                    .ToList();
+
+                int updatedMessageCount = 0;
+
+                foreach (var conversationEntry in userConversations)
+                {
+                    var conversationId = conversationEntry.Key;
+
+                    // Bu konuşmadaki tüm mesajları al
+                    var messages = await _firebaseClient
+                        .Child(Constants.MessagesCollection)
+                        .Child(conversationId)
+                        .OnceAsync<Message>();
+
+                    foreach (var messageEntry in messages)
+                    {
+                        var message = messageEntry.Object;
+                        bool needsUpdate = false;
+
+                        // Gönderen kişi güncelleniyorsa
+                        if (message.SenderId == userId)
+                        {
+                            message.SenderName = newName;
+                            needsUpdate = true;
+                        }
+
+                        // Alıcı kişi güncelleniyorsa
+                        if (message.ReceiverId == userId)
+                        {
+                            message.ReceiverName = newName;
+                            message.ReceiverPhotoUrl = newPhotoUrl;
+                            needsUpdate = true;
+                        }
+
+                        if (needsUpdate)
+                        {
+                            await _firebaseClient
+                                .Child(Constants.MessagesCollection)
+                                .Child(conversationId)
+                                .Child(messageEntry.Key)
+                                .PutAsync(message);
+                            updatedMessageCount++;
+                        }
+                    }
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, $"{updatedMessageCount} mesaj güncellendi");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Mesajlar güncellenemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
+        /// </summary>
+        public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string newName, string newPhotoUrl)
+        {
+            try
+            {
+                // Not: Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor.
+                // Mevcut veri yapısı ve diğer metotlarla tutarlılık için client-side filtreleme kullanılıyor.
+                var allConversations = await _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .OnceAsync<Conversation>();
+
+                int updatedCount = 0;
+
+                foreach (var conversationEntry in allConversations)
+                {
+                    var conversation = conversationEntry.Object;
+                    conversation.ConversationId = conversationEntry.Key;
+                    bool needsUpdate = false;
+
+                    // User1 güncelleniyorsa
+                    if (conversation.User1Id == userId)
+                    {
+                        conversation.User1Name = newName;
+                        conversation.User1PhotoUrl = newPhotoUrl;
+                        needsUpdate = true;
+                    }
+
+                    // User2 güncelleniyorsa
+                    if (conversation.User2Id == userId)
+                    {
+                        conversation.User2Name = newName;
+                        conversation.User2PhotoUrl = newPhotoUrl;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate)
+                    {
+                        await _firebaseClient
+                            .Child(Constants.ConversationsCollection)
+                            .Child(conversationEntry.Key)
+                            .PutAsync(conversation);
+                        updatedCount++;
+                    }
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, $"{updatedCount} konuşma güncellendi");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Konuşmalar güncellenemedi", ex.Message);
+            }
+        }
     }
 }

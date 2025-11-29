@@ -166,4 +166,38 @@ public class FirebaseGoodDeedService : IGoodDeedService
             return ServiceResult<List<Comment>>.FailureResult("Yorumlar alınamadı.", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Kullanıcının tüm panolarındaki isim ve profil fotoğrafı bilgilerini günceller
+    /// </summary>
+    public async Task<ServiceResult<bool>> UpdateUserInfoInPostsAsync(string userId, string newName, string newPhotoUrl)
+    {
+        try
+        {
+            var allPosts = await _firebaseClient
+                .Child(GoodDeedPostsCollection)
+                .OrderBy("UserId")
+                .EqualTo(userId)
+                .OnceAsync<GoodDeedPost>();
+
+            foreach (var postEntry in allPosts)
+            {
+                var post = postEntry.Object;
+                post.PostId = postEntry.Key;
+                post.UserName = newName;
+                post.UserProfileImageUrl = newPhotoUrl;
+
+                await _firebaseClient
+                    .Child(GoodDeedPostsCollection)
+                    .Child(postEntry.Key)
+                    .PutAsync(post);
+            }
+
+            return ServiceResult<bool>.SuccessResult(true, $"{allPosts.Count()} pano güncellendi");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<bool>.FailureResult("Panolar güncellenemedi", ex.Message);
+        }
+    }
 }

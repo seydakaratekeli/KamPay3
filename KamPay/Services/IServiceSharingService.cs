@@ -17,9 +17,14 @@ namespace KamPay.Services
 
         Task<ServiceResult<bool>> CompleteRequestAsync(string requestId, string currentUserId); // mevcut (kredi)
 
-        // --- YENÝ: Ücretli (simülasyon) akýþý ---
+        // --- YENï¿½: ï¿½cretli (simï¿½lasyon) akï¿½ï¿½ï¿½ ---
         Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string requestId, string method /* "CardSim" | "BankTransferSim" | "WalletSim" */);
         Task<ServiceResult<bool>> ConfirmPaymentSimulationAsync(string requestId, string paymentId, string? otp = null);
         Task<ServiceResult<bool>> SimulatePaymentAndCompleteAsync(string requestId, string currentUserId, PaymentMethodType method = PaymentMethodType.CardSim, string? maskedCardLast4 = null);
+
+        /// <summary>
+        /// KullanÄ±cÄ±nÄ±n tÃ¼m hizmetlerindeki isim ve profil fotoÄŸrafÄ± bilgilerini gÃ¼nceller
+        /// </summary>
+        Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl);
     }
 }

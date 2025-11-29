@@ -23,6 +23,7 @@ namespace KamPay.ViewModels
 
         // 🔥 EKLENEN: Profil servisi
         private readonly IUserProfileService _userProfileService;
+        private readonly IUserStateService _userStateService;
 
         private IDisposable _conversationsSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
@@ -53,11 +54,52 @@ namespace KamPay.ViewModels
         public MessagesViewModel(
             IMessagingService messagingService,
             IAuthenticationService authService,
-            IUserProfileService userProfileService) // <-- Parametre eklendi
+            IUserProfileService userProfileService,
+            IUserStateService userStateService)
         {
             _messagingService = messagingService;
             _authService = authService;
-            _userProfileService = userProfileService; // <-- Atama yapıldı
+            _userProfileService = userProfileService;
+            _userStateService = userStateService;
+
+            // Kullanıcı profil değişikliklerini dinle
+            _userStateService.UserProfileChanged += OnUserProfileChanged;
+        }
+
+        private void OnUserProfileChanged(object sender, User updatedUser)
+        {
+            if (updatedUser == null) return;
+
+            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Konuşmalardaki kullanıcı bilgilerini güncelle
+                foreach (var conversation in Conversations.Where(c => 
+                    c.User1Id == updatedUser.UserId || c.User2Id == updatedUser.UserId))
+                {
+                    if (conversation.User1Id == updatedUser.UserId)
+                    {
+                        conversation.User1Name = updatedUser.FullName;
+                        conversation.User1PhotoUrl = updatedUser.ProfileImageUrl;
+                    }
+                    if (conversation.User2Id == updatedUser.UserId)
+                    {
+                        conversation.User2Name = updatedUser.FullName;
+                        conversation.User2PhotoUrl = updatedUser.ProfileImageUrl;
+                    }
+
+                    // OtherUser bilgilerini de güncelle
+                    if (_currentUser != null)
+                    {
+                        var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
+                        if (otherUserId == updatedUser.UserId)
+                        {
+                            conversation.OtherUserName = updatedUser.FullName;
+                            conversation.OtherUserPhotoUrl = updatedUser.ProfileImageUrl;
+                        }
+                    }
+                }
+            });
         }
 
         public async Task InitializeAsync()
@@ -357,6 +399,7 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             Console.WriteLine("🧹 MessagesViewModel dispose ediliyor...");
+            _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _conversationsSubscription?.Dispose();
             _conversationsSubscription = null;
             _conversationIds.Clear();

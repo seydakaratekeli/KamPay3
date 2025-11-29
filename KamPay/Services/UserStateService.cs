@@ -1,5 +1,6 @@
 using KamPay.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace KamPay.Services
@@ -8,6 +9,10 @@ namespace KamPay.Services
     {
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _profileService;
+        private readonly IProductService _productService;
+        private readonly IServiceSharingService _serviceService;
+        private readonly IGoodDeedService _goodDeedService;
+        private readonly IMessagingService _messagingService;
         private User _currentUser;
 
         public User CurrentUser 
@@ -25,10 +30,18 @@ namespace KamPay.Services
 
         public UserStateService(
             IAuthenticationService authService, 
-            IUserProfileService profileService)
+            IUserProfileService profileService,
+            IProductService productService,
+            IServiceSharingService serviceService,
+            IGoodDeedService goodDeedService,
+            IMessagingService messagingService)
         {
             _authService = authService;
             _profileService = profileService;
+            _productService = productService;
+            _serviceService = serviceService;
+            _goodDeedService = goodDeedService;
+            _messagingService = messagingService;
         }
 
         public async Task<ServiceResult<User>> RefreshCurrentUserAsync()
@@ -74,7 +87,7 @@ namespace KamPay.Services
 
             try
             {
-                // Firebase'de güncelle
+                // Firebase'de kullanıcı profilini güncelle
                 var result = await _profileService.UpdateUserProfileAsync(
                     CurrentUser.UserId,
                     firstName,
@@ -99,6 +112,40 @@ namespace KamPay.Services
 
                 if (!string.IsNullOrWhiteSpace(profileImageUrl))
                     CurrentUser.ProfileImageUrl = profileImageUrl;
+
+                string newFullName = CurrentUser.FullName;
+                string newPhotoUrl = CurrentUser.ProfileImageUrl;
+
+                // 🔥 Firebase'deki tüm ilgili verileri paralel olarak güncelle
+                var tasks = new List<Task<ServiceResult<bool>>>
+                {
+                    _productService.UpdateUserInfoInProductsAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
+                    _serviceService.UpdateUserInfoInServicesAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
+                    _goodDeedService.UpdateUserInfoInPostsAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
+                    _messagingService.UpdateUserInfoInMessagesAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
+                    _messagingService.UpdateUserInfoInConversationsAsync(CurrentUser.UserId, newFullName, newPhotoUrl)
+                };
+
+                // Paralel çalıştır ve sonuçları logla
+                try
+                {
+                    await Task.WhenAll(tasks);
+
+                    // Hata olan task'ları logla
+                    foreach (var task in tasks)
+                    {
+                        if (!task.Result.Success)
+                        {
+                            Console.WriteLine($"⚠️ Bulk update uyarısı: {task.Result.Message}");
+                        }
+                    }
+                }
+                catch (Exception taskEx)
+                {
+                    // Task hatalarını logla ama işlemi başarısız olarak işaretleme
+                    // Çünkü kullanıcı profili zaten güncellendi
+                    Console.WriteLine($"⚠️ Bulk update hatası: {taskEx.Message}");
+                }
 
                 // Explicitly trigger event after property updates to notify all listeners.
                 // Note: This is NOT redundant - modifying properties on CurrentUser (e.g., CurrentUser.FirstName = x)
