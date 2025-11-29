@@ -91,9 +91,9 @@ namespace KamPay.ViewModels
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 // Diğer kullanıcının bilgilerini güncelle
-                if (Conversation != null)
+                if (Conversation != null && _currentUser != null)
                 {
-                    var otherUserId = Conversation.GetOtherUserId(_currentUser?.UserId);
+                    var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
                     if (otherUserId == updatedUser.UserId)
                     {
                         OtherUserName = updatedUser.FullName;

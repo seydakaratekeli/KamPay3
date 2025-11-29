@@ -429,7 +429,10 @@ namespace KamPay.Services
         {
             try
             {
-                // Tüm konuşmaları al
+                // Not: Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor.
+                // İdeal senaryoda User1Id veya User2Id üzerinde ayrı sorgular yapılmalı,
+                // ancak mevcut veri yapısı ve diğer metotlarla tutarlılık için client-side filtreleme kullanılıyor.
+                // Bu yaklaşım GetUserConversationsAsync ile aynı pattern'i takip eder.
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -498,6 +501,8 @@ namespace KamPay.Services
         {
             try
             {
+                // Not: Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor.
+                // Mevcut veri yapısı ve diğer metotlarla tutarlılık için client-side filtreleme kullanılıyor.
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();

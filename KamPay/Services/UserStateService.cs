@@ -126,8 +126,26 @@ namespace KamPay.Services
                     _messagingService.UpdateUserInfoInConversationsAsync(CurrentUser.UserId, newFullName, newPhotoUrl)
                 };
 
-                // Paralel çalıştır ama hataları logla
-                await Task.WhenAll(tasks);
+                // Paralel çalıştır ve sonuçları logla
+                try
+                {
+                    await Task.WhenAll(tasks);
+
+                    // Hata olan task'ları logla
+                    foreach (var task in tasks)
+                    {
+                        if (!task.Result.Success)
+                        {
+                            Console.WriteLine($"⚠️ Bulk update uyarısı: {task.Result.Message}");
+                        }
+                    }
+                }
+                catch (Exception taskEx)
+                {
+                    // Task hatalarını logla ama işlemi başarısız olarak işaretleme
+                    // Çünkü kullanıcı profili zaten güncellendi
+                    Console.WriteLine($"⚠️ Bulk update hatası: {taskEx.Message}");
+                }
 
                 // Explicitly trigger event after property updates to notify all listeners.
                 // Note: This is NOT redundant - modifying properties on CurrentUser (e.g., CurrentUser.FirstName = x)
