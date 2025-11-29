@@ -25,7 +25,7 @@ public partial class GoodDeedBoardPage : ContentPage
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ GoodDeedBoardPage OnAppearing hatası: {ex.Message}");
-                MainThread.BeginInvokeOnMainThread(async () =>
+                _ = MainThread.InvokeOnMainThreadAsync(async () =>
                 {
                     await DisplayAlert("Hata", "Sayfa yüklenirken bir hata oluştu.", "Tamam");
                 });

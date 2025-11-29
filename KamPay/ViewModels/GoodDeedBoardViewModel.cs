@@ -409,7 +409,7 @@ namespace KamPay.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"❌ Post işleme hatası: {ex.Message}");
+                    Debug.WriteLine($"❌ Post işleme hatası: {ex}");
                     // Hata olsa bile devam et
                     continue;
                 }
@@ -494,11 +494,8 @@ namespace KamPay.ViewModels
                 }
                 _commentSubscriptions.Clear();
                 
-                // ✅ Cache'i temizleme - sayfa tekrar açıldığında kullanılacak
-                // _postsCache.Clear();
-                
-                // ✅ Initial load durumunu sıfırlama - cache korunmalı
-                // _initialLoadComplete = false;
+                // Cache ve _initialLoadComplete durumu korunur
+                // Böylece sayfa tekrar açıldığında veriler hızlıca gösterilebilir
                 
                 Debug.WriteLine("✅ Listener başarıyla durduruldu");
             }
