@@ -89,19 +89,25 @@
 
                 <CollectionView.Header>
                     <Frame Padding="15,10" 
-                           CornerRadius="20" 
-                           HasShadow="False"
-                           Margin="0,0,10,0"
-                           BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
-                           BorderColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
+           CornerRadius="20" 
+           HasShadow="False"
+           Margin="0,0,10,0"
+           BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
+           BorderColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
+
                         <Label Text="Tümü"
-                               VerticalOptions="Center"
-                               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
+               VerticalOptions="Center"
+               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
+
                         <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding CategoryTappedCommand}" CommandParameter="{x:Null}"/>
+                            <TapGestureRecognizer 
+                Command="{Binding CategoryTappedCommand}" 
+                CommandParameter="{x:Null}"/>
                         </Frame.GestureRecognizers>
+
                     </Frame>
                 </CollectionView.Header>
+
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Category">
@@ -129,10 +135,29 @@
                          IsRefreshing="{Binding IsRefreshing}">
 
                 <CollectionView ItemsSource="{Binding Products}"
-                                SelectionMode="None"
-                                EmptyView="{Binding EmptyMessage}"
-                                RemainingItemsThreshold="5"
-                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}">
+                SelectionMode="None"
+                RemainingItemsThreshold="5"
+                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}">
+
+                    <CollectionView.EmptyView>
+                        <Grid VerticalOptions="Center"
+HorizontalOptions="Center"
+Padding="20"
+IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+
+                            <VerticalStackLayout Spacing="12"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center">
+
+                                <Label Text="{Binding EmptyMessage}"
+         FontSize="14"
+         TextColor="{StaticResource Gray600}"
+         HorizontalTextAlignment="Center"/>
+
+                            </VerticalStackLayout>
+
+                        </Grid>
+                    </CollectionView.EmptyView>
 
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical" Span="2" />

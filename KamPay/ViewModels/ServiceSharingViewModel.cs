@@ -81,13 +81,7 @@ namespace KamPay.ViewModels
             IsLoading = true;
             StartListeningForServices();
 
-            // 🔥 TIMEOUT: Eğer 4 saniye içinde veri gelmezse loading'i kapat
-            await Task.Delay(4000);
-            if (IsLoading && !_initialLoadComplete)
-            {
-                IsLoading = false;
-                Console.WriteLine("⚠️ Timeout: Hizmet bulunamadı veya yavaş bağlantı");
-            }
+        
         }
         // 🔥 YENİ: Paneli Aç
         [RelayCommand]

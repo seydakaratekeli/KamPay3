@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
@@ -16,15 +16,19 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
+
     <Grid>
 
-        <!-- REFRESH VIEW -->
+        <!-- REFRESH VIEW - SADECE YÜKLEME BİTTİKTEN SONRA GÖRÜNÜR -->
         <RefreshView Command="{Binding RefreshServicesCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
                      RefreshColor="{StaticResource Primary}"
                      IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
 
-            <CollectionView ItemsSource="{Binding Services}" Margin="10,0">
+            <CollectionView ItemsSource="{Binding Services}"
+                            Margin="10,0"
+                            IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+
                 <CollectionView.Header>
                     <Label Text="Mevcut Hizmetler"
                            FontSize="20"
@@ -33,21 +37,27 @@
                            Margin="10,15"/>
                 </CollectionView.Header>
 
+                <!-- EMPTYVIEW sadece yükleme bitince gösterilir -->
                 <CollectionView.EmptyView>
-                    <VerticalStackLayout Padding="40"
-                                         VerticalOptions="Center"
-                                         HorizontalOptions="Center"
-                                         Spacing="15"
-                                         Margin="0,50,0,0">
+                    <VerticalStackLayout
+                        IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                        Padding="40"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        Spacing="15"
+                        Margin="0,50,0,0">
+
                         <Label Text="💼"
                                FontSize="60"
                                HorizontalTextAlignment="Center"
                                Opacity="0.3"/>
+
                         <Label Text="Henüz paylaşılan bir hizmet yok."
                                FontSize="18"
                                FontAttributes="Bold"
                                TextColor="{StaticResource Gray600}"
                                HorizontalTextAlignment="Center"/>
+
                         <Label Text="İlk hizmeti siz paylaşın!"
                                FontSize="14"
                                TextColor="{StaticResource Primary}"
@@ -56,11 +66,13 @@
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
 
+
                 <!-- ITEM TEMPLATE -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:ServiceOffer">
 
                         <Frame Margin="0,5" Padding="15" BorderColor="{StaticResource Gray200}" CornerRadius="15" HasShadow="True">
+
                             <VerticalStackLayout Spacing="10">
 
                                 <!-- Title + Category -->
@@ -122,17 +134,14 @@
 
                                     <!-- Price + Button -->
                                     <HorizontalStackLayout Grid.Column="1" Spacing="15" VerticalOptions="Center">
-                                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                        <VerticalStackLayout Spacing="2">
                                             <Label Text="{Binding Price, StringFormat='{0} ₺'}"
                                                    FontAttributes="Bold"
                                                    FontSize="16"
-                                                   TextColor="{StaticResource Primary}"
-                                                   HorizontalOptions="End"/>
-
+                                                   TextColor="{StaticResource Primary}"/>
                                             <Label Text="{Binding TimeCredits, StringFormat='⏱ {0} Saat'}"
                                                    FontSize="12"
-                                                   TextColor="{StaticResource Secondary}"
-                                                   HorizontalOptions="End"/>
+                                                   TextColor="{StaticResource Secondary}"/>
                                         </VerticalStackLayout>
 
                                         <Button Text="Talep Et"
@@ -153,8 +162,10 @@
 
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
             </CollectionView>
         </RefreshView>
+
 
         <!-- LOADING OVERLAY -->
         <Grid IsVisible="{Binding IsLoading}"
@@ -167,12 +178,12 @@
                                    HeightRequest="50"/>
                 <Label Text="Hizmetler yükleniyor..."
                        TextColor="{StaticResource Gray600}"
-                       FontSize="14"
-                       HorizontalTextAlignment="Center"/>
+                       FontSize="14"/>
             </VerticalStackLayout>
         </Grid>
 
-        <!-- FAB -->
+
+        <!-- FAB (+) -->
         <Button Text="+"
                 Command="{Binding OpenPostFormCommand}"
                 BackgroundColor="{StaticResource Primary}"
@@ -191,7 +202,8 @@
             </Button.Shadow>
         </Button>
 
-        <!-- POPUP -->
+
+        <!-- POSTING POPUP (FORM) -->
         <Grid IsVisible="{Binding IsPostFormVisible}"
               BackgroundColor="#80000000"
               ZIndex="99">
@@ -233,14 +245,12 @@
                         <Editor Placeholder="Hizmetin Detayları..."
                                 Text="{Binding ServiceDescription}"
                                 HeightRequest="80"
-                                AutoSize="TextChanges"
-                                BackgroundColor="Transparent"/>
+                                AutoSize="TextChanges"/>
                     </Border>
 
                     <Label Text="Kategori"
                            FontSize="12"
-                           TextColor="{StaticResource Gray600}"
-                           Margin="0,5,0,0"/>
+                           TextColor="{StaticResource Gray600}"/>
 
                     <Border Stroke="{StaticResource Gray300}"
                             StrokeShape="RoundRectangle 10"
@@ -248,13 +258,13 @@
                             Padding="10,0">
                         <Picker Title="Kategori Seçin"
                                 ItemsSource="{Binding Categories}"
-                                SelectedItem="{Binding SelectedCategory}"
-                                VerticalOptions="Center">
+                                SelectedItem="{Binding SelectedCategory}">
                             <Picker.ItemDisplayBinding>
                                 <Binding Converter="{StaticResource ServiceCategoryToTextConverter}"/>
                             </Picker.ItemDisplayBinding>
                         </Picker>
                     </Border>
+
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
 
@@ -269,8 +279,7 @@
                                     Padding="10,0">
                                 <Entry Text="{Binding ServicePrice}"
                                        Placeholder="0"
-                                       Keyboard="Numeric"
-                                       VerticalOptions="Center"/>
+                                       Keyboard="Numeric"/>
                             </Border>
                         </VerticalStackLayout>
 
@@ -288,7 +297,6 @@
                                     <Label Text="{Binding TimeCredits}"
                                            FontSize="16"
                                            FontAttributes="Bold"
-                                           VerticalOptions="Center"
                                            HorizontalOptions="Center"
                                            Grid.Column="1"/>
 
@@ -310,25 +318,20 @@
                             TextColor="White"
                             CornerRadius="10"
                             HeightRequest="50"
-                            FontAttributes="Bold"
-                            IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}"
-                            Margin="0,10,0,10"/>
+                            FontAttributes="Bold"/>
                 </VerticalStackLayout>
 
             </Border>
-
         </Grid>
+
 
         <!-- POSTING OVERLAY -->
         <Grid IsVisible="{Binding IsPosting}"
               BackgroundColor="#80000000"
-              InputTransparent="False"
               ZIndex="100">
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
                 <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" HeightRequest="50"/>
-                <Label Text="İşlem yapılıyor..."
-                       TextColor="White"
-                       FontAttributes="Bold"/>
+                <Label Text="İşlem yapılıyor..." TextColor="White" FontAttributes="Bold"/>
             </VerticalStackLayout>
         </Grid>
 
