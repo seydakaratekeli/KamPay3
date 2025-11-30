@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using System.Globalization;
 
 namespace KamPay
 {
@@ -15,6 +16,20 @@ namespace KamPay
     {
         public static MauiApp CreateMauiApp()
         {
+            // Load saved language preference and set culture
+            var savedLanguage = Preferences.Get("AppLanguage", "tr");
+            CultureInfo culture;
+            try
+            {
+                culture = new CultureInfo(savedLanguage);
+            }
+            catch (CultureNotFoundException)
+            {
+                culture = new CultureInfo("tr");
+            }
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+
             var builder = MauiApp.CreateBuilder();
 
             builder
