@@ -14,6 +14,9 @@ namespace KamPay.ViewModels
     {
         private readonly IAuthenticationService _authService;
 
+        // Localization helper
+        private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
+
         [ObservableProperty] private string email;
         [ObservableProperty] private string password;
         [ObservableProperty] private bool rememberMe;
@@ -49,9 +52,9 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hoþgeldiniz", result.Message ?? "Giriþ baþarýlý", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
 
-                    // Ana sayfaya yönlendir ()
+                    // Ana sayfaya yÃ¶nlendir ()
                     await Shell.Current.GoToAsync("//MainApp");
                     ClearCredentials();
                 }
@@ -60,12 +63,12 @@ namespace KamPay.ViewModels
                     if (result.Errors != null && result.Errors.Any())
                         ErrorMessage = string.Join("\n", result.Errors);
                     else
-                        ErrorMessage = result.Message ?? "Giriþ yapýlamadý.";
+                        ErrorMessage = result.Message ?? Res["LoginFailed"];
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Beklenmeyen hata: {ex.Message}";
+                ErrorMessage = $"{Res["UnexpectedError"]}: {ex.Message}";
             }
             finally
             {
@@ -76,7 +79,7 @@ namespace KamPay.ViewModels
 [RelayCommand]
 private async Task GoToRegisterAsync()
 {
-    // Yýðýný sýfýrlama
+    // YÄ±ÄŸÄ±nÄ± sÄ±fÄ±rlama
     await Shell.Current.GoToAsync(nameof(RegisterPage)); 
 }
     }

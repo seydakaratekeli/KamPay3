@@ -2,8 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.QRScannerPage"
-             Title="QR Kod Tara">
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}">
     <Grid>
         <zxing:CameraBarcodeReaderView
             x:Name="barcodeReader"
@@ -11,7 +12,7 @@
             Options="{Binding BarcodeOptions}"
             IsDetecting="True"/>
 
-        <Label Text="Teslimatı onaylamak için QR kodu kameraya okutun."
+        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRInstruction]}"
                TextColor="White"
                BackgroundColor="#80000000"
                Padding="20"

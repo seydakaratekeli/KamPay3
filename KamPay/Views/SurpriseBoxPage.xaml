@@ -2,9 +2,10 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:DataType="vm:SurpriseBoxViewModel"
              x:Class="KamPay.Views.SurpriseBoxPage"
-             Title="Sürpriz Kutu"
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SurpriseBoxTitle]}"
              Shell.BackgroundColor="#4CAF50">
 
     <Grid>
@@ -25,7 +26,7 @@
                                FontSize="32"
                                VerticalOptions="Center"/>
                         <VerticalStackLayout Spacing="2">
-                            <Label Text="Mevcut Puanınız" 
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[CurrentPoints]}" 
                                    FontSize="12" 
                                    TextColor="White"
                                    Opacity="0.9"/>
@@ -72,19 +73,11 @@
                            CornerRadius="15"
                            Padding="20"
                            Margin="0">
-                        <Label FontSize="16"
+                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SurpriseBoxDescription]}"
+                               FontSize="16"
                                HorizontalTextAlignment="Center"
                                TextColor="#F57C00"
-                               LineHeight="1.5">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="100 puan" FontAttributes="Bold"/>
-                                    <Span Text=" karşılığında bir sürpriz kutu açarak "/>
-                                    <Span Text="bağışlanmış ürünlerden " FontAttributes="Bold"/>
-                                    <Span Text="birini kazanma şansı yakala!"/>
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
+                               LineHeight="1.5"/>
                     </Frame>
 
                     <!-- 🔥 Sonuç Frame'i (Dinamik) -->
@@ -99,7 +92,7 @@
                            Margin="0,10">
                         <VerticalStackLayout Spacing="15">
                             <!-- Tebrik Başlığı -->
-                            <Label Text="🎉 Tebrikler! 🎉"
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Congratulations]}"
                                    FontSize="28"
                                    FontAttributes="Bold"
                                    TextColor="#4CAF50"
@@ -132,7 +125,7 @@
                                    Margin="10,0"/>
 
                             <!-- Buton -->
-                            <Button Text="🎁 Ürünümü Görmek İstiyorum"
+                            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ViewMyProduct]}"
                                     Clicked="CloseResult_Clicked"
                                     BackgroundColor="#4CAF50"
                                     TextColor="White"
@@ -181,7 +174,7 @@
                             <Label Text="💡" 
                                    FontSize="20"
                                    VerticalOptions="Center"/>
-                            <Label Text="Yetersiz puan! Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz."
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[InsufficientPoints]}"
                                    FontSize="13"
                                    TextColor="#F57C00"
                                    VerticalOptions="Center"
@@ -197,7 +190,7 @@
                            BackgroundColor="Transparent"
                            BorderColor="Transparent">
                         <Button Command="{Binding RedeemBoxCommand}"
-                                Text="🎁 100 Puana Kutu Aç!"
+                                Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OpenBoxFor100Points]}"
                                 IsEnabled="{Binding CanRedeem}"
                                 HeightRequest="60"
                                 BackgroundColor="#4CAF50"
@@ -223,7 +216,7 @@
                                    Color="White"
                                    WidthRequest="60"
                                    HeightRequest="60" />
-                <Label Text="Sürpriz kutunuz açılıyor..."
+                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OpeningBox]}"
                        TextColor="White"
                        FontSize="18"
                        FontAttributes="Bold"

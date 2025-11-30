@@ -5,9 +5,10 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.MessagesPage"
              x:DataType="vm:MessagesViewModel"
-             Title="Mesajlar"
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Messages]}"
              BackgroundColor="White">
 
     <ContentPage.Resources>
@@ -35,7 +36,7 @@
                            VerticalOptions="Center" 
                            Opacity="0.5"/>
                     <Entry Grid.Column="1" 
-                           Placeholder="Sohbetlerde ara..." 
+                           Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SearchInChats]}" 
                            TextColor="{StaticResource Gray900}"
                            PlaceholderColor="{StaticResource Gray500}"
                            VerticalOptions="Center"
@@ -69,11 +70,11 @@
                                    FontSize="60" 
                                    HorizontalTextAlignment="Center" 
                                    Opacity="0.3"/>
-                            <Label Text="Henüz mesajınız yok." 
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessagesYet]}" 
                                    TextColor="{StaticResource Gray500}"
                                    FontSize="16"
                                    HorizontalTextAlignment="Center"/>
-                            <Label Text="Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz." 
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[StartChatFromProduct]}" 
                                    TextColor="{StaticResource Gray400}"
                                    FontSize="13"
                                    HorizontalTextAlignment="Center"
@@ -179,7 +180,7 @@
                                        Color="{StaticResource Primary}"
                                        WidthRequest="50" 
                                        HeightRequest="50"/>
-                    <Label Text="Mesajlar yükleniyor..." 
+                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MessagesLoading]}" 
                            TextColor="{StaticResource Gray600}"
                            FontSize="14"
                            HorizontalTextAlignment="Center"/>
