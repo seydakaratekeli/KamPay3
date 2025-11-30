@@ -18,7 +18,15 @@ namespace KamPay
         {
             // Load saved language preference and set culture
             var savedLanguage = Preferences.Get("AppLanguage", "tr");
-            var culture = new CultureInfo(savedLanguage);
+            CultureInfo culture;
+            try
+            {
+                culture = new CultureInfo(savedLanguage);
+            }
+            catch (CultureNotFoundException)
+            {
+                culture = new CultureInfo("tr");
+            }
             CultureInfo.CurrentCulture = culture;
             CultureInfo.CurrentUICulture = culture;
 

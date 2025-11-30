@@ -47,7 +47,16 @@ public class LocalizationResourceManager : INotifyPropertyChanged
     /// <param name="savePreference">Whether to save the preference (default: true)</param>
     public void SetCulture(string cultureCode, bool savePreference = true)
     {
-        var culture = new CultureInfo(cultureCode);
+        CultureInfo culture;
+        try
+        {
+            culture = new CultureInfo(cultureCode);
+        }
+        catch (CultureNotFoundException)
+        {
+            culture = new CultureInfo(DefaultLanguage);
+            cultureCode = DefaultLanguage;
+        }
         
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
@@ -60,8 +69,6 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         
         // Notify all bindings that resources have changed
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item"));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
     }
 
     /// <summary>
