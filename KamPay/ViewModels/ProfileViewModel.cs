@@ -368,6 +368,29 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task ChangeLanguageAsync()
+    {
+        var action = await Application.Current.MainPage.DisplayActionSheet(
+            "🌐 Select Language / Dil Seçin",
+            null,
+            null,
+            "English",
+            "Türkçe");
+
+        if (string.IsNullOrEmpty(action))
+            return;
+
+        var cultureCode = action switch
+        {
+            "English" => "en",
+            "Türkçe" => "tr",
+            _ => "tr"
+        };
+
+        Services.LocalizationResourceManager.Instance.SetCulture(cultureCode);
+    }
+
+    [RelayCommand]
     private async Task ProductTappedAsync(Product product)
     {
         if (product == null) return;
