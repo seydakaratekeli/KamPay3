@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,6 +11,7 @@ using KamPay.Services;
 using KamPay.Views;
 using Firebase.Database;
 using Firebase.Database.Query;
+using Firebase.Database.Streaming;
 using KamPay.Helpers;
 using System.Reactive.Linq;
 using System.Collections.Generic;
@@ -24,6 +26,10 @@ namespace KamPay.ViewModels
         // 🔥 EKLENEN: Profil servisi
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
+
+        // 🔥 UltraFastLoad: Snapshot + Realtime loader
+        private readonly RealtimeSnapshotService<Conversation> _loader;
+        private IDisposable _realtimeListener;
 
         private IDisposable _conversationsSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
@@ -62,6 +68,9 @@ namespace KamPay.ViewModels
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
+
+            // 🔥 UltraFastLoad: RealtimeSnapshotService başlat
+            _loader = new RealtimeSnapshotService<Conversation>(Constants.FirebaseRealtimeDbUrl);
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -119,7 +128,8 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                StartListeningForConversations();
+                // 🔥 UltraFastLoad pattern ile hızlı yükleme
+                await UltraFastLoadAsync();
                 _isInitialized = true;
             }
             catch (Exception ex)
@@ -128,6 +138,210 @@ namespace KamPay.ViewModels
                 EmptyMessage = "Konuşmalar yüklenemedi.";
                 IsLoading = false;
             }
+        }
+
+        // 🔥 UltraFastLoad Pattern - Snapshot + Realtime
+        public async Task UltraFastLoadAsync()
+        {
+            try
+            {
+                // 1️⃣ SNAPSHOT: Anında veri yükle
+                var snapshot = await _loader.LoadSnapshotAsync(Constants.ConversationsCollection);
+
+                if (snapshot.Any())
+                {
+                    // Kullanıcıya ait konuşmaları filtrele ve işle
+                    var userConversations = snapshot
+                        .Where(kvp => kvp.Value != null &&
+                                      kvp.Value.IsActive &&
+                                      (kvp.Value.User1Id == _currentUser.UserId || kvp.Value.User2Id == _currentUser.UserId))
+                        .Select(kvp =>
+                        {
+                            var conversation = kvp.Value;
+                            conversation.ConversationId = kvp.Key;
+                            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
+                            conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
+                            // İlk yüklemede placeholder resim koy
+                            conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
+                            return conversation;
+                        })
+                        .OrderByDescending(c => c.LastMessageTime)
+                        .ToList();
+
+                    // UI'a ekle
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Conversations.Clear();
+                        _conversationIds.Clear();
+
+                        foreach (var conversation in userConversations)
+                        {
+                            Conversations.Add(conversation);
+                            _conversationIds.Add(conversation.ConversationId);
+                        }
+
+                        // 🔥 Loading'i hemen kapat - veri gösterildi
+                        IsLoading = false;
+                        UpdateUnreadCount();
+                        EmptyMessage = Conversations.Any() ? string.Empty : "Henüz mesajınız yok.";
+                    });
+
+                    // 3️⃣ ARKA PLAN: Profil resimlerini asenkron yükle
+                    _ = Task.Run(async () => await LoadProfileImagesInBackgroundAsync(userConversations));
+                }
+                else
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        IsLoading = false;
+                        EmptyMessage = "Henüz mesajınız yok.";
+                    });
+                }
+
+                // 4️⃣ REALTIME: Canlı güncellemeler için listener başlat
+                _realtimeListener = _loader.Listen(Constants.ConversationsCollection, evt =>
+                {
+                    MainThread.BeginInvokeOnMainThread(() => ApplyRealtimeEvent(evt));
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ UltraFastLoadAsync hatası: {ex.Message}");
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    IsLoading = false;
+                    EmptyMessage = "Konuşmalar yüklenemedi.";
+                });
+            }
+        }
+
+        // 🔥 Profil resimlerini arka planda yükle (UI bloke etmez)
+        private async Task LoadProfileImagesInBackgroundAsync(List<Conversation> conversations)
+        {
+            // Use SemaphoreSlim to limit concurrent API calls
+            using var semaphore = new SemaphoreSlim(3, 3); // Max 3 concurrent requests
+            
+            var tasks = conversations.Select(async conversation =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
+                    
+                    // Check cache first
+                    if (_profileCache.TryGetValue(otherUserId, out var cachedUser))
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
+                            if (convo != null)
+                            {
+                                convo.OtherUserPhotoUrl = cachedUser.ProfileImageUrl ?? "person_icon.svg";
+                                convo.OtherUserName = cachedUser.FullName ?? convo.OtherUserName;
+                            }
+                        });
+                        return;
+                    }
+
+                    var userProfile = await _userProfileService.GetUserProfileAsync(otherUserId);
+                    if (userProfile?.Data != null)
+                    {
+                        _profileCache[otherUserId] = userProfile.Data;
+
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
+                            if (convo != null)
+                            {
+                                convo.OtherUserPhotoUrl = userProfile.Data.ProfileImageUrl ?? "person_icon.svg";
+                                if (!string.IsNullOrEmpty(userProfile.Data.Username))
+                                {
+                                    convo.OtherUserName = userProfile.Data.Username;
+                                }
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Profil resmi yüklenemedi: {ex.Message}");
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+        }
+
+        // 🔥 Realtime Event Handler
+        private void ApplyRealtimeEvent(FirebaseEvent<Conversation> evt)
+        {
+            if (evt.Object == null) return;
+            if (_currentUser == null) return;
+
+            var conversation = evt.Object;
+            conversation.ConversationId = evt.Key;
+
+            // Kullanıcıya ait olmayan konuşmaları atla
+            if (conversation.User1Id != _currentUser.UserId && conversation.User2Id != _currentUser.UserId)
+                return;
+
+            // Aktif olmayan konuşmaları atla
+            if (!conversation.IsActive)
+            {
+                // Delete olarak işle
+                var toRemove = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
+                if (toRemove != null)
+                {
+                    Conversations.Remove(toRemove);
+                    _conversationIds.Remove(conversation.ConversationId);
+                    UpdateUnreadCount();
+                    EmptyMessage = Conversations.Any() ? string.Empty : "Henüz mesajınız yok.";
+                }
+                return;
+            }
+
+            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
+            conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
+            conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
+
+            var existingConvo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
+
+            switch (evt.EventType)
+            {
+                case FirebaseEventType.InsertOrUpdate:
+                    if (existingConvo != null)
+                    {
+                        var index = Conversations.IndexOf(existingConvo);
+                        Conversations[index] = conversation;
+                    }
+                    else
+                    {
+                        if (!_conversationIds.Contains(conversation.ConversationId))
+                        {
+                            Conversations.Add(conversation);
+                            _conversationIds.Add(conversation.ConversationId);
+                        }
+                    }
+
+                    // Arka planda profil resmini yükle
+                    _ = Task.Run(async () => await LoadProfileImagesInBackgroundAsync(new List<Conversation> { conversation }));
+                    break;
+
+                case FirebaseEventType.Delete:
+                    if (existingConvo != null)
+                    {
+                        Conversations.Remove(existingConvo);
+                        _conversationIds.Remove(conversation.ConversationId);
+                    }
+                    break;
+            }
+
+            SortConversationsInPlace();
+            UpdateUnreadCount();
+            EmptyMessage = Conversations.Any() ? string.Empty : "Henüz mesajınız yok.";
         }
 
         private void StartListeningForConversations()
@@ -403,7 +617,10 @@ namespace KamPay.ViewModels
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _conversationsSubscription?.Dispose();
             _conversationsSubscription = null;
+            _realtimeListener?.Dispose();
+            _realtimeListener = null;
             _conversationIds.Clear();
+            _profileCache.Clear();
             _isInitialized = false;
         }
     }
