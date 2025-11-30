@@ -199,8 +199,9 @@ namespace KamPay.ViewModels
                     }
                 }
 
-                // Listener başlat
-                StartListeningToMessages();
+                // 🔥 UltraFastLoad: Snapshot ile anında mesajları yükle
+                await LoadMessagesWithSnapshotAsync();
+
                 _activeConversationId = ConversationId;
 
                 await _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
@@ -210,6 +211,61 @@ namespace KamPay.ViewModels
                 await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
                 Console.WriteLine($"❌ LoadChatAsync hatası: {ex.Message}");
                 IsLoading = false;
+            }
+        }
+
+        // 🔥 UltraFastLoad: Snapshot ile mesajları anında yükle
+        private async Task LoadMessagesWithSnapshotAsync()
+        {
+            try
+            {
+                Console.WriteLine($"📸 Snapshot ile mesaj yükleme başlıyor: {ConversationId}");
+
+                // 1️⃣ SNAPSHOT: Tüm mesajları anında çek
+                var messagesSnapshot = await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(ConversationId)
+                    .OnceAsync<Message>();
+
+                if (messagesSnapshot.Any())
+                {
+                    var loadedMessages = messagesSnapshot
+                        .Where(m => m.Object != null && !m.Object.IsDeleted)
+                        .Select(m =>
+                        {
+                            var message = m.Object;
+                            message.MessageId = m.Key;
+                            message.IsSentByMe = message.SenderId == _currentUser.UserId;
+                            return message;
+                        })
+                        .OrderBy(m => m.SentAt)
+                        .ToList();
+
+                    // UI'a ekle
+                    Messages.Clear();
+                    foreach (var message in loadedMessages)
+                    {
+                        Messages.Add(message);
+                    }
+
+                    Console.WriteLine($"✅ Snapshot ile {loadedMessages.Count} mesaj yüklendi");
+                }
+
+                // 2️⃣ Loading'i kapat - veri gösterildi
+                _initialLoadComplete = true;
+                IsLoading = false;
+
+                // 3️⃣ Scroll to bottom
+                WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
+
+                // 4️⃣ REALTIME: Listener başlat (yeni mesajlar için)
+                StartListeningToMessages();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ LoadMessagesWithSnapshotAsync hatası: {ex.Message}");
+                // Hata durumunda eski yönteme geri dön
+                StartListeningToMessages();
             }
         }
 
