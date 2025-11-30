@@ -264,7 +264,9 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ LoadMessagesWithSnapshotAsync hatası: {ex.Message}");
-                // Hata durumunda eski yönteme geri dön
+                // Hata durumunda loading'i kapat ve real-time listener ile devam et
+                _initialLoadComplete = false;
+                IsLoading = false;
                 StartListeningToMessages();
             }
         }

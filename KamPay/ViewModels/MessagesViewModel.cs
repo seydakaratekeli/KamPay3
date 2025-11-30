@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -217,13 +218,17 @@ namespace KamPay.ViewModels
         // 🔥 Profil resimlerini arka planda yükle (UI bloke etmez)
         private async Task LoadProfileImagesInBackgroundAsync(List<Conversation> conversations)
         {
-            foreach (var conversation in conversations)
+            // Use SemaphoreSlim to limit concurrent API calls
+            using var semaphore = new SemaphoreSlim(3, 3); // Max 3 concurrent requests
+            
+            var tasks = conversations.Select(async conversation =>
             {
+                await semaphore.WaitAsync();
                 try
                 {
                     var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
                     
-                    // Cache'e bak
+                    // Check cache first
                     if (_profileCache.TryGetValue(otherUserId, out var cachedUser))
                     {
                         await MainThread.InvokeOnMainThreadAsync(() =>
@@ -235,7 +240,7 @@ namespace KamPay.ViewModels
                                 convo.OtherUserName = cachedUser.FullName ?? convo.OtherUserName;
                             }
                         });
-                        continue;
+                        return;
                     }
 
                     var userProfile = await _userProfileService.GetUserProfileAsync(otherUserId);
@@ -261,7 +266,13 @@ namespace KamPay.ViewModels
                 {
                     Console.WriteLine($"⚠️ Profil resmi yüklenemedi: {ex.Message}");
                 }
-            }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
         }
 
         // 🔥 Realtime Event Handler
