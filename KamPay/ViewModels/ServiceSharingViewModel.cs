@@ -9,6 +9,7 @@ using KamPay.Services;
 using System.Collections.Generic;
 using KamPay.Helpers;
 using Firebase.Database.Streaming;
+using Microsoft.Maui.ApplicationModel;
 
 namespace KamPay.ViewModels
 {
@@ -19,80 +20,83 @@ namespace KamPay.ViewModels
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
 
-        // 🔥 UltraFast loader (snapshot + realtime)
         private readonly RealtimeSnapshotService<ServiceOffer> _loader;
         private IDisposable _listener;
 
-        // 🔥 CACHE: Service tracking
         private readonly HashSet<string> _serviceIds = new();
         private bool _initialLoadComplete = false;
 
-        // 🔥 Form görünürlüğü
-        [ObservableProperty]
-        private bool isPostFormVisible;
 
-        [ObservableProperty]
-        private bool isLoading;
+        // ------------ UI STATE ----------
+        [ObservableProperty] private bool isPostFormVisible;
+        [ObservableProperty] private bool isLoading;
+        [ObservableProperty] private bool isPosting;
+        [ObservableProperty] private bool isRefreshing;
 
-        [ObservableProperty]
-        private bool isPosting;
+        // ------------ FORM FIELDS ----------
+        [ObservableProperty] private string serviceTitle;
+        [ObservableProperty] private string serviceDescription;
+        [ObservableProperty] private ServiceCategory selectedCategory;
+        [ObservableProperty] private decimal servicePrice;
+        [ObservableProperty] private int timeCredits = 1;
 
-        [ObservableProperty]
-        private bool isRefreshing;
+        // ------------ FILTERS ------------
+        [ObservableProperty] private string searchText;
 
-        [ObservableProperty]
-        private string serviceTitle;
+        // null → Hepsi
+        [ObservableProperty] private ServiceCategory? filterCategory = null;
 
-        [ObservableProperty]
-        private string serviceDescription;
+        // “asc”, “desc”, null (Hepsi)
+        [ObservableProperty] private string priceSort = null;
 
-        [ObservableProperty]
-        private ServiceCategory selectedCategory;
 
-        [ObservableProperty]
-        private int timeCredits = 1;
-
-        [ObservableProperty]
-        private decimal servicePrice;
-
+        // ------------ DATA COLLECTIONS --------
         public ObservableCollection<ServiceOffer> Services { get; } = new();
-        public List<ServiceCategory> Categories { get; } =
-            Enum.GetValues(typeof(ServiceCategory)).Cast<ServiceCategory>().ToList();
+        public ObservableCollection<ServiceOffer> FilteredServices { get; } = new();
 
+        // ⚠️ Değişiklik: Tipi 'ServiceCategory?' (nullable) yaptık ve başa 'null' ekledik.
+        // Bu 'null' değeri Picker'da "Tümü" seçeneği olarak işlev görecek.
+        public List<ServiceCategory?> Categories { get; } =
+            new List<ServiceCategory?> { null }
+            .Concat(Enum.GetValues(typeof(ServiceCategory)).Cast<ServiceCategory?>())
+            .ToList();
+
+        // ------------ CONSTRUCTOR ------------
         public ServiceSharingViewModel(
             IServiceSharingService serviceService,
             IAuthenticationService authService,
             IUserProfileService userProfileService,
             IUserStateService userStateService)
         {
-            _serviceService = serviceService ?? throw new ArgumentNullException(nameof(serviceService));
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
-            _userStateService = userStateService ?? throw new ArgumentNullException(nameof(userStateService));
+            _serviceService = serviceService;
+            _authService = authService;
+            _userProfileService = userProfileService;
+            _userStateService = userStateService;
 
-            // 🔥 UltraFast loader
             _loader = new RealtimeSnapshotService<ServiceOffer>(Constants.FirebaseRealtimeDbUrl);
 
-            // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             _ = InitializeAsync();
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
-        {
-            if (updatedUser == null) return;
 
-            // 🔥 UI thread
+        private void OnUserProfileChanged(object sender, User u)
+        {
+            if (u == null) return;
+
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                foreach (var service in Services.Where(s => s.ProviderId == updatedUser.UserId))
+                foreach (var s in Services.Where(x => x.ProviderId == u.UserId))
                 {
-                    service.ProviderName = updatedUser.FullName;
-                    service.ProviderPhotoUrl = updatedUser.ProfileImageUrl;
+                    s.ProviderName = u.FullName;
+                    s.ProviderPhotoUrl = u.ProfileImageUrl;
                 }
+
+                ApplyFilter();
             });
         }
+
 
         private async Task InitializeAsync()
         {
@@ -100,191 +104,226 @@ namespace KamPay.ViewModels
             await UltraFastLoadAsync();
         }
 
-        // 🔥 ULTRA FAST: Snapshot + realtime listener
+
+        // ----------------------------------------------------
+        // 🔥 ULTRA FAST LOADING (Snapshot + Realtime)
+        // ----------------------------------------------------
         public async Task UltraFastLoadAsync()
         {
             try
             {
-                // Eski listener varsa kapat
                 _listener?.Dispose();
                 _listener = null;
 
                 IsLoading = true;
 
-                // 1️⃣ SNAPSHOT – ilk yükleme
                 var snapshot = await _loader.LoadSnapshotAsync(Constants.ServiceOffersCollection);
 
                 Services.Clear();
                 _serviceIds.Clear();
 
-                var list = snapshot
-                    .Select(s =>
-                    {
-                        s.Value.ServiceId = s.Key;
-                        return s.Value;
-                    })
-                    .Where(s => s.IsAvailable)
-                    .OrderByDescending(s => s.CreatedAt)
-                    .ToList();
-
-                foreach (var service in list)
+                foreach (var row in snapshot)
                 {
-                    Services.Add(service);
-                    _serviceIds.Add(service.ServiceId);
+                    if (row.Value == null) continue;
+
+                    var s = row.Value;
+                    s.ServiceId = row.Key;
+
+                    if (s.IsAvailable)
+                    {
+                        Services.Add(s);
+                        _serviceIds.Add(s.ServiceId);
+                    }
                 }
+
+                Services.SortDescending(x => x.CreatedAt);
 
                 _initialLoadComplete = true;
                 IsLoading = false;
 
-                Console.WriteLine($"✅ UltraFast snapshot: {Services.Count} hizmet yüklendi.");
+                ApplyFilter();
 
-                // 2️⃣ REALTIME – canlı güncellemeler
+                // 🔥 REALTIME LISTENER
                 _listener = _loader.Listen(Constants.ServiceOffersCollection, evt =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        try
-                        {
-                            ApplyRealtimeEvent(evt);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"❌ ApplyRealtimeEvent hatası: {ex.Message}");
-                        }
+                        ApplyRealtimeEvent(evt);
                     });
                 });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ UltraFastLoadAsync hata: {ex.Message}");
+                Console.WriteLine("UltraFastLoadAsync Error: " + ex.Message);
                 IsLoading = false;
             }
         }
 
-        // 🔥 Tek tek realtime event işleme
+        [RelayCommand]
+        private void ClearCategoryFilter()
+        {
+            FilterCategory = null;   // kategori filtresi sıfırlanır
+            ApplyFilter();
+        }
+
+        // ----------------------------------------------------
+        // 🔥 REALTIME UPDATE HANDLER
+        // ----------------------------------------------------
         private void ApplyRealtimeEvent(FirebaseEvent<ServiceOffer> e)
         {
-            var service = e.Object;
-            if (service == null) return;
+            var s = e.Object;
+            if (s == null) return;
 
-            service.ServiceId = e.Key;
-            var existingService = Services.FirstOrDefault(s => s.ServiceId == service.ServiceId);
+            s.ServiceId = e.Key;
+            var old = Services.FirstOrDefault(x => x.ServiceId == s.ServiceId);
+
+            bool changed = false;
 
             switch (e.EventType)
             {
                 case FirebaseEventType.InsertOrUpdate:
-                    if (!service.IsAvailable)
+
+                    if (!s.IsAvailable)
                     {
-                        // Artık uygun değilse listeden kaldır
-                        if (existingService != null)
+                        if (old != null)
                         {
-                            Services.Remove(existingService);
-                            _serviceIds.Remove(service.ServiceId);
+                            Services.Remove(old);
+                            _serviceIds.Remove(s.ServiceId);
+                            changed = true;
                         }
-                        return;
+                        break;
                     }
 
-                    if (existingService != null)
+                    if (old != null)
                     {
-                        // Güncelle
-                        var index = Services.IndexOf(existingService);
-                        Services[index] = service;
+                        var i = Services.IndexOf(old);
+                        Services[i] = s;
                     }
                     else
                     {
-                        if (!_serviceIds.Contains(service.ServiceId))
+                        if (!_serviceIds.Contains(s.ServiceId))
                         {
-                            InsertServiceSorted(service);
-                            _serviceIds.Add(service.ServiceId);
+                            InsertSorted(s);
+                            _serviceIds.Add(s.ServiceId);
                         }
                     }
 
-                    // İlk event geldiğinde loading'i kapat (snapshot boşsa)
-                    if (!_initialLoadComplete)
-                    {
-                        _initialLoadComplete = true;
-                        IsLoading = false;
-                        Console.WriteLine("✅ İlk realtime hizmet geldi, loading kapatıldı.");
-                    }
+                    changed = true;
                     break;
 
                 case FirebaseEventType.Delete:
-                    if (existingService != null)
+                    if (old != null)
                     {
-                        Services.Remove(existingService);
-                        _serviceIds.Remove(service.ServiceId);
+                        Services.Remove(old);
+                        _serviceIds.Remove(s.ServiceId);
+                        changed = true;
                     }
                     break;
             }
+
+            if (changed)
+                ApplyFilter();
         }
 
-        // 🔥 En yeni hizmetler üstte olacak şekilde insert
-        private void InsertServiceSorted(ServiceOffer service)
+
+        private void InsertSorted(ServiceOffer s)
         {
             if (Services.Count == 0)
             {
-                Services.Add(service);
-                return;
-            }
-
-            if (Services[0].CreatedAt <= service.CreatedAt)
-            {
-                Services.Insert(0, service);
+                Services.Add(s);
                 return;
             }
 
             for (int i = 0; i < Services.Count; i++)
             {
-                if (Services[i].CreatedAt < service.CreatedAt)
+                if (s.CreatedAt > Services[i].CreatedAt)
                 {
-                    Services.Insert(i, service);
+                    Services.Insert(i, s);
                     return;
                 }
             }
 
-            Services.Add(service);
+            Services.Add(s);
         }
 
-        // 🔄 Elle sıralamak istersen (şu an ApplyRealtimeEvent içinde pek gerek yok ama dursun)
-        private void SortServicesInPlace()
+
+        // ----------------------------------------------------
+        // 🔍 FILTERING
+        // ----------------------------------------------------
+        private void FilterServices()
         {
-            var sorted = Services.OrderByDescending(s => s.CreatedAt).ToList();
+            var q = Services.AsEnumerable();
 
-            for (int i = 0; i < sorted.Count; i++)
+            // Search
+            if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var currentIndex = Services.IndexOf(sorted[i]);
-                if (currentIndex != i && currentIndex >= 0)
-                {
-                    Services.Move(currentIndex, i);
-                }
+                var t = SearchText.ToLower();
+                q = q.Where(s =>
+                    (s.Title ?? "").ToLower().Contains(t) ||
+                    (s.Description ?? "").ToLower().Contains(t) ||
+                    (s.ProviderName ?? "").ToLower().Contains(t)
+                );
             }
+
+            // Category
+            if (FilterCategory != null)
+            {
+                q = q.Where(s => s.Category == FilterCategory.Value);
+            }
+
+            // Price sort
+            if (PriceSort == "Artan")
+                q = q.OrderBy(s => s.Price);
+            else if (PriceSort == "Azalan")
+                q = q.OrderByDescending(s => s.Price);
+            else
+                q = q.OrderByDescending(s => s.CreatedAt);
+
+            // Update Filtered list
+            FilteredServices.Clear();
+            foreach (var s in q)
+                FilteredServices.Add(s);
         }
 
-        // 🔄 Pull-to-Refresh
+
+        [RelayCommand]
+        private void ApplyFilter()
+        {
+            FilterServices();
+        }
+
+
+        partial void OnSearchTextChanged(string value) => ApplyFilter();
+        partial void OnFilterCategoryChanged(ServiceCategory? value) => ApplyFilter();
+
+        partial void OnPriceSortChanged(string value)
+        {
+            PriceSort = value == "Hepsi" ? null : value;
+            ApplyFilter();
+        }
+
+
+        // ----------------------------------------------------
+        // 🔄 REFRESH
+        // ----------------------------------------------------
         [RelayCommand]
         private async Task RefreshServicesAsync()
         {
             if (IsRefreshing) return;
 
+            IsRefreshing = true;
+
             try
             {
-                IsRefreshing = true;
-
-                // Listener'ı durdur
                 _listener?.Dispose();
                 _listener = null;
 
-                // State'i sıfırla
-                _serviceIds.Clear();
                 Services.Clear();
+                FilteredServices.Clear();
+                _serviceIds.Clear();
                 _initialLoadComplete = false;
 
-                // Tekrar ultra-fast yükle
                 await UltraFastLoadAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Refresh hatası: {ex.Message}");
             }
             finally
             {
@@ -292,86 +331,88 @@ namespace KamPay.ViewModels
             }
         }
 
-        // Eğer XAML'de kullanıyorsan, sadece loading state'i yönetir
-        [RelayCommand]
-        private async Task LoadServicesAsync()
-        {
-            if (!_initialLoadComplete)
-            {
-                await UltraFastLoadAsync();
-            }
-        }
 
-        // Paneli Aç / Kapat
-        [RelayCommand]
-        private void OpenPostForm() => IsPostFormVisible = true;
+        // ----------------------------------------------------
+        // FORM OPEN/CLOSE
+        // ----------------------------------------------------
+        [RelayCommand] private void OpenPostForm() => IsPostFormVisible = true;
+        [RelayCommand] private void ClosePostForm() => IsPostFormVisible = false;
 
-        [RelayCommand]
-        private void ClosePostForm() => IsPostFormVisible = false;
 
+        // ----------------------------------------------------
+        // 🔥 CREATE SERVICE
+        // ----------------------------------------------------
         [RelayCommand]
         private async Task CreateServiceAsync()
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(ServiceTitle) || string.IsNullOrWhiteSpace(ServiceDescription))
+                if (string.IsNullOrWhiteSpace(ServiceTitle))
                 {
-                    await Application.Current.MainPage.DisplayAlert("Uyarı", "Başlık ve açıklama gerekli.", "Tamam");
+                    await Display("Uyarı", "Başlık gerekli.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(ServiceDescription))
+                {
+                    await Display("Uyarı", "Açıklama gerekli.");
                     return;
                 }
 
                 if (ServicePrice <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Uyarı", "Lütfen geçerli bir fiyat giriniz.", "Tamam");
+                    await Display("Uyarı", "Geçerli bir fiyat giriniz.");
                     return;
                 }
+
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    await Display("Hata", "Giriş yapılmamış.");
+                    return;
+                }
+
+                var profile = await _userProfileService.GetUserProfileAsync(user.UserId);
+                var img = profile?.Data?.ProfileImageUrl ?? "person_icon.svg";
 
                 IsPosting = true;
 
-                var currentUser = await _authService.GetCurrentUserAsync();
-                if (currentUser == null)
+                var offer = new ServiceOffer
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Giriş yapılmamış.", "Tamam");
-                    return;
-                }
-
-                var userProfile = await _userProfileService.GetUserProfileAsync(currentUser.UserId);
-                string userImage = userProfile?.Data?.ProfileImageUrl ?? "person_icon.svg";
-
-                var service = new ServiceOffer
-                {
-                    ProviderId = currentUser.UserId,
-                    ProviderName = currentUser.FullName,
-                    ProviderPhotoUrl = userImage,
-                    Category = SelectedCategory,
+                    ProviderId = user.UserId,
+                    ProviderName = user.FullName,
+                    ProviderPhotoUrl = img,
                     Title = ServiceTitle,
                     Description = ServiceDescription,
-                    TimeCredits = TimeCredits,
+                    Category = SelectedCategory,
                     Price = ServicePrice,
+                    TimeCredits = TimeCredits,
                     CreatedAt = DateTime.UtcNow,
                     IsAvailable = true
                 };
 
-                var result = await _serviceService.CreateServiceOfferAsync(service);
+                var result = await _serviceService.CreateServiceOfferAsync(offer);
 
-                if (result.Success && result.Data != null)
+                if (result.Success)
                 {
-                    ServiceTitle = string.Empty;
-                    ServiceDescription = string.Empty;
+                    ServiceTitle = "";
+                    ServiceDescription = "";
                     ServicePrice = 0;
                     TimeCredits = 1;
+                    SelectedCategory = 0;
+
                     IsPostFormVisible = false;
 
-                    await Application.Current.MainPage.DisplayAlert("Başarılı", "Hizmet paylaşıldı!", "Tamam");
+                    await Display("Başarılı", "Hizmet paylaşıldı!");
                 }
-                else if (!result.Success)
+                else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message ?? "Bir hata oluştu.", "Tamam");
+                    await Display("Hata", result.Message ?? "Hata oluştu.");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Display("Hata", ex.Message);
             }
             finally
             {
@@ -379,52 +420,52 @@ namespace KamPay.ViewModels
             }
         }
 
+
+        // ----------------------------------------------------
+        // REQUEST SERVICE
+        // ----------------------------------------------------
         [RelayCommand]
         private async Task RequestServiceAsync(ServiceOffer offer)
         {
             if (offer == null) return;
 
-            var currentUser = await _authService.GetCurrentUserAsync();
-            if (currentUser == null)
+            var user = await _authService.GetCurrentUserAsync();
+            if (user == null)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Bu işlem için giriş yapmalısınız.", "Tamam");
+                await Display("Hata", "Giriş yapılmalı.");
                 return;
             }
 
-            if (offer.ProviderId == currentUser.UserId)
+            if (offer.ProviderId == user.UserId)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Kendi hizmetinizi talep edemezsiniz.", "Tamam");
+                await Display("Bilgi", "Kendi hizmetinize talep gönderemezsiniz.");
                 return;
             }
 
             try
             {
-                var message = await Application.Current.MainPage.DisplayPromptAsync(
+                var msg = await Application.Current.MainPage.DisplayPromptAsync(
                     "Hizmet Talebi",
-                    $"'{offer.Title}' hizmeti için talebinizi iletin (Fiyat: {offer.Price} ₺):",
+                    $"'{offer.Title}' için mesajınız:",
                     "Gönder",
                     "İptal",
-                    "Merhaba, bu hizmetinizden yararlanmak istiyorum."
+                    "Merhaba, hizmetinizle ilgileniyorum."
                 );
 
-                if (string.IsNullOrWhiteSpace(message)) return;
+                if (string.IsNullOrWhiteSpace(msg)) return;
 
                 IsPosting = true;
 
-                var result = await _serviceService.RequestServiceAsync(offer, currentUser, message);
+                var res = await _serviceService.RequestServiceAsync(offer, user, msg);
 
-                if (result.Success)
-                {
-                    await Application.Current.MainPage.DisplayAlert("Başarılı", result.Message, "Tamam");
-                }
+                if (res.Success)
+                    await Display("Başarılı", res.Message);
                 else
-                {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message ?? "Talep gönderilemedi.", "Tamam");
-                }
+                    await Display("Hata", res.Message ?? "Talep gönderilemedi.");
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Display("Hata", ex.Message);
             }
             finally
             {
@@ -432,16 +473,60 @@ namespace KamPay.ViewModels
             }
         }
 
+
+
+        // ----------------------------------------------------
+        // TIME CREDITS (+ / -)
+        // ----------------------------------------------------
+        [RelayCommand]
+        private void IncrementTimeCredits()
+        {
+            if (TimeCredits < 10)
+                TimeCredits++;
+        }
+
+        [RelayCommand]
+        private void DecrementTimeCredits()
+        {
+            if (TimeCredits > 1)
+                TimeCredits--;
+        }
+
+
+
+        private Task Display(string t, string m)
+        {
+            return Application.Current.MainPage.DisplayAlert(t, m, "Tamam");
+        }
+
+
+        // ----------------------------------------------------
+        // DISPOSE
+        // ----------------------------------------------------
         public void Dispose()
         {
-            Console.WriteLine("🧹 ServiceSharingViewModel dispose ediliyor...");
+            _listener?.Dispose();
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
 
-            _listener?.Dispose();
-            _listener = null;
-
+            Services.Clear();
+            FilteredServices.Clear();
             _serviceIds.Clear();
-            _initialLoadComplete = false;
+        }
+    }
+
+
+    // ----------------------------------------------------
+    // 🌟 SMALL EXTENSION FOR SORTING
+    // ----------------------------------------------------
+    public static class ListSortExtensions
+    {
+        public static void SortDescending<T, K>(this ObservableCollection<T> list, Func<T, K> key)
+        {
+            var sorted = list.OrderByDescending(key).ToList();
+
+            list.Clear();
+            foreach (var i in sorted)
+                list.Add(i);
         }
     }
 }

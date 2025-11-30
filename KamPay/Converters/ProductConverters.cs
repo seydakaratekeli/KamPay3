@@ -233,11 +233,40 @@ namespace KamPay.Converters
 
     public class ServiceCategoryToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (ServiceCategory)value switch { ServiceCategory.Education => "Eğitim", ServiceCategory.Technical => "Teknik", ServiceCategory.Cooking => "Yemek", ServiceCategory.Childcare => "Çocuk Bakımı", ServiceCategory.PetCare => "Evcil Hayvan", ServiceCategory.Translation => "Çeviri", ServiceCategory.Moving => "Taşıma", _ => "Diğer" };
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // 🔥 1. Adım: Eğer değer null ise (yani "Tümü" seçeneği ise)
+            if (value == null)
+                return "Tümü";
+
+            // 2. Adım: Değer bir kategori ise normal çeviriyi yap
+            if (value is ServiceCategory category)
+            {
+                return category switch
+                {
+                    ServiceCategory.Education => "Eğitim",
+                    ServiceCategory.Technical => "Teknik",
+                    ServiceCategory.Cooking => "Yemek",
+                    ServiceCategory.Childcare => "Çocuk Bakımı",
+                    ServiceCategory.PetCare => "Evcil Hayvan",
+                    ServiceCategory.Translation => "Çeviri",
+                    ServiceCategory.Moving => "Taşıma",
+                    _ => "Diğer"
+                };
+            }
+
+            // Beklenmeyen bir durum olursa varsayılan olarak Tümü veya Diğer diyebiliriz
+            return "Tümü";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Picker'dan ViewModel'e veri giderken kullanılır. 
+            // Genellikle null dönmek yeterlidir.
+            return null;
+        }
     }
 
-   
     public class EqualityToBorderColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#4CAF50") : Colors.Transparent;
