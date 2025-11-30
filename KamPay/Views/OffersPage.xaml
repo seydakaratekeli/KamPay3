@@ -5,9 +5,10 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.OffersPage"
              x:DataType="vm:OffersViewModel"
-             Title="Teklifler"
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OffersTitle]}"
              BackgroundColor="{StaticResource Gray100}">
 
     <ContentPage.Resources>
@@ -27,7 +28,7 @@
 
             <!-- Gelen Teklifler -->
             <Button Grid.Column="0"
-                    Text="Gelen Teklifler"
+                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[IncomingOffers]}"
                     Command="{Binding SelectIncomingCommand}"
                     HeightRequest="40"
                     CornerRadius="20"
@@ -56,7 +57,7 @@
 
             <!-- Giden Teklifler -->
             <Button Grid.Column="1"
-                    Text="Giden Teklifler"
+                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OutgoingOffers]}"
                     Command="{Binding SelectOutgoingCommand}"
                     HeightRequest="40"
                     CornerRadius="20"
@@ -103,7 +104,7 @@
                         <CollectionView.EmptyView>
                             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="30">
                                 <Label Text="📥" FontSize="50" HorizontalTextAlignment="Center"/>
-                                <Label Text="Henüz gelen bir teklif yok."
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingOffers]}"
                                        TextColor="{StaticResource Gray600}"
                                        HorizontalTextAlignment="Center"
                                        FontSize="16"/>
@@ -175,7 +176,7 @@
                                                                        HorizontalOptions="End"
                                                                        Spacing="8">
 
-                                                    <Button Text="Reddet"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Reject]}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
                                                             CommandParameter="{Binding .}"
                                                             BackgroundColor="{StaticResource Tertiary}"
@@ -185,7 +186,7 @@
                                                             FontSize="11"
                                                             IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
 
-                                                    <Button Text="Kabul Et"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Accept]}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
                                                             CommandParameter="{Binding .}"
                                                             BackgroundColor="{StaticResource Primary}"
@@ -195,7 +196,7 @@
                                                             FontSize="11"
                                                             IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
 
-                                                    <Button Text="Teslimat QR"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
                                                             CommandParameter="{Binding .}"
                                                             BackgroundColor="{StaticResource Secondary}"
@@ -225,7 +226,7 @@
                         <CollectionView.EmptyView>
                             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="30">
                                 <Label Text="📤" FontSize="50" HorizontalTextAlignment="Center"/>
-                                <Label Text="Henüz yaptığınız bir teklif yok."
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingOffers]}"
                                        TextColor="{StaticResource Gray600}"
                                        HorizontalTextAlignment="Center"
                                        FontSize="16"/>
@@ -295,7 +296,7 @@
                                                                      HorizontalOptions="End"
                                                                      Spacing="8">
 
-                                                    <Button Text="Ödeme Yap"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MakePayment]}"
                                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
                                                           CommandParameter="{Binding .}"
                                                           BackgroundColor="{StaticResource Primary}"
@@ -305,7 +306,7 @@
                                                           FontSize="11"
                                                           IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}" />
 
-                                                    <Button Text="Teslim Aldım"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ConfirmReceived]}"
                                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ConfirmDonationReceivedCommand}"
                                                           CommandParameter="{Binding .}"
                                                           BackgroundColor="#4CAF50"
@@ -315,7 +316,7 @@
                                                           FontSize="11"
                                                           IsVisible="{Binding Path=., Converter={StaticResource ConfirmDonationButtonVisibilityConverter}}" />
 
-                                                    <Button Text="Teslimat QR"
+                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
                                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
                                                           CommandParameter="{Binding .}"
                                                           BackgroundColor="{StaticResource Secondary}"
@@ -353,7 +354,7 @@
                                        WidthRequest="50"
                                        HeightRequest="50"/>
 
-                    <Label Text="Teklifler yükleniyor..."
+                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OffersLoading]}"
                            TextColor="{StaticResource Gray600}"
                            FontSize="14"
                            HorizontalTextAlignment="Center"/>

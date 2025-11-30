@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.QRCodeDisplayPage"
              x:DataType="vm:QRCodeViewModel"
              Title="{Binding PageTitle}">
@@ -13,7 +14,7 @@
             <Label Text="{Binding InstructionText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray600}"/>
 
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto, Auto, Auto" Margin="0,20,0,0" ColumnSpacing="15">
-                <Label Grid.Row="0" Grid.Column="0" Text="Benim Ürünüm" HorizontalOptions="Center" FontAttributes="Bold"/>
+                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyProduct]}" HorizontalOptions="Center" FontAttributes="Bold"/>
                 <Frame Grid.Row="1" Grid.Column="0" CornerRadius="10" Padding="10" BorderColor="{StaticResource Gray200}" HasShadow="True">
                     <Grid>
                         <zxing:BarcodeGeneratorView 
@@ -24,7 +25,7 @@
             ForegroundColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"/>
 
-                        <Label Text="TESLİM EDİLDİ ✔️"
+                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Delivered]}"
                IsVisible="{Binding MyDelivery.IsUsed}"
                HorizontalOptions="Center"
                VerticalOptions="Center"
@@ -34,13 +35,13 @@
                 </Frame>
 
                 <Label Grid.Row="2" Grid.Column="0" Text="{Binding MyDelivery.ProductTitle}" HorizontalOptions="Center" FontSize="12"/>
-                <Label Grid.Row="0" Grid.Column="1" Text="Diğer Ürün" HorizontalOptions="Center" FontAttributes="Bold"/>
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OtherProduct]}" HorizontalOptions="Center" FontAttributes="Bold"/>
                 <Frame Grid.Row="1" Grid.Column="1" HeightRequest="150" WidthRequest="150" Padding="10" HorizontalOptions="Center" BorderColor="{StaticResource Gray300}">
 
                     <Label HorizontalOptions="Center" VerticalOptions="Center">
                         <Label.Style>
                             <Style TargetType="Label">
-                                <Setter Property="Text" Value="ONAY BEKLİYOR..."/>
+                                <Setter Property="Text" Value="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WaitingConfirmation]}"/>
                                 <Setter Property="TextColor" Value="{StaticResource Gray500}"/>
                                 <Setter Property="FontAttributes" Value="None"/>
 
@@ -48,7 +49,7 @@
                                     <DataTrigger TargetType="Label"
                                  Binding="{Binding OtherUserDelivery.IsUsed}"
                                  Value="True">
-                                        <Setter Property="Text" Value="TESLİM ALINDI ✔️"/>
+                                        <Setter Property="Text" Value="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Received]}"/>
                                         <Setter Property="TextColor" Value="{StaticResource Primary}"/>
                                         <Setter Property="FontAttributes" Value="Bold"/>
                                     </DataTrigger>
@@ -61,7 +62,7 @@
                 <Label Grid.Row="2" Grid.Column="1" Text="{Binding OtherUserDelivery.ProductTitle}" HorizontalOptions="Center" FontSize="12"/>
             </Grid>
 
-            <Button Text="Karşı Tarafın Kodunu Tara" 
+            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanOtherCode]}" 
                     Command="{Binding ScanQRCodeCommand}" 
                     Margin="0,30,0,0"
                     IsEnabled="{Binding OtherUserDelivery.IsUsed, Converter={StaticResource InverseBoolConverter}}"/>

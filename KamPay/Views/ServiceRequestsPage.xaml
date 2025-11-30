@@ -4,9 +4,10 @@
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.ServiceRequestsPage"
              x:DataType="vm:ServiceRequestsViewModel"
-             Title="Hizmet Taleplerim"
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ServiceRequestsTitle]}"
              BackgroundColor="{StaticResource Gray100}">
 
     <ContentPage.Resources>
@@ -30,7 +31,7 @@
 
             <!-- Gelen -->
             <Button Grid.Column="0"
-                    Text="Gelen Talepler"
+                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[IncomingRequests]}"
                     Command="{Binding SelectIncomingCommand}"
                     HeightRequest="40"
                     CornerRadius="20"
@@ -59,7 +60,7 @@
 
             <!-- Giden -->
             <Button Grid.Column="1"
-                    Text="Giden Talepler"
+                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OutgoingRequests]}"
                     Command="{Binding SelectOutgoingCommand}"
                     HeightRequest="40"
                     CornerRadius="20"
@@ -113,7 +114,7 @@
                                        FontSize="50"
                                        HorizontalTextAlignment="Center" />
 
-                                <Label Text="Henüz size gelen bir hizmet talebi yok."
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingRequests]}"
                                        TextColor="{StaticResource Gray600}"
                                        FontSize="16"
                                        HorizontalTextAlignment="Center" />
@@ -171,7 +172,7 @@
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
 
-                                                <Button Text="Reddet"
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Reject]}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=DeclineRequestCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource Tertiary}"
@@ -181,7 +182,7 @@
                                                         FontSize="11"
                                                         IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}" />
 
-                                                <Button Text="Kabul Et"
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Accept]}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptRequestCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource Primary}"
@@ -218,7 +219,7 @@
                                        FontSize="50"
                                        HorizontalTextAlignment="Center" />
 
-                                <Label Text="Henüz gönderdiğiniz bir hizmet talebi yok."
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingRequests]}"
                                        TextColor="{StaticResource Gray600}"
                                        FontSize="16"
                                        HorizontalTextAlignment="Center" />
@@ -272,7 +273,7 @@
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
 
-                                                <Button Text="Hizmeti Tamamla"
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[CompleteService]}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=CompleteRequestCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="#4CAF50"
@@ -309,7 +310,7 @@
                                        WidthRequest="50"
                                        HeightRequest="50"/>
 
-                    <Label Text="Hizmet talepleri yükleniyor..."
+                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ServiceRequestsLoading]}"
                            TextColor="{StaticResource Gray600}"
                            FontSize="14"
                            HorizontalTextAlignment="Center"/>
