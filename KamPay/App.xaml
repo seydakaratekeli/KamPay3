@@ -34,6 +34,7 @@
             <converters:PostTypeToTextConverter x:Key="PostTypeToTextConverter" />
             <converters:ServiceCategoryToIconConverter x:Key="ServiceCategoryToIconConverter" />
             <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
+            <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
             <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter" />
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
