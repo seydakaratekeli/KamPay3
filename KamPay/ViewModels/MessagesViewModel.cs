@@ -35,7 +35,6 @@ namespace KamPay.ViewModels
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private User _currentUser;
         private bool _isInitialized = false;
-        private readonly Dictionary<string, User> _profileCache = new();
 
         // Cache: Conversation ID tracker
         private readonly HashSet<string> _conversationIds = new();
@@ -227,27 +226,10 @@ namespace KamPay.ViewModels
                 try
                 {
                     var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
-                    
-                    // Check cache first
-                    if (_profileCache.TryGetValue(otherUserId, out var cachedUser))
-                    {
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
-                            if (convo != null)
-                            {
-                                convo.OtherUserPhotoUrl = cachedUser.ProfileImageUrl ?? "person_icon.svg";
-                                convo.OtherUserName = cachedUser.FullName ?? convo.OtherUserName;
-                            }
-                        });
-                        return;
-                    }
 
                     var userProfile = await _userProfileService.GetUserProfileAsync(otherUserId);
                     if (userProfile?.Data != null)
                     {
-                        _profileCache[otherUserId] = userProfile.Data;
-
                         await MainThread.InvokeOnMainThreadAsync(() =>
                         {
                             var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
@@ -620,7 +602,6 @@ namespace KamPay.ViewModels
             _realtimeListener?.Dispose();
             _realtimeListener = null;
             _conversationIds.Clear();
-            _profileCache.Clear();
             _isInitialized = false;
         }
     }
