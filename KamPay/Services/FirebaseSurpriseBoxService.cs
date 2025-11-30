@@ -234,36 +234,39 @@ namespace KamPay.Services
         }
 
         // Rozet kontrol ve verme sistemi
+        // NOT: BadgeId ile kontrol yapılarak FirebaseUserProfileService ile tutarlılık sağlanıyor.
+        // BadgeName yerine BadgeId kullanılır çünkü aynı isimde farklı ID'lerle rozet oluşturulabilir.
         private async Task CheckAndAwardBadges(string userId, UserStats stats)
         {
             try
             {
                 var badges = await _userProfileService.GetUserBadgesAsync(userId);
-                var existingBadges = badges.Success ? badges.Data.Select(b => b.BadgeName).ToList() : new List<string>();
+                // BadgeId ile kontrol et - FirebaseUserProfileService.CheckAndAwardBadgesAsync ile tutarlı
+                var existingBadgeIds = badges.Success ? badges.Data.Select(b => b.BadgeId).ToList() : new List<string>();
 
-                // Bağış rozetleri
-                if (stats.DonationsMade >= 1 && !existingBadges.Contains("İlk Bağış"))
+                // Bağış rozetleri - BadgeId ile karşılaştır
+                if (stats.DonationsMade >= 1 && !existingBadgeIds.Contains("first_donation"))
                 {
                     await CreateAndAwardBadge(userId, "first_donation", "İlk Bağış", "İlk bağışını yaptın! 🎁", "🎁");
                 }
 
-                if (stats.DonationsMade >= 5 && !existingBadges.Contains("Cömert Kalp"))
+                if (stats.DonationsMade >= 5 && !existingBadgeIds.Contains("generous_heart"))
                 {
                     await CreateAndAwardBadge(userId, "generous_heart", "Cömert Kalp", "5 bağış yaptın! 💝", "💝");
                 }
 
-                if (stats.DonationsMade >= 10 && !existingBadges.Contains("Süper Bağışçı"))
+                if (stats.DonationsMade >= 10 && !existingBadgeIds.Contains("super_donor"))
                 {
                     await CreateAndAwardBadge(userId, "super_donor", "Süper Bağışçı", "10 bağış yaptın! 🌟", "🌟");
                 }
 
-                // Sürpriz kutu rozetleri
-                if (stats.ItemsShared >= 1 && !existingBadges.Contains("Şanslı"))
+                // Sürpriz kutu rozetleri - BadgeId ile karşılaştır
+                if (stats.ItemsShared >= 1 && !existingBadgeIds.Contains("lucky_one"))
                 {
                     await CreateAndAwardBadge(userId, "lucky_one", "Şanslı", "İlk sürpriz kutunu açtın! 🍀", "🍀");
                 }
 
-                if (stats.ItemsShared >= 5 && !existingBadges.Contains("Kutu Avcısı"))
+                if (stats.ItemsShared >= 5 && !existingBadgeIds.Contains("box_hunter"))
                 {
                     await CreateAndAwardBadge(userId, "box_hunter", "Kutu Avcısı", "5 sürpriz kutu açtın! 🎰", "🎰");
                 }
