@@ -159,30 +159,30 @@
                BackgroundColor="White"
                HasShadow="True">
             <Grid ColumnDefinitions="Auto,*,Auto"
-                  ColumnSpacing="10">
+                  ColumnSpacing="10"
+                  RowDefinitions="Auto">
                 
-                <!-- Fotoğraf Butonu -->
+                <!-- 📷 Fotoğraf Butonu -->
                 <Button Grid.Column="0"
                         Text="📷"
                         Command="{Binding PickImageCommand}"
-                        IsEnabled="{Binding IsUploadingImage, Converter={StaticResource InvertedBoolConverter}}"
                         BackgroundColor="Transparent"
                         TextColor="{StaticResource Primary}"
-                        WidthRequest="44"
-                        HeightRequest="44"
+                        BorderWidth="0"
+                        WidthRequest="45"
+                        HeightRequest="45"
+                        FontSize="24"
                         Padding="0"
-                        FontSize="22">
-                    <Button.GestureRecognizers>
-                        <TapGestureRecognizer NumberOfTapsRequired="2" Command="{Binding TakePhotoCommand}" />
-                    </Button.GestureRecognizers>
-                </Button>
-
+                        VerticalOptions="Center" />
+                
+                <!-- Mesaj Entry -->
                 <Frame Grid.Column="1"
                        Padding="12,8"
                        CornerRadius="20"
                        BorderColor="#E0E0E0"
                        BackgroundColor="#F5F5F5"
-                       HasShadow="False">
+                       HasShadow="False"
+                       VerticalOptions="Center">
                     <Entry Placeholder="Mesajınızı yazın..."
                            Text="{Binding MessageText}"
                            ReturnCommand="{Binding SendMessageCommand}"
@@ -191,6 +191,7 @@
                            BackgroundColor="Transparent" />
                 </Frame>
 
+                <!-- Gönder Butonu -->
                 <Button Grid.Column="2"
                         Text="📤"
                         Command="{Binding SendMessageCommand}"
@@ -201,7 +202,8 @@
                         WidthRequest="50"
                         HeightRequest="50"
                         Padding="0"
-                        FontSize="20" />
+                        FontSize="20"
+                        VerticalOptions="Center" />
             </Grid>
         </Frame>
 
