@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using KamPay.Models;
+using KamPay.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -46,27 +47,28 @@ namespace KamPay.Converters
         {
             if (value is ProductType type)
             {
+                var loc = LocalizationResourceManager.Instance;
                 return type switch
                 {
-                    ProductType.Satis => "Satılık",
-                    ProductType.Bagis => "Bağış",
-                    ProductType.Takas => "Takas",
-                    _ => "Belirtilmemiş"
+                    ProductType.Satis => loc.GetString("ProductTypeSale"),
+                    ProductType.Bagis => loc.GetString("ProductTypeDonation"),
+                    ProductType.Takas => loc.GetString("ProductTypeExchange"),
+                    _ => loc.GetString("NotSpecified")
                 };
             }
-            return "Belirtilmemiş";
+            return LocalizationResourceManager.Instance.GetString("NotSpecified");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var text = value as string;
-            return text switch
-            {
-                "Satılık" => ProductType.Satis,
-                "Bağış" => ProductType.Bagis,
-                "Takas" => ProductType.Takas,
-                _ => ProductType.Satis
-            };
+            var loc = LocalizationResourceManager.Instance;
+            
+            if (text == loc.GetString("ProductTypeSale")) return ProductType.Satis;
+            if (text == loc.GetString("ProductTypeDonation")) return ProductType.Bagis;
+            if (text == loc.GetString("ProductTypeExchange")) return ProductType.Takas;
+            
+            return ProductType.Satis;
         }
     }
 
@@ -77,31 +79,32 @@ namespace KamPay.Converters
         {
             if (value is ProductCondition condition)
             {
+                var loc = LocalizationResourceManager.Instance;
                 return condition switch
                 {
-                    ProductCondition.YeniGibi => "Yeni Gibi",
-                    ProductCondition.CokIyi => "Çok İyi",
-                    ProductCondition.Iyi => "İyi",
-                    ProductCondition.Orta => "Orta",
-                    ProductCondition.Kullanilabilir => "Kullanılabilir",
-                    _ => "Belirtilmemiş"
+                    ProductCondition.YeniGibi => loc.GetString("ConditionLikeNew"),
+                    ProductCondition.CokIyi => loc.GetString("ConditionVeryGood"),
+                    ProductCondition.Iyi => loc.GetString("ConditionGood"),
+                    ProductCondition.Orta => loc.GetString("ConditionFair"),
+                    ProductCondition.Kullanilabilir => loc.GetString("ConditionUsable"),
+                    _ => loc.GetString("NotSpecified")
                 };
             }
-            return "Belirtilmemiş";
+            return LocalizationResourceManager.Instance.GetString("NotSpecified");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var text = value as string;
-            return text switch
-            {
-                "Yeni Gibi" => ProductCondition.YeniGibi,
-                "Çok İyi" => ProductCondition.CokIyi,
-                "İyi" => ProductCondition.Iyi,
-                "Orta" => ProductCondition.Orta,
-                "Kullanılabilir" => ProductCondition.Kullanilabilir,
-                _ => ProductCondition.YeniGibi
-            };
+            var loc = LocalizationResourceManager.Instance;
+            
+            if (text == loc.GetString("ConditionLikeNew")) return ProductCondition.YeniGibi;
+            if (text == loc.GetString("ConditionVeryGood")) return ProductCondition.CokIyi;
+            if (text == loc.GetString("ConditionGood")) return ProductCondition.Iyi;
+            if (text == loc.GetString("ConditionFair")) return ProductCondition.Orta;
+            if (text == loc.GetString("ConditionUsable")) return ProductCondition.Kullanilabilir;
+            
+            return ProductCondition.YeniGibi;
         }
     }
 
@@ -221,7 +224,18 @@ namespace KamPay.Converters
 
     public class PostTypeToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (PostType)value switch { PostType.HelpRequest => "Yardım Talebi", PostType.Announcement => "Duyuru", PostType.ThankYou => "Teşekkür", PostType.Volunteer => "Gönüllü Aranıyor", _ => "Diğer" };
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var loc = LocalizationResourceManager.Instance;
+            return (PostType)value switch 
+            { 
+                PostType.HelpRequest => loc.GetString("PostTypeHelpRequest"), 
+                PostType.Announcement => loc.GetString("PostTypeAnnouncement"), 
+                PostType.ThankYou => loc.GetString("PostTypeThankYou"), 
+                PostType.Volunteer => loc.GetString("PostTypeVolunteer"), 
+                _ => loc.GetString("Other") 
+            };
+        }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
@@ -235,34 +249,36 @@ namespace KamPay.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // 🔥 1. Adım: Eğer değer null ise (yani "Tümü" seçeneği ise)
+            var loc = LocalizationResourceManager.Instance;
+            
+            // If value is null (i.e., "All" option)
             if (value == null)
-                return "Tümü";
+                return loc.GetString("All");
 
-            // 2. Adım: Değer bir kategori ise normal çeviriyi yap
+            // If value is a category, do the normal conversion
             if (value is ServiceCategory category)
             {
                 return category switch
                 {
-                    ServiceCategory.Education => "Eğitim",
-                    ServiceCategory.Technical => "Teknik",
-                    ServiceCategory.Cooking => "Yemek",
-                    ServiceCategory.Childcare => "Çocuk Bakımı",
-                    ServiceCategory.PetCare => "Evcil Hayvan",
-                    ServiceCategory.Translation => "Çeviri",
-                    ServiceCategory.Moving => "Taşıma",
-                    _ => "Diğer"
+                    ServiceCategory.Education => loc.GetString("ServiceCategoryEducation"),
+                    ServiceCategory.Technical => loc.GetString("ServiceCategoryTechnical"),
+                    ServiceCategory.Cooking => loc.GetString("ServiceCategoryCooking"),
+                    ServiceCategory.Childcare => loc.GetString("ServiceCategoryChildcare"),
+                    ServiceCategory.PetCare => loc.GetString("ServiceCategoryPetCare"),
+                    ServiceCategory.Translation => loc.GetString("ServiceCategoryTranslation"),
+                    ServiceCategory.Moving => loc.GetString("ServiceCategoryMoving"),
+                    _ => loc.GetString("Other")
                 };
             }
 
-            // Beklenmeyen bir durum olursa varsayılan olarak Tümü veya Diğer diyebiliriz
-            return "Tümü";
+            // If unexpected, return "All" or "Other"
+            return loc.GetString("All");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Picker'dan ViewModel'e veri giderken kullanılır. 
-            // Genellikle null dönmek yeterlidir.
+            // Used when going from Picker to ViewModel.
+            // Generally returning null is sufficient.
             return null;
         }
     }

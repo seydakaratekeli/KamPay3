@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Resources.Languages;
 
 namespace KamPay.Services;
@@ -69,6 +70,9 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         
         // Notify all bindings that resources have changed
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        
+        // Send global message for ViewModels to refresh
+        WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
     }
 
     /// <summary>
@@ -77,5 +81,28 @@ public class LocalizationResourceManager : INotifyPropertyChanged
     public string GetCurrentCulture()
     {
         return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    }
+
+    /// <summary>
+    /// Gets a localized string by key.
+    /// </summary>
+    /// <param name="key">The resource key</param>
+    /// <returns>The localized string or the key if not found</returns>
+    public string GetString(string key)
+    {
+        return AppResources.ResourceManager.GetString(key, AppResources.Culture) ?? key;
+    }
+}
+
+/// <summary>
+/// Message sent when the application language changes.
+/// </summary>
+public class LanguageChangedMessage
+{
+    public string LanguageCode { get; }
+    
+    public LanguageChangedMessage(string languageCode)
+    {
+        LanguageCode = languageCode;
     }
 }

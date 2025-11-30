@@ -890,4 +890,69 @@
   <data name="ProductList" xml:space="preserve">
     <value>Ürün Listesi</value>
   </data>
+  
+  <!-- Time Ago -->
+  <data name="JustNow" xml:space="preserve">
+    <value>Az önce</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>dakika önce</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>saat önce</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>gün önce</value>
+  </data>
+  
+  <!-- Product Types -->
+  <data name="ProductTypeSale" xml:space="preserve">
+    <value>Satılık</value>
+  </data>
+  <data name="ProductTypeExchange" xml:space="preserve">
+    <value>Takas</value>
+  </data>
+  <data name="ProductTypeDonation" xml:space="preserve">
+    <value>Bağış</value>
+  </data>
+  <data name="NotSpecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  
+  <!-- Post Types -->
+  <data name="PostTypeHelpRequest" xml:space="preserve">
+    <value>Yardım Talebi</value>
+  </data>
+  <data name="PostTypeAnnouncement" xml:space="preserve">
+    <value>Duyuru</value>
+  </data>
+  <data name="PostTypeThankYou" xml:space="preserve">
+    <value>Teşekkür</value>
+  </data>
+  <data name="PostTypeVolunteer" xml:space="preserve">
+    <value>Gönüllü Aranıyor</value>
+  </data>
+  
+  <!-- Service Categories -->
+  <data name="ServiceCategoryEducation" xml:space="preserve">
+    <value>Eğitim</value>
+  </data>
+  <data name="ServiceCategoryTechnical" xml:space="preserve">
+    <value>Teknik</value>
+  </data>
+  <data name="ServiceCategoryCooking" xml:space="preserve">
+    <value>Yemek</value>
+  </data>
+  <data name="ServiceCategoryChildcare" xml:space="preserve">
+    <value>Çocuk Bakımı</value>
+  </data>
+  <data name="ServiceCategoryPetCare" xml:space="preserve">
+    <value>Evcil Hayvan</value>
+  </data>
+  <data name="ServiceCategoryTranslation" xml:space="preserve">
+    <value>Çeviri</value>
+  </data>
+  <data name="ServiceCategoryMoving" xml:space="preserve">
+    <value>Taşıma</value>
+  </data>
 </root>
