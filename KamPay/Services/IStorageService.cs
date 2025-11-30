@@ -11,11 +11,10 @@ namespace KamPay.Services
     {
         Task<ServiceResult<string>> UploadProductImageAsync(string localPath, string productId, int imageIndex);
         Task<ServiceResult<string>> UploadProfileImageAsync(string localPath, string userId);
+        Task<ServiceResult<string>> UploadMessageImageAsync(string localPath, string conversationId);
         Task<ServiceResult<bool>> DeleteImageAsync(string imageUrl);
         Task<long> GetFileSizeAsync(string localPath);
     }
-
-   
 
 
 }

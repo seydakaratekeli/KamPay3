@@ -134,6 +134,7 @@ namespace KamPay
             builder.Services.AddTransient<ServiceSharingViewModel>();
             builder.Services.AddTransient<ServiceRequestsViewModel>(); // Bu satırı ekleyin
             builder.Services.AddTransient<SurpriseBoxViewModel>();
+            builder.Services.AddTransient<ImageViewerViewModel>();
 
             // Views
             builder.Services.AddTransient<SurpriseBoxPage>();
@@ -158,6 +159,7 @@ namespace KamPay
             builder.Services.AddTransient<QRCodeDisplayPage>();
             builder.Services.AddTransient<QRScannerPage>();
             builder.Services.AddTransient<ServiceRequestsPage>(); 
+            builder.Services.AddTransient<ImageViewerPage>();
             builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();
 
 

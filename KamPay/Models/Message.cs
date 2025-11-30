@@ -22,18 +22,25 @@ namespace KamPay.Models
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
         public bool IsDeleted { get; set; } = false;
-        // Mesaj durumu özellikleri
+        // Mesaj durumu ï¿½zellikleri
         public bool IsDelivered { get; set; } = true;
 
-        // Ürün referansı (opsiyonel)
+        // ï¿½rï¿½n referansï¿½ (opsiyonel)
         public string ProductId { get; set; }
         public string ProductTitle { get; set; }
         public string ProductThumbnail { get; set; }
         public string TimeText => SentAt.ToString("HH:mm");
 
-        // (Veritabanına kaydedilmeyecek, sadece UI için)
+        // FotoÄŸraf mesajlarÄ± iÃ§in
+        public string ImageUrl { get; set; }
+
+        // (VeritabanÄ±na kaydedilmeyecek, sadece UI iÃ§in)
         [JsonIgnore] 
         public bool IsSentByMe { get; set; }
+
+        // UI loading gÃ¶stergesi iÃ§in
+        [JsonIgnore]
+        public bool IsImageLoading { get; set; }
 
     }
 
@@ -45,12 +52,13 @@ namespace KamPay.Models
         System = 3
     }
 
-    // Mesaj gönderme için DTO (Veri Transfer Nesnesi)
+    // Mesaj gÃ¶nderme iÃ§in DTO (Veri Transfer Nesnesi)
     public class SendMessageRequest
     {
         public string ReceiverId { get; set; }
         public string Content { get; set; }
         public MessageType Type { get; set; } = MessageType.Text;
         public string ProductId { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

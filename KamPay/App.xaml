@@ -38,6 +38,7 @@
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
             <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
+            <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
             <converters:BoolToColorConverter x:Key="LikeColorConverter"
                                  TrueColor="{StaticResource Danger}"
                 FalseColor="{StaticResource Gray400}" />
