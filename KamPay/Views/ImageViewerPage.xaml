@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="KamPay.Views.ImageViewerPage"
+             Title="Fotoğraf"
+             BackgroundColor="Black"
+             Shell.NavBarIsVisible="False">
+
+    <Grid>
+        <!-- Tam Ekran Görsel -->
+        <Image Source="{Binding ImageUrl}"
+               Aspect="AspectFit"
+               VerticalOptions="Center"
+               HorizontalOptions="Center" />
+
+        <!-- Kapat Butonu -->
+        <Button Text="✕"
+                Command="{Binding CloseCommand}"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="24"
+                WidthRequest="50"
+                HeightRequest="50"
+                CornerRadius="25"
+                Margin="20"
+                VerticalOptions="Start"
+                HorizontalOptions="End" />
+    </Grid>
+</ContentPage>

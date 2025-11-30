@@ -96,6 +96,53 @@ public class FirebaseStorageService : IStorageService
         }
     }
 
+    public async Task<ServiceResult<string>> UploadMessageImageAsync(string localPath, string conversationId)
+    {
+        try
+        {
+            // Dosya var mı kontrol et
+            if (!File.Exists(localPath))
+            {
+                return ServiceResult<string>.FailureResult(
+                    "Dosya bulunamadı",
+                    "Seçilen görsel dosyası bulunamadı"
+                );
+            }
+
+            // Dosya boyutu kontrolü - Mesaj görselleri için 1MB limit
+            var fileSize = await GetFileSizeAsync(localPath);
+            const long maxMessageImageSize = 1 * 1024 * 1024; // 1 MB
+            if (fileSize > maxMessageImageSize)
+            {
+                return ServiceResult<string>.FailureResult(
+                    "Dosya çok büyük",
+                    "Maksimum 1 MB olabilir"
+                );
+            }
+
+            // Dosya uzantısını al ve unique dosya adı oluştur
+            var extension = Path.GetExtension(localPath);
+            var fileName = $"msg_{Guid.NewGuid()}{extension}";
+
+            // Firebase Storage'a yükle
+            await using var stream = File.OpenRead(localPath);
+            var downloadUrl = await _storage
+                .Child(Constants.MessageImagesFolder)
+                .Child(conversationId)
+                .Child(fileName)
+                .PutAsync(stream);
+
+            return ServiceResult<string>.SuccessResult(downloadUrl, "Görsel başarıyla yüklendi");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<string>.FailureResult(
+                "Görsel yüklenemedi",
+                ex.Message
+            );
+        }
+    }
+
     public async Task<ServiceResult<bool>> DeleteImageAsync(string imageUrl)
     {
         try

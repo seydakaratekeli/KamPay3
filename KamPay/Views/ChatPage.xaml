@@ -44,8 +44,34 @@
                                 </Frame.Style>
 
                                 <VerticalStackLayout Spacing="5">
+                                    <!-- 📷 Fotoğraf Mesajı -->
+                                    <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}">
+                                        <Border StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                MaximumWidthRequest="250"
+                                                MaximumHeightRequest="200">
+                                            <Image Source="{Binding ImageUrl}"
+                                                   Aspect="AspectFill"
+                                                   WidthRequest="250"
+                                                   HeightRequest="200">
+                                                <Image.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ViewImageCommand}"
+                                                                          CommandParameter="{Binding ImageUrl}" />
+                                                </Image.GestureRecognizers>
+                                            </Image>
+                                        </Border>
+                                        <!-- Loading Indicator for Image -->
+                                        <ActivityIndicator IsRunning="{Binding IsImageLoading}"
+                                                           IsVisible="{Binding IsImageLoading}"
+                                                           Color="White"
+                                                           VerticalOptions="Center"
+                                                           HorizontalOptions="Center" />
+                                    </Grid>
+
+                                    <!-- 💬 Text Mesajı -->
                                     <Label Text="{Binding Content}"
-                                           LineBreakMode="WordWrap">
+                                           LineBreakMode="WordWrap"
+                                           IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
                                         <Label.Style>
                                             <Style TargetType="Label">
                                                 <Setter Property="TextColor" Value="Black" />
@@ -132,9 +158,26 @@
                BorderColor="#E0E0E0"
                BackgroundColor="White"
                HasShadow="True">
-            <Grid ColumnDefinitions="*,Auto"
+            <Grid ColumnDefinitions="Auto,*,Auto"
                   ColumnSpacing="10">
-                <Frame Grid.Column="0"
+                
+                <!-- Fotoğraf Butonu -->
+                <Button Grid.Column="0"
+                        Text="📷"
+                        Command="{Binding PickImageCommand}"
+                        IsEnabled="{Binding IsUploadingImage, Converter={StaticResource InvertedBoolConverter}}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"
+                        WidthRequest="44"
+                        HeightRequest="44"
+                        Padding="0"
+                        FontSize="22">
+                    <Button.GestureRecognizers>
+                        <TapGestureRecognizer NumberOfTapsRequired="2" Command="{Binding TakePhotoCommand}" />
+                    </Button.GestureRecognizers>
+                </Button>
+
+                <Frame Grid.Column="1"
                        Padding="12,8"
                        CornerRadius="20"
                        BorderColor="#E0E0E0"
@@ -148,7 +191,7 @@
                            BackgroundColor="Transparent" />
                 </Frame>
 
-                <Button Grid.Column="1"
+                <Button Grid.Column="2"
                         Text="📤"
                         Command="{Binding SendMessageCommand}"
                         IsEnabled="{Binding IsSending, Converter={StaticResource InvertedBoolConverter}}"

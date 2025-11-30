@@ -22,6 +22,7 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
+        private readonly IStorageService _storageService;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
         // 🔥 CACHE: Her konuşma için ayrı state
@@ -61,15 +62,23 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isRefreshing;
 
+        // Fotoğraf yükleme özellikleri
+        [ObservableProperty]
+        private bool isUploadingImage;
+
+        [ObservableProperty]
+        private string selectedImagePath;
+
         public ObservableCollection<Message> Messages { get; } = new();
 
         private User _currentUser;
 
-        public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService, IUserStateService userStateService)
+        public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService, IUserStateService userStateService, IStorageService storageService)
         {
             _messagingService = messagingService;
             _authService = authService;
             _userStateService = userStateService;
+            _storageService = storageService;
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -677,6 +686,174 @@ namespace KamPay.ViewModels
             if (oldKeys.Any())
             {
                 Console.WriteLine($"🗑️ {oldKeys.Count} eski cache temizlendi");
+            }
+        }
+
+        // 📷 Fotoğraf Gönderme Komutları
+
+        [RelayCommand]
+        private async Task PickImageAsync()
+        {
+            if (IsUploadingImage) return;
+
+            try
+            {
+                var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Fotoğraf Seçin"
+                });
+
+                if (result != null)
+                {
+                    SelectedImagePath = result.FullPath;
+                    await SendImageMessageAsync(result.FullPath);
+                }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda fotoğraf seçme desteklenmiyor.", "Tamam");
+            }
+            catch (PermissionException)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", "Galeri erişim izni gerekli.", "Tamam");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ PickImage hatası: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf seçilemedi.", "Tamam");
+            }
+        }
+
+        [RelayCommand]
+        private async Task TakePhotoAsync()
+        {
+            if (IsUploadingImage) return;
+
+            try
+            {
+                if (!MediaPicker.IsCaptureSupported)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
+                    return;
+                }
+
+                var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Fotoğraf Çekin"
+                });
+
+                if (result != null)
+                {
+                    SelectedImagePath = result.FullPath;
+                    await SendImageMessageAsync(result.FullPath);
+                }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
+            }
+            catch (PermissionException)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", "Kamera erişim izni gerekli.", "Tamam");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ TakePhoto hatası: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf çekilemedi.", "Tamam");
+            }
+        }
+
+        private async Task SendImageMessageAsync(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath) || _currentUser == null || Conversation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                IsUploadingImage = true;
+
+                // 1️⃣ Temp mesaj oluştur (loading state ile)
+                var tempMessage = new Message
+                {
+                    MessageId = $"temp_{Guid.NewGuid()}",
+                    ConversationId = ConversationId,
+                    SenderId = _currentUser.UserId,
+                    SenderName = _currentUser.FullName,
+                    SenderPhotoUrl = _currentUser.ProfileImageUrl,
+                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                    ReceiverName = Conversation.GetOtherUserName(_currentUser.UserId),
+                    ReceiverPhotoUrl = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId),
+                    Content = "📷 Fotoğraf",
+                    Type = MessageType.Image,
+                    ImageUrl = imagePath, // Geçici olarak local path göster
+                    IsImageLoading = true,
+                    ProductId = Conversation.ProductId,
+                    ProductTitle = Conversation.ProductTitle,
+                    ProductThumbnail = Conversation.ProductThumbnail,
+                    IsSentByMe = true,
+                    SentAt = DateTime.UtcNow,
+                    IsDelivered = false,
+                    IsRead = false
+                };
+
+                InsertMessageSorted(tempMessage);
+                WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(tempMessage));
+
+                // 2️⃣ Firebase Storage'a yükle
+                var uploadResult = await _storageService.UploadMessageImageAsync(imagePath, ConversationId);
+
+                if (!uploadResult.Success)
+                {
+                    Messages.Remove(tempMessage);
+                    await Application.Current.MainPage.DisplayAlert("Hata", uploadResult.Message ?? "Görsel yüklenemedi.", "Tamam");
+                    return;
+                }
+
+                // 3️⃣ Mesaj olarak gönder
+                var request = new SendMessageRequest
+                {
+                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                    Content = "📷 Fotoğraf",
+                    Type = MessageType.Image,
+                    ProductId = Conversation.ProductId,
+                    ImageUrl = uploadResult.Data
+                };
+
+                var sendResult = await _messagingService.SendMessageAsync(request, _currentUser);
+
+                if (!sendResult.Success)
+                {
+                    Messages.Remove(tempMessage);
+                    await Application.Current.MainPage.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gönderilemedi.", "Tamam");
+                }
+                // 4️⃣ Real-time listener mesajı güncelleyecek
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SendImageMessage hatası: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf gönderilemedi.", "Tamam");
+            }
+            finally
+            {
+                IsUploadingImage = false;
+                SelectedImagePath = null;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewImageAsync(string imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return;
+
+            try
+            {
+                await Shell.Current.GoToAsync($"{nameof(ImageViewerPage)}?imageUrl={Uri.EscapeDataString(imageUrl)}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ViewImage hatası: {ex.Message}");
             }
         }
     }

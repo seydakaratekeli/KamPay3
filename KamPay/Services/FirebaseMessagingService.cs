@@ -34,9 +34,19 @@ namespace KamPay.Services
         {
             try
             {
-                if (request == null || sender == null || string.IsNullOrEmpty(request.ReceiverId) || string.IsNullOrEmpty(request.Content))
+                if (request == null || sender == null || string.IsNullOrEmpty(request.ReceiverId))
                 {
-                    return ServiceResult<Message>.FailureResult("Geçersiz istek: Gönderen, alıcı veya mesaj içeriği boş olamaz.");
+                    return ServiceResult<Message>.FailureResult("Geçersiz istek: Gönderen veya alıcı boş olamaz.");
+                }
+
+                // Text mesajlar için content zorunlu, Image mesajlar için ImageUrl zorunlu
+                if (request.Type == MessageType.Text && string.IsNullOrEmpty(request.Content))
+                {
+                    return ServiceResult<Message>.FailureResult("Mesaj içeriği boş olamaz.");
+                }
+                if (request.Type == MessageType.Image && string.IsNullOrEmpty(request.ImageUrl))
+                {
+                    return ServiceResult<Message>.FailureResult("Görsel URL'i boş olamaz.");
                 }
 
                 var conversationResult = await GetOrCreateConversationAsync(sender.UserId, request.ReceiverId, request.ProductId);
@@ -65,6 +75,7 @@ namespace KamPay.Services
                     Content = request.Content,
                     Type = request.Type,
                     ProductId = request.ProductId,
+                    ImageUrl = request.ImageUrl,
                     ReceiverName = receiver.FullName,
                     ReceiverPhotoUrl = receiver.ProfileImageUrl,
                 };
