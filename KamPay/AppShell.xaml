@@ -6,6 +6,7 @@
     xmlns:views="clr-namespace:KamPay.Views"
     xmlns:converters="clr-namespace:KamPay.Converters"
     xmlns:res="clr-namespace:KamPay.Services"
+    xmlns:localization="clr-namespace:KamPay.Extensions"
     Shell.FlyoutBehavior="Disabled"
     x:Name="shell">
 
@@ -23,34 +24,34 @@
     </Shell.Resources>
 
     <ShellContent
-        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Login]}"
+        Title="{localization:Translate Key=Login}"
         ContentTemplate="{DataTemplate views:LoginPage}"
         Route="LoginPage" />
 
     <TabBar Route="MainApp">
 
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[HomePage]}" Icon="home_icon.svg">
+        <Tab Title="{localization:Translate Key=HomePage}" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate views:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Board]}" Icon="good_board.svg">
+        <Tab Title="{localization:Translate Key=Board}" Icon="good_board.svg">
             <ShellContent ContentTemplate="{DataTemplate views:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Messages]}"
+        <Tab Title="{localization:Translate Key=Messages}"
              Icon="{Binding BindingContext.HasUnreadMessages, Source={x:Reference shell}, Converter={StaticResource UnreadToIconConverter}}">
             <ShellContent ContentTemplate="{DataTemplate views:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Service]}" Icon="briefcase.svg">
+        <Tab Title="{localization:Translate Key=Service}" Icon="briefcase.svg">
             <ShellContent ContentTemplate="{DataTemplate views:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
         
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Profile]}" Icon="person_icon.svg">
+        <Tab Title="{localization:Translate Key=Profile}" Icon="person_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate views:ProfilePage}" Route="ProfilePage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Favorites]}" Icon="heart_icon.svg">
+        <Tab Title="{localization:Translate Key=Favorites}" Icon="heart_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate views:FavoritesPage}" Route="FavoritesPage" />
         </Tab>
         

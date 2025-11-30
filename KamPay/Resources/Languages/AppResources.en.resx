@@ -890,4 +890,69 @@
   <data name="ProductList" xml:space="preserve">
     <value>Product List</value>
   </data>
+  
+  <!-- Time Ago -->
+  <data name="JustNow" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>minutes ago</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>hours ago</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>days ago</value>
+  </data>
+  
+  <!-- Product Types -->
+  <data name="ProductTypeSale" xml:space="preserve">
+    <value>For Sale</value>
+  </data>
+  <data name="ProductTypeExchange" xml:space="preserve">
+    <value>Exchange</value>
+  </data>
+  <data name="ProductTypeDonation" xml:space="preserve">
+    <value>Donation</value>
+  </data>
+  <data name="NotSpecified" xml:space="preserve">
+    <value>Not Specified</value>
+  </data>
+  
+  <!-- Post Types -->
+  <data name="PostTypeHelpRequest" xml:space="preserve">
+    <value>Help Request</value>
+  </data>
+  <data name="PostTypeAnnouncement" xml:space="preserve">
+    <value>Announcement</value>
+  </data>
+  <data name="PostTypeThankYou" xml:space="preserve">
+    <value>Thank You</value>
+  </data>
+  <data name="PostTypeVolunteer" xml:space="preserve">
+    <value>Volunteer Needed</value>
+  </data>
+  
+  <!-- Service Categories -->
+  <data name="ServiceCategoryEducation" xml:space="preserve">
+    <value>Education</value>
+  </data>
+  <data name="ServiceCategoryTechnical" xml:space="preserve">
+    <value>Technical</value>
+  </data>
+  <data name="ServiceCategoryCooking" xml:space="preserve">
+    <value>Cooking</value>
+  </data>
+  <data name="ServiceCategoryChildcare" xml:space="preserve">
+    <value>Childcare</value>
+  </data>
+  <data name="ServiceCategoryPetCare" xml:space="preserve">
+    <value>Pet Care</value>
+  </data>
+  <data name="ServiceCategoryTranslation" xml:space="preserve">
+    <value>Translation</value>
+  </data>
+  <data name="ServiceCategoryMoving" xml:space="preserve">
+    <value>Moving</value>
+  </data>
 </root>
