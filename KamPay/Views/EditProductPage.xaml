@@ -5,8 +5,9 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:conv="clr-namespace:KamPay.Converters"
              xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
+             xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.EditProductPage"
-             Title="Ürünü Düzenle"
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProduct]}"
              Shell.BackgroundColor="{StaticResource Primary}">
 
 
@@ -26,7 +27,7 @@
             </Frame>
 
             <!-- Başlık -->
-            <Label Text="Ürün Bilgileri" 
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductInfo]}" 
                    FontSize="20" 
                    FontAttributes="Bold"
                    TextColor="#333" />
@@ -35,7 +36,7 @@
             <Frame Padding="0" 
                    BorderColor="#E0E0E0"
                    CornerRadius="8">
-                <Entry Placeholder="Ürün Başlığı *"
+                <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductTitle]}"
                        Text="{Binding Title}"
                        MaxLength="100"
                        FontSize="16" />
@@ -45,7 +46,7 @@
             <Frame Padding="0" 
                    BorderColor="#E0E0E0"
                    CornerRadius="8">
-                <Editor Placeholder="Ürün Açıklaması *"
+                <Editor Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductDescription]}"
                         Text="{Binding Description}"
                         HeightRequest="120"
                         MaxLength="1000"
@@ -54,7 +55,7 @@
             </Frame>
 
             <!-- Kategori Seçimi -->
-            <Label Text="Kategori *" 
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Category]}" 
                    FontSize="16" 
                    FontAttributes="Bold"
                    TextColor="#666" />
@@ -66,11 +67,11 @@
                         SelectedItem="{Binding SelectedCategory}"
                         ItemDisplayBinding="{Binding Name}"
                         FontSize="16"
-                        Title="Kategori Seçin" />
+                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCategory]}" />
             </Frame>
 
             <!-- Ürün Tipi -->
-            <Label Text="Ürün Tipi *" 
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductType]}" 
                    FontSize="16" 
                    FontAttributes="Bold"
                    TextColor="#666" />
@@ -81,7 +82,7 @@
                 <Picker ItemsSource="{Binding ProductTypes}"
                         SelectedItem="{Binding SelectedType}"
                         FontSize="16"
-                        Title="Tip Seçin">
+                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectType]}">
                     <Picker.ItemDisplayBinding>
                         <Binding>
                             <Binding.Converter>
@@ -98,7 +99,7 @@
                    BorderColor="#E0E0E0"
                    CornerRadius="8">
                 <HorizontalStackLayout Padding="10">
-                    <Entry Placeholder="Fiyat"
+                    <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Price]}"
                            Text="{Binding Price}"
                            Keyboard="Numeric"
                            FontSize="16"
@@ -116,13 +117,13 @@
                    Padding="0" 
                    BorderColor="#E0E0E0"
                    CornerRadius="8">
-                <Entry Placeholder="Ne ile takas yapmak istersiniz?"
+                <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WhatToExchange]}"
                        Text="{Binding ExchangePreference}"
                        FontSize="16" />
             </Frame>
 
             <!-- Durum -->
-            <Label Text="Ürün Durumu *" 
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductCondition]}" 
                    FontSize="16" 
                    FontAttributes="Bold"
                    TextColor="#666" />
@@ -133,7 +134,7 @@
                 <Picker ItemsSource="{Binding Conditions}"
                         SelectedItem="{Binding SelectedCondition}"
                         FontSize="16"
-                        Title="Durum Seçin">
+                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCondition]}">
                     <Picker.ItemDisplayBinding>
                         <Binding>
                             <Binding.Converter>
@@ -145,7 +146,7 @@
             </Frame>
 
             <!-- Konum -->
-            <Label Text="Konum *"
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Location]}"
                    FontSize="16" 
                    FontAttributes="Bold"
                    TextColor="#666" />
@@ -213,18 +214,18 @@
             </Border>
 
             <!-- Konum bilgi metni -->
-            <Label Text="Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın"
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MapLocationInfo]}"
                    FontSize="12"
                    TextColor="{StaticResource Gray600}"
                    Margin="0,4,0,0"/>
 
             <!-- Görseller -->
-            <Label Text="Ürün Görselleri (Maksimum 5)" 
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductImages]}" 
                    FontSize="16" 
                    FontAttributes="Bold"
                    TextColor="#666" />
 
-            <Button Text="📷 Görsel Ekle"
+            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[AddImage]}"
                     Command="{Binding PickImagesCommand}"
                     BackgroundColor="#2196F3"
                     TextColor="White"
@@ -268,7 +269,7 @@
                   ColumnSpacing="10"
                   Margin="0,20,0,0">
                 <Button Grid.Column="0"
-                        Text="İptal"
+                        Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Cancel]}"
                         Command="{Binding CancelCommand}"
                         BackgroundColor="#757575"
                         TextColor="White"
@@ -276,7 +277,7 @@
                         HeightRequest="50" />
 
                 <Button Grid.Column="1"
-            Text="Güncelle" Command="{Binding SaveProductCommand}" BackgroundColor="#4CAF50"
+            Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Update]}" Command="{Binding SaveProductCommand}" BackgroundColor="#4CAF50"
             TextColor="White"
             CornerRadius="8"
             HeightRequest="50" />
