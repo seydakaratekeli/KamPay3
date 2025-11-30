@@ -208,7 +208,7 @@
                 </Frame>
 
                 <!-- Language Button -->
-                <Button Text="🌐 Language / Dil"
+                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LanguageDil]}"
                         Command="{Binding ChangeLanguageCommand}"
                         BackgroundColor="#9C27B0"
                         TextColor="White"

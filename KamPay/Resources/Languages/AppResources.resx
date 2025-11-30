@@ -58,9 +58,167 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  
+  <!-- Tab Bar Items -->
+  <data name="HomePage" xml:space="preserve">
+    <value>Ana Sayfa</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Pano</value>
+  </data>
+  <data name="Messages" xml:space="preserve">
+    <value>Mesajlar</value>
+  </data>
+  <data name="Service" xml:space="preserve">
+    <value>Hizmet</value>
+  </data>
   <data name="Profile" xml:space="preserve">
     <value>Profil</value>
   </data>
+  <data name="Favorites" xml:space="preserve">
+    <value>Favoriler</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Giriş</value>
+  </data>
+  
+  <!-- Common Actions -->
+  <data name="Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Tamam</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Evet</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Hayır</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Gönder</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Güncelle</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Paylaş</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Uygula</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Geri</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Onayla</value>
+  </data>
+  <data name="Reject" xml:space="preserve">
+    <value>Reddet</value>
+  </data>
+  <data name="Accept" xml:space="preserve">
+    <value>Kabul Et</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Çıkar</value>
+  </data>
+  <data name="Request" xml:space="preserve">
+    <value>Talep Et</value>
+  </data>
+  
+  <!-- Auth Pages -->
+  <data name="LoginTitle" xml:space="preserve">
+    <value>Giriş Yap</value>
+  </data>
+  <data name="RegisterTitle" xml:space="preserve">
+    <value>Kayıt Ol</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Şifre</value>
+  </data>
+  <data name="PasswordConfirm" xml:space="preserve">
+    <value>Şifre Tekrar</value>
+  </data>
+  <data name="VerificationCode" xml:space="preserve">
+    <value>Doğrulama Kodu</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="UniversityEmail" xml:space="preserve">
+    <value>Üniversite E-posta</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Beni hatırla</value>
+  </data>
+  <data name="NoAccountRegister" xml:space="preserve">
+    <value>Hesabın yok mu? Kayıt ol</value>
+  </data>
+  <data name="HaveAccountLogin" xml:space="preserve">
+    <value>Zaten hesabınız var? Giriş Yap</value>
+  </data>
+  <data name="EmailVerification" xml:space="preserve">
+    <value>E-posta doğrulama</value>
+  </data>
+  <data name="EnterVerificationCode" xml:space="preserve">
+    <value>E-postanıza gönderilen 6 haneli kodu girin.</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Doğrula</value>
+  </data>
+  <data name="ResendCode" xml:space="preserve">
+    <value>Kodu Tekrar Gönder</value>
+  </data>
+  <data name="DemoUserInfo" xml:space="preserve">
+    <value>Demo Kullanıcı Bilgileri</value>
+  </data>
+  <data name="User1" xml:space="preserve">
+    <value>Kullanıcı 1</value>
+  </data>
+  <data name="User2" xml:space="preserve">
+    <value>Kullanıcı 2</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Hoş geldiniz</value>
+  </data>
+  <data name="LoginSuccess" xml:space="preserve">
+    <value>Giriş başarılı</value>
+  </data>
+  <data name="LoginFailed" xml:space="preserve">
+    <value>Giriş yapılamadı.</value>
+  </data>
+  <data name="UnexpectedError" xml:space="preserve">
+    <value>Beklenmeyen hata</value>
+  </data>
+  
+  <!-- Profile Related -->
   <data name="EditProfile" xml:space="preserve">
     <value>Profili Düzenle</value>
   </data>
@@ -82,9 +240,6 @@
   <data name="Badge" xml:space="preserve">
     <value>Rozet</value>
   </data>
-  <data name="All" xml:space="preserve">
-    <value>Tümü</value>
-  </data>
   <data name="NoBadgesYet" xml:space="preserve">
     <value>Henüz rozet kazanmadınız</value>
   </data>
@@ -99,5 +254,640 @@
   </data>
   <data name="ServiceRequests" xml:space="preserve">
     <value>Hizmet Taleplerim</value>
+  </data>
+  <data name="LanguageDil" xml:space="preserve">
+    <value>🌐 Language / Dil</value>
+  </data>
+  <data name="SelectLanguage" xml:space="preserve">
+    <value>🌐 Dil Seçin / Select Language</value>
+  </data>
+  <data name="ShareProfile" xml:space="preserve">
+    <value>Profilimi Paylaş</value>
+  </data>
+  <data name="SharedWithKamPay" xml:space="preserve">
+    <value>KamPay ile paylaşıldı</value>
+  </data>
+  <data name="UpdateProfile" xml:space="preserve">
+    <value>Profil Güncelle</value>
+  </data>
+  <data name="EnterNewFirstName" xml:space="preserve">
+    <value>Yeni adınızı girin:</value>
+  </data>
+  <data name="EnterNewLastName" xml:space="preserve">
+    <value>Yeni soyadınızı girin:</value>
+  </data>
+  <data name="EnterNewUsername" xml:space="preserve">
+    <value>Yeni kullanıcı adınızı girin:</value>
+  </data>
+  <data name="ProfilePhoto" xml:space="preserve">
+    <value>Profil Fotoğrafı</value>
+  </data>
+  <data name="ChangePhotoQuestion" xml:space="preserve">
+    <value>Profil fotoğrafını değiştirmek ister misin?</value>
+  </data>
+  <data name="SelectNewPhoto" xml:space="preserve">
+    <value>Yeni profil fotoğrafı seç</value>
+  </data>
+  <data name="ProfileUpdated" xml:space="preserve">
+    <value>Profil güncellendi!</value>
+  </data>
+  <data name="PhotoUploadFailed" xml:space="preserve">
+    <value>Fotoğraf yüklenemedi</value>
+  </data>
+  <data name="ConfirmLogout" xml:space="preserve">
+    <value>Çıkış yapmak istediğinize emin misiniz?</value>
+  </data>
+  <data name="LogoutTitle" xml:space="preserve">
+    <value>Çıkış</value>
+  </data>
+  <data name="TotalBadges" xml:space="preserve">
+    <value>Toplam {0} rozet kazandınız!</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>Kullanıcı bilgisi bulunamadı.</value>
+  </data>
+  
+  <!-- Product Related -->
+  <data name="ProductDetail" xml:space="preserve">
+    <value>Ürün Detayı</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>Ürün Ekle</value>
+  </data>
+  <data name="EditProduct" xml:space="preserve">
+    <value>Ürünü Düzenle</value>
+  </data>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Ürün Başlığı</value>
+  </data>
+  <data name="ProductDescription" xml:space="preserve">
+    <value>Ürün Açıklaması</value>
+  </data>
+  <data name="ProductInfo" xml:space="preserve">
+    <value>Ürün Bilgileri</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Kategori</value>
+  </data>
+  <data name="SelectCategory" xml:space="preserve">
+    <value>Kategori Seçin</value>
+  </data>
+  <data name="Condition" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="SelectCondition" xml:space="preserve">
+    <value>Durum Seçin</value>
+  </data>
+  <data name="ProductCondition" xml:space="preserve">
+    <value>Ürün Durumu</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Fiyat</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Konum</value>
+  </data>
+  <data name="ProductType" xml:space="preserve">
+    <value>Ürün Tipi</value>
+  </data>
+  <data name="SelectType" xml:space="preserve">
+    <value>Tip Seçin</value>
+  </data>
+  <data name="ForSale" xml:space="preserve">
+    <value>Satılık</value>
+  </data>
+  <data name="Exchange" xml:space="preserve">
+    <value>Takas</value>
+  </data>
+  <data name="Donation" xml:space="preserve">
+    <value>Bağış</value>
+  </data>
+  <data name="ExchangePreference" xml:space="preserve">
+    <value>Takas Tercihi</value>
+  </data>
+  <data name="WhatToExchange" xml:space="preserve">
+    <value>Ne ile takas yapmak istersiniz?</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+  <data name="PublishDate" xml:space="preserve">
+    <value>Yayın Tarihi</value>
+  </data>
+  <data name="Seller" xml:space="preserve">
+    <value>Satıcı</value>
+  </data>
+  <data name="ViewCount" xml:space="preserve">
+    <value>Görüntülenme</value>
+  </data>
+  <data name="ProductImages" xml:space="preserve">
+    <value>Ürün Görselleri (Maksimum 5)</value>
+  </data>
+  <data name="AddImage" xml:space="preserve">
+    <value>📷 Görsel Ekle</value>
+  </data>
+  <data name="SearchProduct" xml:space="preserve">
+    <value>Ürün ara...</value>
+  </data>
+  <data name="FilterAndSort" xml:space="preserve">
+    <value>Filtrele ve Sırala</value>
+  </data>
+  <data name="Sorting" xml:space="preserve">
+    <value>Sıralama</value>
+  </data>
+  <data name="SelectSorting" xml:space="preserve">
+    <value>Sıralama Seçin</value>
+  </data>
+  <data name="SendMessage" xml:space="preserve">
+    <value>Mesaj Gönder</value>
+  </data>
+  <data name="WantToBuy" xml:space="preserve">
+    <value>Satın Almak İste</value>
+  </data>
+  <data name="WantToGet" xml:space="preserve">
+    <value>Almak İstiyorum</value>
+  </data>
+  <data name="MakeTradeOffer" xml:space="preserve">
+    <value>Takas Teklif Et</value>
+  </data>
+  <data name="MarkAsSold" xml:space="preserve">
+    <value>Satıldı İşaretle</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>🚩 Şikayet Et</value>
+  </data>
+  <data name="ProductNotFound" xml:space="preserve">
+    <value>Ürün bulunamadı</value>
+  </data>
+  <data name="ProductLoadError" xml:space="preserve">
+    <value>Ürün yüklenirken hata oluştu</value>
+  </data>
+  <data name="ConfirmMarkAsSold" xml:space="preserve">
+    <value>Ürünü satıldı olarak işaretlemek istediğinize emin misiniz?</value>
+  </data>
+  <data name="ProductMarkedAsSold" xml:space="preserve">
+    <value>Ürün satıldı olarak işaretlendi</value>
+  </data>
+  <data name="ConfirmDeleteProduct" xml:space="preserve">
+    <value>Ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</value>
+  </data>
+  <data name="YesDelete" xml:space="preserve">
+    <value>Evet, Sil</value>
+  </data>
+  <data name="ProductDeleted" xml:space="preserve">
+    <value>Ürün silindi</value>
+  </data>
+  <data name="ReportReason" xml:space="preserve">
+    <value>Şikayet Nedeni</value>
+  </data>
+  <data name="InappropriateContent" xml:space="preserve">
+    <value>Uygunsuz içerik</value>
+  </data>
+  <data name="FakeProduct" xml:space="preserve">
+    <value>Sahte ürün</value>
+  </data>
+  <data name="MisleadingInfo" xml:space="preserve">
+    <value>Yanıltıcı bilgi</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Diğer</value>
+  </data>
+  <data name="ReportReceived" xml:space="preserve">
+    <value>Şikayetiniz alındı. İnceleme süreci başlatıldı.</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Bilgi</value>
+  </data>
+  <data name="CouldNotShare" xml:space="preserve">
+    <value>Paylaşılamadı</value>
+  </data>
+  <data name="ContactFailed" xml:space="preserve">
+    <value>İletişim kurulamadı</value>
+  </data>
+  <data name="OperationFailed" xml:space="preserve">
+    <value>İşlem başarısız</value>
+  </data>
+  <data name="MapOpenFailed" xml:space="preserve">
+    <value>Harita açılamadı</value>
+  </data>
+  <data name="MapLocationInfo" xml:space="preserve">
+    <value>Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın</value>
+  </data>
+  <data name="DonateSurpriseBox" xml:space="preserve">
+    <value>Bu ürünü Sürpriz Kutu'ya bağışla</value>
+  </data>
+  <data name="LoginRequired" xml:space="preserve">
+    <value>Bu işlem için giriş yapmalısınız.</value>
+  </data>
+  
+  <!-- Product Conditions -->
+  <data name="ConditionLikeNew" xml:space="preserve">
+    <value>Yeni Gibi</value>
+  </data>
+  <data name="ConditionVeryGood" xml:space="preserve">
+    <value>Çok İyi</value>
+  </data>
+  <data name="ConditionGood" xml:space="preserve">
+    <value>İyi</value>
+  </data>
+  <data name="ConditionFair" xml:space="preserve">
+    <value>Orta</value>
+  </data>
+  <data name="ConditionUsable" xml:space="preserve">
+    <value>Kullanılabilir</value>
+  </data>
+  
+  <!-- Messages Related -->
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>Mesajlar</value>
+  </data>
+  <data name="Chat" xml:space="preserve">
+    <value>Sohbet</value>
+  </data>
+  <data name="SendPhoto" xml:space="preserve">
+    <value>Fotoğraf Gönder</value>
+  </data>
+  <data name="SearchInChats" xml:space="preserve">
+    <value>Sohbetlerde ara...</value>
+  </data>
+  <data name="NoMessagesYet" xml:space="preserve">
+    <value>Henüz mesajınız yok.</value>
+  </data>
+  <data name="StartChatFromProduct" xml:space="preserve">
+    <value>Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz.</value>
+  </data>
+  <data name="MessagesLoading" xml:space="preserve">
+    <value>Mesajlar yükleniyor...</value>
+  </data>
+  <data name="NoMessageYet" xml:space="preserve">
+    <value>Henüz mesaj yok</value>
+  </data>
+  <data name="SendFirstMessage" xml:space="preserve">
+    <value>İlk mesajı gönderin!</value>
+  </data>
+  <data name="TypeMessage" xml:space="preserve">
+    <value>Mesajınızı yazın...</value>
+  </data>
+  
+  <!-- Favorites Related -->
+  <data name="FavoritesTitle" xml:space="preserve">
+    <value>Favoriler</value>
+  </data>
+  <data name="AddToFavorites" xml:space="preserve">
+    <value>Favorilere Ekle</value>
+  </data>
+  <data name="RemoveFromFavorites" xml:space="preserve">
+    <value>Favorilerden Çıkar</value>
+  </data>
+  <data name="NoFavoritesYet" xml:space="preserve">
+    <value>Henüz favori ürününüz yok</value>
+  </data>
+  <data name="AddFavoritesHint" xml:space="preserve">
+    <value>Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz.</value>
+  </data>
+  <data name="FavoritesLoading" xml:space="preserve">
+    <value>Favoriler yükleniyor...</value>
+  </data>
+  
+  <!-- Notifications Related -->
+  <data name="NotificationsTitle" xml:space="preserve">
+    <value>Bildirimler</value>
+  </data>
+  <data name="NewNotification" xml:space="preserve">
+    <value>Yeni Bildirim</value>
+  </data>
+  <data name="NoNotificationsYet" xml:space="preserve">
+    <value>Henüz bildirim yok</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Yükleniyor...</value>
+  </data>
+  
+  <!-- Offers Related -->
+  <data name="OffersTitle" xml:space="preserve">
+    <value>Teklifler</value>
+  </data>
+  <data name="SendOffer" xml:space="preserve">
+    <value>Teklif Gönder</value>
+  </data>
+  <data name="AcceptOffer" xml:space="preserve">
+    <value>Teklif Kabul Et</value>
+  </data>
+  <data name="RejectOffer" xml:space="preserve">
+    <value>Teklif Reddet</value>
+  </data>
+  <data name="IncomingOffers" xml:space="preserve">
+    <value>Gelen Teklifler</value>
+  </data>
+  <data name="OutgoingOffers" xml:space="preserve">
+    <value>Giden Teklifler</value>
+  </data>
+  <data name="NoIncomingOffers" xml:space="preserve">
+    <value>Henüz gelen bir teklif yok.</value>
+  </data>
+  <data name="NoOutgoingOffers" xml:space="preserve">
+    <value>Henüz yaptığınız bir teklif yok.</value>
+  </data>
+  <data name="RequestedBy" xml:space="preserve">
+    <value>Talep Eden: {0}</value>
+  </data>
+  <data name="SellerName" xml:space="preserve">
+    <value>Satıcı: {0}</value>
+  </data>
+  <data name="DeliveryQR" xml:space="preserve">
+    <value>Teslimat QR</value>
+  </data>
+  <data name="MakePayment" xml:space="preserve">
+    <value>Ödeme Yap</value>
+  </data>
+  <data name="ConfirmReceived" xml:space="preserve">
+    <value>Teslim Aldım</value>
+  </data>
+  <data name="OffersLoading" xml:space="preserve">
+    <value>Teklifler yükleniyor...</value>
+  </data>
+  
+  <!-- Service Related -->
+  <data name="ServiceSharingTitle" xml:space="preserve">
+    <value>Hizmet Paylaşımı</value>
+  </data>
+  <data name="ServiceRequest" xml:space="preserve">
+    <value>Hizmet Talebi</value>
+  </data>
+  <data name="TimeCredit" xml:space="preserve">
+    <value>Zaman Kredisi</value>
+  </data>
+  <data name="AvailableServices" xml:space="preserve">
+    <value>Mevcut Hizmetler</value>
+  </data>
+  <data name="ShareNewService" xml:space="preserve">
+    <value>Yeni Hizmet Paylaş</value>
+  </data>
+  <data name="ServiceTitle" xml:space="preserve">
+    <value>Başlık</value>
+  </data>
+  <data name="ServiceDetails" xml:space="preserve">
+    <value>Detaylar</value>
+  </data>
+  <data name="ServiceDescription" xml:space="preserve">
+    <value>Hizmet açıklaması...</value>
+  </data>
+  <data name="PriceTL" xml:space="preserve">
+    <value>Fiyat (₺)</value>
+  </data>
+  <data name="DurationHours" xml:space="preserve">
+    <value>Süre (Saat)</value>
+  </data>
+  <data name="ShareService" xml:space="preserve">
+    <value>Hizmeti Paylaş</value>
+  </data>
+  <data name="SearchService" xml:space="preserve">
+    <value>Hizmet ara...</value>
+  </data>
+  <data name="SelectCategoryFilter" xml:space="preserve">
+    <value>Kategori Seçiniz</value>
+  </data>
+  <data name="PriceSorting" xml:space="preserve">
+    <value>Fiyat sıralama</value>
+  </data>
+  <data name="PriceAll" xml:space="preserve">
+    <value>Hepsi</value>
+  </data>
+  <data name="PriceAscending" xml:space="preserve">
+    <value>Artan</value>
+  </data>
+  <data name="PriceDescending" xml:space="preserve">
+    <value>Azalan</value>
+  </data>
+  <data name="NoResultsFound" xml:space="preserve">
+    <value>Sonuç bulunamadı.</value>
+  </data>
+  <data name="ChangeFiltersHint" xml:space="preserve">
+    <value>Filtreleri değiştirin veya aramayı temizleyin.</value>
+  </data>
+  <data name="ServiceExample" xml:space="preserve">
+    <value>Örneğin: Müzik dersi</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>Saat</value>
+  </data>
+  <data name="Processing" xml:space="preserve">
+    <value>İşlem yapılıyor...</value>
+  </data>
+  
+  <!-- Service Categories -->
+  <data name="CategoryTransport" xml:space="preserve">
+    <value>Taşıma</value>
+  </data>
+  <data name="CategoryCleaning" xml:space="preserve">
+    <value>Temizlik</value>
+  </data>
+  <data name="CategoryLesson" xml:space="preserve">
+    <value>Ders</value>
+  </data>
+  <data name="CategoryRepair" xml:space="preserve">
+    <value>Tamir</value>
+  </data>
+  <data name="CategoryGarden" xml:space="preserve">
+    <value>Bahçe</value>
+  </data>
+  <data name="CategoryOther" xml:space="preserve">
+    <value>Diğer</value>
+  </data>
+  
+  <!-- Service Requests -->
+  <data name="ServiceRequestsTitle" xml:space="preserve">
+    <value>Hizmet Taleplerim</value>
+  </data>
+  <data name="IncomingRequests" xml:space="preserve">
+    <value>Gelen Talepler</value>
+  </data>
+  <data name="OutgoingRequests" xml:space="preserve">
+    <value>Giden Talepler</value>
+  </data>
+  <data name="NoIncomingRequests" xml:space="preserve">
+    <value>Henüz size gelen bir hizmet talebi yok.</value>
+  </data>
+  <data name="NoOutgoingRequests" xml:space="preserve">
+    <value>Henüz gönderdiğiniz bir hizmet talebi yok.</value>
+  </data>
+  <data name="CompleteService" xml:space="preserve">
+    <value>Hizmeti Tamamla</value>
+  </data>
+  <data name="ServiceRequestsLoading" xml:space="preserve">
+    <value>Hizmet talepleri yükleniyor...</value>
+  </data>
+  
+  <!-- Good Deed Board -->
+  <data name="GoodDeedBoardTitle" xml:space="preserve">
+    <value>İyilik Panosu</value>
+  </data>
+  <data name="SharePost" xml:space="preserve">
+    <value>İlan Paylaş</value>
+  </data>
+  <data name="Comment" xml:space="preserve">
+    <value>Yorum Yap</value>
+  </data>
+  <data name="Like" xml:space="preserve">
+    <value>Beğen</value>
+  </data>
+  <data name="CommunityPosts" xml:space="preserve">
+    <value>Topluluk Paylaşımları</value>
+  </data>
+  <data name="ShareNewGoodDeed" xml:space="preserve">
+    <value>Yeni İyilik Paylaş</value>
+  </data>
+  <data name="TopicTitle" xml:space="preserve">
+    <value>Konu Başlığı</value>
+  </data>
+  <data name="ShareYourThoughts" xml:space="preserve">
+    <value>Düşüncelerinizi paylaşın...</value>
+  </data>
+  <data name="SelectCategoryPost" xml:space="preserve">
+    <value>Kategori Seçin</value>
+  </data>
+  <data name="PostType" xml:space="preserve">
+    <value>İlan Tipi</value>
+  </data>
+  <data name="WriteComment" xml:space="preserve">
+    <value>Yorum yaz...</value>
+  </data>
+  
+  <!-- QR Code Related -->
+  <data name="QRCode" xml:space="preserve">
+    <value>QR Kod</value>
+  </data>
+  <data name="ShowQRCode" xml:space="preserve">
+    <value>QR Kod Göster</value>
+  </data>
+  <data name="ScanQRCode" xml:space="preserve">
+    <value>QR Kod Tara</value>
+  </data>
+  <data name="DeliveryConfirmation" xml:space="preserve">
+    <value>Teslimat Onayı</value>
+  </data>
+  <data name="ScanQRTitle" xml:space="preserve">
+    <value>QR Kod Tara</value>
+  </data>
+  <data name="ScanQRInstruction" xml:space="preserve">
+    <value>Teslimatı onaylamak için QR kodu kameraya okutun.</value>
+  </data>
+  <data name="MyProduct" xml:space="preserve">
+    <value>Benim Ürünüm</value>
+  </data>
+  <data name="OtherProduct" xml:space="preserve">
+    <value>Diğer Ürün</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>TESLİM EDİLDİ ✔️</value>
+  </data>
+  <data name="WaitingConfirmation" xml:space="preserve">
+    <value>ONAY BEKLİYOR...</value>
+  </data>
+  <data name="Received" xml:space="preserve">
+    <value>TESLİM ALINDI ✔️</value>
+  </data>
+  <data name="ScanOtherCode" xml:space="preserve">
+    <value>Karşı Tarafın Kodunu Tara</value>
+  </data>
+  
+  <!-- Surprise Box -->
+  <data name="SurpriseBoxTitle" xml:space="preserve">
+    <value>Sürpriz Kutu</value>
+  </data>
+  <data name="CurrentPoints" xml:space="preserve">
+    <value>Mevcut Puanınız</value>
+  </data>
+  <data name="SurpriseBoxDescription" xml:space="preserve">
+    <value>100 puan karşılığında bir sürpriz kutu açarak bağışlanmış ürünlerden birini kazanma şansı yakala!</value>
+  </data>
+  <data name="Congratulations" xml:space="preserve">
+    <value>🎉 Tebrikler! 🎉</value>
+  </data>
+  <data name="ViewMyProduct" xml:space="preserve">
+    <value>🎁 Ürünümü Görmek İstiyorum</value>
+  </data>
+  <data name="InsufficientPoints" xml:space="preserve">
+    <value>Yetersiz puan! Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz.</value>
+  </data>
+  <data name="OpenBoxFor100Points" xml:space="preserve">
+    <value>🎁 100 Puana Kutu Aç!</value>
+  </data>
+  <data name="OpeningBox" xml:space="preserve">
+    <value>Sürpriz kutunuz açılıyor...</value>
+  </data>
+  
+  <!-- Error Messages -->
+  <data name="Error" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Başarılı</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Uyarı</value>
+  </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>Onay</value>
+  </data>
+  <data name="OperationSuccess" xml:space="preserve">
+    <value>İşlem başarılı</value>
+  </data>
+  
+  <!-- Validation Messages -->
+  <data name="FillAllFields" xml:space="preserve">
+    <value>Lütfen tüm alanları doldurun</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Geçersiz e-posta</value>
+  </data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve">
+    <value>Şifreler eşleşmiyor</value>
+  </data>
+  <data name="MissingInfo" xml:space="preserve">
+    <value>Eksik bilgi</value>
+  </data>
+  
+  <!-- Success Messages -->
+  <data name="SavedSuccessfully" xml:space="preserve">
+    <value>Başarıyla kaydedildi</value>
+  </data>
+  <data name="UpdatedSuccessfully" xml:space="preserve">
+    <value>Başarıyla güncellendi</value>
+  </data>
+  <data name="DeletedSuccessfully" xml:space="preserve">
+    <value>Başarıyla silindi</value>
+  </data>
+  
+  <!-- Empty States -->
+  <data name="NoDataYet" xml:space="preserve">
+    <value>Henüz veri yok</value>
+  </data>
+  
+  <!-- Loading States -->
+  <data name="Saving" xml:space="preserve">
+    <value>Kaydediliyor...</value>
+  </data>
+  <data name="Sending" xml:space="preserve">
+    <value>Gönderiliyor...</value>
+  </data>
+  
+  <!-- Dialog Messages -->
+  <data name="AreYouSure" xml:space="preserve">
+    <value>Emin misiniz?</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Silmek istediğinize emin misiniz?</value>
+  </data>
+  <data name="DeleteFailed" xml:space="preserve">
+    <value>Silme başarısız</value>
+  </data>
+  
+  <!-- Main Page -->
+  <data name="WelcomeMessage" xml:space="preserve">
+    <value>Hoş geldiniz 👋</value>
+  </data>
+  <data name="ProductList" xml:space="preserve">
+    <value>Ürün Listesi</value>
   </data>
 </root>

@@ -2,14 +2,15 @@
 <ContentPage 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:res="clr-namespace:KamPay.Services"
     x:Class="KamPay.Views.LoginPage"
-    Title="KamPay - Giriş">
+    Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
 
             <!-- 💡 DEMO KULLANICI BİLGİLERİ -->
-            <Label Text="💡 Demo Kullanıcı Bilgileri"
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DemoUserInfo]}"
                    FontAttributes="Bold"
                    TextColor="#333"
                    FontSize="14"
@@ -57,24 +58,24 @@
                 </Frame>
             </HorizontalStackLayout>
 
-            <Label Text="Giriş Yap" FontSize="24" HorizontalOptions="Center" />
+            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}" FontSize="24" HorizontalOptions="Center" />
 
-            <Entry Placeholder="E-posta" Text="{Binding Email}" Keyboard="Email" />
-            <Entry Placeholder="Şifre" Text="{Binding Password}" IsPassword="True" />
+            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Email]}" Text="{Binding Email}" Keyboard="Email" />
+            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Password]}" Text="{Binding Password}" IsPassword="True" />
 
             <HorizontalStackLayout VerticalOptions="Center">
                 <Switch IsToggled="{Binding RememberMe}" />
-                <Label Text="Beni hatırla" VerticalOptions="Center" />
+                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[RememberMe]}" VerticalOptions="Center" />
             </HorizontalStackLayout>
 
             <Label Text="{Binding ErrorMessage}" 
                    IsVisible="{Binding ErrorMessage}" 
                    TextColor="Red" />
 
-            <Button Text="Giriş Yap" Command="{Binding LoginCommand}" />
+            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}" Command="{Binding LoginCommand}" />
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
 
-            <Button Text="Hesabın yok mu? Kayıt ol" 
+            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoAccountRegister]}" 
                     Command="{Binding GoToRegisterCommand}" 
                     BackgroundColor="Transparent" 
                     TextColor="Blue" />

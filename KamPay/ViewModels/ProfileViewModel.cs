@@ -39,6 +39,9 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     public ObservableCollection<Product> MyProducts { get; } = new();
     public ObservableCollection<UserBadge> MyBadges { get; } = new();
 
+    // Localization helper
+    private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
+
     public ProfileViewModel(
         IUserStateService userStateService,
         IAuthenticationService authService,
@@ -170,7 +173,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally
         {
@@ -193,37 +196,37 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     {
         if (CurrentUser == null)
         {
-            await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı bilgisi bulunamadı.", "Tamam");
+            await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["UserNotFound"], Res["Ok"]);
             return;
         }
 
         string newFirstName = await Application.Current.MainPage.DisplayPromptAsync(
-            "Profil Güncelle",
-            "Yeni adınızı girin:",
+            Res["UpdateProfile"],
+            Res["EnterNewFirstName"],
             initialValue: CurrentUser.FirstName);
 
         if (string.IsNullOrWhiteSpace(newFirstName))
             return;
 
         string newLastName = await Application.Current.MainPage.DisplayPromptAsync(
-            "Profil Güncelle",
-            "Yeni soyadınızı girin:",
+            Res["UpdateProfile"],
+            Res["EnterNewLastName"],
             initialValue: CurrentUser.LastName);
 
         if (string.IsNullOrWhiteSpace(newLastName))
             return;
 
         string newUsername = await Application.Current.MainPage.DisplayPromptAsync(
-            "Profil Güncelle",
-            "Yeni kullanıcı adınızı girin:",
+            Res["UpdateProfile"],
+            Res["EnterNewUsername"],
             initialValue: CurrentUser.FirstName + CurrentUser.LastName);
 
         string uploadedImageUrl = null;
         bool changePhoto = await Application.Current.MainPage.DisplayAlert(
-            "Profil Fotoğrafı",
-            "Profil fotoğrafını değiştirmek ister misin?",
-            "Evet",
-            "Hayır");
+            Res["ProfilePhoto"],
+            Res["ChangePhotoQuestion"],
+            Res["Yes"],
+            Res["No"]);
 
         if (changePhoto)
         {
@@ -231,7 +234,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             {
                 var file = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
-                    Title = "Yeni profil fotoğrafı seç"
+                    Title = Res["SelectNewPhoto"]
                 });
 
                 if (file != null)
@@ -243,13 +246,13 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", uploadResult.Message, "Tamam");
+                        await Application.Current.MainPage.DisplayAlert(Res["Error"], uploadResult.Message, Res["Ok"]);
                     }
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf yüklenemedi: " + ex.Message, "Tamam");
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["PhotoUploadFailed"] + ": " + ex.Message, Res["Ok"]);
             }
         }
 
@@ -269,7 +272,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             {
                 HasProfileImage = !string.IsNullOrWhiteSpace(CurrentUser?.ProfileImageUrl);
 
-                await Application.Current.MainPage.DisplayAlert("Başarılı", "Profil güncellendi!", "Tamam");
+                await Application.Current.MainPage.DisplayAlert(Res["Success"], Res["ProfileUpdated"], Res["Ok"]);
 
                 // 🔥 Cache'i sıfırla ve yeniden yükle
                 _isDataLoaded = false;
@@ -277,12 +280,12 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             }
             else
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
             }
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally
         {
@@ -300,10 +303,10 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private async Task ViewAllBadgesAsync()
     {
         await Application.Current.MainPage.DisplayAlert(
-            "🏆 Rozetlerim",
-            $"Toplam {MyBadges.Count} rozet kazandınız!\n\n" +
+            "🏆 " + Res["MyBadges"],
+            string.Format(Res["TotalBadges"], MyBadges.Count) + "\n\n" +
             string.Join("\n", MyBadges.Select(b => $"• {b.BadgeName}")),
-            "Tamam"
+            Res["Ok"]
         );
     }
 
@@ -316,17 +319,17 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         {
             await Share.RequestAsync(new ShareTextRequest
             {
-                Title = "Profilimi Paylaş",
+                Title = Res["ShareProfile"],
                 Text = $"{CurrentUser.FullName}\n" +
-               $"🎯 {UserStats?.Points ?? 0} puan\n" +
-               $"📦 {UserStats?.TotalProducts ?? 0} ürün\n" +
-               $"🏆 {MyBadges.Count} rozet\n\n" +
-               "KamPay ile paylaşıldı"
+               $"🎯 {UserStats?.Points ?? 0} {Res["Points"].ToLower()}\n" +
+               $"📦 {UserStats?.TotalProducts ?? 0} {Res["Product"].ToLower()}\n" +
+               $"🏆 {MyBadges.Count} {Res["Badge"].ToLower()}\n\n" +
+               Res["SharedWithKamPay"]
             });
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
     }
 
@@ -334,10 +337,10 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private async Task LogoutAsync()
     {
         var confirm = await Application.Current.MainPage.DisplayAlert(
-            "Çıkış",
-            "Çıkış yapmak istediğinize emin misiniz?",
-            "Evet",
-            "Hayır"
+            Res["LogoutTitle"],
+            Res["ConfirmLogout"],
+            Res["Yes"],
+            Res["No"]
         );
 
         if (!confirm) return;
@@ -351,7 +354,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
     }
 
@@ -371,7 +374,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private async Task ChangeLanguageAsync()
     {
         var action = await Application.Current.MainPage.DisplayActionSheet(
-            "🌐 Select Language / Dil Seçin",
+            Res["SelectLanguage"],
             null,
             null,
             "English",

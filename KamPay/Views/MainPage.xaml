@@ -1,28 +1,29 @@
 <ContentPage 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:res="clr-namespace:KamPay.Services"
     x:Class="KamPay.Views.MainPage"
     Title="KamPay">
 
     <VerticalStackLayout Padding="20" Spacing="15">
-        <Label Text="Hoş geldiniz 👋"
+        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WelcomeMessage]}"
                FontSize="24"
                FontAttributes="Bold"
                HorizontalOptions="Center" />
 
-        <Button Text="Ürün Listesi"
+        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductList]}"
                 Command="{Binding NavigateProductListCommand}" />
 
-        <Button Text="Favoriler"
+        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Favorites]}"
                 Command="{Binding NavigateFavoritesCommand}" />
 
-        <Button Text="Mesajlar"
+        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Messages]}"
                 Command="{Binding NavigateMessagesCommand}" />
 
-        <Button Text="Profil"
+        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Profile]}"
                 Command="{Binding NavigateProfileCommand}" />
 
-        <Button Text="Çıkış Yap"
+        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Logout]}"
                 Command="{Binding LogoutCommand}" />
     </VerticalStackLayout>
 </ContentPage>
