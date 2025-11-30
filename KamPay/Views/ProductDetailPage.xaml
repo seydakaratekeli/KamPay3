@@ -82,7 +82,7 @@
                             <Label Grid.Row="0" Grid.Column="1" Text="{Binding Product.ConditionText}" FontSize="13" TextColor="Black" />
 
                             <Label Grid.Row="1" Grid.Column="0" Text="Kategori:" FontSize="13" TextColor="#757575" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Product.CategoryName}" FontSize="13" TextColor="Black" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Product.CategoryName, Converter={StaticResource ProductCategoryToTextConverter}}" FontSize="13" TextColor="Black" />
 
                             <Label Grid.Row="2" Grid.Column="0" Text="Yayın Tarihi:" FontSize="13" TextColor="#757575" FontAttributes="Bold" />
                             <Label Grid.Row="2" Grid.Column="1" Text="{Binding Product.CreatedAt, StringFormat='{0:dd MMMM yyyy}'}" FontSize="13" TextColor="Black" />

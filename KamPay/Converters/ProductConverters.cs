@@ -267,6 +267,7 @@ namespace KamPay.Converters
                     ServiceCategory.PetCare => loc.GetString("ServiceCategoryPetCare"),
                     ServiceCategory.Translation => loc.GetString("ServiceCategoryTranslation"),
                     ServiceCategory.Moving => loc.GetString("ServiceCategoryMoving"),
+                    ServiceCategory.Other => loc.GetString("ServiceCategoryOther"),
                     _ => loc.GetString("Other")
                 };
             }
@@ -342,6 +343,42 @@ namespace KamPay.Converters
                 return text.ToUpper()[0];
             }
             return string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converts product category names to localized text.
+    /// Maps Turkish category names stored in Firebase to localized resource keys.
+    /// </summary>
+    public class ProductCategoryToTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string categoryName && !string.IsNullOrEmpty(categoryName))
+            {
+                var loc = LocalizationResourceManager.Instance;
+                
+                // Map Turkish category names to localized resource keys
+                return categoryName switch
+                {
+                    "Elektronik" => loc.GetString("CategoryElectronics"),
+                    "Kitap ve Kırtasiye" => loc.GetString("CategoryBooks"),
+                    "Giyim" => loc.GetString("CategoryClothing"),
+                    "Ev Eşyası" => loc.GetString("CategoryHomeGoods"),
+                    "Spor Malzemeleri" => loc.GetString("CategorySports"),
+                    "Müzik Aletleri" => loc.GetString("CategoryMusic"),
+                    "Oyun ve Hobi" => loc.GetString("CategoryGames"),
+                    "Bebek Ürünleri" => loc.GetString("CategoryBaby"),
+                    "Diğer" => loc.GetString("CategoryOther"),
+                    _ => categoryName // Return original if not matched
+                };
+            }
+            return value?.ToString() ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

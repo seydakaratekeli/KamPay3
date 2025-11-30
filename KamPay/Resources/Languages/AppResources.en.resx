@@ -955,4 +955,75 @@
   <data name="ServiceCategoryMoving" xml:space="preserve">
     <value>Moving</value>
   </data>
+  <data name="ServiceCategoryOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  
+  <!-- Product Categories -->
+  <data name="CategoryElectronics" xml:space="preserve">
+    <value>Electronics</value>
+  </data>
+  <data name="CategoryBooks" xml:space="preserve">
+    <value>Books &amp; Stationery</value>
+  </data>
+  <data name="CategoryClothing" xml:space="preserve">
+    <value>Clothing</value>
+  </data>
+  <data name="CategoryHomeGoods" xml:space="preserve">
+    <value>Home Goods</value>
+  </data>
+  <data name="CategorySports" xml:space="preserve">
+    <value>Sports Equipment</value>
+  </data>
+  <data name="CategoryMusic" xml:space="preserve">
+    <value>Musical Instruments</value>
+  </data>
+  <data name="CategoryGames" xml:space="preserve">
+    <value>Games &amp; Hobbies</value>
+  </data>
+  <data name="CategoryBaby" xml:space="preserve">
+    <value>Baby Products</value>
+  </data>
+  
+  <!-- Post Type for Good Deed -->
+  <data name="PostTypeRequest" xml:space="preserve">
+    <value>Request</value>
+  </data>
+  <data name="PostTypeOffer" xml:space="preserve">
+    <value>Offer</value>
+  </data>
+  
+  <!-- Form Labels -->
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="DescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CategoryLabel" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="PriceLabel" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="LocationLabel" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="ConditionLabel" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="TimeCreditsLabel" xml:space="preserve">
+    <value>Time Credits</value>
+  </data>
+  <data name="FeeLabel" xml:space="preserve">
+    <value>Fee</value>
+  </data>
+  
+  <!-- Button and Action Labels -->
+  <data name="SendRequest" xml:space="preserve">
+    <value>Send Request</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
 </root>
