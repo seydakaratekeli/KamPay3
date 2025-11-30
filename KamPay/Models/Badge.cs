@@ -31,6 +31,7 @@ public class Badge
         {
             new Badge
             {
+                BadgeId = "first_step",
                 Name = "İlk Adım",
                 Description = "İlk ürününü ekledin!",
                 IconName = "badge_first.png",
@@ -40,6 +41,7 @@ public class Badge
             },
             new Badge
             {
+                BadgeId = "sharing_hero",
                 Name = "Paylaşım Kahramanı",
                 Description = "5 ürün paylaştın",
                 IconName = "badge_hero.png",
@@ -49,6 +51,7 @@ public class Badge
             },
             new Badge
             {
+                BadgeId = "donation_angel",
                 Name = "Bağış Meleği",
                 Description = "3 ürün bağışladın",
                 IconName = "badge_angel.png",
@@ -58,6 +61,7 @@ public class Badge
             },
             new Badge
             {
+                BadgeId = "active_buyer",
                 Name = "Aktif Alıcı",
                 Description = "5 ürün aldın",
                 IconName = "badge_buyer.png",
@@ -67,6 +71,7 @@ public class Badge
             },
             new Badge
             {
+                BadgeId = "super_seller",
                 Name = "Süper Satıcı",
                 Description = "10 ürün sattın",
                 IconName = "badge_super_seller.png",
@@ -76,6 +81,7 @@ public class Badge
             },
             new Badge
             {
+                BadgeId = "campus_star",
                 Name = "Kampüs Yıldızı",
                 Description = "100 puana ulaştın",
                 IconName = "badge_star.png",
