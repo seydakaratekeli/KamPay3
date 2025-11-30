@@ -25,12 +25,5 @@
                 Margin="20"
                 VerticalOptions="Start"
                 HorizontalOptions="End" />
-
-        <!-- Yükleme Göstergesi -->
-        <ActivityIndicator IsRunning="True"
-                           Color="White"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"
-                           IsVisible="False" />
     </Grid>
 </ContentPage>
