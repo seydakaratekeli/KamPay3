@@ -27,6 +27,8 @@ namespace KamPay.ViewModels
                     return;
                 }
 
+                // Note: HttpClient created per request - acceptable for infrequent user-initiated downloads
+                // For production at scale, consider IHttpClientFactory for connection pooling
                 using var client = new HttpClient();
                 var bytes = await client.GetByteArrayAsync(PhotoUrl);
                 var fileName = $"KamPay_Delivery_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";

@@ -200,6 +200,12 @@ public class FirebaseStorageService : IStorageService
             int width, height;
             using (var originalImage = SKBitmap.Decode(photoData))
             {
+                if (originalImage == null)
+                {
+                    return ServiceResult<DeliveryPhotoUploadResult>.FailureResult(
+                        "Geçersiz fotoğraf", 
+                        "Fotoğraf dosyası okunamadı veya bozuk");
+                }
                 width = originalImage.Width;
                 height = originalImage.Height;
             }
@@ -267,6 +273,8 @@ public class FirebaseStorageService : IStorageService
             byte[] compressed;
             
             // Sıkıştır: kaliteyi 10'ar 10'ar azalt, hedef boyuta veya min kaliteye ulaşana kadar
+            // Not: Her iterasyonda yeni MemoryStream oluşturulması kasıtlıdır - 
+            // modern GC kısa ömürlü küçük nesneleri verimli yönetir
             do
             {
                 using var outputStream = new MemoryStream();

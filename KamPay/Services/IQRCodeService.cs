@@ -269,6 +269,8 @@ namespace KamPay.Services
                 }
 
                 // 7. Fotoğraf kontrolü (FAZ 2)
+                // Not: Location ve status güncellemesi kasıtlı - kullanıcı tüm kontrolleri geçti,
+                // fotoğraf yükleme bekleniyor. Bu bir hata değil, workflow'un bir parçası.
                 if (delivery.PhotoRequired && string.IsNullOrEmpty(delivery.DeliveryPhotoUrl))
                 {
                     delivery.DeliveryStatus = DeliveryStatus.WaitingForPhoto;
