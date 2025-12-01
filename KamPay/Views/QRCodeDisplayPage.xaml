@@ -108,7 +108,7 @@
                 </Frame>
                 
                 <!-- Fotoğraf Yüklenmediyse Butonları Göster -->
-                <StackLayout IsVisible="{Binding IsPhotoUploaded, Converter={StaticResource InvertedBoolConverter}}" 
+                <StackLayout IsVisible="{Binding IsPhotoUploaded, Converter={StaticResource InverseBoolConverter}}" 
                              Spacing="10">
                     <Button Text="📷 Fotoğraf Çek" 
                             Command="{Binding TakeDeliveryPhotoCommand}"
