@@ -8,7 +8,7 @@
 
     <Grid>
         <!-- Tam Ekran Görsel -->
-        <Image Source="{Binding ImageUrl}"
+        <Image Source="{Binding PhotoUrl}"
                Aspect="AspectFit"
                VerticalOptions="Center"
                HorizontalOptions="Center" />
@@ -25,5 +25,18 @@
                 Margin="20"
                 VerticalOptions="Start"
                 HorizontalOptions="End" />
+
+        <!-- İndir Butonu -->
+        <Button Text="⬇"
+                Command="{Binding DownloadPhotoCommand}"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="24"
+                WidthRequest="50"
+                HeightRequest="50"
+                CornerRadius="25"
+                Margin="20"
+                VerticalOptions="Start"
+                HorizontalOptions="Start" />
     </Grid>
 </ContentPage>

@@ -54,22 +54,35 @@ namespace KamPay.Services
             string qrCodeId,
             string userId,
             string reason);
+
+        /// <summary>
+        /// Teslimat fotoğrafı yükler (FAZ 2)
+        /// </summary>
+        Task<ServiceResult<string>> UploadDeliveryPhotoAsync(
+            string qrCodeId, byte[] photoData, string userId);
+
+        /// <summary>
+        /// Fotoğraf gerekli mi kontrol eder (FAZ 2)
+        /// </summary>
+        Task<ServiceResult<bool>> IsPhotoRequiredAsync(string qrCodeId);
     }
 
     public class FirebaseQRCodeService : IQRCodeService
     {
         private readonly FirebaseClient _firebaseClient;
         private readonly IUserProfileService _userProfileService;
+        private readonly IStorageService _storageService;
         private const string QRCodesCollection = "delivery_qrcodes";
         
         // 📌 Güvenlik sabitleri
         private const int MaxExtensionMinutes = 30;
         private const int ExtendTimeThresholdMinutes = 15;
 
-        public FirebaseQRCodeService(IUserProfileService userProfileService)
+        public FirebaseQRCodeService(IUserProfileService userProfileService, IStorageService storageService)
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
             _userProfileService = userProfileService;
+            _storageService = storageService;
         }
 
         public async Task<ServiceResult<bool>> CompleteDeliveryAsync(string qrCodeId)
@@ -255,7 +268,20 @@ namespace KamPay.Services
                     delivery.LocationVerified = true;
                 }
 
-                // 7. Tüm kontroller geçti, teslimatı tamamla
+                // 7. Fotoğraf kontrolü (FAZ 2)
+                // Not: Location ve status güncellemesi kasıtlı - kullanıcı tüm kontrolleri geçti,
+                // fotoğraf yükleme bekleniyor. Bu bir hata değil, workflow'un bir parçası.
+                if (delivery.PhotoRequired && string.IsNullOrEmpty(delivery.DeliveryPhotoUrl))
+                {
+                    delivery.DeliveryStatus = DeliveryStatus.WaitingForPhoto;
+                    delivery.ActualDeliveryLatitude = currentLatitude;
+                    delivery.ActualDeliveryLongitude = currentLongitude;
+                    await deliveryNode.PutAsync(delivery);
+                    return ServiceResult<bool>.FailureResult("Lütfen teslimat fotoğrafı yükleyin", 
+                        new List<string> { "PHOTO_REQUIRED" });
+                }
+
+                // 8. Tüm kontroller geçti, teslimatı tamamla
                 delivery.IsUsed = true;
                 delivery.UsedAt = DateTime.UtcNow;
                 delivery.Status = DeliveryStatus.Completed;
@@ -492,6 +518,133 @@ namespace KamPay.Services
                 return ServiceResult<DeliveryQRCode>.SuccessResult(delivery, "QR kod geçerli");
             }
             catch (Exception ex) { return ServiceResult<DeliveryQRCode>.FailureResult("Doğrulama hatası", ex.Message); }
+        }
+
+        #endregion
+
+        #region FAZ 2: Fotoğraf Yönetimi
+
+        /// <summary>
+        /// Teslimat fotoğrafı yükler
+        /// </summary>
+        public async Task<ServiceResult<string>> UploadDeliveryPhotoAsync(
+            string qrCodeId, byte[] photoData, string userId)
+        {
+            try
+            {
+                var deliveryNode = _firebaseClient.Child(QRCodesCollection).Child(qrCodeId);
+                var delivery = await deliveryNode.OnceSingleAsync<DeliveryQRCode>();
+
+                if (delivery == null)
+                {
+                    return ServiceResult<string>.FailureResult("QR kod bulunamadı.");
+                }
+
+                // Yetki kontrolü: Sadece satıcı veya alıcı fotoğraf yükleyebilir
+                if (delivery.SellerId != userId && delivery.BuyerId != userId)
+                {
+                    return ServiceResult<string>.FailureResult("Bu teslimat için fotoğraf yükleme yetkiniz yok.");
+                }
+
+                // Zaten fotoğraf yüklenmişse
+                if (!string.IsNullOrEmpty(delivery.DeliveryPhotoUrl))
+                {
+                    return ServiceResult<string>.FailureResult("Bu teslimat için zaten fotoğraf yüklenmiş.");
+                }
+
+                // Fotoğrafı yükle
+                var uploadResult = await _storageService.UploadDeliveryPhotoAsync(
+                    photoData, delivery.TransactionId, qrCodeId, userId);
+
+                if (!uploadResult.Success || uploadResult.Data == null)
+                {
+                    return ServiceResult<string>.FailureResult("Fotoğraf yüklenemedi", uploadResult.Message);
+                }
+
+                // QR kodu güncelle
+                delivery.DeliveryPhotoUrl = uploadResult.Data.FullPhotoUrl;
+                delivery.DeliveryPhotoThumbnailUrl = uploadResult.Data.ThumbnailUrl;
+                delivery.PhotoUploadedAt = DateTime.UtcNow;
+                delivery.PhotoSizeBytes = uploadResult.Data.FileSize;
+                delivery.PhotoUploadedByUserId = userId;
+                delivery.PhotoWidth = uploadResult.Data.Width;
+                delivery.PhotoHeight = uploadResult.Data.Height;
+
+                // Fotoğraf yüklendiyse ve WaitingForPhoto durumundaysa, teslimatı tamamla
+                if (delivery.DeliveryStatus == DeliveryStatus.WaitingForPhoto)
+                {
+                    delivery.IsUsed = true;
+                    delivery.UsedAt = DateTime.UtcNow;
+                    delivery.Status = DeliveryStatus.Completed;
+                    delivery.DeliveryStatus = DeliveryStatus.Completed;
+                }
+
+                await deliveryNode.PutAsync(delivery);
+
+                // Transaction'ı kontrol et ve gerekirse güncelle
+                var transaction = await _firebaseClient.Child(Constants.TransactionsCollection)
+                    .Child(delivery.TransactionId).OnceSingleAsync<Transaction>();
+                
+                if (transaction != null && delivery.DeliveryStatus == DeliveryStatus.Completed)
+                {
+                    var allCodesResult = await GetQRCodesForTransactionAsync(transaction.TransactionId);
+
+                    if (allCodesResult.Success && allCodesResult.Data.All(c => c.IsUsed))
+                    {
+                        await MarkProductAsSold(transaction.ProductId);
+                        if (!string.IsNullOrEmpty(transaction.OfferedProductId))
+                        {
+                            await MarkProductAsSold(transaction.OfferedProductId);
+                        }
+
+                        transaction.Status = TransactionStatus.Completed;
+                        await _firebaseClient.Child(Constants.TransactionsCollection)
+                            .Child(transaction.TransactionId).PutAsync(transaction);
+
+                        if (transaction.Type == ProductType.Bagis)
+                        {
+                            await _userProfileService.AddPointsForAction(transaction.SellerId, UserAction.MakeDonation);
+                            await _userProfileService.AddPointsForAction(transaction.BuyerId, UserAction.ReceiveDonation);
+                        }
+                        else
+                        {
+                            await _userProfileService.AddPointsForAction(transaction.SellerId, UserAction.CompleteTransaction);
+                            await _userProfileService.AddPointsForAction(transaction.BuyerId, UserAction.CompleteTransaction);
+                        }
+                    }
+                }
+
+                return ServiceResult<string>.SuccessResult(
+                    uploadResult.Data.FullPhotoUrl, 
+                    "Fotoğraf başarıyla yüklendi");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<string>.FailureResult("Fotoğraf yükleme hatası", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Fotoğraf gerekli mi kontrol eder
+        /// </summary>
+        public async Task<ServiceResult<bool>> IsPhotoRequiredAsync(string qrCodeId)
+        {
+            try
+            {
+                var delivery = await _firebaseClient.Child(QRCodesCollection)
+                    .Child(qrCodeId).OnceSingleAsync<DeliveryQRCode>();
+
+                if (delivery == null)
+                {
+                    return ServiceResult<bool>.FailureResult("QR kod bulunamadı.");
+                }
+
+                return ServiceResult<bool>.SuccessResult(delivery.PhotoRequired);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Kontrol hatası", ex.Message);
+            }
         }
 
         #endregion

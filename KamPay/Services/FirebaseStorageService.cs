@@ -1,6 +1,7 @@
 ﻿using Firebase.Storage;
 using KamPay.Helpers;
 using KamPay.Models;
+using SkiaSharp;
 
 namespace KamPay.Services;
 
@@ -183,5 +184,170 @@ public class FirebaseStorageService : IStorageService
             var fileInfo = new FileInfo(localPath);
             return fileInfo.Length;
         });
+    }
+
+    // FAZ 2: Teslimat fotoğrafı yükleme metodları
+
+    /// <summary>
+    /// Teslimat fotoğrafını sıkıştırır, thumbnail oluşturur ve Firebase Storage'a yükler
+    /// </summary>
+    public async Task<ServiceResult<DeliveryPhotoUploadResult>> UploadDeliveryPhotoAsync(
+        byte[] photoData, string transactionId, string qrCodeId, string userId)
+    {
+        try
+        {
+            // 1. Önce orijinal boyutları al (sıkıştırmadan önce)
+            int width, height;
+            using (var originalImage = SKBitmap.Decode(photoData))
+            {
+                if (originalImage == null)
+                {
+                    return ServiceResult<DeliveryPhotoUploadResult>.FailureResult(
+                        "Geçersiz fotoğraf", 
+                        "Fotoğraf dosyası okunamadı veya bozuk");
+                }
+                width = originalImage.Width;
+                height = originalImage.Height;
+            }
+            
+            // 2. Fotoğrafı sıkıştır (max 1MB)
+            var compressedData = await CompressPhotoAsync(photoData, 1048576);
+            
+            // 3. Thumbnail oluştur (200x200)
+            var thumbnailData = await CreateThumbnailAsync(photoData, 200);
+            
+            // 4. Dosya adları oluştur
+            var timestamp = DateTime.UtcNow.Ticks;
+            var fullFileName = $"{qrCodeId}_{timestamp}_full.jpg";
+            var thumbFileName = $"{qrCodeId}_{timestamp}_thumb.jpg";
+            
+            // 5. Paralel olarak yükle
+            var uploadTasks = new[]
+            {
+                UploadPhotoToStorageAsync(compressedData, transactionId, fullFileName),
+                UploadPhotoToStorageAsync(thumbnailData, transactionId, thumbFileName)
+            };
+            
+            var results = await Task.WhenAll(uploadTasks);
+            
+            if (!results[0].Success || !results[1].Success)
+            {
+                return ServiceResult<DeliveryPhotoUploadResult>.FailureResult(
+                    "Fotoğraf yüklenemedi", 
+                    results[0].Message ?? results[1].Message);
+            }
+            
+            var result = new DeliveryPhotoUploadResult
+            {
+                FullPhotoUrl = results[0].Data!,
+                ThumbnailUrl = results[1].Data!,
+                FileSize = compressedData.Length,
+                Width = width,
+                Height = height
+            };
+            
+            return ServiceResult<DeliveryPhotoUploadResult>.SuccessResult(result, "Fotoğraf başarıyla yüklendi");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<DeliveryPhotoUploadResult>.FailureResult(
+                "Fotoğraf işleme hatası", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Fotoğrafı belirtilen maksimum boyuta sıkıştırır
+    /// JPEG kalitesi: 90 → 20 arasında azaltılarak hedef boyuta ulaşılır
+    /// </summary>
+    public async Task<byte[]> CompressPhotoAsync(byte[] photoData, int maxSizeBytes = 1048576)
+    {
+        return await Task.Run(() =>
+        {
+            using var inputStream = new MemoryStream(photoData);
+            using var bitmap = SKBitmap.Decode(inputStream);
+            
+            if (bitmap == null)
+                throw new InvalidOperationException("Fotoğraf decode edilemedi");
+            
+            var quality = 90;
+            byte[] compressed;
+            
+            // Sıkıştır: kaliteyi 10'ar 10'ar azalt, hedef boyuta veya min kaliteye ulaşana kadar
+            // Not: Her iterasyonda yeni MemoryStream oluşturulması kasıtlıdır - 
+            // modern GC kısa ömürlü küçük nesneleri verimli yönetir
+            do
+            {
+                using var outputStream = new MemoryStream();
+                bitmap.Encode(outputStream, SKEncodedImageFormat.Jpeg, quality);
+                compressed = outputStream.ToArray();
+                
+                // Hedef boyuta ulaştık veya minimum kaliteye indik
+                if (compressed.Length <= maxSizeBytes || quality <= 20)
+                    break;
+                
+                quality -= 10;
+            } while (compressed.Length > maxSizeBytes && quality > 20);
+            
+            return compressed;
+        });
+    }
+
+    /// <summary>
+    /// Thumbnail oluşturur (aspect ratio korunur)
+    /// </summary>
+    public async Task<byte[]> CreateThumbnailAsync(byte[] photoData, int size = 200)
+    {
+        return await Task.Run(() =>
+        {
+            using var inputStream = new MemoryStream(photoData);
+            using var bitmap = SKBitmap.Decode(inputStream);
+            
+            if (bitmap == null)
+                throw new InvalidOperationException("Fotoğraf decode edilemedi");
+            
+            // Aspect ratio'yu koru
+            var aspectRatio = (float)bitmap.Width / bitmap.Height;
+            int newWidth, newHeight;
+            
+            if (aspectRatio > 1)
+            {
+                newWidth = size;
+                newHeight = (int)(size / aspectRatio);
+            }
+            else
+            {
+                newHeight = size;
+                newWidth = (int)(size * aspectRatio);
+            }
+            
+            using var resized = bitmap.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
+            using var outputStream = new MemoryStream();
+            resized.Encode(outputStream, SKEncodedImageFormat.Jpeg, 85);
+            
+            return outputStream.ToArray();
+        });
+    }
+
+    /// <summary>
+    /// Firebase Storage'a fotoğraf yükler
+    /// </summary>
+    private async Task<ServiceResult<string>> UploadPhotoToStorageAsync(
+        byte[] photoData, string transactionId, string fileName)
+    {
+        try
+        {
+            using var stream = new MemoryStream(photoData);
+            var downloadUrl = await _storage
+                .Child(Constants.DeliveryPhotosFolder)
+                .Child(transactionId)
+                .Child(fileName)
+                .PutAsync(stream);
+            
+            return ServiceResult<string>.SuccessResult(downloadUrl);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<string>.FailureResult("Yükleme hatası", ex.Message);
+        }
     }
 }

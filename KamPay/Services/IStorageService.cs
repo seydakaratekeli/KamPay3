@@ -14,6 +14,12 @@ namespace KamPay.Services
         Task<ServiceResult<string>> UploadMessageImageAsync(string localPath, string conversationId);
         Task<ServiceResult<bool>> DeleteImageAsync(string imageUrl);
         Task<long> GetFileSizeAsync(string localPath);
+        
+        // FAZ 2: Fotoğraf işleme metodları
+        Task<ServiceResult<DeliveryPhotoUploadResult>> UploadDeliveryPhotoAsync(
+            byte[] photoData, string transactionId, string qrCodeId, string userId);
+        Task<byte[]> CompressPhotoAsync(byte[] photoData, int maxSizeBytes = 1048576);
+        Task<byte[]> CreateThumbnailAsync(byte[] photoData, int size = 200);
     }
 
 

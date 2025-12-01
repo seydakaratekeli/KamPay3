@@ -57,6 +57,17 @@ namespace KamPay.Models
         // Süre uzatma kontrolü
         public bool HasBeenExtended { get; set; } = false;
 
+        // 📸 Fotoğraf Özellikleri (FAZ 2)
+        public string? DeliveryPhotoUrl { get; set; }
+        public string? DeliveryPhotoThumbnailUrl { get; set; }
+        public DateTime? PhotoUploadedAt { get; set; }
+        public bool PhotoRequired { get; set; } = true;
+        public long PhotoSizeBytes { get; set; }
+        public string? PhotoUploadedByUserId { get; set; }
+        public int PhotoWidth { get; set; }
+        public int PhotoHeight { get; set; }
+        public string PhotoFormat { get; set; } = "JPEG";
+
         public DeliveryQRCode()
         {
             QRCodeId = Guid.NewGuid().ToString();
@@ -78,6 +89,7 @@ namespace KamPay.Models
         Cancelled = 3,    // İptal edildi (eski değer korundu)
         Scheduled = 4,    // Planlandı (yeni)
         Disputed = 5,     // Anlaşmazlık (yeni)
-        Expired = 6       // Süresi doldu (yeni)
+        Expired = 6,      // Süresi doldu (yeni)
+        WaitingForPhoto = 7  // Fotoğraf bekleniyor (FAZ 2)
     }
 }
