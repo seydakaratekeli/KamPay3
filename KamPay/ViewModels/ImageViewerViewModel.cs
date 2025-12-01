@@ -30,6 +30,7 @@ namespace KamPay.ViewModels
                 using var client = new HttpClient();
                 var bytes = await client.GetByteArrayAsync(PhotoUrl);
                 var fileName = $"KamPay_Delivery_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                // CacheDirectory is appropriate for temporary sharing - file doesn't need to persist
                 var path = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(path, bytes);
                 

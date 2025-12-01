@@ -473,8 +473,8 @@ namespace KamPay.ViewModels
 
             // FAZ 2: Fotoğraf durumunu güncelle
             PhotoRequired = MyDelivery?.PhotoRequired ?? false;
-            IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoUrl);
-            if (IsPhotoUploaded && !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl))
+            IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl);
+            if (!string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl))
             {
                 DeliveryPhotoSource = ImageSource.FromUri(new Uri(MyDelivery.DeliveryPhotoThumbnailUrl));
             }

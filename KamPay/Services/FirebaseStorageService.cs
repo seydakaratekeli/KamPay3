@@ -196,16 +196,19 @@ public class FirebaseStorageService : IStorageService
     {
         try
         {
-            // 1. Fotoğrafı sıkıştır (max 1MB)
+            // 1. Önce orijinal boyutları al (sıkıştırmadan önce)
+            int width, height;
+            using (var originalImage = SKBitmap.Decode(photoData))
+            {
+                width = originalImage.Width;
+                height = originalImage.Height;
+            }
+            
+            // 2. Fotoğrafı sıkıştır (max 1MB)
             var compressedData = await CompressPhotoAsync(photoData, 1048576);
             
-            // 2. Thumbnail oluştur (200x200)
+            // 3. Thumbnail oluştur (200x200)
             var thumbnailData = await CreateThumbnailAsync(photoData, 200);
-            
-            // 3. Boyutları al
-            using var image = SKBitmap.Decode(compressedData);
-            var width = image.Width;
-            var height = image.Height;
             
             // 4. Dosya adları oluştur
             var timestamp = DateTime.UtcNow.Ticks;
