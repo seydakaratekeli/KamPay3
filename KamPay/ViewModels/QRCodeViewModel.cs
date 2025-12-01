@@ -16,6 +16,7 @@ namespace KamPay.ViewModels
         private readonly IQRCodeService _qrCodeService;
         private readonly IAuthenticationService _authService;
         private readonly IProductService _productService;
+        private readonly IStorageService _storageService;
 
         private readonly Firebase.Database.FirebaseClient _firebaseClient;
         
@@ -64,16 +65,28 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private DeliveryQRCode? currentQRCode;
 
+        // FAZ 2: Fotoğraf özellikleri
+        [ObservableProperty]
+        private bool photoRequired;
+
+        [ObservableProperty]
+        private ImageSource? deliveryPhotoSource;
+
+        [ObservableProperty]
+        private bool isPhotoUploaded;
+
         private IDispatcherTimer? _expirationTimer;
 
         public QRCodeViewModel(
             IQRCodeService qrCodeService,
             IAuthenticationService authService,
-            IProductService productService)
+            IProductService productService,
+            IStorageService storageService)
         {
             _qrCodeService = qrCodeService;
             _authService = authService;
             _productService = productService;
+            _storageService = storageService;
             _firebaseClient = new Firebase.Database.FirebaseClient(Helpers.Constants.FirebaseRealtimeDbUrl);
 
             WeakReferenceMessenger.Default.Register<QRCodeScannedMessage>(this);
@@ -457,6 +470,125 @@ namespace KamPay.ViewModels
                 PageTitle = "Teslimat Onayı";
                 InstructionText = "Takası başlatmak için QR kodunuzu diğer kullanıcıya okutun veya onun kodunu tarayın.";
             }
+
+            // FAZ 2: Fotoğraf durumunu güncelle
+            PhotoRequired = MyDelivery?.PhotoRequired ?? false;
+            IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoUrl);
+            if (IsPhotoUploaded && !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl))
+            {
+                DeliveryPhotoSource = ImageSource.FromUri(new Uri(MyDelivery.DeliveryPhotoThumbnailUrl));
+            }
+        }
+
+        // FAZ 2: Fotoğraf komutları
+
+        [RelayCommand]
+        private async Task TakeDeliveryPhotoAsync()
+        {
+            try
+            {
+                var status = await Permissions.RequestAsync<Permissions.Camera>();
+                if (status != PermissionStatus.Granted)
+                {
+                    await Application.Current.MainPage.DisplayAlert("İzin Gerekli", 
+                        "Fotoğraf çekmek için kamera iznine ihtiyaç var.", "Tamam");
+                    return;
+                }
+
+                var photo = await MediaPicker.Default.CapturePhotoAsync();
+                if (photo != null)
+                {
+                    await ProcessAndUploadPhotoAsync(photo);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", 
+                    $"Fotoğraf çekerken hata oluştu: {ex.Message}", "Tamam");
+            }
+        }
+
+        [RelayCommand]
+        private async Task PickPhotoFromGalleryAsync()
+        {
+            try
+            {
+                var photo = await MediaPicker.Default.PickPhotoAsync();
+                if (photo != null)
+                {
+                    await ProcessAndUploadPhotoAsync(photo);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", 
+                    $"Fotoğraf seçerken hata oluştu: {ex.Message}", "Tamam");
+            }
+        }
+
+        private async Task ProcessAndUploadPhotoAsync(FileResult photo)
+        {
+            IsLoading = true;
+            
+            try
+            {
+                using var stream = await photo.OpenReadAsync();
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı bulunamadı.", "Tamam");
+                    return;
+                }
+
+                if (MyDelivery == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "QR kod bilgisi bulunamadı.", "Tamam");
+                    return;
+                }
+
+                var result = await _qrCodeService.UploadDeliveryPhotoAsync(
+                    MyDelivery.QRCodeId, 
+                    ms.ToArray(), 
+                    currentUser.UserId);
+
+                if (result.Success)
+                {
+                    await LoadTransactionAndQRCodesAsync();
+                    await Application.Current.MainPage.DisplayAlert("Başarılı", 
+                        "Fotoğraf yüklendi! Teslimat tamamlandı.", "Tamam");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", 
+                    $"Fotoğraf yüklenirken hata oluştu: {ex.Message}", "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewFullPhotoAsync()
+        {
+            var photoUrl = MyDelivery?.DeliveryPhotoUrl ?? OtherUserDelivery?.DeliveryPhotoUrl;
+            
+            if (string.IsNullOrEmpty(photoUrl))
+            {
+                await Application.Current.MainPage.DisplayAlert("Bilgi", 
+                    "Görüntülenecek fotoğraf bulunamadı.", "Tamam");
+                return;
+            }
+
+            await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(photoUrl)}");
         }
     }
 }

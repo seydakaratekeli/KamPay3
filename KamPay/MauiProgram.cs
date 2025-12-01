@@ -85,7 +85,9 @@ namespace KamPay
 
             builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
             builder.Services.AddSingleton<IQRCodeService>(sp =>
-                new FirebaseQRCodeService(sp.GetRequiredService<IUserProfileService>())
+                new FirebaseQRCodeService(
+                    sp.GetRequiredService<IUserProfileService>(),
+                    sp.GetRequiredService<IStorageService>())
             );
 
             // ✅ SERVICES BÖLÜMÜNE EKLE (mevcut satırlardan sonra)

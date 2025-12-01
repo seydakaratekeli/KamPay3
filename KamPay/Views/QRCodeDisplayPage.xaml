@@ -88,6 +88,39 @@
                 <Label Grid.Row="2" Grid.Column="1" Text="{Binding OtherUserDelivery.ProductTitle}" HorizontalOptions="Center" FontSize="12"/>
             </Grid>
 
+            <!-- 📸 FAZ 2: Teslimat Fotoğrafı Bölümü -->
+            <StackLayout IsVisible="{Binding PhotoRequired}" Margin="0,30,0,0" Spacing="15">
+                <Label Text="📸 Teslimat Fotoğrafı" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center"/>
+                
+                <!-- Fotoğraf Yüklendiyse Göster -->
+                <Frame IsVisible="{Binding IsPhotoUploaded}" 
+                       CornerRadius="10" 
+                       Padding="0" 
+                       BorderColor="{StaticResource Primary}"
+                       HasShadow="True">
+                    <Image Source="{Binding DeliveryPhotoSource}"
+                           HeightRequest="200" 
+                           Aspect="AspectFill">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewFullPhotoCommand}"/>
+                        </Image.GestureRecognizers>
+                    </Image>
+                </Frame>
+                
+                <!-- Fotoğraf Yüklenmediyse Butonları Göster -->
+                <StackLayout IsVisible="{Binding IsPhotoUploaded, Converter={StaticResource InvertedBoolConverter}}" 
+                             Spacing="10">
+                    <Button Text="📷 Fotoğraf Çek" 
+                            Command="{Binding TakeDeliveryPhotoCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"/>
+                    <Button Text="🖼️ Galeriden Seç" 
+                            Command="{Binding PickPhotoFromGalleryCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White"/>
+                </StackLayout>
+            </StackLayout>
+
             <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanOtherCode]}" 
                     Command="{Binding ScanQRCodeCommand}" 
                     Margin="0,30,0,0"

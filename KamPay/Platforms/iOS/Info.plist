@@ -32,5 +32,9 @@
 	<string>KamPay ürün konumunu belirlemek için konumunuza erişim izni istemektedir.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>KamPay ürün konumunu belirlemek için konumunuza erişim izni istemektedir.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>KamPay teslimat fotoğrafı çekmek için kameranıza erişim izni istemektedir.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KamPay teslimat fotoğrafı seçmek için fotoğraf galerinize erişim izni istemektedir.</string>
 </dict>
 </plist>
