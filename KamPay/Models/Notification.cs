@@ -61,8 +61,12 @@ public enum NotificationType
     PointsEarned = 5,    // Puan kazandınız
     DonationMade = 6,    // Bağış yapıldı
     SystemNotice = 7,    // Sistem bildirimi
-         NewOffer = 8,         // Yeni teklif/istek geldi
-    OfferAccepted = 9,    // Teklifin kabul edildi
-    OfferRejected = 10    // Teklifin reddedildi
-
+    NewOffer = 8,        // Yeni teklif/istek geldi
+    OfferAccepted = 9,   // Teklifin kabul edildi
+    OfferRejected = 10,  // Teklifin reddedildi
+    ServiceRequest = 11, // Hizmet talebi
+    Payment = 12,        // Ödeme bildirimi
+    Dispute = 13,        // Anlaşmazlık
+    Rating = 14,         // Değerlendirme
+    System = 15          // Sistem (admin işlemleri)
 }
