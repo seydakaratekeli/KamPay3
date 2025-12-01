@@ -266,17 +266,19 @@ public class FirebaseStorageService : IStorageService
             var quality = 90;
             byte[] compressed;
             
+            // Sıkıştır: kaliteyi 10'ar 10'ar azalt, hedef boyuta veya min kaliteye ulaşana kadar
             do
             {
                 using var outputStream = new MemoryStream();
                 bitmap.Encode(outputStream, SKEncodedImageFormat.Jpeg, quality);
                 compressed = outputStream.ToArray();
                 
+                // Hedef boyuta ulaştık veya minimum kaliteye indik
                 if (compressed.Length <= maxSizeBytes || quality <= 20)
                     break;
                 
                 quality -= 10;
-            } while (true);
+            } while (compressed.Length > maxSizeBytes && quality > 20);
             
             return compressed;
         });
