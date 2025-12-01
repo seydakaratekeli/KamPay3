@@ -15,9 +15,12 @@ namespace KamPay.ViewModels
     { 
         private readonly IQRCodeService _qrCodeService;
         private readonly IAuthenticationService _authService;
-        private readonly IProductService _productService; // 🔹 YENİ EKLENEN
+        private readonly IProductService _productService;
 
         private readonly Firebase.Database.FirebaseClient _firebaseClient;
+        
+        // 📌 Güvenlik sabitleri
+        private const int ExtendTimeThresholdMinutes = 15;
 
         [ObservableProperty]
         private string transactionId;
@@ -42,14 +45,35 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string instructionText = "Teslimatı başlatmak için QR kodunuzu diğer kullanıcıya okutun veya onun kodunu tarayın.";
 
+        // 🔒 Yeni Güvenlik Özellikleri
+        [ObservableProperty]
+        private string? verificationPin;
+
+        [ObservableProperty]
+        private double currentLatitude;
+
+        [ObservableProperty]
+        private double currentLongitude;
+
+        [ObservableProperty]
+        private string timeRemaining = "";
+
+        [ObservableProperty]
+        private bool canExtendTime;
+
+        [ObservableProperty]
+        private DeliveryQRCode? currentQRCode;
+
+        private IDispatcherTimer? _expirationTimer;
+
         public QRCodeViewModel(
             IQRCodeService qrCodeService,
             IAuthenticationService authService,
-            IProductService productService) // 🔹 YENİ PARAMETRE
+            IProductService productService)
         {
             _qrCodeService = qrCodeService;
             _authService = authService;
-            _productService = productService; // 🔹 ATAMA
+            _productService = productService;
             _firebaseClient = new Firebase.Database.FirebaseClient(Helpers.Constants.FirebaseRealtimeDbUrl);
 
             WeakReferenceMessenger.Default.Register<QRCodeScannedMessage>(this);
@@ -59,7 +83,7 @@ namespace KamPay.ViewModels
         public async void Receive(QRCodeScannedMessage message)
         {
             // Gelen mesajın içindeki QR kod verisini al ve işle
-            await ProcessScannedQRCode(message.Value);
+            await ProcessScannedQRCodeAsync(message.Value);
         }
 
         async partial void OnTransactionIdChanged(string value)
@@ -70,47 +94,141 @@ namespace KamPay.ViewModels
             }
         }
 
-        public async Task ProcessScannedQRCode(string qrCodeData)
+        /// <summary>
+        /// Güvenli tarama ile QR kodu işler (konum ve PIN doğrulaması dahil)
+        /// </summary>
+        public async Task ProcessScannedQRCodeAsync(string qrCodeData)
         {
             IsLoading = true;
 
-            if (OtherUserDelivery == null || qrCodeData != OtherUserDelivery.QRCodeData)
+            try
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Geçersiz veya bu takasa ait olmayan bir QR kod okuttunuz.", "Tamam");
-                IsLoading = false;
-                return;
-            }
-
-            if (OtherUserDelivery.IsUsed)
-            {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu ürünün teslimatı zaten onaylanmış.", "Tamam");
-                IsLoading = false;
-                return;
-            }
-
-            var result = await _qrCodeService.CompleteDeliveryAsync(OtherUserDelivery.QRCodeId);
-            if (result.Success)
-            {
-                // 🔹 YENİ: Her iki teslimat da tamamlandıysa ürünleri "TAKAS YAPILDI" olarak işaretle
-                if (MyDelivery?.IsUsed == true && OtherUserDelivery?.IsUsed == true && CurrentTransaction != null)
+                if (OtherUserDelivery == null || qrCodeData != OtherUserDelivery.QRCodeData)
                 {
-                    // Her iki ürünü de takas yapıldı olarak işaretle
-                    await _productService.MarkAsExchangedAsync(CurrentTransaction.ProductId);
-                    await _productService.MarkAsExchangedAsync(CurrentTransaction.OfferedProductId);
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçersiz veya bu takasa ait olmayan bir QR kod okuttunuz.", "Tamam");
+                    IsLoading = false;
+                    return;
                 }
 
-                await Application.Current.MainPage.DisplayAlert("Başarılı",
-                    $"'{OtherUserDelivery.ProductTitle}' ürününü teslim aldığınız onaylandı.", "Harika!");
+                if (OtherUserDelivery.IsUsed)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu ürünün teslimatı zaten onaylanmış.", "Tamam");
+                    IsLoading = false;
+                    return;
+                }
 
-                // Durumu yenilemek için verileri tekrar yükle
-                await LoadTransactionAndQRCodesAsync();
+                // 1. Konum al
+                try
+                {
+                    var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+                    {
+                        DesiredAccuracy = GeolocationAccuracy.Best,
+                        Timeout = TimeSpan.FromSeconds(10)
+                    });
+
+                    if (location != null)
+                    {
+                        CurrentLatitude = location.Latitude;
+                        CurrentLongitude = location.Longitude;
+                    }
+                    else
+                    {
+                        // Konum alınamadıysa kullanıcıyı uyar ama devam et (backward compatibility)
+                        CurrentLatitude = 0;
+                        CurrentLongitude = 0;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Konum izni yoksa veya hata varsa, 0,0 kullan (backward compatibility)
+                    CurrentLatitude = 0;
+                    CurrentLongitude = 0;
+                }
+
+                // 2. PIN iste (eğer QR kodda PIN varsa)
+                if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin) && string.IsNullOrEmpty(VerificationPin))
+                {
+                    VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
+                        "PIN Doğrulama",
+                        "6 haneli PIN kodunu girin:",
+                        maxLength: 6,
+                        keyboard: Keyboard.Numeric);
+                    
+                    if (string.IsNullOrEmpty(VerificationPin))
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", "PIN kodu gereklidir.", "Tamam");
+                        IsLoading = false;
+                        return;
+                    }
+                }
+
+                // 3. Güvenli tarama yap veya eski yöntemle devam et
+                if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin))
+                {
+                    // Yeni güvenli QR kod
+                    var result = await _qrCodeService.ScanQRCodeWithLocationAsync(
+                        OtherUserDelivery.QRCodeId,
+                        CurrentLatitude,
+                        CurrentLongitude,
+                        VerificationPin);
+
+                    if (result.Success)
+                    {
+                        // Takas tamamlandıysa ürünleri işaretle
+                        await CheckAndMarkExchangeComplete();
+                        
+                        await Application.Current.MainPage.DisplayAlert("Başarılı", result.Message, "Tamam");
+                        await LoadTransactionAndQRCodesAsync();
+                    }
+                    else
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    }
+                }
+                else
+                {
+                    // Eski QR kod (backward compatibility)
+                    var result = await _qrCodeService.CompleteDeliveryAsync(OtherUserDelivery.QRCodeId);
+                    if (result.Success)
+                    {
+                        await CheckAndMarkExchangeComplete();
+
+                        await Application.Current.MainPage.DisplayAlert("Başarılı",
+                            $"'{OtherUserDelivery.ProductTitle}' ürününü teslim aldığınız onaylandı.", "Harika!");
+
+                        await LoadTransactionAndQRCodesAsync();
+                    }
+                    else
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    }
+                }
+
+                // PIN'i temizle
+                VerificationPin = null;
             }
-            else
+            finally
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                IsLoading = false;
             }
+        }
 
-            IsLoading = false;
+        /// <summary>
+        /// Eski ProcessScannedQRCode metodu için backward compatibility
+        /// </summary>
+        public async Task ProcessScannedQRCode(string qrCodeData)
+        {
+            await ProcessScannedQRCodeAsync(qrCodeData);
+        }
+
+        private async Task CheckAndMarkExchangeComplete()
+        {
+            // Her iki teslimat da tamamlandıysa ürünleri "TAKAS YAPILDI" olarak işaretle
+            if (MyDelivery?.IsUsed == true && OtherUserDelivery?.IsUsed == true && CurrentTransaction != null)
+            {
+                await _productService.MarkAsExchangedAsync(CurrentTransaction.ProductId);
+                await _productService.MarkAsExchangedAsync(CurrentTransaction.OfferedProductId);
+            }
         }
 
         private async Task LoadTransactionAndQRCodesAsync()
@@ -157,14 +275,154 @@ namespace KamPay.ViewModels
                 OtherUserDelivery = allCodes.FirstOrDefault(c => c.ProductId == CurrentTransaction.ProductId);
             }
 
+            CurrentQRCode = MyDelivery;
+            
+            // Süre sayacını başlat
+            StartExpirationTimer();
+
             UpdateUIState();
             IsLoading = false;
+        }
+
+        /// <summary>
+        /// QR kodun süre dolum sayacını başlatır (IDispatcherTimer ile)
+        /// </summary>
+        private void StartExpirationTimer()
+        {
+            // Önceki timer'ı durdur
+            StopExpirationTimer();
+
+            // Yeni timer oluştur
+            _expirationTimer = Application.Current?.Dispatcher?.CreateTimer();
+            if (_expirationTimer == null) return;
+
+            _expirationTimer.Interval = TimeSpan.FromSeconds(1);
+            _expirationTimer.Tick += (s, e) => UpdateTimeRemaining();
+            _expirationTimer.Start();
+        }
+
+        /// <summary>
+        /// Timer'ı durdurur
+        /// </summary>
+        private void StopExpirationTimer()
+        {
+            _expirationTimer?.Stop();
+            _expirationTimer = null;
+        }
+
+        /// <summary>
+        /// Kalan süreyi günceller
+        /// </summary>
+        private void UpdateTimeRemaining()
+        {
+            if (CurrentQRCode == null)
+            {
+                TimeRemaining = "";
+                CanExtendTime = false;
+                return;
+            }
+
+            if (CurrentQRCode.IsExpired)
+            {
+                TimeRemaining = "Süresi doldu";
+                CanExtendTime = false;
+                StopExpirationTimer();
+                return;
+            }
+
+            var remaining = CurrentQRCode.ExpiresAt - DateTime.UtcNow;
+            
+            if (remaining.TotalSeconds <= 0)
+            {
+                TimeRemaining = "Süresi doldu";
+                CanExtendTime = false;
+                StopExpirationTimer();
+            }
+            else if (remaining.TotalMinutes > 1)
+            {
+                TimeRemaining = $"{(int)remaining.TotalMinutes} dakika";
+                CanExtendTime = remaining.TotalMinutes < ExtendTimeThresholdMinutes && !CurrentQRCode.HasBeenExtended;
+            }
+            else
+            {
+                TimeRemaining = $"{(int)remaining.TotalSeconds} saniye";
+                CanExtendTime = !CurrentQRCode.HasBeenExtended;
+            }
         }
 
         [RelayCommand]
         private async Task ScanQRCodeAsync()
         {
             await Shell.Current.GoToAsync("qrscanner");
+        }
+
+        [RelayCommand]
+        private async Task ExtendTimeAsync()
+        {
+            if (CurrentQRCode == null) return;
+
+            var minutes = await Application.Current.MainPage.DisplayPromptAsync(
+                "Süre Uzat",
+                "Kaç dakika uzatmak istersiniz? (Max 30)",
+                maxLength: 2,
+                keyboard: Keyboard.Numeric);
+
+            if (int.TryParse(minutes, out int value))
+            {
+                var result = await _qrCodeService.ExtendQRCodeValidityAsync(
+                    CurrentQRCode.QRCodeId, value);
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Başarılı",
+                        $"Süre {value} dakika uzatıldı. Yeni bitiş: {result.Data:HH:mm}", "Tamam");
+                    await LoadTransactionAndQRCodesAsync();
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task CancelDeliveryAsync()
+        {
+            if (CurrentQRCode == null) return;
+
+            var reason = await Application.Current.MainPage.DisplayActionSheet(
+                "İptal Nedeni",
+                "Vazgeç",
+                null,
+                "Randevuya gelemiyorum",
+                "Ürünü bulamadım",
+                "Fikrim değişti",
+                "Diğer");
+
+            if (reason != "Vazgeç" && !string.IsNullOrEmpty(reason))
+            {
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı bulunamadı.", "Tamam");
+                    return;
+                }
+
+                var result = await _qrCodeService.CancelDeliveryQRCodeAsync(
+                    CurrentQRCode.QRCodeId,
+                    currentUser.UserId,
+                    reason);
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Teslimat iptal edildi.", "Tamam");
+                    await Shell.Current.GoToAsync("..");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
         }
 
         private void UpdateUIState()

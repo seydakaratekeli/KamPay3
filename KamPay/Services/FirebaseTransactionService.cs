@@ -79,25 +79,33 @@ namespace KamPay.Services
                     {
                         await _productService.MarkAsReservedAsync(transaction.OfferedProductId, true);
 
-                        // 🔥 KRİTİK: TAKAS İÇİN QR KODLARI OLUŞTUR
-                        Console.WriteLine($"✅ Takas kabul edildi.  QR kodlar oluşturuluyor: {transactionId}");
+                        // 🔥 KRİTİK: TAKAS İÇİN GÜVENLİ QR KODLARI OLUŞTUR
+                        Console.WriteLine($"✅ Takas kabul edildi. Güvenli QR kodlar oluşturuluyor: {transactionId}");
 
-                        // Satıcının ürünü için QR kod
-                        var qrCode1 = await _qrCodeService.GenerateDeliveryQRCodeAsync(
+                        // Satıcının ürünü için güvenli QR kod (60 dakika geçerli)
+                        var qrCode1 = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
                             transactionId,
                             transaction.ProductId,
                             transaction.ProductTitle,
                             transaction.SellerId,
-                            transaction.BuyerId
+                            transaction.BuyerId,
+                            validityMinutes: 60, // 1 saat
+                            meetingPointLatitude: null, // Şimdilik null, Faz 3'te eklenecek
+                            meetingPointLongitude: null,
+                            meetingPointName: null
                         );
 
-                        // Alıcının ürünü için QR kod
-                        var qrCode2 = await _qrCodeService.GenerateDeliveryQRCodeAsync(
+                        // Alıcının ürünü için güvenli QR kod (60 dakika geçerli)
+                        var qrCode2 = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
                             transactionId,
                             transaction.OfferedProductId,
                             transaction.OfferedProductTitle,
                             transaction.BuyerId, // Teklif veren alıcı, bu ürünün sahibi
-                            transaction.SellerId // Satıcı bu ürünü alacak
+                            transaction.SellerId, // Satıcı bu ürünü alacak
+                            validityMinutes: 60, // 1 saat
+                            meetingPointLatitude: null,
+                            meetingPointLongitude: null,
+                            meetingPointName: null
                         );
 
                         if (!qrCode1.Success || !qrCode2.Success)
@@ -106,7 +114,7 @@ namespace KamPay.Services
                             return ServiceResult<Transaction>.FailureResult($"Takas kabul edildi ancak QR kodlar oluşturulamadı.");
                         }
 
-                        Console.WriteLine($"✅ QR kodlar başarıyla oluşturuldu!");
+                        Console.WriteLine($"✅ Güvenli QR kodlar başarıyla oluşturuldu!");
                     }
                 }
 
