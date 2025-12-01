@@ -23,6 +23,9 @@ namespace KamPay.Models
         public DateTime ExpiresAt { get; set; }
         public bool IsUsed { get; set; }
         public DateTime? UsedAt { get; set; }
+        
+        // ⚠️ Status: Eski alan, backward compatibility için korunuyor
+        // Yeni kod DeliveryStatus'u kullanmalı, her iki alanı da güncellemeli
         public DeliveryStatus Status { get; set; }
 
         // ⏱️ Süre Sınırı Özellikleri
@@ -42,7 +45,7 @@ namespace KamPay.Models
         public int ScanAttempts { get; set; } = 0;
         public int MaxScanAttempts { get; set; } = 5;
 
-        // 🚨 Durum Yönetimi
+        // 🚨 Durum Yönetimi - Yeni status alanı (yeni enum değerlerini destekler)
         public DeliveryStatus DeliveryStatus { get; set; } = DeliveryStatus.Pending;
         public string? CancellationReason { get; set; }
         public DateTime? CancelledAt { get; set; }

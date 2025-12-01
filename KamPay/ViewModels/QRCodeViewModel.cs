@@ -18,6 +18,9 @@ namespace KamPay.ViewModels
         private readonly IProductService _productService;
 
         private readonly Firebase.Database.FirebaseClient _firebaseClient;
+        
+        // 📌 Güvenlik sabitleri
+        private const int ExtendTimeThresholdMinutes = 15;
 
         [ObservableProperty]
         private string transactionId;
@@ -61,7 +64,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private DeliveryQRCode? currentQRCode;
 
-        private CancellationTokenSource? _timerCancellationTokenSource;
+        private IDispatcherTimer? _expirationTimer;
 
         public QRCodeViewModel(
             IQRCodeService qrCodeService,
@@ -282,59 +285,69 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// QR kodun süre dolum sayacını başlatır
+        /// QR kodun süre dolum sayacını başlatır (IDispatcherTimer ile)
         /// </summary>
         private void StartExpirationTimer()
         {
-            // Önceki timer'ı iptal et
-            _timerCancellationTokenSource?.Cancel();
-            _timerCancellationTokenSource = new CancellationTokenSource();
-            var token = _timerCancellationTokenSource.Token;
+            // Önceki timer'ı durdur
+            StopExpirationTimer();
 
-            // Timer'ı arka planda başlat
-            Task.Run(async () =>
+            // Yeni timer oluştur
+            _expirationTimer = Application.Current?.Dispatcher?.CreateTimer();
+            if (_expirationTimer == null) return;
+
+            _expirationTimer.Interval = TimeSpan.FromSeconds(1);
+            _expirationTimer.Tick += (s, e) => UpdateTimeRemaining();
+            _expirationTimer.Start();
+        }
+
+        /// <summary>
+        /// Timer'ı durdurur
+        /// </summary>
+        private void StopExpirationTimer()
+        {
+            _expirationTimer?.Stop();
+            _expirationTimer = null;
+        }
+
+        /// <summary>
+        /// Kalan süreyi günceller
+        /// </summary>
+        private void UpdateTimeRemaining()
+        {
+            if (CurrentQRCode == null)
             {
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await Task.Delay(1000, token);
-                        
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            if (CurrentQRCode != null && !CurrentQRCode.IsExpired)
-                            {
-                                var remaining = CurrentQRCode.ExpiresAt - DateTime.UtcNow;
-                                
-                                if (remaining.TotalSeconds <= 0)
-                                {
-                                    TimeRemaining = "Süresi doldu";
-                                    CanExtendTime = false;
-                                }
-                                else if (remaining.TotalMinutes > 1)
-                                {
-                                    TimeRemaining = $"{(int)remaining.TotalMinutes} dakika";
-                                    CanExtendTime = remaining.TotalMinutes < 15; // 15 dakikadan az kaldıysa uzatılabilir
-                                }
-                                else
-                                {
-                                    TimeRemaining = $"{(int)remaining.TotalSeconds} saniye";
-                                    CanExtendTime = true;
-                                }
-                            }
-                            else if (CurrentQRCode != null)
-                            {
-                                TimeRemaining = "Süresi doldu";
-                                CanExtendTime = false;
-                            }
-                        });
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        break;
-                    }
-                }
-            }, token);
+                TimeRemaining = "";
+                CanExtendTime = false;
+                return;
+            }
+
+            if (CurrentQRCode.IsExpired)
+            {
+                TimeRemaining = "Süresi doldu";
+                CanExtendTime = false;
+                StopExpirationTimer();
+                return;
+            }
+
+            var remaining = CurrentQRCode.ExpiresAt - DateTime.UtcNow;
+            
+            if (remaining.TotalSeconds <= 0)
+            {
+                TimeRemaining = "Süresi doldu";
+                CanExtendTime = false;
+                StopExpirationTimer();
+            }
+            else if (remaining.TotalMinutes > 1)
+            {
+                TimeRemaining = $"{(int)remaining.TotalMinutes} dakika";
+                CanExtendTime = remaining.TotalMinutes < ExtendTimeThresholdMinutes && !CurrentQRCode.HasBeenExtended;
+            }
+            else
+            {
+                TimeRemaining = $"{(int)remaining.TotalSeconds} saniye";
+                CanExtendTime = !CurrentQRCode.HasBeenExtended;
+            }
         }
 
         [RelayCommand]

@@ -61,6 +61,10 @@ namespace KamPay.Services
         private readonly FirebaseClient _firebaseClient;
         private readonly IUserProfileService _userProfileService;
         private const string QRCodesCollection = "delivery_qrcodes";
+        
+        // 📌 Güvenlik sabitleri
+        private const int MaxExtensionMinutes = 30;
+        private const int ExtendTimeThresholdMinutes = 15;
 
         public FirebaseQRCodeService(IUserProfileService userProfileService)
         {
@@ -305,9 +309,9 @@ namespace KamPay.Services
         {
             try
             {
-                if (additionalMinutes <= 0 || additionalMinutes > 30)
+                if (additionalMinutes <= 0 || additionalMinutes > MaxExtensionMinutes)
                 {
-                    return ServiceResult<DateTime>.FailureResult("Süre uzatma 1-30 dakika arasında olmalıdır.");
+                    return ServiceResult<DateTime>.FailureResult($"Süre uzatma 1-{MaxExtensionMinutes} dakika arasında olmalıdır.");
                 }
 
                 var deliveryNode = _firebaseClient.Child(QRCodesCollection).Child(qrCodeId);

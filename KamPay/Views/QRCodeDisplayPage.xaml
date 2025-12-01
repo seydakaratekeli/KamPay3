@@ -14,7 +14,7 @@
             <Label Text="{Binding InstructionText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray600}"/>
 
             <!-- ⏱️ Süre Göstergesi -->
-            <Frame BackgroundColor="{StaticResource Primary}" Padding="10" CornerRadius="8" IsVisible="{Binding MyDelivery, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
+            <Frame BackgroundColor="{StaticResource Primary}" Padding="10" CornerRadius="8" IsVisible="{Binding MyDelivery.QRCodeData, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
                 <HorizontalStackLayout Spacing="10">
                     <Label Text="⏱️" FontSize="18" TextColor="White" VerticalOptions="Center"/>
                     <Label Text="{Binding TimeRemaining}" 
