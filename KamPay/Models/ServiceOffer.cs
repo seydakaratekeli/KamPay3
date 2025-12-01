@@ -72,6 +72,13 @@ public class ServiceRequest
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
     public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Pending;
     public DateTime? CompletedAt { get; set; } // Hizmetin tamamlandığı zamanı tutmak için
+    
+    // Cancellation details
+    public bool IsCancelled { get; set; }
+    public CancellationReason? CancellationReason { get; set; }
+    public string? CancellationNotes { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public string? CancelledByUserId { get; set; }
 }
 
 public enum ServiceRequestStatus
@@ -80,4 +87,19 @@ public enum ServiceRequestStatus
     Accepted = 1,   // Kabul Edildi
     Declined = 2,   // Reddedildi
     Completed = 3   // Tamamlandı
+}
+
+/// <summary>
+/// Cancellation reason enumeration
+/// </summary>
+public enum CancellationReason
+{
+    ProviderUnavailable = 0,      // Hizmet sağlayıcı müsait değil
+    RequesterNotNeeded = 1,        // Artık gerekli değil
+    PriceDisagreement = 2,         // Fiyat anlaşmazlığı
+    TimeConflict = 3,              // Zaman uyuşmazlığı
+    QualityIssue = 4,              // Kalite sorunu
+    CommunicationIssue = 5,        // İletişim sorunu
+    Emergency = 6,                 // Acil durum
+    Other = 7                      // Diğer
 }

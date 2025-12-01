@@ -49,17 +49,28 @@ namespace KamPay
 
 
             // 📧 E-posta Ayarları
-            // Gerçek değerler IT'den alınmalı (örnek olarak gösteriliyor)
-            var emailSettings = new EmailSettings
+            // ✅ GÜVENL: Ayarlar artık appsettings.json dosyasından okunuyor
+            // Production'da Azure Key Vault veya güvenli depolama kullanılmalıdır
+            EmailSettings emailSettings;
+            try
             {
-                SmtpHost = "smtp.bartin.edu.tr",
-                SmtpPort = 587,          // IT'den gelen bilgiye göre 465 de olabilir
-                UseSsl = true,
-                FromEmail = "kampay@bartin.edu.tr",
-                FromName = "KamPay Doğrulama",
-                Username = "kampay@bartin.edu.tr",
-                Password = "SMTP_PAROLASI_BURAYA" // ⚠️ Gerçek uygulamada güvenli kaynakta sakla
-            };
+                emailSettings = Helpers.ConfigurationHelper.GetEmailSettings();
+            }
+            catch (Exception ex)
+            {
+                // Fallback to default settings if configuration fails (for backward compatibility)
+                System.Diagnostics.Debug.WriteLine($"Configuration error: {ex.Message}");
+                emailSettings = new EmailSettings
+                {
+                    SmtpHost = "smtp.bartin.edu.tr",
+                    SmtpPort = 587,
+                    UseSsl = true,
+                    FromEmail = "kampay@bartin.edu.tr",
+                    FromName = "KamPay Doğrulama",
+                    Username = "kampay@bartin.edu.tr",
+                    Password = "DEVELOPMENT_FALLBACK_PASSWORD" // Fallback for development only
+                };
+            }
 
             // Servislerin DI kaydı
             builder.Services.AddSingleton(emailSettings);
@@ -149,8 +160,7 @@ namespace KamPay
             builder.Services.AddTransient<SurpriseBoxViewModel>();
             builder.Services.AddTransient<GoodDeedBoardViewModel>();
             builder.Services.AddTransient<ServiceSharingViewModel>();
-            builder.Services.AddTransient<ServiceRequestsViewModel>(); // Bu satırı ekleyin
-            builder.Services.AddTransient<SurpriseBoxViewModel>();
+            builder.Services.AddTransient<ServiceRequestsViewModel>();
             builder.Services.AddTransient<ImageViewerViewModel>();
 
             // Views
@@ -178,6 +188,15 @@ namespace KamPay
             builder.Services.AddTransient<ServiceRequestsPage>(); 
             builder.Services.AddTransient<ImageViewerPage>();
             builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();
+
+            // New services for Phase 2
+            builder.Services.AddSingleton<IPaymentService, PaymentSimulationService>();
+            builder.Services.AddSingleton<IDisputeService>(sp =>
+                new FirebaseDisputeService(sp.GetRequiredService<INotificationService>()));
+            builder.Services.AddSingleton<IRatingService>(sp =>
+                new FirebaseRatingService(sp.GetRequiredService<INotificationService>()));
+            builder.Services.AddSingleton<IAdminService>(sp =>
+                new FirebaseAdminService(sp.GetRequiredService<INotificationService>()));
 
 
 #if DEBUG

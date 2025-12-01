@@ -130,10 +130,11 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // 1. Konum al
+                // 1. Konum al - ✅ GÜVENL: Konum zorunlu kılındı
+                Location? location = null;
                 try
                 {
-                    var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+                    location = await Geolocation.GetLocationAsync(new GeolocationRequest
                     {
                         DesiredAccuracy = GeolocationAccuracy.Best,
                         Timeout = TimeSpan.FromSeconds(10)
@@ -141,21 +142,70 @@ namespace KamPay.ViewModels
 
                     if (location != null)
                     {
+                        // ✅ GÜVENL: Konum doğruluğu kontrolü
+                        if (location.Accuracy.HasValue && location.Accuracy.Value > 100) // 100 metre üzeri doğruluk düşük
+                        {
+                            bool continueAnyway = await Application.Current.MainPage.DisplayAlert(
+                                "Konum Doğruluğu Düşük",
+                                $"GPS doğruluğu düşük ({location.Accuracy:F0}m). Yine de devam etmek istiyor musunuz?",
+                                "Evet", "Hayır");
+                            
+                            if (!continueAnyway)
+                            {
+                                IsLoading = false;
+                                return;
+                            }
+                        }
+
                         CurrentLatitude = location.Latitude;
                         CurrentLongitude = location.Longitude;
                     }
                     else
                     {
-                        // Konum alınamadıysa kullanıcıyı uyar ama devam et (backward compatibility)
-                        CurrentLatitude = 0;
-                        CurrentLongitude = 0;
+                        // ✅ GÜVENL: Konum alınamazsa işlemi durdur
+                        await Application.Current.MainPage.DisplayAlert(
+                            "Konum Gerekli",
+                            "Teslimat onayı için konum bilgisi gereklidir. Lütfen konum servislerini aktif edin.",
+                            "Tamam");
+                        IsLoading = false;
+                        return;
                     }
                 }
-                catch (Exception)
+                catch (FeatureNotSupportedException)
                 {
-                    // Konum izni yoksa veya hata varsa, 0,0 kullan (backward compatibility)
-                    CurrentLatitude = 0;
-                    CurrentLongitude = 0;
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Desteklenmiyor",
+                        "Cihazınız konum servislerini desteklemiyor.",
+                        "Tamam");
+                    IsLoading = false;
+                    return;
+                }
+                catch (FeatureNotEnabledException)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Konum Kapalı",
+                        "Lütfen cihazınızın konum servislerini açın.",
+                        "Tamam");
+                    IsLoading = false;
+                    return;
+                }
+                catch (PermissionException)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "İzin Gerekli",
+                        "Teslimat onayı için konum izni gereklidir.",
+                        "Tamam");
+                    IsLoading = false;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Konum Hatası",
+                        $"Konum alınamadı: {ex.Message}",
+                        "Tamam");
+                    IsLoading = false;
+                    return;
                 }
 
                 // 2. PIN iste (eğer QR kodda PIN varsa)
