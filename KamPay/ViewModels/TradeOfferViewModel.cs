@@ -82,14 +82,14 @@ namespace KamPay.ViewModels
         {
             if (SelectedProduct == null)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Lütfen takas için bir ürün seçin.", "Tamam");
+                await Application.Current.MainPage.DisplayAlert("Hata", "Lï¿½tfen takas iï¿½in bir ï¿½rï¿½n seï¿½in.", "Tamam");
                 return;
             }
 
             IsLoading = true;
             var currentUser = await _authService.GetCurrentUserAsync();
             var result = await _transactionService.CreateTradeOfferAsync(TargetProduct, SelectedProduct.ProductId, OfferMessage, currentUser);
-            await Application.Current.MainPage.DisplayAlert(result.Success ? "Baþarýlý" : "Hata", result.Message, "Tamam");
+            await Application.Current.MainPage.DisplayAlert(result.Success ? "BaÅŸarÄ±lÄ±" : "Hata", result.Message, "Tamam");
             IsLoading = false;
 
             if (popup != null)

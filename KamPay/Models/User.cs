@@ -15,6 +15,10 @@ namespace KamPay.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; }
+        
+        // Admin-related fields
+        public bool IsBanned { get; set; }
+        public string? BanReason { get; set; }
 
         // G�ven puan� (ilerde kullan�lacak)
         public int TrustScore { get; set; }

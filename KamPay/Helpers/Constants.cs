@@ -33,6 +33,10 @@ public static class Constants
     public const string ServiceRequestsCollection = "service_requests";
     public const string TransactionsCollection = "transactions";
     public const string TempOtpsCollection = "TempOtps";
+    public const string DisputesCollection = "disputes";
+    public const string ServiceRatingsCollection = "service_ratings";
+    public const string AdminActionsCollection = "admin_actions";
+    public const string PaymentTransactionsCollection = "payment_transactions";
 
     // Firebase Storage yollar�
     public const string ProductImagesFolder = "product_images";

@@ -480,5 +480,112 @@ namespace KamPay.Services
                 return ServiceResult<bool>.FailureResult("Hizmetler güncellenemedi", ex.Message);
             }
         }
+
+        /// <summary>
+        /// Cancels a service request with refund simulation if payment was made
+        /// </summary>
+        public async Task<ServiceResult<bool>> CancelServiceRequestAsync(
+            string requestId,
+            string userId,
+            CancellationReason reason,
+            string? notes = null)
+        {
+            try
+            {
+                var requestNode = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .Child(requestId);
+
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                {
+                    return ServiceResult<bool>.FailureResult("Hizmet talebi bulunamadı");
+                }
+
+                // Check if user is involved in the request
+                if (request.ProviderId != userId && request.RequesterId != userId)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu talebi iptal etme yetkiniz yok");
+                }
+
+                // Can't cancel completed requests
+                if (request.Status == ServiceRequestStatus.Completed)
+                {
+                    return ServiceResult<bool>.FailureResult("Tamamlanmış hizmet iptal edilemez");
+                }
+
+                // Check if already cancelled
+                if (request.IsCancelled)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu talep zaten iptal edilmiş");
+                }
+
+                // Mark as cancelled
+                request.IsCancelled = true;
+                request.CancellationReason = reason;
+                request.CancellationNotes = notes;
+                request.CancelledAt = DateTime.UtcNow;
+                request.CancelledByUserId = userId;
+                request.Status = ServiceRequestStatus.Declined;
+
+                await requestNode.PutAsync(request);
+
+                // Process refund if payment was completed
+                if (request.PaymentStatus == ServicePaymentStatus.Completed &&
+                    !string.IsNullOrEmpty(request.PaymentSimulationId))
+                {
+                    // Simulate refund (In Phase 2, this will be real PayTr refund)
+                    var paymentNode = _firebaseClient
+                        .Child(Constants.PaymentTransactionsCollection)
+                        .Child(request.PaymentSimulationId);
+
+                    var payment = await paymentNode.OnceSingleAsync<PaymentTransaction>();
+                    if (payment != null && payment.Status == PaymentStatus.Completed)
+                    {
+                        payment.Status = PaymentStatus.Refunded;
+                        payment.RefundedAmount = payment.Amount;
+                        payment.RefundReason = $"Hizmet iptali: {reason}";
+                        payment.RefundedAt = DateTime.UtcNow;
+                        await paymentNode.PutAsync(payment);
+                    }
+
+                    request.PaymentStatus = ServicePaymentStatus.Refunded;
+                    await requestNode.PutAsync(request);
+                }
+
+                // Notify the other party
+                var otherUserId = userId == request.ProviderId ? request.RequesterId : request.ProviderId;
+                var cancellerName = userId == request.ProviderId ? "Hizmet sağlayıcı" : "Talep eden";
+                
+                await _notificationService.CreateNotificationAsync(
+                    otherUserId,
+                    "Hizmet İptal Edildi",
+                    $"{cancellerName} '{request.ServiceTitle}' hizmetini iptal etti. Sebep: {reason}",
+                    NotificationType.ServiceRequest,
+                    requestId);
+
+                // If payment was refunded, notify requester
+                if (request.PaymentStatus == ServicePaymentStatus.Refunded)
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        request.RequesterId,
+                        "Ödeme İade Edildi",
+                        $"'{request.ServiceTitle}' hizmeti için ödediğiniz {request.Price} {request.Currency} iade edilmiştir",
+                        NotificationType.Payment,
+                        request.PaymentSimulationId);
+                }
+
+                return ServiceResult<bool>.SuccessResult(
+                    true,
+                    request.PaymentStatus == ServicePaymentStatus.Refunded
+                        ? "Hizmet iptal edildi ve ödeme iade edildi"
+                        : "Hizmet iptal edildi");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("İptal işlemi başarısız", ex.Message);
+            }
+        }
     }
 }

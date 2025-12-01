@@ -26,5 +26,14 @@ namespace KamPay.Services
         /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
         /// </summary>
         Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl);
+
+        /// <summary>
+        /// Cancels a service request
+        /// </summary>
+        Task<ServiceResult<bool>> CancelServiceRequestAsync(
+            string requestId,
+            string userId,
+            CancellationReason reason,
+            string? notes = null);
     }
 }

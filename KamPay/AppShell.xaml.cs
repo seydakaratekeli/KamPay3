@@ -24,7 +24,7 @@ namespace KamPay
             Routing.RegisterRoute(nameof(QRCodeDisplayPage), typeof(QRCodeDisplayPage));
             Routing.RegisterRoute("qrscanner", typeof(QRScannerPage));
             Routing.RegisterRoute(nameof(ServiceRequestsPage), typeof(ServiceRequestsPage));
-            Routing.RegisterRoute(nameof(SurpriseBoxPage), typeof(SurpriseBoxPage)); // Bu satırı ekleyin
+            Routing.RegisterRoute(nameof(SurpriseBoxPage), typeof(SurpriseBoxPage));
             Routing.RegisterRoute(nameof(ImageViewerPage), typeof(ImageViewerPage));
             Routing.RegisterRoute("myproducts", typeof(ProductListPage));
 
