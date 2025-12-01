@@ -18,7 +18,9 @@ namespace KamPay.Models
         None = 0,
         CardSim = 1,
         BankTransferSim = 2,
-        WalletSim = 3
+        WalletSim = 3,
+        PayTrCard = 10,           // Real PayTr card payment (Phase 2)
+        PayTrBankTransfer = 11    // Real PayTr bank transfer (Phase 2)
     }
 
     // Ödeme simülasyonu için sade DTO
