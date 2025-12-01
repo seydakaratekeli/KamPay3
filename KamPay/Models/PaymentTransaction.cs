@@ -50,24 +50,4 @@ namespace KamPay.Models
         PartiallyRefunded = 5,
         Cancelled = 6
     }
-
-    public enum PaymentMethodType
-    {
-        None = 0,
-        CardSim = 1,              // Simulated card payment
-        BankTransferSim = 2,      // Simulated bank transfer
-        WalletSim = 3,            // Simulated wallet payment
-        PayTrCard = 10,           // Real PayTr card payment (Phase 2)
-        PayTrBankTransfer = 11    // Real PayTr bank transfer (Phase 2)
-    }
-
-    // Enum for service payment status
-    public enum ServicePaymentStatus
-    {
-        None = 0,
-        Pending = 1,
-        Completed = 2,
-        Failed = 3,
-        Refunded = 4
-    }
 }
