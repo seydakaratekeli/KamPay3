@@ -7,7 +7,9 @@ namespace KamPay.Models
         None = 0,
         Initiated = 1,
         Paid = 2,
-        Failed = 3
+        Failed = 3,
+        Completed = 4,
+        Refunded = 5
     }
 
 
