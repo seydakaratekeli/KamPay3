@@ -390,6 +390,13 @@ namespace KamPay.Services
         {
             try
             {
+                // TODO: For production, implement caching or incremental statistics updates
+                // Loading all collections is expensive and will not scale well with large datasets
+                // Consider: 
+                // 1. Caching stats with periodic refresh (e.g., every hour)
+                // 2. Maintaining counters incrementally when items are added/removed
+                // 3. Using Firebase aggregation queries when available
+                
                 // Get all collections
                 var users = await _firebaseClient.Child(Constants.UsersCollection).OnceAsync<User>();
                 var products = await _firebaseClient.Child(Constants.ProductsCollection).OnceAsync<Product>();

@@ -63,7 +63,7 @@ namespace KamPay.Services
 
                 return ServiceResult<PaymentTransaction>.SuccessResult(
                     payment,
-                    $"Ödeme başlatıldı. Doğrulama kodu: {payment.VerificationCode}");
+                    "Ödeme başlatıldı. Doğrulama kodu güvenli kanal üzerinden gönderildi.");
             }
             catch (Exception ex)
             {
@@ -252,11 +252,24 @@ namespace KamPay.Services
 
         private string GenerateOtp()
         {
+            // Use cryptographically secure random number generation
             using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
             var bytes = new byte[4];
             rng.GetBytes(bytes);
-            var randomNumber = Math.Abs(BitConverter.ToInt32(bytes, 0)) % 900000 + 100000;
-            return randomNumber.ToString();
+            
+            // Convert to positive integer and get 6 digits
+            // This avoids modulo bias by rejecting values that would cause bias
+            uint number = BitConverter.ToUInt32(bytes, 0);
+            const uint maxValue = uint.MaxValue - (uint.MaxValue % 900000);
+            
+            // Retry if we get a value in the biased range
+            while (number >= maxValue)
+            {
+                rng.GetBytes(bytes);
+                number = BitConverter.ToUInt32(bytes, 0);
+            }
+            
+            return (100000 + (number % 900000)).ToString();
         }
     }
 }

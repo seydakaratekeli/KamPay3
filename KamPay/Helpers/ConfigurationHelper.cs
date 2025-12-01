@@ -9,6 +9,10 @@ namespace KamPay.Helpers
     public static class ConfigurationHelper
     {
         private static IConfiguration? _configuration;
+        
+        // Placeholder constants
+        private const string DefaultPasswordPlaceholder = "YOUR_SMTP_PASSWORD_HERE";
+        private const string LegacyPasswordPlaceholder = "SMTP_PAROLASI_BURAYA";
 
         /// <summary>
         /// Gets the application configuration
@@ -63,8 +67,8 @@ namespace KamPay.Helpers
             
             // Validate that password is not the placeholder
             if (string.IsNullOrEmpty(settings.Password) || 
-                settings.Password == "YOUR_SMTP_PASSWORD_HERE" ||
-                settings.Password == "SMTP_PAROLASI_BURAYA")
+                settings.Password == DefaultPasswordPlaceholder ||
+                settings.Password == LegacyPasswordPlaceholder)
             {
                 throw new InvalidOperationException(
                     "SMTP password not configured. Please set it in appsettings.Development.json " +
