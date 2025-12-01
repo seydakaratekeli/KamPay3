@@ -277,8 +277,7 @@ namespace KamPay.Services
                     delivery.ActualDeliveryLatitude = currentLatitude;
                     delivery.ActualDeliveryLongitude = currentLongitude;
                     await deliveryNode.PutAsync(delivery);
-                    return ServiceResult<bool>.FailureResult("Lütfen teslimat fotoğrafı yükleyin", 
-                        new List<string> { "PHOTO_REQUIRED" });
+                    return ServiceResult<bool>.FailureResult("Lütfen teslimat fotoğrafı yükleyin", "PHOTO_REQUIRED");
                 }
 
                 // 8. Tüm kontroller geçti, teslimatı tamamla
