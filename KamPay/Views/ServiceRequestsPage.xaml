@@ -17,6 +17,7 @@
             <converters:IsAcceptedConverter x:Key="IsAcceptedConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter" />
+            <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -160,7 +161,27 @@
                                         <BoxView HeightRequest="1" 
                                                  Color="{StaticResource Gray200}" />
 
-                                        <Grid ColumnDefinitions="Auto,*">
+                                        <!-- 🔥 YENİ: Pazarlık Bilgileri -->
+                                        <VerticalStackLayout Spacing="5"
+                                                             IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}">
+                                            <Label Text="💰 Pazarlık Devam Ediyor"
+                                                   FontSize="12"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource Secondary}" />
+                                            
+                                            <Label Text="{Binding ProposedPriceByRequester, StringFormat='Talep Eden Teklifi: {0} ₺'}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Gray600}"
+                                                   IsVisible="{Binding ProposedPriceByRequester, Converter={StaticResource IsNotZeroConverter}}" />
+                                            
+                                            <Label Text="{Binding CounterOfferByProvider, StringFormat='Sizin Karşı Teklifiniz: {0} ₺'}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Gray600}"
+                                                   IsVisible="{Binding CounterOfferByProvider, Converter={StaticResource IsNotZeroConverter}}" />
+                                        </VerticalStackLayout>
+
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
 
                                             <Label Text="{Binding QuotedPrice, StringFormat='{0} ₺'}"
                                                    TextColor="{StaticResource Primary}"
@@ -171,6 +192,40 @@
                                             <HorizontalStackLayout Grid.Column="1"
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
+
+                                                <!-- 🔥 YENİ: Mesaj Gönder Butonu -->
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        WidthRequest="40"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        ToolTipProperties.Text="Mesaj Gönder" />
+
+                                                <!-- 🔥 YENİ: Karşı Teklif Butonu (Pending durumunda) -->
+                                                <Button Text="💰 Teklif"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=SendCounterOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="10"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}" />
+
+                                                <!-- 🔥 YENİ: Fiyat Kabul Butonu (Pazarlık devam ederken) -->
+                                                <Button Text="✓ Kabul"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="10"
+                                                        IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}" />
 
                                                 <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Reject]}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=DeclineRequestCommand}"
@@ -261,7 +316,27 @@
 
                                         <BoxView HeightRequest="1" Color="{StaticResource Gray200}" />
 
-                                        <Grid ColumnDefinitions="Auto,*">
+                                        <!-- 🔥 YENİ: Pazarlık Bilgileri -->
+                                        <VerticalStackLayout Spacing="5"
+                                                             IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}">
+                                            <Label Text="💰 Pazarlık Devam Ediyor"
+                                                   FontSize="12"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource Secondary}" />
+                                            
+                                            <Label Text="{Binding ProposedPriceByRequester, StringFormat='Sizin Teklifiniz: {0} ₺'}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Gray600}"
+                                                   IsVisible="{Binding ProposedPriceByRequester, Converter={StaticResource IsNotZeroConverter}}" />
+                                            
+                                            <Label Text="{Binding CounterOfferByProvider, StringFormat='Karşı Teklif: {0} ₺'}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Gray600}"
+                                                   IsVisible="{Binding CounterOfferByProvider, Converter={StaticResource IsNotZeroConverter}}" />
+                                        </VerticalStackLayout>
+
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="8">
 
                                             <Label Text="{Binding QuotedPrice, StringFormat='{0} ₺'}"
                                                    TextColor="{StaticResource Primary}"
@@ -272,6 +347,40 @@
                                             <HorizontalStackLayout Grid.Column="1"
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
+
+                                                <!-- 🔥 YENİ: Mesaj Gönder Butonu -->
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        WidthRequest="40"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        ToolTipProperties.Text="Mesaj Gönder" />
+
+                                                <!-- 🔥 YENİ: Fiyat Teklifi Butonu (Pending durumunda) -->
+                                                <Button Text="💰 Teklif"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=ProposePriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="10"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}" />
+
+                                                <!-- 🔥 YENİ: Fiyat Kabul Butonu (Pazarlık devam ederken) -->
+                                                <Button Text="✓ Kabul"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="10"
+                                                        IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}" />
 
                                                 <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[CompleteService]}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=CompleteRequestCommand}"
