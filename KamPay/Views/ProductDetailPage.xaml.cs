@@ -222,7 +222,8 @@ public partial class ProductDetailPage : ContentPage
 
             if (status != PermissionStatus.Granted)
             {
-                Console.WriteLine("Konum izni verilmedi");
+                await Shell.Current.DisplayAlert("İzin Gerekli", 
+                    "Konumunuza gitmek için konum iznine ihtiyacımız var.", "Tamam");
                 return;
             }
 
@@ -239,10 +240,27 @@ public partial class ProductDetailPage : ContentPage
                 ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
                 ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
             }
+            else
+            {
+                await Shell.Current.DisplayAlert("Konum Alınamadı", 
+                    "Şu anda konumunuz belirlenemiyor. Lütfen GPS'in açık olduğundan emin olun.", "Tamam");
+            }
+        }
+        catch (FeatureNotSupportedException)
+        {
+            await Shell.Current.DisplayAlert("Desteklenmiyor", 
+                "Bu cihazda konum servisi desteklenmiyor.", "Tamam");
+        }
+        catch (PermissionException)
+        {
+            await Shell.Current.DisplayAlert("İzin Hatası", 
+                "Konum izni verilmedi.", "Tamam");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Konum alınamadı: {ex.Message}");
+            await Shell.Current.DisplayAlert("Hata", 
+                "Konumunuz alınırken bir hata oluştu.", "Tamam");
         }
     }
 
