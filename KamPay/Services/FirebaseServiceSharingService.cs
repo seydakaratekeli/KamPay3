@@ -15,6 +15,7 @@ namespace KamPay.Services
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService; // Bildirim servisini ekleyin
         private readonly IUserProfileService _userProfileService; // YENİ SERVİS
+        private readonly IMessagingService _messagingService; // 🔥 YENİ: Mesajlaşma servisi
                                                                   // Basit OTP modeli (geçici koleksiyon için)
         internal class TempOtpModel
         {
@@ -27,11 +28,12 @@ namespace KamPay.Services
 
 
         // Constructor'ı INotificationService alacak şekilde güncelleyin
-        public FirebaseServiceSharingService(INotificationService notificationService, IUserProfileService userProfileService)
+        public FirebaseServiceSharingService(INotificationService notificationService, IUserProfileService userProfileService, IMessagingService messagingService)
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
             _notificationService = notificationService;
             _userProfileService = userProfileService; // Ata
+            _messagingService = messagingService; // 🔥 YENİ
         }
 
         // ... CreateServiceOfferAsync ve GetServiceOffersAsync metotları aynı kalacak ...
@@ -478,6 +480,256 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 return ServiceResult<bool>.FailureResult("Hizmetler güncellenemedi", ex.Message);
+            }
+        }
+
+        // 🔥 YENİ METODLAR: Mesajlaşma ve Pazarlık
+        
+        /// <summary>
+        /// Hizmet talebi için konuşma başlatır veya mevcut konuşma ID'sini döndürür
+        /// </summary>
+        public async Task<ServiceResult<string>> StartConversationForRequestAsync(string requestId, string currentUserId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                    return ServiceResult<string>.FailureResult("Talep bulunamadı.");
+
+                // Kullanıcının talep eden veya sağlayıcı olduğunu doğrula
+                if (request.RequesterId != currentUserId && request.ProviderId != currentUserId)
+                    return ServiceResult<string>.FailureResult("Bu talebe erişim yetkiniz yok.");
+
+                // Eğer zaten bir konuşma varsa onu döndür
+                if (!string.IsNullOrEmpty(request.ConversationId))
+                {
+                    return ServiceResult<string>.SuccessResult(request.ConversationId, "Mevcut konuşma bulundu.");
+                }
+
+                // Yeni konuşma oluştur
+                var otherUserId = request.RequesterId == currentUserId ? request.ProviderId : request.RequesterId;
+                var conversationResult = await _messagingService.GetOrCreateConversationAsync(currentUserId, otherUserId);
+
+                if (!conversationResult.Success || conversationResult.Data == null)
+                    return ServiceResult<string>.FailureResult("Konuşma oluşturulamadı.", conversationResult.Message);
+
+                // Konuşma ID'sini talebe kaydet
+                request.ConversationId = conversationResult.Data.ConversationId;
+                request.HasActiveConversation = true;
+                await requestNode.PutAsync(request);
+
+                // Sistem mesajı gönder
+                var systemMessageContent = $"'{request.ServiceTitle}' hizmeti için konuşma başlatıldı. Fiyat: {request.Price} ₺";
+                await _messagingService.SendMessageAsync(new SendMessageRequest
+                {
+                    ReceiverId = otherUserId,
+                    Content = systemMessageContent,
+                    Type = MessageType.System
+                }, await GetUserAsync(currentUserId));
+
+                return ServiceResult<string>.SuccessResult(conversationResult.Data.ConversationId, "Konuşma başlatıldı.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<string>.FailureResult("Konuşma başlatılırken hata oluştu.", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Talep eden kişinin fiyat teklifi göndermesi
+        /// </summary>
+        public async Task<ServiceResult<bool>> ProposePrice(string requestId, decimal proposedPrice, string currentUserId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                    return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+
+                // Sadece talep eden kişi fiyat teklif edebilir
+                if (request.RequesterId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Sadece talep eden kişi fiyat teklif edebilir.");
+
+                if (proposedPrice <= 0)
+                    return ServiceResult<bool>.FailureResult("Geçerli bir fiyat giriniz.");
+
+                // Fiyat teklifini kaydet
+                request.ProposedPriceByRequester = proposedPrice;
+                request.IsNegotiating = true;
+                request.LastNegotiationDate = DateTime.UtcNow;
+                await requestNode.PutAsync(request);
+
+                // Sağlayıcıya bildirim gönder
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = request.ProviderId,
+                    Title = "Yeni Fiyat Teklifi",
+                    Message = $"{request.RequesterName}, '{request.ServiceTitle}' hizmeti için {proposedPrice} ₺ teklif etti. (Orijinal fiyat: {request.Price} ₺)"
+                });
+
+                // Eğer konuşma varsa, mesaj olarak da gönder
+                if (!string.IsNullOrEmpty(request.ConversationId))
+                {
+                    var messageContent = $"💰 Fiyat Teklifi: {proposedPrice} ₺ (Orijinal: {request.Price} ₺)";
+                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    {
+                        ReceiverId = request.ProviderId,
+                        Content = messageContent,
+                        Type = MessageType.Text
+                    }, await GetUserAsync(currentUserId));
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Fiyat teklifiniz gönderildi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Fiyat teklifi gönderilemedi.", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Hizmet sağlayıcısının karşı teklif göndermesi
+        /// </summary>
+        public async Task<ServiceResult<bool>> SendCounterOfferAsync(string requestId, decimal counterOffer, string currentUserId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                    return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+
+                // Sadece hizmet sağlayıcı karşı teklif verebilir
+                if (request.ProviderId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Sadece hizmet sağlayıcı karşı teklif verebilir.");
+
+                if (counterOffer <= 0)
+                    return ServiceResult<bool>.FailureResult("Geçerli bir fiyat giriniz.");
+
+                // Karşı teklifi kaydet
+                request.CounterOfferByProvider = counterOffer;
+                request.IsNegotiating = true;
+                request.LastNegotiationDate = DateTime.UtcNow;
+                await requestNode.PutAsync(request);
+
+                // Talep eden kişiye bildirim gönder
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = request.RequesterId,
+                    Title = "Karşı Teklif Alındı",
+                    Message = $"'{request.ServiceTitle}' hizmeti için karşı teklif: {counterOffer} ₺"
+                });
+
+                // Eğer konuşma varsa, mesaj olarak da gönder
+                if (!string.IsNullOrEmpty(request.ConversationId))
+                {
+                    var messageContent = $"💰 Karşı Teklif: {counterOffer} ₺";
+                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    {
+                        ReceiverId = request.RequesterId,
+                        Content = messageContent,
+                        Type = MessageType.Text
+                    }, await GetUserAsync(currentUserId));
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Karşı teklifiniz gönderildi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Karşı teklif gönderilemedi.", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Pazarlık sonucu anlaşılan fiyatı kabul etme
+        /// </summary>
+        public async Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(string requestId, string currentUserId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                    return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+
+                // Kullanıcının talep eden veya sağlayıcı olduğunu doğrula
+                if (request.RequesterId != currentUserId && request.ProviderId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Bu talebe erişim yetkiniz yok.");
+
+                if (!request.IsNegotiating)
+                    return ServiceResult<bool>.FailureResult("Aktif bir pazarlık bulunmuyor.");
+
+                // Son teklif edilen fiyatı belirle
+                decimal agreedPrice = 0;
+                if (request.CounterOfferByProvider.HasValue && request.CounterOfferByProvider.Value > 0)
+                {
+                    agreedPrice = request.CounterOfferByProvider.Value;
+                }
+                else if (request.ProposedPriceByRequester.HasValue && request.ProposedPriceByRequester.Value > 0)
+                {
+                    agreedPrice = request.ProposedPriceByRequester.Value;
+                }
+                else
+                {
+                    return ServiceResult<bool>.FailureResult("Kabul edilecek bir teklif bulunamadı.");
+                }
+
+                // Anlaşılan fiyatı kaydet
+                request.QuotedPrice = agreedPrice;
+                request.Price = agreedPrice;
+                request.IsNegotiating = false;
+                request.NegotiationNotes = $"Fiyat {agreedPrice} ₺ olarak anlaşıldı. Kabul eden: {currentUserId}";
+                await requestNode.PutAsync(request);
+
+                // Diğer tarafa bildirim gönder
+                var otherUserId = request.RequesterId == currentUserId ? request.ProviderId : request.RequesterId;
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = otherUserId,
+                    Title = "Fiyat Anlaşması",
+                    Message = $"'{request.ServiceTitle}' hizmeti için {agreedPrice} ₺ fiyat üzerinde anlaşıldı."
+                });
+
+                // Konuşmaya sistem mesajı ekle
+                if (!string.IsNullOrEmpty(request.ConversationId))
+                {
+                    var messageContent = $"✅ Fiyat anlaşıldı: {agreedPrice} ₺";
+                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    {
+                        ReceiverId = otherUserId,
+                        Content = messageContent,
+                        Type = MessageType.System
+                    }, await GetUserAsync(currentUserId));
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, $"Fiyat {agreedPrice} ₺ olarak kabul edildi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Fiyat kabulü sırasında hata oluştu.", ex.Message);
+            }
+        }
+
+        // Yardımcı metod: Kullanıcı bilgisini getir
+        private async Task<User> GetUserAsync(string userId)
+        {
+            try
+            {
+                var user = await _firebaseClient
+                    .Child(Constants.UsersCollection)
+                    .Child(userId)
+                    .OnceSingleAsync<User>();
+                return user;
+            }
+            catch
+            {
+                return null;
             }
         }
     }

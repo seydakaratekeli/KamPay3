@@ -427,6 +427,210 @@ namespace KamPay.ViewModels
             }
         }
     
+        // 🔥 YENİ: Mesajlaşma Başlatma Komutu
+        [RelayCommand]
+        private async Task StartConversationAsync(ServiceRequest request)
+        {
+            if (request == null) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null)
+                {
+                    await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                    return;
+                }
+
+                var result = await _serviceService.StartConversationForRequestAsync(request.RequestId, currentUser.UserId);
+                
+                if (result.Success)
+                {
+                    // Mesajlaşma sayfasına yönlendir
+                    var otherUserId = request.RequesterId == currentUser.UserId ? request.ProviderId : request.RequesterId;
+                    await Shell.Current.GoToAsync($"///MessagingPage?conversationId={result.Data}&otherUserId={otherUserId}");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Fiyat Teklifi Gönderme Komutu
+        [RelayCommand]
+        private async Task ProposePriceAsync(ServiceRequest request)
+        {
+            if (request == null) return;
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null || request.RequesterId != currentUser.UserId)
+            {
+                await Shell.Current.DisplayAlert("Uyarı", "Sadece talep eden kişi fiyat teklif edebilir.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                string priceInput = await Shell.Current.DisplayPromptAsync(
+                    "Fiyat Teklifi",
+                    $"'{request.ServiceTitle}' için teklif etmek istediğiniz fiyatı girin:\n(Mevcut fiyat: {request.Price} ₺)",
+                    "Gönder",
+                    "İptal",
+                    keyboard: Keyboard.Numeric,
+                    initialValue: request.Price.ToString()
+                );
+
+                if (string.IsNullOrWhiteSpace(priceInput)) return;
+
+                if (!decimal.TryParse(priceInput, out decimal proposedPrice) || proposedPrice <= 0)
+                {
+                    await Shell.Current.DisplayAlert("Hata", "Geçerli bir fiyat giriniz.", "Tamam");
+                    return;
+                }
+
+                IsLoading = true;
+
+                var result = await _serviceService.ProposePrice(request.RequestId, proposedPrice, currentUser.UserId);
+
+                if (result.Success)
+                {
+                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Karşı Teklif Gönderme Komutu
+        [RelayCommand]
+        private async Task SendCounterOfferAsync(ServiceRequest request)
+        {
+            if (request == null) return;
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null || request.ProviderId != currentUser.UserId)
+            {
+                await Shell.Current.DisplayAlert("Uyarı", "Sadece hizmet sağlayıcı karşı teklif verebilir.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                string priceInfo = request.ProposedPriceByRequester.HasValue 
+                    ? $"Talep eden kişinin teklifi: {request.ProposedPriceByRequester} ₺\n" 
+                    : "";
+                
+                string priceInput = await Shell.Current.DisplayPromptAsync(
+                    "Karşı Teklif",
+                    $"{priceInfo}Karşı teklifinizi girin:\n(Orijinal fiyat: {request.Price} ₺)",
+                    "Gönder",
+                    "İptal",
+                    keyboard: Keyboard.Numeric,
+                    initialValue: request.Price.ToString()
+                );
+
+                if (string.IsNullOrWhiteSpace(priceInput)) return;
+
+                if (!decimal.TryParse(priceInput, out decimal counterOffer) || counterOffer <= 0)
+                {
+                    await Shell.Current.DisplayAlert("Hata", "Geçerli bir fiyat giriniz.", "Tamam");
+                    return;
+                }
+
+                IsLoading = true;
+
+                var result = await _serviceService.SendCounterOfferAsync(request.RequestId, counterOffer, currentUser.UserId);
+
+                if (result.Success)
+                {
+                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Anlaşılan Fiyatı Kabul Etme Komutu
+        [RelayCommand]
+        private async Task AcceptNegotiatedPriceAsync(ServiceRequest request)
+        {
+            if (request == null || !request.IsNegotiating) return;
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                // Anlaşılan fiyatı belirle
+                decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? request.Price;
+
+                bool confirm = await Shell.Current.DisplayAlert(
+                    "Fiyat Kabulü",
+                    $"'{request.ServiceTitle}' hizmeti için {agreedPrice} ₺ fiyatı kabul ediyor musunuz?",
+                    "Evet",
+                    "Hayır"
+                );
+
+                if (!confirm) return;
+
+                IsLoading = true;
+
+                var result = await _serviceService.AcceptNegotiatedPriceAsync(request.RequestId, currentUser.UserId);
+
+                if (result.Success)
+                {
+                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
         public void Dispose()
         {
             Console.WriteLine("🧹 ServiceRequestsViewModel dispose ediliyor...");

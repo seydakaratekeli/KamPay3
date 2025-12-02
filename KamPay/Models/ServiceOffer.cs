@@ -72,6 +72,17 @@ public class ServiceRequest
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
     public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Pending;
     public DateTime? CompletedAt { get; set; } // Hizmetin tamamlandığı zamanı tutmak için
+
+    // 🔥 YENİ: Mesajlaşma ve Pazarlık Özellikleri
+    public string ConversationId { get; set; } // İlgili konuşma ID'si
+    public bool HasActiveConversation { get; set; } = false; // Konuşma başladı mı?
+    
+    // Pazarlık özellikleri
+    public decimal? ProposedPriceByRequester { get; set; } // Talep edenin teklif ettiği fiyat
+    public decimal? CounterOfferByProvider { get; set; } // Sağlayıcının karşı teklifi
+    public bool IsNegotiating { get; set; } = false; // Pazarlık devam ediyor mu?
+    public DateTime? LastNegotiationDate { get; set; } // Son pazarlık tarihi
+    public string NegotiationNotes { get; set; } // Pazarlık notları
 }
 
 public enum ServiceRequestStatus
