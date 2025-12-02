@@ -162,9 +162,24 @@ namespace KamPay.Helpers
     /// </summary>
     public class RateLimitResult
     {
+        /// <summary>
+        /// Gets or sets whether the request is allowed
+        /// </summary>
         public bool IsAllowed { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the number of remaining requests in the current time window
+        /// </summary>
         public int RemainingRequests { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the time when the rate limit will reset
+        /// </summary>
         public DateTime? ResetTime { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the user-friendly message explaining the rate limit status
+        /// </summary>
         public string Message { get; set; }
 
         public static RateLimitResult Allowed(int remaining, DateTime? resetTime)

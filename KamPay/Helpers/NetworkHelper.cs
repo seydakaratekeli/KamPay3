@@ -199,6 +199,8 @@ namespace KamPay.Helpers
 
         /// <summary>
         /// Throttles operation execution to prevent rate limiting
+        /// NOTE: Uses static fields for simplicity. In a multi-user scenario,
+        /// consider using a per-operation or per-user throttling mechanism.
         /// </summary>
         private static DateTime _lastRequestTime = DateTime.MinValue;
         private static readonly object _throttleLock = new object();

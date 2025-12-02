@@ -64,6 +64,9 @@ namespace KamPay.Services
 
         /// <summary>
         /// Gets transaction history for a specific user (both sent and received)
+        /// NOTE: For production use with large datasets, consider implementing 
+        /// server-side filtering using Firebase queries with proper indexing.
+        /// Current implementation fetches all transactions and filters in memory.
         /// </summary>
         public async Task<ServiceResult<List<TransactionHistory>>> GetUserTransactionHistoryAsync(string userId, int limit = 50)
         {
@@ -136,6 +139,9 @@ namespace KamPay.Services
 
         /// <summary>
         /// Gets transaction history for a specific reference (e.g., product, service)
+        /// NOTE: For production use with large datasets, consider implementing 
+        /// server-side filtering using Firebase queries with proper indexing.
+        /// Current implementation fetches all transactions and filters in memory.
         /// </summary>
         public async Task<ServiceResult<List<TransactionHistory>>> GetTransactionsByReferenceAsync(string referenceId, string referenceType)
         {

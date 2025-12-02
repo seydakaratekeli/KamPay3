@@ -30,6 +30,9 @@ namespace KamPay.Helpers
         /// <summary>
         /// Validates if the file is a valid image with acceptable size and format
         /// </summary>
+        /// <param name="filePath">Path to the image file to validate</param>
+        /// <param name="isProfileImage">Set to true for profile images (allows larger file size up to 10MB)</param>
+        /// <returns>ValidationResult indicating if the image is valid</returns>
         public static ValidationResult ValidateImage(string filePath, bool isProfileImage = false)
         {
             var result = new ValidationResult();
