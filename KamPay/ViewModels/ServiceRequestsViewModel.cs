@@ -596,7 +596,7 @@ namespace KamPay.ViewModels
 
             try
             {
-                // Anlaşılan fiyatı belirle
+                // Anlaşılan fiyatı belirle (karşı teklif > teklif > orijinal fiyat)
                 decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? request.Price;
 
                 bool confirm = await Shell.Current.DisplayAlert(

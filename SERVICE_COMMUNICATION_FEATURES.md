@@ -257,8 +257,8 @@ Sistem aşağıdaki durumlarda bildirim gönderir:
 
 ## 🤝 Katkıda Bulunanlar
 
-- **Geliştirici**: GitHub Copilot
-- **Proje Sahibi**: Seyda Karatekeli
+- **Proje Sahibi & Geliştirici**: Seyda Karatekeli
+- **Destek**: GitHub Copilot AI Assistant
 
 ---
 

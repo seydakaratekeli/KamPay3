@@ -27,7 +27,7 @@ namespace KamPay.Services
         private string GenerateBankReference() => $"BTX-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString().Substring(0, 6)}";
 
 
-        // Constructor'ı INotificationService alacak şekilde güncelleyin
+        // Constructor to inject all required services
         public FirebaseServiceSharingService(INotificationService notificationService, IUserProfileService userProfileService, IMessagingService messagingService)
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
@@ -665,17 +665,10 @@ namespace KamPay.Services
                 if (!request.IsNegotiating)
                     return ServiceResult<bool>.FailureResult("Aktif bir pazarlık bulunmuyor.");
 
-                // Son teklif edilen fiyatı belirle
-                decimal agreedPrice = 0;
-                if (request.CounterOfferByProvider.HasValue && request.CounterOfferByProvider.Value > 0)
-                {
-                    agreedPrice = request.CounterOfferByProvider.Value;
-                }
-                else if (request.ProposedPriceByRequester.HasValue && request.ProposedPriceByRequester.Value > 0)
-                {
-                    agreedPrice = request.ProposedPriceByRequester.Value;
-                }
-                else
+                // Anlaşılan fiyatı belirle (karşı teklif > teklif > 0)
+                decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? 0;
+                
+                if (agreedPrice <= 0)
                 {
                     return ServiceResult<bool>.FailureResult("Kabul edilecek bir teklif bulunamadı.");
                 }
