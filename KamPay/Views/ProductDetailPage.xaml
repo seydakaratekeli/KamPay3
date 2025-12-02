@@ -287,28 +287,6 @@
             HeightRequest="50" />
                         </Grid>
 
-                        <!-- Fiyat Teklifi Butonu (Sadece Satılık Ürünler İçin) -->
-                        <Button Text="💰 Fiyat Teklif Et"
-                                Command="{Binding MakeOfferCommand}"
-                                BackgroundColor="#FF9800"
-                                TextColor="White"
-                                CornerRadius="12"
-                                HeightRequest="50"
-                                FontSize="16"
-                                FontAttributes="Bold"
-                                Margin="0,10,0,0"
-                                IsVisible="{Binding CanContact}">
-                            <Button.Triggers>
-                                <!-- Sadece Satılık ürünler için göster -->
-                                <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Bagis}">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </DataTrigger>
-                                <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Takas}">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-
                         <!-- Ek Aksiyonlar -->
                         <HorizontalStackLayout HorizontalOptions="Center"
                        Spacing="20"
