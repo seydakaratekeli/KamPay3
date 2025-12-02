@@ -20,9 +20,13 @@ public partial class AddProductPage : ContentPage
     private const double DefaultLatitude = 41.5810;
     private const double DefaultLongitude = 32.4610;
 
-    private const double DefaultZoomResolution = 10000;
-    private const double SelectedZoomResolution = 200;
-    private const double InitialZoomMultiplier = 5;
+    // Optimized zoom resolutions for better user experience
+    private const double DefaultZoomResolution = 5000;      // Default city view
+    private const double SelectedZoomResolution = 500;      // Selected location view
+    private const double InitialZoomMultiplier = 2;         // Initial zoom multiplier
+    private const double MinZoomResolution = 100;            // Maximum zoom in
+    private const double MaxZoomResolution = 50000;          // Maximum zoom out
+    private const double ZoomStep = 2.0;                     // Zoom step factor
 
     // Pin styling
     private const string PinFillColor = "#F44336";
@@ -30,6 +34,7 @@ public partial class AddProductPage : ContentPage
 
     private WritableLayer? _pinLayer;
     private bool _isMapInfoSubscribed;
+    private MPoint? _selectedLocation; // Store selected location for reset
 
     public AddProductPage(AddProductViewModel viewModel)
     {
@@ -57,6 +62,9 @@ public partial class AddProductPage : ContentPage
             {
                 ProductMap.Map.Info += OnMapInfo;
                 _isMapInfoSubscribed = true;
+                
+                // Enable double-tap zoom
+                ProductMap.DoubleTapped += OnMapDoubleTapped;
             }
 
             Console.WriteLine("📍 Kategoriler yükleniyor...");
@@ -86,6 +94,7 @@ public partial class AddProductPage : ContentPage
         if (_isMapInfoSubscribed && ProductMap?.Map != null)
         {
             ProductMap.Map.Info -= OnMapInfo;
+            ProductMap.DoubleTapped -= OnMapDoubleTapped;
             _isMapInfoSubscribed = false;
         }
     }
@@ -97,6 +106,9 @@ public partial class AddProductPage : ContentPage
             e.MapInfo?.WorldPosition != null)
         {
             var worldPosition = e.MapInfo.WorldPosition;
+            
+            // Store selected location for reset functionality
+            _selectedLocation = worldPosition;
 
             var lonLat = SphericalMercator.ToLonLat(worldPosition.X, worldPosition.Y);
 
@@ -108,7 +120,7 @@ public partial class AddProductPage : ContentPage
             await viewModel.UpdateLocationFromCoordinatesAsync(lonLat.lat, lonLat.lon);
 
             ProductMap.Map?.Navigator.CenterOn(worldPosition);
-            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution);
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500); // Add smooth animation
         }
     }
 
@@ -130,11 +142,14 @@ public partial class AddProductPage : ContentPage
         try
         {
             var spherical = SphericalMercator.FromLonLat(longitude, latitude);
+            
+            // Store as selected location
+            _selectedLocation = new MPoint(spherical.x, spherical.y);
 
             UpdatePinOnMap(spherical.x, spherical.y);
 
             ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
-            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution);
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500); // Add smooth animation
         }
         catch (Exception ex)
         {
@@ -197,6 +212,90 @@ public partial class AddProductPage : ContentPage
                 ProductMap.Map.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
                 ProductMap.Map.Navigator.ZoomTo(DefaultZoomResolution);
             }
+        }
+    }
+
+    // Double-tap to zoom in
+    private void OnMapDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        ZoomIn();
+    }
+
+    // Event handlers for XAML buttons
+    private void OnZoomInClicked(object? sender, EventArgs e)
+    {
+        ZoomIn();
+    }
+
+    private void OnZoomOutClicked(object? sender, EventArgs e)
+    {
+        ZoomOut();
+    }
+
+    private void OnMyLocationClicked(object? sender, EventArgs e)
+    {
+        GoToMyLocation();
+    }
+
+    private void OnResetLocationClicked(object? sender, EventArgs e)
+    {
+        GoToSelectedLocation();
+    }
+
+    // Zoom in method
+    private void ZoomIn()
+    {
+        if (ProductMap?.Map?.Navigator == null) return;
+
+        var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
+        var newResolution = Math.Max(MinZoomResolution, currentResolution / ZoomStep);
+        
+        ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
+    }
+
+    // Zoom out method  
+    private void ZoomOut()
+    {
+        if (ProductMap?.Map?.Navigator == null) return;
+
+        var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
+        var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
+        
+        ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
+    }
+
+    // Go to current user location
+    private async void GoToMyLocation()
+    {
+        try
+        {
+            var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+            {
+                DesiredAccuracy = GeolocationAccuracy.Best,
+                Timeout = TimeSpan.FromSeconds(10)
+            });
+
+            if (location != null)
+            {
+                var spherical = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
+                
+                ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
+                ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Konum alınamadı: {ex.Message}");
+        }
+    }
+
+    // Go back to selected location
+    private void GoToSelectedLocation()
+    {
+        if (_selectedLocation != null && ProductMap?.Map?.Navigator != null)
+        {
+            ProductMap.Map.Navigator.CenterOn(_selectedLocation);
+            ProductMap.Map.Navigator.ZoomTo(SelectedZoomResolution, 500);
         }
     }
 }

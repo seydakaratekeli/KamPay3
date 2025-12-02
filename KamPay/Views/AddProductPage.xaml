@@ -186,12 +186,60 @@
                                            VerticalOptions="FillAndExpand"
                                            HorizontalOptions="FillAndExpand" />
                         
-                        <!-- Harita üzerindeki kontrol butonları -->
+                        <!-- Zoom and Navigation Controls -->
                         <VerticalStackLayout HorizontalOptions="End" 
                                             VerticalOptions="Start"
                                             Margin="12"
                                             Spacing="8">
-                            <!-- Mevcut konuma git butonu -->
+                            
+                            <!-- Zoom In Button -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="White"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    Padding="0">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                </Border.Shadow>
+                                <Button Text="+"
+                                        Clicked="OnZoomInClicked"
+                                        FontSize="22"
+                                        FontAttributes="Bold"
+                                        BackgroundColor="Transparent"
+                                        TextColor="#333"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        Padding="0"/>
+                            </Border>
+                            
+                            <!-- Zoom Out Button -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="White"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    Padding="0">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                </Border.Shadow>
+                                <Button Text="−"
+                                        Clicked="OnZoomOutClicked"
+                                        FontSize="22"
+                                        FontAttributes="Bold"
+                                        BackgroundColor="Transparent"
+                                        TextColor="#333"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        Padding="0"/>
+                            </Border>
+                            
+                            <!-- Separator -->
+                            <BoxView HeightRequest="1" 
+                                     WidthRequest="30"
+                                     BackgroundColor="#E0E0E0"
+                                     HorizontalOptions="Center"
+                                     Margin="0,4"/>
+                            
+                            <!-- My Location Button -->
                             <Border StrokeShape="RoundRectangle 20"
                                     BackgroundColor="White"
                                     WidthRequest="40"
@@ -201,10 +249,29 @@
                                     <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
                                 </Border.Shadow>
                                 <Button Text="📍"
-                                        Command="{Binding UseCurrentLocationCommand}"
+                                        Clicked="OnMyLocationClicked"
                                         FontSize="18"
                                         BackgroundColor="Transparent"
                                         TextColor="#4CAF50"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        Padding="0"/>
+                            </Border>
+                            
+                            <!-- Reset/Center Button -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="White"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    Padding="0">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                </Border.Shadow>
+                                <Button Text="🎯"
+                                        Clicked="OnResetLocationClicked"
+                                        FontSize="18"
+                                        BackgroundColor="Transparent"
+                                        TextColor="#2196F3"
                                         WidthRequest="40"
                                         HeightRequest="40"
                                         Padding="0"/>
