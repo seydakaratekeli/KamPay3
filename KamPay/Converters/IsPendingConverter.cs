@@ -24,7 +24,9 @@ namespace KamPay.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            // ConvertBack is not needed for this one-way binding converter
+            // Return default status if somehow called
+            return TransactionStatus.Pending;
         }
     }
 }

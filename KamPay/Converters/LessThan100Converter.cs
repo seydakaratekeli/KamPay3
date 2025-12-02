@@ -4,9 +4,9 @@ using Microsoft.Maui.Controls;
 
 namespace KamPay.Converters
 {
-    // Yalnýzca puana bakarak bool deðeri döndürür.
-    // True = Puan 100'den az (Uyarýyý göster).
-    // False = Puan 100 veya 100'den fazla (Uyarýyý gizle).
+    // Yalnï¿½zca puana bakarak bool deï¿½eri dï¿½ndï¿½rï¿½r.
+    // True = Puan 100'den az (Uyarï¿½yï¿½ gï¿½ster).
+    // False = Puan 100 veya 100'den fazla (Uyarï¿½yï¿½ gizle).
     public class LessThan100Converter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -16,13 +16,15 @@ namespace KamPay.Converters
                 const int requiredPoints = 100;
                 return points < requiredPoints;
             }
-            // Hata durumunda veya null ise uyarýyý gizle (varsayým)
+            // Hata durumunda veya null ise uyarï¿½yï¿½ gizle (varsayï¿½m)
             return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            // ConvertBack is not needed for this one-way binding converter
+            // Return 0 as default value if somehow called
+            return 0;
         }
     }
 }
