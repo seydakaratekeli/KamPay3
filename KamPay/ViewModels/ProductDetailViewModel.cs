@@ -29,6 +29,7 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly ITransactionService _transactionService;
         private readonly IUserStateService _userStateService;
+        private readonly IPriceQuoteService _priceQuoteService;
         private string _lastLoadedProductId;
         private bool _disposed = false;
 
@@ -70,7 +71,8 @@ namespace KamPay.ViewModels
             IFavoriteService favoriteService,
             IMessagingService messagingService,
             ITransactionService transactionService,
-            IUserStateService userStateService)
+            IUserStateService userStateService,
+            IPriceQuoteService priceQuoteService)
         {
             _productService = productService;
             _authService = authService;
@@ -78,6 +80,7 @@ namespace KamPay.ViewModels
             _messagingService = messagingService;
             _transactionService = transactionService;
             _userStateService = userStateService;
+            _priceQuoteService = priceQuoteService;
             
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -488,6 +491,132 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["MapOpenFailed"]}: {ex.Message}", Res["Ok"]);
+            }
+        }
+
+        /// <summary>
+        /// Fiyat teklifi ver (Dolap tarzı pazarlık)
+        /// </summary>
+        [RelayCommand]
+        private async Task MakeOfferAsync()
+        {
+            if (Product == null || IsLoading) return;
+
+            // Sadece satılık ürünler için teklif verilebilir
+            if (Product.Type != ProductType.Satis)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    Res["Error"], 
+                    "Sadece satılık ürünler için fiyat teklifi verebilirsiniz.", 
+                    Res["Ok"]);
+                return;
+            }
+
+            // Kullanıcı kendi ürününe teklif veremez
+            if (IsOwner)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    Res["Error"], 
+                    "Kendi ürününüze teklif veremezsiniz.", 
+                    Res["Ok"]);
+                return;
+            }
+
+            // Ürün rezerve veya satılmışsa teklif verilemez
+            if (Product.IsReserved || Product.IsSold)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    Res["Error"], 
+                    "Bu ürün artık müsait değil.", 
+                    Res["Ok"]);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["LoginRequired"], Res["Ok"]);
+                    return;
+                }
+
+                // Teklif fiyatı iste
+                var priceStr = await Application.Current.MainPage.DisplayPromptAsync(
+                    "Fiyat Teklifi Ver 💰",
+                    $"Ürün fiyatı: {Product.Price:N2} ₺\n\nTeklif etmek istediğiniz fiyatı girin:",
+                    "Gönder",
+                    "İptal",
+                    placeholder: "Örn: " + (Product.Price * 0.8m).ToString("N0"),
+                    keyboard: Keyboard.Numeric);
+
+                if (string.IsNullOrEmpty(priceStr))
+                    return;
+
+                if (!decimal.TryParse(priceStr, out var offerPrice) || offerPrice <= 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Geçerli bir fiyat girin.", Res["Ok"]);
+                    return;
+                }
+
+                // Mantıklı fiyat kontrolü
+                if (offerPrice >= Product.Price)
+                {
+                    var confirm = await Application.Current.MainPage.DisplayAlert(
+                        "Dikkat",
+                        $"Teklifiniz ({offerPrice:N2} ₺) ürün fiyatından ({Product.Price:N2} ₺) yüksek veya eşit. Devam etmek istiyor musunuz?",
+                        "Evet",
+                        "Hayır");
+                    
+                    if (!confirm)
+                        return;
+                }
+
+                // Mesaj ekle (isteğe bağlı)
+                var message = await Application.Current.MainPage.DisplayPromptAsync(
+                    "Mesaj Ekle",
+                    "Teklifinizle birlikte bir mesaj eklemek ister misiniz? (İsteğe bağlı)",
+                    "Gönder",
+                    "Atla",
+                    placeholder: "Örn: Merhaba, bu ürünle ilgileniyorum...");
+
+                // Teklifi oluştur
+                var request = new CreateQuoteRequest
+                {
+                    QuoteType = PriceQuoteType.Product,
+                    ReferenceId = Product.ProductId,
+                    QuotedPrice = offerPrice,
+                    Message = message ?? string.Empty
+                };
+
+                var result = await _priceQuoteService.CreateQuoteAsync(currentUser.UserId, request);
+
+                if (result.IsValid)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Başarılı! 🎉",
+                        $"Teklifiniz ({offerPrice:N2} ₺) satıcıya gönderildi. Satıcının cevabını bekleyebilirsiniz.",
+                        Res["Ok"]);
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        Res["Error"],
+                        string.Join("\n", result.Errors),
+                        Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    Res["Error"], 
+                    $"Teklif gönderilirken hata: {ex.Message}", 
+                    Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
