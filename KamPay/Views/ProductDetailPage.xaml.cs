@@ -60,12 +60,9 @@ public partial class ProductDetailPage : ContentPage
 
         // Subscribe to property changes to know when product is loaded
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-        
-        // Enable double-tap zoom if map is ready
-        if (ProductMap != null)
-        {
-            ProductMap.DoubleTapped += OnMapDoubleTapped;
-        }
+
+        // NOT: Mapsui varsayılan olarak çift tıklama ile zoom özelliğine sahiptir.
+        // Manuel event ekleme kodu (DoubleTapped) burada hataya sebep olduğu için kaldırıldı.
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -86,11 +83,8 @@ public partial class ProductDetailPage : ContentPage
 
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         WeakReferenceMessenger.Default.Unregister<ShowTradeOfferPopupMessage>(this);
-        
-        if (ProductMap != null)
-        {
-            ProductMap.DoubleTapped -= OnMapDoubleTapped;
-        }
+
+        // Event aboneliği yukarıda kaldırıldığı için burada da çıkarma işlemine gerek yok.
     }
 
     private async Task InitializeMapAsync()
@@ -125,7 +119,7 @@ public partial class ProductDetailPage : ContentPage
             var lat = _viewModel.Product.Latitude.Value;
             var lon = _viewModel.Product.Longitude.Value;
             var spherical = SphericalMercator.FromLonLat(lon, lat);
-            
+
             // Store product location for reset functionality
             _productLocation = new MPoint(spherical.x, spherical.y);
 
@@ -159,11 +153,7 @@ public partial class ProductDetailPage : ContentPage
         _pinLayer.DataHasChanged();
     }
 
-    // Double-tap to zoom in
-    private void OnMapDoubleTapped(object? sender, TappedEventArgs e)
-    {
-        ZoomIn();
-    }
+    // Double-tap metodu Mapsui ile uyumsuz olduğu için kaldırıldı.
 
     // Event handlers for XAML buttons
     private void OnZoomInClicked(object? sender, EventArgs e)
@@ -193,7 +183,7 @@ public partial class ProductDetailPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Max(MinZoomResolution, currentResolution / ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 
@@ -204,7 +194,7 @@ public partial class ProductDetailPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 
@@ -222,7 +212,7 @@ public partial class ProductDetailPage : ContentPage
 
             if (status != PermissionStatus.Granted)
             {
-                await Shell.Current.DisplayAlert("İzin Gerekli", 
+                await Shell.Current.DisplayAlert("İzin Gerekli",
                     "Konumunuza gitmek için konum iznine ihtiyacımız var.", "Tamam");
                 return;
             }
@@ -236,30 +226,30 @@ public partial class ProductDetailPage : ContentPage
             if (location != null)
             {
                 var spherical = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
-                
+
                 ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
                 ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
             }
             else
             {
-                await Shell.Current.DisplayAlert("Konum Alınamadı", 
+                await Shell.Current.DisplayAlert("Konum Alınamadı",
                     "Şu anda konumunuz belirlenemiyor. Lütfen GPS'in açık olduğundan emin olun.", "Tamam");
             }
         }
         catch (FeatureNotSupportedException)
         {
-            await Shell.Current.DisplayAlert("Desteklenmiyor", 
+            await Shell.Current.DisplayAlert("Desteklenmiyor",
                 "Bu cihazda konum servisi desteklenmiyor.", "Tamam");
         }
         catch (PermissionException)
         {
-            await Shell.Current.DisplayAlert("İzin Hatası", 
+            await Shell.Current.DisplayAlert("İzin Hatası",
                 "Konum izni verilmedi.", "Tamam");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Konum alınamadı: {ex.Message}");
-            await Shell.Current.DisplayAlert("Hata", 
+            await Shell.Current.DisplayAlert("Hata",
                 "Konumunuz alınırken bir hata oluştu.", "Tamam");
         }
     }

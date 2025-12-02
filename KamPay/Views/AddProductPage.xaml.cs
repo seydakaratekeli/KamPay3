@@ -62,9 +62,9 @@ public partial class AddProductPage : ContentPage
             {
                 ProductMap.Map.Info += OnMapInfo;
                 _isMapInfoSubscribed = true;
-                
-                // Enable double-tap zoom
-                ProductMap.DoubleTapped += OnMapDoubleTapped;
+
+                // NOT: Mapsui varsayılan olarak çift tıklama ile zoom özelliğine sahiptir.
+                // Manuel event ekleme kodu (DoubleTapped) burada hataya sebep olduğu için kaldırıldı.
             }
 
             Console.WriteLine("📍 Kategoriler yükleniyor...");
@@ -94,7 +94,7 @@ public partial class AddProductPage : ContentPage
         if (_isMapInfoSubscribed && ProductMap?.Map != null)
         {
             ProductMap.Map.Info -= OnMapInfo;
-            ProductMap.DoubleTapped -= OnMapDoubleTapped;
+            // DoubleTapped event aboneliği kaldırıldı
             _isMapInfoSubscribed = false;
         }
     }
@@ -106,7 +106,7 @@ public partial class AddProductPage : ContentPage
             e.MapInfo?.WorldPosition != null)
         {
             var worldPosition = e.MapInfo.WorldPosition;
-            
+
             // Store selected location for reset functionality
             _selectedLocation = worldPosition;
 
@@ -142,7 +142,7 @@ public partial class AddProductPage : ContentPage
         try
         {
             var spherical = SphericalMercator.FromLonLat(longitude, latitude);
-            
+
             // Store as selected location
             _selectedLocation = new MPoint(spherical.x, spherical.y);
 
@@ -215,11 +215,7 @@ public partial class AddProductPage : ContentPage
         }
     }
 
-    // Double-tap to zoom in
-    private void OnMapDoubleTapped(object? sender, TappedEventArgs e)
-    {
-        ZoomIn();
-    }
+    // Double-tap metodu kaldırıldı.
 
     // Event handlers for XAML buttons
     private void OnZoomInClicked(object? sender, EventArgs e)
@@ -244,7 +240,7 @@ public partial class AddProductPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Max(MinZoomResolution, currentResolution / ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 
@@ -255,7 +251,7 @@ public partial class AddProductPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 

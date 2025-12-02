@@ -4,391 +4,224 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:KamPay.ViewModels"
     xmlns:models="clr-namespace:KamPay.Models"
+    xmlns:converters="clr-namespace:KamPay.Converters"
     xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
-    x:Class="KamPay.Views.ProductDetailPage"
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    x:Class="KamPay.Views.ProductDetailPage"
     Title="Ürün Detayı"
-    Shell.BackgroundColor="#4CAF50">
+    BackgroundColor="#F5F5F5"
+    Shell.BackgroundColor="#4CAF50"
+    Shell.ForegroundColor="White">
 
-    <Grid>
-        <!-- ANA İÇERİK -->
-        <ScrollView>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colors -->
+            <Color x:Key="Primary">#4CAF50</Color>
+            <Color x:Key="PrimaryDark">#388E3C</Color>
+            <Color x:Key="TextPrimary">#212121</Color>
+            <Color x:Key="TextSecondary">#757575</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="BorderColor">#EEEEEE</Color>
+            <Color x:Key="Danger">#D32F2F</Color>
+
+            <!-- Converters -->
+            <converters:InvertedBoolConverter x:Key="InverseBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter" />
+            <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- SCROLLABLE CONTENT -->
+        <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="0">
 
-                <!-- Görsel Carousel -->
-                <CarouselView ItemsSource="{Binding ProductImages}"
-                              HeightRequest="320"
-                              Position="{Binding CurrentImageIndex}"
-                              IndicatorView="indicatorView">
-                    <CarouselView.ItemTemplate>
-                        <DataTemplate>
-                            <Image Source="{Binding .}"
-                                   Aspect="AspectFill" />
-                        </DataTemplate>
-                    </CarouselView.ItemTemplate>
-                </CarouselView>
+                <!-- HEADER IMAGE & CAROUSEL -->
+                <Grid HeightRequest="350">
+                    <CarouselView ItemsSource="{Binding ProductImages}"
+                                  Position="{Binding CurrentImageIndex}"
+                                  IndicatorView="indicatorView"
+                                  Loop="False">
+                        <CarouselView.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding .}" Aspect="AspectFill" />
+                            </DataTemplate>
+                        </CarouselView.ItemTemplate>
+                    </CarouselView>
 
-                <IndicatorView x:Name="indicatorView"
-                               IndicatorColor="#E0E0E0"
-                               SelectedIndicatorColor="#4CAF50"
-                               HorizontalOptions="Center"
-                               Margin="0,-25,0,10" />
+                    <!-- Gradient Overlay for Indicators (Grid kullanımı BoxView'den daha güvenlidir) -->
+                    <Grid VerticalOptions="End" HeightRequest="80">
+                        <Grid.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="Transparent" Offset="0.0" />
+                                <GradientStop Color="#99000000" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Grid.Background>
+                    </Grid>
 
-                <!-- Ana İçerik Border -->
-                <Border Stroke="Transparent"
-                        BackgroundColor="White"
-                        StrokeShape="RoundRectangle 25,25,0,0"
-                        Margin="0,-15,0,0"
-                        Padding="20">
+                    <IndicatorView x:Name="indicatorView"
+                                   IndicatorColor="#E0E0E0"
+                                   SelectedIndicatorColor="{StaticResource Primary}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="End"
+                                   Margin="0,0,0,45" />
+                </Grid>
 
+                <!-- MAIN CONTENT SHEET -->
+                <Border StrokeThickness="0"
+                        BackgroundColor="{StaticResource Surface}"
+                        StrokeShape="RoundRectangle 24,24,0,0"
+                        Margin="0,-30,0,0"
+                        Padding="24,30,24,40">
                     <Border.Shadow>
-                        <Shadow Brush="#80000000" Offset="0,4" Radius="10" Opacity="0.5" />
+                        <Shadow Brush="Black" Offset="0,-4" Radius="10" Opacity="0.1" />
                     </Border.Shadow>
 
-                    <VerticalStackLayout Spacing="18">
+                    <VerticalStackLayout Spacing="20">
 
-                        <!-- Başlık ve Tip Badge -->
-                        <Grid ColumnDefinitions="*,Auto" RowSpacing="5">
-                            <Label Grid.Column="0"
-                                   Text="{Binding Product.Title}"
-                                   FontSize="22"
+                        <!-- Title, Badge & Price Section -->
+                        <VerticalStackLayout Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding Product.CreatedAt, StringFormat='{0:d MMMM yyyy}'}"
+                                       TextColor="{StaticResource TextSecondary}"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+
+                                <Border BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
+                                        StrokeShape="RoundRectangle 8"
+                                        StrokeThickness="0"
+                                        Padding="10,5"
+                                        HorizontalOptions="End">
+                                    <Label Text="{Binding Product.TypeText}"
+                                           TextColor="White"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextTransform="Uppercase"/>
+                                </Border>
+                            </Grid>
+
+                            <Label Text="{Binding Product.Title}"
+                                   TextColor="{StaticResource TextPrimary}"
+                                   FontSize="24"
                                    FontAttributes="Bold"
                                    LineBreakMode="WordWrap" />
 
-                            <Frame Grid.Column="1"
-                                   Padding="8,4"
-                                   CornerRadius="12"
-                                   BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
-                                   VerticalOptions="Start">
-                                <Label Text="{Binding Product.TypeText}"
-                                       TextColor="White"
-                                       FontSize="11"
-                                       FontAttributes="Bold" />
-                            </Frame>
+                            <Label Text="{Binding Product.PriceText}"
+                                   TextColor="{StaticResource Primary}"
+                                   FontSize="28"
+                                   FontAttributes="Bold"
+                                   Margin="0,-4,0,0"/>
+                        </VerticalStackLayout>
+
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
+
+                        <!-- Details Grid (Condition, Category) -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="15" ColumnSpacing="15">
+                            <!-- Condition -->
+                            <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                                <Label Text="Durum" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                <!-- SemiBold yerine Bold kullanıldı -->
+                                <Label Text="{Binding Product.ConditionText}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+
+                            <!-- Category -->
+                            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                                <Label Text="Kategori" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                <!-- SemiBold yerine Bold kullanıldı -->
+                                <Label Text="{Binding Product.CategoryName, Converter={StaticResource ProductCategoryToTextConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+
+                            <!-- Exchange Preference -->
+                            <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4"
+                                                  IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource StringIsNotNullOrEmptyConverter}}">
+                                <Label Text="Takas Tercihi" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                <Frame Padding="12" BackgroundColor="#E3F2FD" BorderColor="#BBDEFB" CornerRadius="8" HasShadow="False">
+                                    <Label Text="{Binding Product.ExchangePreference}" TextColor="#1565C0" FontSize="14" />
+                                </Frame>
+                            </VerticalStackLayout>
                         </Grid>
 
-                        <!-- Fiyat -->
-                        <Label Text="{Binding Product.PriceText}"
-                               FontSize="26"
-                               FontAttributes="Bold"
-                               TextColor="#4CAF50"
-                               Margin="0,-5,0,0" />
+                        <!-- Description -->
+                        <VerticalStackLayout Spacing="8" Margin="0,10,0,0">
+                            <Label Text="Açıklama" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                            <Label Text="{Binding Product.Description}" 
+                                   FontSize="15" 
+                                   TextColor="#424242" 
+                                   LineHeight="1.4" />
+                        </VerticalStackLayout>
 
-                        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" />
+                        <!-- Map Section -->
+                        <VerticalStackLayout Spacing="12" IsVisible="{Binding HasLocation}" Margin="0,10,0,0">
+                            <Label Text="Konum" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                            <Border StrokeShape="RoundRectangle 16"
+                                    HeightRequest="220"
+                                    StrokeThickness="1"
+                                    Stroke="{StaticResource BorderColor}"
+                                    BackgroundColor="#F0F0F0">
+                                <Grid>
+                                    <mapsui:MapControl x:Name="ProductMap" VerticalOptions="Fill" HorizontalOptions="Fill" />
 
-                        <!-- Durum - Kategori - Tarih -->
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="6">
-                            <Label Grid.Row="0" Grid.Column="0" Text="Durum:" FontSize="13" TextColor="#757575" FontAttributes="Bold" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Product.ConditionText}" FontSize="13" TextColor="Black" />
+                                    <!-- Map Controls -->
+                                    <VerticalStackLayout HorizontalOptions="End" VerticalOptions="Start" Margin="10" Spacing="8">
+                                        <Button Text="+" Clicked="OnZoomInClicked" WidthRequest="36" HeightRequest="36" CornerRadius="18" BackgroundColor="White" TextColor="Black" Padding="0" FontSize="20" Shadow="{Shadow Brush=Black, Opacity=0.2, Radius=4}" />
+                                        <Button Text="−" Clicked="OnZoomOutClicked" WidthRequest="36" HeightRequest="36" CornerRadius="18" BackgroundColor="White" TextColor="Black" Padding="0" FontSize="20" Shadow="{Shadow Brush=Black, Opacity=0.2, Radius=4}" />
+                                        <Button Text="🎯" Clicked="OnResetLocationClicked" WidthRequest="36" HeightRequest="36" CornerRadius="18" BackgroundColor="White" TextColor="{StaticResource Primary}" Padding="0" FontSize="16" Margin="0,8,0,0" Shadow="{Shadow Brush=Black, Opacity=0.2, Radius=4}" />
+                                    </VerticalStackLayout>
 
-                            <Label Grid.Row="1" Grid.Column="0" Text="Kategori:" FontSize="13" TextColor="#757575" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Product.CategoryName, Converter={StaticResource ProductCategoryToTextConverter}}" FontSize="13" TextColor="Black" />
-
-                            <Label Grid.Row="2" Grid.Column="0" Text="Yayın Tarihi:" FontSize="13" TextColor="#757575" FontAttributes="Bold" />
-                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding Product.CreatedAt, StringFormat='{0:dd MMMM yyyy}'}" FontSize="13" TextColor="Black" />
-                        </Grid>
-
-                        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" />
-
-                        <!-- Açıklama -->
-                        <Label Text="Açıklama" FontSize="17" FontAttributes="Bold" />
-                        <Label Text="{Binding Product.Description}" FontSize="14.5" LineBreakMode="WordWrap" TextColor="#333" />
-
-                        <!-- Konum Harita Görünümü -->
-                        <Border StrokeShape="RoundRectangle 12" 
-                                StrokeThickness="0"
-                                HeightRequest="200"
-                                IsVisible="{Binding HasLocation}">
-                            <Grid>
-                                <mapsui:MapControl x:Name="ProductMap"
-                                                   VerticalOptions="FillAndExpand"
-                                                   HorizontalOptions="FillAndExpand" />
-                                
-                                <!-- Zoom and Navigation Controls -->
-                                <VerticalStackLayout HorizontalOptions="End" 
-                                                    VerticalOptions="Start"
-                                                    Margin="12"
-                                                    Spacing="8">
-                                    
-                                    <!-- Zoom In Button -->
-                                    <Border StrokeShape="RoundRectangle 20"
-                                            BackgroundColor="White"
-                                            WidthRequest="40"
-                                            HeightRequest="40"
-                                            Padding="0">
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                        </Border.Shadow>
-                                        <Button Text="+"
-                                                Clicked="OnZoomInClicked"
-                                                FontSize="22"
-                                                FontAttributes="Bold"
-                                                BackgroundColor="Transparent"
-                                                TextColor="#333"
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"/>
+                                    <!-- Address Strip -->
+                                    <Border VerticalOptions="End" Margin="10" BackgroundColor="White" StrokeShape="RoundRectangle 10" Padding="12" Shadow="{Shadow Brush=Black, Opacity=0.15, Radius=5}">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                            <Label Text="📍" VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" Text="{Binding Product.Location}" FontSize="13" TextColor="{StaticResource TextPrimary}" LineBreakMode="TailTruncation" MaxLines="2" VerticalOptions="Center"/>
+                                            <Button Grid.Column="2" Text="Git" Command="{Binding OpenLocationCommand}" HeightRequest="32" CornerRadius="16" Padding="15,0" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                                        </Grid>
                                     </Border>
-                                    
-                                    <!-- Zoom Out Button -->
-                                    <Border StrokeShape="RoundRectangle 20"
-                                            BackgroundColor="White"
-                                            WidthRequest="40"
-                                            HeightRequest="40"
-                                            Padding="0">
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                        </Border.Shadow>
-                                        <Button Text="−"
-                                                Clicked="OnZoomOutClicked"
-                                                FontSize="22"
-                                                FontAttributes="Bold"
-                                                BackgroundColor="Transparent"
-                                                TextColor="#333"
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"/>
-                                    </Border>
-                                    
-                                    <!-- Separator -->
-                                    <BoxView HeightRequest="1" 
-                                             WidthRequest="30"
-                                             BackgroundColor="#E0E0E0"
-                                             HorizontalOptions="Center"
-                                             Margin="0,4"/>
-                                    
-                                    <!-- My Location Button -->
-                                    <Border StrokeShape="RoundRectangle 20"
-                                            BackgroundColor="White"
-                                            WidthRequest="40"
-                                            HeightRequest="40"
-                                            Padding="0">
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                        </Border.Shadow>
-                                        <Button Text="📍"
-                                                Clicked="OnMyLocationClicked"
-                                                FontSize="18"
-                                                BackgroundColor="Transparent"
-                                                TextColor="#4CAF50"
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"/>
-                                    </Border>
-                                    
-                                    <!-- Reset/Center Button -->
-                                    <Border StrokeShape="RoundRectangle 20"
-                                            BackgroundColor="White"
-                                            WidthRequest="40"
-                                            HeightRequest="40"
-                                            Padding="0">
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                        </Border.Shadow>
-                                        <Button Text="🎯"
-                                                Clicked="OnResetLocationClicked"
-                                                FontSize="18"
-                                                BackgroundColor="Transparent"
-                                                TextColor="#2196F3"
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"/>
-                                    </Border>
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Seller Info Card -->
+                        <Border StrokeShape="RoundRectangle 16"
+                                StrokeThickness="1"
+                                Stroke="{StaticResource BorderColor}"
+                                BackgroundColor="White"
+                                Padding="12"
+                                Margin="0,10,0,0">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <ffimageloading:CachedImage Grid.Column="0"
+                                                            Source="{Binding Product.UserPhotoUrl}"
+                                                            WidthRequest="50" HeightRequest="50"
+                                                            Aspect="AspectFill"
+                                                            LoadingPlaceholder="person_icon.svg"
+                                                            ErrorPlaceholder="person_icon.svg">
+                                    <ffimageloading:CachedImage.Clip>
+                                        <EllipseGeometry Center="25,25" RadiusX="25" RadiusY="25" />
+                                    </ffimageloading:CachedImage.Clip>
+                                </ffimageloading:CachedImage>
+
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding Product.UserName}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                                    <Label Text="{Binding Product.TimeAgoText}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
                                 </VerticalStackLayout>
-                                
-                                <!-- Konum bilgi kartı ve harita aç butonu -->
-                                <Border StrokeShape="RoundRectangle 12"
-                                        BackgroundColor="#F5F5F5"
-                                        Padding="12,8"
-                                        Margin="12"
-                                        VerticalOptions="End"
-                                        HorizontalOptions="FillAndExpand">
-                                    <Border.Shadow>
-                                        <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                    </Border.Shadow>
-                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                        <Label Grid.Column="0" 
-                                               Text="📌" 
-                                               FontSize="16"
-                                               VerticalOptions="Center"/>
-                                        <Label Grid.Column="1"
-                                               Text="{Binding Product.Location}"
-                                               FontSize="12"
-                                               TextColor="#333"
-                                               VerticalOptions="Center"
-                                               LineBreakMode="TailTruncation"
-                                               MaxLines="2"/>
-                                        <Button Grid.Column="2"
-                                                Text="🗺️"
-                                                Command="{Binding OpenLocationCommand}"
-                                                FontSize="18"
-                                                BackgroundColor="#4CAF50"
-                                                TextColor="White"
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                CornerRadius="20"
-                                                Padding="0"/>
-                                    </Grid>
-                                </Border>
+
+                                <Button Grid.Column="2" 
+                                        Text="Satıcı Profili" 
+                                        TextColor="{StaticResource Primary}" 
+                                        BackgroundColor="Transparent" 
+                                        FontSize="13" 
+                                        FontAttributes="Bold"
+                                        Padding="0"
+                                        HeightRequest="40"/>
                             </Grid>
                         </Border>
 
-                        <!-- Takas Tercihi -->
-                        <Frame IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
-                               Padding="12" CornerRadius="10" BorderColor="#2196F3" BackgroundColor="#E3F2FD">
-                            <VerticalStackLayout>
-                                <Label Text="Takas Tercihi" FontSize="13" TextColor="#1976D2" FontAttributes="Bold" />
-                                <Label Text="{Binding Product.ExchangePreference}" FontSize="13" TextColor="#333" Margin="0,5,0,0" />
-                            </VerticalStackLayout>
-                        </Frame>
-
-                        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" />
-
-                        <!-- Satıcı Bilgisi -->
-                        <Label Text="Satıcı" FontSize="17" FontAttributes="Bold" />
-
-                        <Frame Padding="12" CornerRadius="10" BorderColor="#E0E0E0">
-                            <HorizontalStackLayout Spacing="15">
-                                <ffimageloading:CachedImage Source="{Binding Product.UserPhotoUrl}"
-                                                            Aspect="AspectFill"
-                                                            HeightRequest="48" WidthRequest="48"
-                                                            LoadingPlaceholder="person_icon.svg"
-                                                            ErrorPlaceholder="person_icon.svg"
-                                                            DownsampleToViewSize="True"
-                                                            VerticalOptions="Center">
-                                    <ffimageloading:CachedImage.Clip>
-                                        <EllipseGeometry Center="24,24" RadiusX="24" RadiusY="24" />
-                                    </ffimageloading:CachedImage.Clip>
-                                </ffimageloading:CachedImage>
-                                <VerticalStackLayout VerticalOptions="Center">
-                                    <Label Text="{Binding Product.UserName}" FontSize="15" FontAttributes="Bold" />
-                                    <Label Text="{Binding Product.TimeAgoText}" FontSize="11" TextColor="#757575" />
-                                </VerticalStackLayout>
-                            </HorizontalStackLayout>
-                        </Frame>
-
-                        <!-- İstatistikler -->
-                        <HorizontalStackLayout Spacing="30"
-                       HorizontalOptions="Center"
-                       Margin="0,20">
-                            <VerticalStackLayout HorizontalOptions="Center">
-                                <Label Text="👁" FontSize="26" HorizontalTextAlignment="Center" />
-                                <Label Text="{Binding Product.ViewCount}"
-               FontSize="18"
-               FontAttributes="Bold"
-               HorizontalTextAlignment="Center" />
-                                <Label Text="Görüntülenme"
-               FontSize="12"
-               TextColor="#757575"
-               HorizontalTextAlignment="Center" />
-                            </VerticalStackLayout>
-                        </HorizontalStackLayout>
-
-                        <!-- Sahip için Butonlar -->
-                        <Grid ColumnDefinitions="*,*,*"
-      ColumnSpacing="15"
-      IsVisible="{Binding IsOwner}"
-      Margin="0,20,0,0">
-
-                            <Button Grid.Column="0"
-            Text="Düzenle"
-            Command="{Binding EditProductCommand}"
-            BackgroundColor="{StaticResource Secondary}"
-            TextColor="White"
-            CornerRadius="10"
-            HeightRequest="50" />
-
-                            <Button Grid.Column="1"
-            Text="Satıldı İşaretle"
-            Command="{Binding MarkAsSoldCommand}"
-            IsVisible="{Binding Product.IsSold, Converter={StaticResource InverseBoolConverter}}"
-            BackgroundColor="{StaticResource Primary}"
-            TextColor="White"
-            CornerRadius="10"
-            HeightRequest="50" />
-
-                            <Button Grid.Column="2"
-            Text="Sil"
-            Command="{Binding DeleteProductCommand}"
-            BackgroundColor="{StaticResource Danger}"
-            TextColor="White"
-            CornerRadius="10"
-            HeightRequest="50" />
-                        </Grid>
-
-                        <!-- Alıcı için Butonlar -->
-                        <Grid ColumnDefinitions="*,*,Auto,Auto"
-      ColumnSpacing="10"
-      IsVisible="{Binding CanContact}"
-      Margin="0,20,0,0">
-
-                            <Button Grid.Column="0"
-            Text="Mesaj Gönder"
-            Command="{Binding ContactSellerCommand}"
-            BackgroundColor="{StaticResource Gray500}"
-            TextColor="White"
-            CornerRadius="12"
-            HeightRequest="50" />
-
-                            <Button Grid.Column="1"
-            Command="{Binding SendRequestCommand}"
-            BackgroundColor="{StaticResource Primary}"
-            TextColor="White"
-            CornerRadius="12"
-            HeightRequest="50">
-                                <Button.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Satis}">
-                                        <Setter Property="Text" Value="Satın Almak İste" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Bagis}">
-                                        <Setter Property="Text" Value="Almak İstiyorum" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Takas}">
-                                        <Setter Property="Text" Value="Takas Teklif Et" />
-                                    </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
-
-                            <Button Grid.Column="2"
-            Command="{Binding ToggleFavoriteCommand}"
-            BackgroundColor="Transparent"
-            BorderColor="#F44336"
-            BorderWidth="2"
-            CornerRadius="12"
-            WidthRequest="50"
-            HeightRequest="50">
-                                <Button.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsFavorite}" Value="True">
-                                        <Setter Property="Text" Value="❤️" />
-                                        <Setter Property="BackgroundColor" Value="#F44336" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Button" Binding="{Binding IsFavorite}" Value="False">
-                                        <Setter Property="Text" Value="🤍" />
-                                        <Setter Property="TextColor" Value="#F44336" />
-                                    </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
-
-                            <Button Grid.Column="3"
-            Text="📤"
-            Command="{Binding ShareProductCommand}"
-            BackgroundColor="#2196F3"
-            TextColor="White"
-            CornerRadius="12"
-            WidthRequest="50"
-            HeightRequest="50" />
-                        </Grid>
-
-                        <!-- Ek Aksiyonlar -->
-                        <HorizontalStackLayout HorizontalOptions="Center"
-                       Spacing="20"
-                       Margin="0,15,0,0">
-                            <Button Text="🚩 Şikayet Et"
-            Command="{Binding ReportProductCommand}"
-            BackgroundColor="Transparent"
-            TextColor="#F44336"
-            FontSize="13"
-            FontAttributes="Bold" />
+                        <!-- View Stats -->
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Opacity="0.6" Margin="0,10,0,20">
+                            <Label Text="👁" FontSize="14" VerticalOptions="Center"/>
+                            <Label Text="{Binding Product.ViewCount, StringFormat='{0} kez görüntülendi'}" FontSize="12" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
 
                     </VerticalStackLayout>
@@ -396,8 +229,77 @@
             </VerticalStackLayout>
         </ScrollView>
 
+        <!-- STICKY BOTTOM ACTION BAR -->
+        <Border Grid.Row="1" 
+                VerticalOptions="End" 
+                BackgroundColor="{StaticResource Surface}" 
+                StrokeThickness="0" 
+                Padding="16,16,16,24" 
+                Shadow="{Shadow Brush=Black, Opacity=0.15, Radius=10, Offset='0,-4'}">
+            <Grid>
+                <!-- Owner Actions -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" IsVisible="{Binding IsOwner}">
+                    <!-- SemiBold yerine Bold kullanıldı -->
+                    <Button Grid.Column="0" Text="Düzenle" Command="{Binding EditProductCommand}" BackgroundColor="#F5F5F5" TextColor="{StaticResource TextPrimary}" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
+                    <Button Grid.Column="1" Text="Satıldı" Command="{Binding MarkAsSoldCommand}" IsVisible="{Binding Product.IsSold, Converter={StaticResource InverseBoolConverter}}" BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
+                    <Button Grid.Column="2" Text="Sil" Command="{Binding DeleteProductCommand}" BackgroundColor="#FFEBEE" TextColor="{StaticResource Danger}" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
+                </Grid>
+
+                <!-- Buyer Actions -->
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" IsVisible="{Binding CanContact}">
+
+                    <!-- Favorite Button -->
+                    <Button Grid.Column="0" Command="{Binding ToggleFavoriteCommand}" WidthRequest="50" HeightRequest="50" CornerRadius="14" BackgroundColor="#FFF8E1" BorderColor="Transparent">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsFavorite}" Value="True">
+                                <Setter Property="Text" Value="❤️"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsFavorite}" Value="False">
+                                <Setter Property="Text" Value="🤍"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Main Action Button (Buy/Request/Offer) -->
+                    <!-- SemiBold yerine Bold kullanıldı -->
+                    <Button Grid.Column="1" Command="{Binding SendRequestCommand}" HeightRequest="50" CornerRadius="14" BackgroundColor="{StaticResource Primary}" TextColor="White" FontAttributes="Bold" FontSize="15" Shadow="{Shadow Brush={StaticResource Primary}, Opacity=0.4, Radius=8, Offset='0,4'}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Satis}">
+                                <Setter Property="Text" Value="Satın Almak İste" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Bagis}">
+                                <Setter Property="Text" Value="Almak İstiyorum" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Takas}">
+                                <Setter Property="Text" Value="Takas Teklif Et" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Message Button -->
+                    <Button Grid.Column="2" Text="💬" Command="{Binding ContactSellerCommand}" WidthRequest="50" HeightRequest="50" CornerRadius="14" BackgroundColor="#E3F2FD" TextColor="#1976D2" FontSize="20"/>
+                </Grid>
+
+                <!-- Report Button -->
+                <Button Grid.Column="2"
+                        Text="🚩"
+                        Command="{Binding ReportProductCommand}" 
+                        IsVisible="{Binding IsOwner, Converter={StaticResource InverseBoolConverter}}"
+                        HorizontalOptions="End"
+                        VerticalOptions="Start"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Danger}"
+                        FontSize="18"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        Margin="0,-330,20,0"
+                        InputTransparent="False"
+                        ZIndex="10"/>
+            </Grid>
+        </Border>
+
         <!-- LOADING OVERLAY -->
-        <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#80000000" InputTransparent="False">
+        <Grid Grid.RowSpan="2" IsVisible="{Binding IsLoading}" BackgroundColor="#80000000" InputTransparent="False">
             <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" HeightRequest="50"
                                VerticalOptions="Center" HorizontalOptions="Center" />
         </Grid>

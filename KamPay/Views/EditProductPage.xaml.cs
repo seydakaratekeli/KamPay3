@@ -62,12 +62,11 @@ public partial class EditProductPage : ContentPage
             {
                 ProductMap.Map.Info += OnMapInfo;
                 _isMapInfoSubscribed = true;
-                
-                // Enable double-tap zoom
-                ProductMap.DoubleTapped += OnMapDoubleTapped;
+
+                // NOT: Mapsui varsayılan olarak çift tıklama ile zoom özelliğine sahiptir.
+                // Manuel olarak event eklemeye gerek yoktur.
             }
 
-            // Subscribe to property changes to initialize map when product loads
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
             Console.WriteLine("📍 EditProductPage harita başlatılıyor...");
@@ -77,20 +76,6 @@ public partial class EditProductPage : ContentPage
         catch (Exception ex)
         {
             Console.WriteLine($"❌ EditProductPage OnAppearing Hatası: {ex.Message}");
-        }
-    }
-
-    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        // When Latitude/Longitude changes from product load, update map
-        if ((e.PropertyName == nameof(EditProductViewModel.Latitude) || 
-             e.PropertyName == nameof(EditProductViewModel.Longitude)) && 
-            _viewModel.Latitude.HasValue && _viewModel.Longitude.HasValue)
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                UpdateMapLocation(_viewModel.Latitude.Value, _viewModel.Longitude.Value);
-            });
         }
     }
 
@@ -104,8 +89,22 @@ public partial class EditProductPage : ContentPage
         if (_isMapInfoSubscribed && ProductMap?.Map != null)
         {
             ProductMap.Map.Info -= OnMapInfo;
-            ProductMap.DoubleTapped -= OnMapDoubleTapped;
+            // Event aboneliği kaldırıldı çünkü yukarıda eklenmedi.
             _isMapInfoSubscribed = false;
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // When Latitude/Longitude changes from product load, update map
+        if ((e.PropertyName == nameof(EditProductViewModel.Latitude) ||
+             e.PropertyName == nameof(EditProductViewModel.Longitude)) &&
+            _viewModel.Latitude.HasValue && _viewModel.Longitude.HasValue)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateMapLocation(_viewModel.Latitude.Value, _viewModel.Longitude.Value);
+            });
         }
     }
 
@@ -116,7 +115,7 @@ public partial class EditProductPage : ContentPage
             e.MapInfo?.WorldPosition != null)
         {
             var worldPosition = e.MapInfo.WorldPosition;
-            
+
             // Store selected location for reset functionality
             _selectedLocation = worldPosition;
 
@@ -152,7 +151,7 @@ public partial class EditProductPage : ContentPage
         try
         {
             var spherical = SphericalMercator.FromLonLat(longitude, latitude);
-            
+
             // Store as selected location
             _selectedLocation = new MPoint(spherical.x, spherical.y);
 
@@ -198,7 +197,7 @@ public partial class EditProductPage : ContentPage
             if (_viewModel.Latitude.HasValue && _viewModel.Longitude.HasValue)
             {
                 var spherical = SphericalMercator.FromLonLat(_viewModel.Longitude.Value, _viewModel.Latitude.Value);
-                
+
                 UpdatePinOnMap(spherical.x, spherical.y);
                 map.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
                 map.Navigator.ZoomTo(SelectedZoomResolution);
@@ -241,12 +240,6 @@ public partial class EditProductPage : ContentPage
         }
     }
 
-    // Double-tap to zoom in
-    private void OnMapDoubleTapped(object? sender, TappedEventArgs e)
-    {
-        ZoomIn();
-    }
-
     // Event handlers for XAML buttons
     private void OnZoomInClicked(object? sender, EventArgs e)
     {
@@ -270,7 +263,7 @@ public partial class EditProductPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Max(MinZoomResolution, currentResolution / ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 
@@ -281,7 +274,7 @@ public partial class EditProductPage : ContentPage
 
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
-        
+
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
     }
 
