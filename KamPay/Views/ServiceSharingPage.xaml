@@ -220,9 +220,9 @@
                                             </VerticalStackLayout>
                                         </HorizontalStackLayout>
 
-                                        <!-- PRICE + BUTTON -->
+                                        <!-- PRICE + BUTTONS -->
                                         <HorizontalStackLayout Grid.Column="1"
-                                                               Spacing="15"
+                                                               Spacing="8"
                                                                VerticalOptions="Center">
                                             <VerticalStackLayout Spacing="2">
                                                 <Label Text="{Binding Price, StringFormat='{0} ₺'}"
@@ -233,6 +233,18 @@
                                                        FontSize="12"
                                                        TextColor="{StaticResource Secondary}" />
                                             </VerticalStackLayout>
+
+                                            <!-- 🔥 YENİ: Mesaj Butonu -->
+                                            <Button Text="💬"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=MessageProviderCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="{StaticResource Secondary}"
+                                                    TextColor="White"
+                                                    CornerRadius="10"
+                                                    HeightRequest="40"
+                                                    WidthRequest="40"
+                                                    FontSize="18"
+                                                    ToolTipProperties.Text="Satıcıya Mesaj Gönder" />
 
                                             <Button Text="Talep Et"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}"

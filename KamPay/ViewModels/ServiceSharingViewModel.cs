@@ -19,6 +19,7 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
+        private readonly IMessagingService _messagingService; // 🔥 YENİ
 
         private readonly RealtimeSnapshotService<ServiceOffer> _loader;
         private IDisposable _listener;
@@ -66,12 +67,14 @@ namespace KamPay.ViewModels
             IServiceSharingService serviceService,
             IAuthenticationService authService,
             IUserProfileService userProfileService,
-            IUserStateService userStateService)
+            IUserStateService userStateService,
+            IMessagingService messagingService) // 🔥 YENİ
         {
             _serviceService = serviceService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
+            _messagingService = messagingService; // 🔥 YENİ
 
             _loader = new RealtimeSnapshotService<ServiceOffer>(Constants.FirebaseRealtimeDbUrl);
 
@@ -473,6 +476,53 @@ namespace KamPay.ViewModels
             }
         }
 
+
+
+        // 🔥 YENİ: Satıcıya Mesaj Gönderme Komutu
+        [RelayCommand]
+        private async Task MessageProviderAsync(ServiceOffer offer)
+        {
+            if (offer == null) return;
+
+            var user = await _authService.GetCurrentUserAsync();
+            if (user == null)
+            {
+                await Display("Hata", "Giriş yapılmalı.");
+                return;
+            }
+
+            if (offer.ProviderId == user.UserId)
+            {
+                await Display("Bilgi", "Kendinize mesaj gönderemezsiniz.");
+                return;
+            }
+
+            try
+            {
+                IsPosting = true;
+
+                // Konuşma başlat veya mevcut konuşmayı al
+                var conversationResult = await _messagingService.GetOrCreateConversationAsync(user.UserId, offer.ProviderId);
+
+                if (conversationResult.Success && conversationResult.Data != null)
+                {
+                    // Mesajlaşma sayfasına yönlendir
+                    await Shell.Current.GoToAsync($"///MessagingPage?conversationId={conversationResult.Data.ConversationId}&otherUserId={offer.ProviderId}");
+                }
+                else
+                {
+                    await Display("Hata", conversationResult.Message ?? "Konuşma başlatılamadı.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Display("Hata", ex.Message);
+            }
+            finally
+            {
+                IsPosting = false;
+            }
+        }
 
 
         // ----------------------------------------------------
