@@ -249,7 +249,7 @@
                                     <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
                                 </Border.Shadow>
                                 <Button Text="📍"
-                                        Clicked="OnMyLocationClicked"
+                                        Command="{Binding UseCurrentLocationCommand}"
                                         FontSize="18"
                                         BackgroundColor="Transparent"
                                         TextColor="#4CAF50"

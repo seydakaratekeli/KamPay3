@@ -213,6 +213,19 @@ public partial class ProductDetailPage : ContentPage
     {
         try
         {
+            // Check location permissions first
+            var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+            }
+
+            if (status != PermissionStatus.Granted)
+            {
+                Console.WriteLine("Konum izni verilmedi");
+                return;
+            }
+
             var location = await Geolocation.GetLocationAsync(new GeolocationRequest
             {
                 DesiredAccuracy = GeolocationAccuracy.Best,

@@ -258,11 +258,6 @@ public partial class EditProductPage : ContentPage
         ZoomOut();
     }
 
-    private void OnMyLocationClicked(object? sender, EventArgs e)
-    {
-        GoToMyLocation();
-    }
-
     private void OnResetLocationClicked(object? sender, EventArgs e)
     {
         GoToSelectedLocation();
@@ -288,31 +283,6 @@ public partial class EditProductPage : ContentPage
         var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
         
         ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
-    }
-
-    // Go to current user location
-    private async void GoToMyLocation()
-    {
-        try
-        {
-            var location = await Geolocation.GetLocationAsync(new GeolocationRequest
-            {
-                DesiredAccuracy = GeolocationAccuracy.Best,
-                Timeout = TimeSpan.FromSeconds(10)
-            });
-
-            if (location != null)
-            {
-                var spherical = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
-                
-                ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
-                ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Konum alınamadı: {ex.Message}");
-        }
     }
 
     // Go back to selected location
