@@ -314,15 +314,39 @@ namespace KamPay.Services
 
             // Ad kontrolü
             if (string.IsNullOrWhiteSpace(request.FirstName))
+            {
                 result.AddError("Ad alanı boş bırakılamaz");
-            else if (request.FirstName.Length < 2)
-                result.AddError("Ad en az 2 karakter olmalıdır");
+            }
+            else
+            {
+                // Check for dangerous content
+                if (InputSanitizer.ContainsDangerousContent(request.FirstName))
+                {
+                    result.AddError("Ad alanı geçersiz karakterler içeriyor");
+                }
+                else if (request.FirstName.Length < 2)
+                {
+                    result.AddError("Ad en az 2 karakter olmalıdır");
+                }
+            }
 
             // Soyad kontrolü
             if (string.IsNullOrWhiteSpace(request.LastName))
+            {
                 result.AddError("Soyad alanı boş bırakılamaz");
-            else if (request.LastName.Length < 2)
-                result.AddError("Soyad en az 2 karakter olmalıdır");
+            }
+            else
+            {
+                // Check for dangerous content
+                if (InputSanitizer.ContainsDangerousContent(request.LastName))
+                {
+                    result.AddError("Soyad alanı geçersiz karakterler içeriyor");
+                }
+                else if (request.LastName.Length < 2)
+                {
+                    result.AddError("Soyad en az 2 karakter olmalıdır");
+                }
+            }
 
             // E-posta kontrolü
             if (string.IsNullOrWhiteSpace(request.Email))
@@ -331,15 +355,13 @@ namespace KamPay.Services
             }
             else
             {
-                // E-posta format kontrolü
-                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-                if (!emailRegex.IsMatch(request.Email))
+                // E-posta format kontrolü using InputSanitizer
+                if (!InputSanitizer.IsValidEmail(request.Email))
                 {
                     result.AddError("Geçersiz e-posta formatı");
                 }
-
                 // Üniversite e-posta kontrolü
-                if (!request.Email.ToLower().EndsWith(Constants.UniversityEmailDomain))
+                else if (!request.Email.ToLower().EndsWith(Constants.UniversityEmailDomain))
                 {
                     result.AddError($"Sadece {Constants.UniversityEmailDomain} uzantılı e-postalar kabul edilir");
                 }

@@ -320,8 +320,24 @@ namespace KamPay.Services
                 await UpdateUserStatsAsync(fromUserStats);
                 await UpdateUserStatsAsync(toUserStats);
 
-                // TODO: Bu önemli işlemi bir "transaction_history" koleksiyonuna kaydetmek,
-                // projenizin güvenilirliğini artırır. Raporunuzda bundan bahsedebilirsiniz.
+                // ✅ IMPLEMENTED: Transaction history logging for audit trail and reliability
+                var transactionHistory = new TransactionHistory
+                {
+                    FromUserId = fromUserId,
+                    ToUserId = toUserId,
+                    Amount = amount,
+                    Type = TransactionHistoryType.CreditTransfer,
+                    Description = reason ?? "Zaman kredisi transferi",
+                    Status = TransactionHistoryStatus.Completed,
+                    FromUserBalanceAfter = fromUserStats.TimeCredits,
+                    ToUserBalanceAfter = toUserStats.TimeCredits,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _firebaseClient
+                    .Child("transaction_history")
+                    .Child(transactionHistory.TransactionHistoryId)
+                    .PutAsync(transactionHistory);
 
                 return ServiceResult<bool>.SuccessResult(true, "Kredi transferi başarılı.");
             }

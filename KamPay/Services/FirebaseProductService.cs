@@ -579,18 +579,34 @@ public class FirebaseProductService : IProductService
         {
             result.AddError("Ürün başlığı boş olamaz");
         }
-        else if (request.Title.Length > Constants.MaxProductTitleLength)
+        else
         {
-            result.AddError($"Başlık en fazla {Constants.MaxProductTitleLength} karakter olabilir");
+            // Check for dangerous content in title
+            if (InputSanitizer.ContainsDangerousContent(request.Title))
+            {
+                result.AddError("Ürün başlığı geçersiz karakterler içeriyor");
+            }
+            else if (request.Title.Length > Constants.MaxProductTitleLength)
+            {
+                result.AddError($"Başlık en fazla {Constants.MaxProductTitleLength} karakter olabilir");
+            }
         }
 
         if (string.IsNullOrWhiteSpace(request.Description))
         {
             result.AddError("Ürün açıklaması boş olamaz");
         }
-        else if (request.Description.Length > Constants.MaxProductDescriptionLength)
+        else
         {
-            result.AddError($"Açıklama en fazla {Constants.MaxProductDescriptionLength} karakter olabilir");
+            // Check for dangerous content in description
+            if (InputSanitizer.ContainsDangerousContent(request.Description))
+            {
+                result.AddError("Ürün açıklaması geçersiz karakterler içeriyor");
+            }
+            else if (request.Description.Length > Constants.MaxProductDescriptionLength)
+            {
+                result.AddError($"Açıklama en fazla {Constants.MaxProductDescriptionLength} karakter olabilir");
+            }
         }
 
         if (string.IsNullOrWhiteSpace(request.CategoryId))
