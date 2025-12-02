@@ -371,6 +371,12 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task GoToPriceQuotesAsync()
+    {
+        await Shell.Current.GoToAsync(nameof(PriceQuotesPage));
+    }
+
+    [RelayCommand]
     private async Task ChangeLanguageAsync()
     {
         var action = await Application.Current.MainPage.DisplayActionSheet(
