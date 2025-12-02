@@ -475,43 +475,46 @@ namespace KamPay.ViewModels
                 IsPosting = false;
             }
         }
+        // ServiceSharingViewModel.cs içine ekleyin:
 
-
-
-        // 🔥 YENİ: Satıcıya Mesaj Gönderme Komutu
+        // ----------------------------------------------------
+        // 🔥 MESSAGE PROVIDER - ProductDetailViewModel'deki gibi
+        // ----------------------------------------------------
         [RelayCommand]
         private async Task MessageProviderAsync(ServiceOffer offer)
         {
-            if (offer == null) return;
-
-            var user = await _authService.GetCurrentUserAsync();
-            if (user == null)
-            {
-                await Display("Hata", "Giriş yapılmalı.");
-                return;
-            }
-
-            if (offer.ProviderId == user.UserId)
-            {
-                await Display("Bilgi", "Kendinize mesaj gönderemezsiniz.");
-                return;
-            }
+            if (offer == null || IsLoading) return;
 
             try
             {
-                IsPosting = true;
+                IsLoading = true;
 
-                // Konuşma başlat veya mevcut konuşmayı al
-                var conversationResult = await _messagingService.GetOrCreateConversationAsync(user.UserId, offer.ProviderId);
-
-                if (conversationResult.Success && conversationResult.Data != null)
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null)
                 {
-                    // Mesajlaşma sayfasına yönlendir
-                    await Shell.Current.GoToAsync($"///MessagingPage?conversationId={conversationResult.Data.ConversationId}&otherUserId={offer.ProviderId}");
+                    await Display("Hata", "Giriş yapılmalı.");
+                    return;
+                }
+
+                if (currentUser.UserId == offer.ProviderId)
+                {
+                    await Display("Bilgi", "Kendinize mesaj gönderemezsiniz.");
+                    return;
+                }
+
+                // Konuşma oluştur veya mevcut konuşmaya git
+                var conversationResult = await _messagingService.GetOrCreateConversationAsync(
+                    currentUser.UserId,
+                    offer.ProviderId,
+                    offer.ServiceId); // ServiceId'yi de geçebilirsiniz
+
+                if (conversationResult.Success)
+                {
+                    await Shell.Current.GoToAsync($"ChatPage?conversationId={conversationResult.Data.ConversationId}");
                 }
                 else
                 {
-                    await Display("Hata", conversationResult.Message ?? "Konuşma başlatılamadı.");
+                    await Display("Hata", conversationResult.Message ?? "Mesaj gönderilemedi.");
                 }
             }
             catch (Exception ex)
@@ -520,10 +523,9 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                IsPosting = false;
+                IsLoading = false;
             }
         }
-
 
         // ----------------------------------------------------
         // TIME CREDITS (+ / -)

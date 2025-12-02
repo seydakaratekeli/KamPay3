@@ -1,5 +1,4 @@
-﻿
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +37,9 @@ public partial class GoodDeedPost : ObservableObject
     public string? ContactInfo { get; set; }
 
     public Dictionary<string, Comment> Comments { get; set; } = new Dictionary<string, Comment>();
+
+    // 🔥 YENİ: Beğenen kullanıcıların listesi
+    public Dictionary<string, bool> Likes { get; set; } = new Dictionary<string, bool>();
 
     [JsonIgnore] // <-- Bu attribute, özelliğin Firebase'e kaydedilmesini engeller.
     public bool IsOwner { get; set; }
@@ -80,6 +82,7 @@ public partial class GoodDeedPost : ObservableObject
         LikeCount = 0;
         CommentCount = 0;
         UserProfileImageUrl = "default_avatar.png";
+        Likes = new Dictionary<string, bool>();
     }
     // Yorum listesi güncellendiğinde UI'ı tetiklemek için yardımcı metod
     public void RefreshCommentsUI()
@@ -90,6 +93,19 @@ public partial class GoodDeedPost : ObservableObject
         OnPropertyChanged(nameof(VisibleComments));
         OnPropertyChanged(nameof(ShowExpandButton));
         OnPropertyChanged(nameof(ShowMoreButtonText));
+    }
+
+    // 🔥 YENİ: Kullanıcının beğenip beğenmediğini kontrol et
+    public void UpdateLikeStatus(string userId)
+    {
+        if (Likes != null && Likes.ContainsKey(userId))
+        {
+            IsLiked = Likes[userId];
+        }
+        else
+        {
+            IsLiked = false;
+        }
     }
 }
 

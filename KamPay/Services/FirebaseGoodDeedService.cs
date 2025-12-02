@@ -57,25 +57,41 @@ public class FirebaseGoodDeedService : IGoodDeedService
     {
         try
         {
-            var post = await _firebaseClient
-                .Child(GoodDeedPostsCollection)
-                .Child(postId)
-                .OnceSingleAsync<GoodDeedPost>();
+            if (string.IsNullOrEmpty(postId) || string.IsNullOrEmpty(userId))
+                return ServiceResult<bool>.FailureResult("Geçersiz parametreler");
 
-            if (post != null)
+            var postRef = _firebaseClient.Child(Constants.GoodDeedPostsCollection).Child(postId);
+            var likesRef = postRef.Child("Likes");
+
+            // Kullanıcının beğeni durumunu kontrol et
+            var userLikeRef = likesRef.Child(userId);
+            var existingLike = await userLikeRef.OnceSingleAsync<bool?>();
+
+            var post = await postRef.OnceSingleAsync<GoodDeedPost>();
+            if (post == null)
+                return ServiceResult<bool>.FailureResult("Post bulunamadı");
+
+            if (existingLike.HasValue && existingLike.Value)
             {
-                post.LikeCount++;
-                await _firebaseClient
-                    .Child(GoodDeedPostsCollection)
-                    .Child(postId)
-                    .PutAsync(post);
+                // Beğeni var, kaldır
+                await userLikeRef.DeleteAsync();
+                post.LikeCount = Math.Max(0, post.LikeCount - 1);
             }
+            else
+            {
+                // Beğeni yok, ekle
+                await userLikeRef.PutAsync(true);
+                post.LikeCount++;
+            }
+
+            // Post'un beğeni sayısını güncelle
+            await postRef.Child("LikeCount").PutAsync(post.LikeCount);
 
             return ServiceResult<bool>.SuccessResult(true);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("Hata", ex.Message);
+            return ServiceResult<bool>.FailureResult("Beğeni işlemi başarısız", ex.Message);
         }
     }
 

@@ -203,22 +203,38 @@ namespace KamPay.ViewModels
         {
             if (post == null) return;
 
-            bool previousState = post.IsLiked;
-            post.IsLiked = !post.IsLiked;
-            post.LikeCount = post.IsLiked ? post.LikeCount + 1 : Math.Max(0, post.LikeCount - 1);
-
             try
             {
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null) return;
 
-                await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
+                // Optimistik UI güncellemesi yapma, servisten sonucu bekle
+                var result = await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
+
+                if (result.Success)
+                {
+                    // Firebase'den güncel veriyi al
+                    var updatedPost = await _firebaseClient
+                        .Child("good_deed_posts")
+                        .Child(post.PostId)
+                        .OnceSingleAsync<GoodDeedPost>();
+
+                    if (updatedPost != null)
+                    {
+                        // UI'ı güncelle
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            post.LikeCount = updatedPost.LikeCount;
+                            post.Likes = updatedPost.Likes ?? new Dictionary<string, bool>();
+                            post.UpdateLikeStatus(currentUser.UserId);
+                        });
+                    }
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Hata durumunda geri al
-                post.IsLiked = previousState;
-                post.LikeCount = post.IsLiked ? post.LikeCount + 1 : Math.Max(0, post.LikeCount - 1);
+                Debug.WriteLine($"❌ Beğeni hatası: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hata", "Beğeni işlemi başarısız oldu.", "Tamam");
             }
         }
 
@@ -472,7 +488,6 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            // BOŞ VE GEÇERSİZ VERİLERİ FİLTRELE
             var validEvents = events.Where(e =>
                 e.Object != null &&
                 !string.IsNullOrWhiteSpace(e.Key) &&
@@ -493,8 +508,13 @@ namespace KamPay.ViewModels
                 {
                     var post = e.Object;
                     post.PostId = e.Key;
+
                     if (currentUser != null)
+                    {
                         post.IsOwner = post.UserId == currentUser.UserId;
+                        // 🔥 YENİ: Beğeni durumunu güncelle
+                        post.UpdateLikeStatus(currentUser.UserId);
+                    }
 
                     var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
 

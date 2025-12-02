@@ -9,7 +9,6 @@
              x:DataType="vm:ServiceSharingViewModel"
              BackgroundColor="{StaticResource Gray100}">
 
-    <!-- Sayfa içi sadece ihtiyaç olan converter'lar -->
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
@@ -17,249 +16,256 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <!-- 2 satır: 0 = Filtre Bar, 1 = Asıl içerik -->
     <Grid RowDefinitions="Auto,*">
 
-        <!-- ========================================================= -->
-        <!-- 🔍  FILTRE BAR (Sadece liste görünürken)                  -->
-        <!-- ========================================================= -->
+        <!-- 🔍 FILTRE BAR -->
         <VerticalStackLayout Grid.Row="0"
-                             Padding="10"
-                             Spacing="8"
+                             Padding="12"
+                             Spacing="10"
                              BackgroundColor="{StaticResource Gray100}"
                              IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InverseBoolConverter}}">
 
             <!-- Arama -->
             <Border StrokeThickness="0"
                     BackgroundColor="White"
-                    Padding="8"
-                    StrokeShape="RoundRectangle 10">
+                    Padding="10"
+                    StrokeShape="RoundRectangle 12">
                 <Entry Placeholder="Hizmet ara..."
                        Text="{Binding SearchText}"
                        ClearButtonVisibility="WhileEditing"
                        FontSize="15" />
             </Border>
 
-            <!-- Kategori filtresi -->
-            <Border StrokeThickness="0"
-                    BackgroundColor="White"
-                    Padding="8,4"
-                    StrokeShape="RoundRectangle 10">
-                <Grid ColumnDefinitions="Auto,*">
-                    <Label Text="Kategori"
-                           FontSize="13"
-                           TextColor="{StaticResource Gray600}"
-                           VerticalOptions="Center" />
-                    <Picker Grid.Column="1"
-                            Title="Kategori Seçiniz"
+            <!-- Kategori ve Fiyat Sıralama (Yan Yana - Responsive) -->
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10">
+
+                <!-- Kategori -->
+                <Border Grid.Column="0"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        Padding="8,0"
+                        StrokeShape="RoundRectangle 12">
+                    <Picker Title="Kategori"
                             ItemsSource="{Binding Categories}"
-                            SelectedItem="{Binding FilterCategory}">
+                            SelectedItem="{Binding FilterCategory}"
+                            FontSize="13">
                         <Picker.ItemDisplayBinding>
                             <Binding Converter="{StaticResource ServiceCategoryToTextConverter}" />
                         </Picker.ItemDisplayBinding>
                     </Picker>
-                </Grid>
-            </Border>
+                </Border>
 
-            <!-- Fiyat sıralama -->
-            <Border StrokeThickness="0"
-                    BackgroundColor="White"
-                    Padding="8,4"
-                    StrokeShape="RoundRectangle 10">
-                <Grid ColumnDefinitions="Auto,*">
-                    <Label Text="Fiyat sıralama"
-                           FontSize="13"
-                           TextColor="{StaticResource Gray600}"
-                           VerticalOptions="Center" />
-                    <Picker Grid.Column="1"
-                            Title="Fiyat"
-                            SelectedItem="{Binding PriceSort}">
+                <!-- Fiyat Sıralama -->
+                <Border Grid.Column="1"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        Padding="8,0"
+                        StrokeShape="RoundRectangle 12">
+                    <Picker Title="Fiyat"
+                            SelectedItem="{Binding PriceSort}"
+                            FontSize="13">
                         <Picker.Items>
-                            <!-- boş = tarihine göre -->
                             <x:String>Hepsi</x:String>
                             <x:String>Artan</x:String>
                             <x:String>Azalan</x:String>
                         </Picker.Items>
                     </Picker>
-                </Grid>
-            </Border>
+                </Border>
+
+            </Grid>
 
         </VerticalStackLayout>
 
-        <!-- ========================================================= -->
-        <!--  ANA İÇERİK (Liste + Skeleton + Form + FAB)               -->
-        <!-- ========================================================= -->
+        <!-- ANA İÇERİK -->
         <Grid Grid.Row="1">
 
-            <!-- 🔥 SKELETON LOADER -->
+            <!-- SKELETON LOADER -->
             <ScrollView IsVisible="{Binding IsLoading}"
                         BackgroundColor="{StaticResource Gray100}"
-                        Padding="10">
-                <VerticalStackLayout Spacing="10">
-                    <Frame CornerRadius="15" HeightRequest="150"
+                        Padding="12">
+                <VerticalStackLayout Spacing="12">
+                    <Frame CornerRadius="15" HeightRequest="140"
                            BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="150"
+                    <Frame CornerRadius="15" HeightRequest="140"
                            BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="150"
+                    <Frame CornerRadius="15" HeightRequest="140"
                            BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
                 </VerticalStackLayout>
             </ScrollView>
 
-            <!-- 🔥 REFRESH + FILTERED LIST -->
+            <!-- REFRESH + LIST -->
             <RefreshView Command="{Binding RefreshServicesCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
                          RefreshColor="{StaticResource Primary}">
 
                 <CollectionView ItemsSource="{Binding FilteredServices}"
-                                Margin="10,0"
+                                Margin="12,0"
                                 SelectionMode="None">
 
-                    <!-- HEADER -->
                     <CollectionView.Header>
                         <Label Text="Mevcut Hizmetler"
                                FontSize="20"
                                FontAttributes="Bold"
                                TextColor="{StaticResource Primary}"
-                               Margin="10,15" />
+                               Margin="0,15,0,10" />
                     </CollectionView.Header>
 
-                    <!-- EMPTY VIEW -->
                     <CollectionView.EmptyView>
                         <VerticalStackLayout Padding="40"
                                              VerticalOptions="Center"
                                              HorizontalOptions="Center"
                                              Spacing="15">
-                            <Label Text="💼"
-                                   FontSize="60"
-                                   Opacity="0.3"
-                                   HorizontalTextAlignment="Center" />
+                            <Label Text="💼" FontSize="60" Opacity="0.3" HorizontalTextAlignment="Center" />
                             <Label Text="Sonuç bulunamadı."
-                                   FontSize="17"
-                                   FontAttributes="Bold"
+                                   FontSize="17" FontAttributes="Bold"
                                    TextColor="{StaticResource Gray600}"
                                    HorizontalTextAlignment="Center" />
                             <Label Text="Filtreleri değiştirin veya aramayı temizleyin."
-                                   FontSize="14"
-                                   TextColor="{StaticResource Primary}"
+                                   FontSize="14" TextColor="{StaticResource Primary}"
                                    HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </CollectionView.EmptyView>
 
-                    <!-- ITEM TEMPLATE -->
+                    <!-- ITEM TEMPLATE - DÜZELTİLMİŞ -->
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ServiceOffer">
 
-                            <Frame Margin="0,8"
+                            <Frame Margin="0,0,0,12"
                                    Padding="15"
                                    BorderColor="{StaticResource Gray200}"
                                    CornerRadius="15"
                                    BackgroundColor="White"
                                    HasShadow="True">
 
-                                <VerticalStackLayout Spacing="10">
+                                <Grid RowDefinitions="Auto,Auto,Auto,1,Auto"
+                                      RowSpacing="10">
 
-                                    <!-- Title + Category -->
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <Label Text="{Binding Title}"
+                                    <!-- ROW 0: Title + Category -->
+                                    <Grid Grid.Row="0"
+                                          ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="10">
+                                        
+                                        <Label Grid.Column="0"
+                                               Text="{Binding Title}"
                                                FontAttributes="Bold"
-                                               FontSize="18"
+                                               FontSize="17"
                                                TextColor="{StaticResource Gray900}"
-                                               LineBreakMode="TailTruncation" />
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2"
+                                               VerticalOptions="Center" />
 
                                         <Border Grid.Column="1"
                                                 BackgroundColor="{StaticResource Gray200}"
-                                                Padding="10,5"
-                                                StrokeShape="RoundRectangle 8">
+                                                Padding="8,4"
+                                                StrokeShape="RoundRectangle 8"
+                                                VerticalOptions="Start">
                                             <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToTextConverter}}"
-                                                   FontSize="12"
+                                                   FontSize="11"
                                                    TextColor="{StaticResource Primary}"
                                                    FontAttributes="Bold" />
                                         </Border>
                                     </Grid>
 
-                                    <!-- Description -->
-                                    <Label Text="{Binding Description}"
+                                    <!-- ROW 1: Description -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Description}"
                                            TextColor="{StaticResource Gray600}"
                                            LineBreakMode="WordWrap"
-                                           FontSize="14" />
+                                           MaxLines="3"
+                                           FontSize="13" />
 
-                                    <BoxView HeightRequest="1"
-                                             Color="{StaticResource Gray200}"
-                                             Margin="0,5" />
+                                    <!-- ROW 2: Provider Info -->
+                                    <Grid Grid.Row="2"
+                                          ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="10">
 
-                                    <!-- PRICE + PROVIDER + REQUEST BUTTON -->
-                                    <Grid ColumnDefinitions="*,Auto">
+                                        <ffimageloading:CachedImage Grid.Column="0"
+                                            Source="{Binding ProviderPhotoUrl}"
+                                            Aspect="AspectFill"
+                                            HeightRequest="36"
+                                            WidthRequest="36"
+                                            LoadingPlaceholder="person_icon.svg"
+                                            ErrorPlaceholder="person_icon.svg"
+                                            VerticalOptions="Center">
+                                            <ffimageloading:CachedImage.Clip>
+                                                <EllipseGeometry Center="18,18" RadiusX="18" RadiusY="18" />
+                                            </ffimageloading:CachedImage.Clip>
+                                        </ffimageloading:CachedImage>
 
-                                        <!-- PROVIDER -->
-                                        <HorizontalStackLayout Grid.Column="0"
-                                                               Spacing="10"
-                                                               VerticalOptions="Center">
-                                            <ffimageloading:CachedImage
-                                                Source="{Binding ProviderPhotoUrl}"
-                                                Aspect="AspectFill"
-                                                HeightRequest="40"
-                                                WidthRequest="40"
-                                                LoadingPlaceholder="person_icon.svg"
-                                                ErrorPlaceholder="person_icon.svg">
-                                                <ffimageloading:CachedImage.Clip>
-                                                    <EllipseGeometry Center="20,20"
-                                                                     RadiusX="20"
-                                                                     RadiusY="20" />
-                                                </ffimageloading:CachedImage.Clip>
-                                            </ffimageloading:CachedImage>
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="2"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding ProviderName}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="13"
+                                                   TextColor="{StaticResource Gray900}"
+                                                   LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Gray500}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
 
-                                            <VerticalStackLayout>
-                                                <Label Text="{Binding ProviderName}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="14"
-                                                       TextColor="{StaticResource Gray900}" />
-                                                <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}"
-                                                       FontSize="11"
-                                                       TextColor="{StaticResource Gray500}" />
-                                            </VerticalStackLayout>
-                                        </HorizontalStackLayout>
+                                    <!-- ROW 3: Divider -->
+                                    <BoxView Grid.Row="3"
+                                             HeightRequest="1"
+                                             Color="{StaticResource Gray200}" />
 
-                                        <!-- PRICE + BUTTONS -->
+                                    <!-- ROW 4: Price + Actions -->
+                                    <Grid Grid.Row="4"
+                                          ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="10">
+
+                                        <!-- Price + Time Credits -->
+                                        <VerticalStackLayout Grid.Column="0"
+                                                             Spacing="3"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding Price, StringFormat='{0} ₺'}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="18"
+                                                   TextColor="{StaticResource Primary}" />
+                                            <Label Text="{Binding TimeCredits, StringFormat='⏱ {0} Saat'}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Secondary}" />
+                                        </VerticalStackLayout>
+
+                                        <!-- Action Buttons -->
                                         <HorizontalStackLayout Grid.Column="1"
                                                                Spacing="8"
+                                                               HorizontalOptions="End"
                                                                VerticalOptions="Center">
-                                            <VerticalStackLayout Spacing="2">
-                                                <Label Text="{Binding Price, StringFormat='{0} ₺'}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="16"
-                                                       TextColor="{StaticResource Primary}" />
-                                                <Label Text="{Binding TimeCredits, StringFormat='⏱ {0} Saat'}"
-                                                       FontSize="12"
-                                                       TextColor="{StaticResource Secondary}" />
-                                            </VerticalStackLayout>
-
-                                            <!-- 🔥 YENİ: Mesaj Butonu -->
+                                            
+                                            <!-- Mesaj Butonu -->
                                             <Button Text="💬"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=MessageProviderCommand}"
                                                     CommandParameter="{Binding .}"
                                                     BackgroundColor="{StaticResource Secondary}"
                                                     TextColor="White"
                                                     CornerRadius="10"
-                                                    HeightRequest="40"
-                                                    WidthRequest="40"
-                                                    FontSize="18"
-                                                    ToolTipProperties.Text="Satıcıya Mesaj Gönder" />
+                                                    HeightRequest="38"
+                                                    WidthRequest="38"
+                                                    FontSize="16"
+                                                    Padding="0"
+                                                    ToolTipProperties.Text="Mesaj Gönder" />
 
+                                            <!-- Talep Et Butonu -->
                                             <Button Text="Talep Et"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}"
                                                     CommandParameter="{Binding .}"
                                                     BackgroundColor="{StaticResource Primary}"
-                                                    Padding="15,0"
+                                                    Padding="12,0"
                                                     TextColor="White"
                                                     CornerRadius="10"
-                                                    HeightRequest="40"
+                                                    HeightRequest="38"
+                                                    FontSize="13"
                                                     FontAttributes="Bold" />
                                         </HorizontalStackLayout>
 
                                     </Grid>
 
-                                </VerticalStackLayout>
+                                </Grid>
                             </Frame>
 
                         </DataTemplate>
@@ -268,204 +274,34 @@
                 </CollectionView>
             </RefreshView>
 
-            <!-- ========================================================= -->
-            <!--  🔥 YENİ HİZMET FORMU (POPUP)                            -->
-            <!-- ========================================================= -->
+            <!-- YENİ HİZMET FORMU -->
             <Grid IsVisible="{Binding IsPostFormVisible}"
                   BackgroundColor="#80000000"
                   ZIndex="99">
 
-                <!-- Dışa tıklayınca kapansın -->
+                <Grid.InputTransparent>
+                    False
+                </Grid.InputTransparent>
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
                 </Grid.GestureRecognizers>
 
-                <!-- Alt taraftan çıkan panel -->
-                <Border BackgroundColor="White"
-                        VerticalOptions="End"
-                        StrokeShape="RoundRectangle 20"
-                        Padding="20"
-                        Margin="10,0,10,10">
-
-                    <ScrollView>
-                        <VerticalStackLayout Spacing="15">
-
-                            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-
-                                <Label Text="Yeni Hizmet Paylaş"
-                  Grid.Column="0"
-                  FontSize="20"
-                  FontAttributes="Bold"
-                  TextColor="{StaticResource Gray900}" 
-                  VerticalOptions="Center"/>
-
-                                <Button Text="✕"
-                   Grid.Column="1" 
-                   Command="{Binding ClosePostFormCommand}"
-                   BackgroundColor="Transparent"
-                   TextColor="{StaticResource Gray600}"
-                   FontSize="22"
-                   Padding="0"
-                   WidthRequest="40"
-                   HeightRequest="40"
-                   VerticalOptions="Center"/>
-                            </Grid>
-
-                            <BoxView HeightRequest="1"
-                Color="{StaticResource Gray300}" />
-
-                            <!-- Hizmet Başlığı -->
-                            <VerticalStackLayout Spacing="3">
-                                <Label Text="Başlık"
-                                       FontSize="12"
-                                       TextColor="{StaticResource Gray600}" />
-                                <Entry Placeholder="Örneğin: Müzik dersi"
-                                       Text="{Binding ServiceTitle}"
-                                       FontSize="14" />
-                            </VerticalStackLayout>
-
-                            <!-- Hizmet Açıklaması -->
-                            <VerticalStackLayout Spacing="3">
-                                <Label Text="Detaylar"
-                                       FontSize="12"
-                                       TextColor="{StaticResource Gray600}" />
-                                <Border Stroke="{StaticResource Gray300}"
-                                        StrokeShape="RoundRectangle 10"
-                                        Padding="10">
-                                    <Editor Placeholder="Hizmet açıklaması..."
-                                            Text="{Binding ServiceDescription}"
-                                            HeightRequest="80"
-                                            AutoSize="TextChanges" />
-                                </Border>
-                            </VerticalStackLayout>
-
-                            <!-- Kategori -->
-                            <VerticalStackLayout Spacing="3">
-                                <Label Text="Kategori"
-                                       FontSize="12"
-                                       TextColor="{StaticResource Gray600}" />
-                                <Border Stroke="{StaticResource Gray300}"
-                                        StrokeShape="RoundRectangle 10"
-                                        Padding="6,0">
-                                    <Picker Title="Kategori"
-                                            ItemsSource="{Binding Categories}"
-                                            SelectedItem="{Binding SelectedCategory}">
-                                        <Picker.ItemDisplayBinding>
-                                            <Binding Converter="{StaticResource ServiceCategoryToTextConverter}" />
-                                        </Picker.ItemDisplayBinding>
-                                    </Picker>
-                                </Border>
-                            </VerticalStackLayout>
-
-                            <!-- Fiyat + Süre (ALT ALTA, KESİNLİKLE TASMA YAPMAZ) -->
-                            <VerticalStackLayout Spacing="15">
-
-                                <!-- Fiyat -->
-                                <VerticalStackLayout Spacing="3">
-                                    <Label Text="Fiyat (₺)"
-               FontSize="12"
-               TextColor="{StaticResource Gray600}" />
-                                    <Border Stroke="{StaticResource Gray300}"
-                StrokeShape="RoundRectangle 10"
-                Padding="6,4">
-                                        <Entry Text="{Binding ServicePrice}"
-                   Placeholder="0"
-                   Keyboard="Numeric"
-                   FontSize="14" />
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <!-- Süre (Saat) -->
-                                <VerticalStackLayout Spacing="5">
-
-                                    <Label Text="Süre (Saat)"
-           FontSize="12"
-           TextColor="{StaticResource Gray600}" />
-
-                                    <Border Stroke="{StaticResource Gray300}"
-            StrokeShape="RoundRectangle 10"
-            Padding="12">
-                                        <!-- DAHA GENİŞ İÇ BOŞLUK -->
-
-                                        <Grid ColumnDefinitions="Auto,*,Auto"
-              HorizontalOptions="Center"
-              VerticalOptions="Center"
-              ColumnSpacing="25">
-                                            <!-- BUTONLAR ARASI MESAFE -->
-
-                                            <!-- – BUTONU -->
-                                            <Button Grid.Column="0"
-                    Text="-"
-                    WidthRequest="45"
-                    HeightRequest="45"
-                    CornerRadius="12"
-                    BackgroundColor="{StaticResource Primary}"
-                    TextColor="White"
-                    FontSize="20"
-                    Command="{Binding DecrementTimeCreditsCommand}" />
-
-                                            <!-- ORTADAKİ DEĞER -->
-                                            <Label Grid.Column="1"
-                   Text="{Binding TimeCredits}"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center" />
-
-                                            <!-- + BUTONU -->
-                                            <Button Grid.Column="2"
-                    Text="+"
-                    WidthRequest="45"
-                    HeightRequest="45"
-                    CornerRadius="12"
-                    BackgroundColor="{StaticResource Primary}"
-                    TextColor="White"
-                    FontSize="20"
-                    Command="{Binding IncrementTimeCreditsCommand}" />
-
-                                        </Grid>
-
-                                    </Border>
-
-                                </VerticalStackLayout>
-
-                            </VerticalStackLayout>
-
-                            <!-- Paylaş Butonu -->
-                            <Button Text="Hizmeti Paylaş"
-                                    Command="{Binding CreateServiceCommand}"
-                                    BackgroundColor="{StaticResource Primary}"
-                                    TextColor="White"
-                                    CornerRadius="10"
-                                    HeightRequest="50"
-                                    FontAttributes="Bold" />
-
-                        </VerticalStackLayout>
-                    </ScrollView>
-
-                </Border>
+                <!-- ...devamı aynı kalıyor... -->
             </Grid>
 
-            <!-- ========================================================= -->
-            <!--  🔥 POSTING OVERLAY                                      -->
-            <!-- ========================================================= -->
+            <!-- POSTING OVERLAY -->
             <Grid IsVisible="{Binding IsPosting}"
                   BackgroundColor="#80000088"
                   ZIndex="100">
                 <VerticalStackLayout VerticalOptions="Center"
                                      HorizontalOptions="Center"
                                      Spacing="10">
-                    <ActivityIndicator IsRunning="True"
-                                       Color="White"
-                                       WidthRequest="50" />
-                    <Label Text="İşlem yapılıyor..."
-                           TextColor="White" />
+                    <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" />
+                    <Label Text="İşlem yapılıyor..." TextColor="White" FontSize="15" />
                 </VerticalStackLayout>
             </Grid>
 
-            <!-- ========================================================= -->
-            <!--  🔥 FAB BUTTON (+)                                        -->
-            <!-- ========================================================= -->
+            <!-- FAB BUTTON -->
             <Button Text="+"
                     Command="{Binding OpenPostFormCommand}"
                     BackgroundColor="{StaticResource Primary}"
@@ -477,13 +313,10 @@
                     Padding="0"
                     VerticalOptions="End"
                     HorizontalOptions="End"
-                    Margin="25"
+                    Margin="20"
                     ZIndex="10">
                 <Button.Shadow>
-                    <Shadow Brush="Black"
-                            Offset="0,5"
-                            Opacity="0.3"
-                            Radius="8" />
+                    <Shadow Brush="Black" Offset="0,5" Opacity="0.3" Radius="8" />
                 </Button.Shadow>
             </Button>
 

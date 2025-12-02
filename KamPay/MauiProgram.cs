@@ -103,10 +103,11 @@ namespace KamPay
             ); builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
             builder.Services.AddSingleton<IServiceSharingService>(sp =>
-     new FirebaseServiceSharingService(
-         sp.GetRequiredService<INotificationService>(),
-         sp.GetRequiredService<IUserProfileService>() // <-- YENİ EKLENEN SATIR
-     )
+    new FirebaseServiceSharingService(
+        sp.GetRequiredService<INotificationService>(),
+        sp.GetRequiredService<IUserProfileService>(),
+        sp.GetRequiredService<IMessagingService>() // <-- EKLENDİ
+    )
  );
             builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
 
