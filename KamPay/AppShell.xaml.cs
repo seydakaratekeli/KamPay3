@@ -26,7 +26,6 @@ namespace KamPay
             Routing.RegisterRoute(nameof(ServiceRequestsPage), typeof(ServiceRequestsPage));
             Routing.RegisterRoute(nameof(SurpriseBoxPage), typeof(SurpriseBoxPage)); // Bu satırı ekleyin
             Routing.RegisterRoute(nameof(ImageViewerPage), typeof(ImageViewerPage));
-            Routing.RegisterRoute(nameof(PriceQuotesPage), typeof(PriceQuotesPage));
             Routing.RegisterRoute("myproducts", typeof(ProductListPage));
 
         }

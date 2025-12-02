@@ -119,15 +119,6 @@ namespace KamPay
             sp.GetRequiredService<IUserProfileService>()) // IQRCodeService'i buraya ekleyin
   );
 
-            // 💰 Fiyat Teklifi Servisi
-            builder.Services.AddSingleton<IPriceQuoteService>(sp =>
-                new FirebasePriceQuoteService(
-                    sp.GetRequiredService<INotificationService>(),
-                    sp.GetRequiredService<IProductService>(),
-                    sp.GetRequiredService<IServiceSharingService>(),
-                    sp.GetRequiredService<IUserProfileService>())
-            );
-
             // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
             // ✅ Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
             builder.Services.AddSingleton<IUserStateService>(sp =>
@@ -162,7 +153,6 @@ namespace KamPay
             builder.Services.AddTransient<ServiceRequestsViewModel>(); // Bu satırı ekleyin
             builder.Services.AddTransient<SurpriseBoxViewModel>();
             builder.Services.AddTransient<ImageViewerViewModel>();
-            builder.Services.AddTransient<PriceQuotesViewModel>();
 
             // Views
             builder.Services.AddTransient<SurpriseBoxPage>();
@@ -188,7 +178,6 @@ namespace KamPay
             builder.Services.AddTransient<QRScannerPage>();
             builder.Services.AddTransient<ServiceRequestsPage>(); 
             builder.Services.AddTransient<ImageViewerPage>();
-            builder.Services.AddTransient<PriceQuotesPage>();
             builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();
 
 
