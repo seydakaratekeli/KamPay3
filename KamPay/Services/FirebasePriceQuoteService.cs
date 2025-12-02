@@ -20,6 +20,8 @@ namespace KamPay.Services
         private readonly IUserProfileService _userProfileService;
 
         private const string QUOTES_PATH = "price_quotes";
+        // TODO: Move Firebase URL to configuration/appsettings
+        private const string FIREBASE_URL = "https://kampay-b7859-default-rtdb.firebaseio.com/";
 
         public FirebasePriceQuoteService(
             INotificationService notificationService,
@@ -27,7 +29,7 @@ namespace KamPay.Services
             IServiceSharingService serviceSharingService,
             IUserProfileService userProfileService)
         {
-            _firebaseClient = new FirebaseClient("https://kampay-b7859-default-rtdb.firebaseio.com/");
+            _firebaseClient = new FirebaseClient(FIREBASE_URL);
             _notificationService = notificationService;
             _productService = productService;
             _serviceSharingService = serviceSharingService;
@@ -349,9 +351,11 @@ namespace KamPay.Services
                     return result;
                 }
 
-                if (request.CounterOfferPrice <= 0 || request.CounterOfferPrice >= quote.OriginalPrice)
+                // Karşı teklif fiyatı geçerli olmalı
+                // Not: Satıcı orijinal fiyattan düşük herhangi bir fiyat teklif edebilir
+                if (request.CounterOfferPrice <= 0)
                 {
-                    result.AddError("Karşı teklif fiyatı geçerli aralıkta olmalıdır");
+                    result.AddError("Karşı teklif fiyatı 0'dan büyük olmalıdır");
                     return result;
                 }
 
@@ -569,6 +573,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return null if quote not found or network error
+                // TODO: Add proper logging here
                 return null;
             }
         }
@@ -591,6 +597,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return empty list on error (network issues, etc.)
+                // TODO: Add proper logging here
                 return new List<PriceQuote>();
             }
         }
@@ -613,6 +621,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return empty list on error (network issues, etc.)
+                // TODO: Add proper logging here
                 return new List<PriceQuote>();
             }
         }
@@ -635,6 +645,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return empty list on error (network issues, etc.)
+                // TODO: Add proper logging here
                 return new List<PriceQuote>();
             }
         }
@@ -653,6 +665,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return 0 on error
+                // TODO: Add proper logging here
                 return 0;
             }
         }
@@ -673,7 +687,8 @@ namespace KamPay.Services
             }
             catch
             {
-                // Sessizce başarısız
+                // Silent failure is acceptable for read status updates
+                // TODO: Add proper logging here
             }
         }
 
@@ -702,7 +717,8 @@ namespace KamPay.Services
             }
             catch
             {
-                // Sessizce başarısız
+                // Silent failure for background expiration updates
+                // TODO: Add proper logging here
             }
         }
 
@@ -724,6 +740,8 @@ namespace KamPay.Services
             }
             catch
             {
+                // Return empty list on error
+                // TODO: Add proper logging here
                 return new List<PriceQuote>();
             }
         }

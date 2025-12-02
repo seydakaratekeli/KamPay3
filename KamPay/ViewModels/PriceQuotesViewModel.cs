@@ -389,12 +389,7 @@ namespace KamPay.ViewModels
         private void FilterByStatus(PriceQuoteStatus? status)
         {
             FilterStatus = status;
-            ApplyFilters();
-        }
-
-        private void ApplyFilters()
-        {
-            // TODO: Filtreleme mantığı eklenebilir
+            // Filter is applied on service side when loading quotes
         }
     }
 }
