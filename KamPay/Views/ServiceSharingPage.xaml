@@ -286,7 +286,80 @@
                     <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
                 </Grid.GestureRecognizers>
 
-                <!-- ...devamı aynı kalıyor... -->
+                <ContentView IsVisible="{Binding IsPostFormVisible}" BackgroundColor="#80000080" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ZIndex="99">
+                    <Grid VerticalOptions="End">
+                        <Border BackgroundColor="White"
+                                StrokeShape="RoundRectangle 24,24,0,0"
+                                Padding="24,30"
+                                VerticalOptions="End">
+                            <VerticalStackLayout Spacing="18">
+                                <!-- Panel Başlığı ve Kapat -->
+                                <Grid>
+                                    <Label Text="Yeni Hizmet Paylaş" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                    <Button Text="✕"
+                                            Command="{Binding ClosePostFormCommand}"
+                                            HorizontalOptions="End"
+                                            BackgroundColor="Transparent"
+                                            TextColor="Gray"
+                                            FontSize="18"
+                                            Padding="0"
+                                            HeightRequest="30"/>
+                                </Grid>
+
+                                <BoxView HeightRequest="1" Color="#EEEEEE" />
+
+                                <!-- Başlık -->
+                                <Entry Placeholder="Hizmet Başlığı"
+                                       Text="{Binding ServiceTitle}"
+                                       FontSize="16"
+                                       Margin="0,0,0,0"/>
+
+                                <!-- Açıklama -->
+                                <Editor Placeholder="Açıklama"
+                                        Text="{Binding ServiceDescription}"
+                                        FontSize="15"
+                                        AutoSize="TextChanges"
+                                        Margin="0,0,0,0"/>
+
+                                <!-- Kategori -->
+                                <Picker Title="Kategori Seçin"
+                                        ItemsSource="{Binding Categories}"
+                                        SelectedItem="{Binding SelectedCategory}"
+                                        Margin="0,0,0,0"/>
+
+                                <!-- Fiyat -->
+                                <Entry Placeholder="Fiyat (₺)"
+                                       Text="{Binding ServicePrice}"
+                                       Keyboard="Numeric"
+                                       FontSize="16"
+                                       Margin="0,0,0,0"/>
+
+                                <!-- Zaman Kredisi (Süre) -->
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,0" VerticalOptions="Center">
+                                    <Button Text="−" Command="{Binding DecrementTimeCreditsCommand}" WidthRequest="36" HeightRequest="36"
+                                            FontSize="22" BackgroundColor="#F5F5F5" TextColor="#4CAF50" CornerRadius="18"/>
+                                    <VerticalStackLayout>
+                                        <Label Text="Süre (Zaman Kredisi)" FontSize="13" TextColor="#757575" HorizontalOptions="Center"/>
+                                        <Label Text="{Binding TimeCredits}" FontSize="18" FontAttributes="Bold" TextColor="#4CAF50" HorizontalOptions="Center"/>
+                                        <Label Text="Saat" FontSize="12" TextColor="#757575" HorizontalOptions="Center"/>
+                                    </VerticalStackLayout>
+                                    <Button Text="+" Command="{Binding IncrementTimeCreditsCommand}" WidthRequest="36" HeightRequest="36"
+                                            FontSize="22" BackgroundColor="#F5F5F5" TextColor="#4CAF50" CornerRadius="18"/>
+                                </Grid>
+
+                                <!-- Kaydet Butonu -->
+                                <Button Text="Paylaş"
+                                        Command="{Binding CreateServiceCommand}"
+                                        BackgroundColor="#4CAF50"
+                                        TextColor="White"
+                                        FontAttributes="Bold"
+                                        CornerRadius="12"
+                                        HeightRequest="48"
+                                        Margin="0,10,0,0"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </ContentView>
             </Grid>
 
             <!-- POSTING OVERLAY -->
@@ -320,6 +393,202 @@
                 </Button.Shadow>
             </Button>
 
+        </Grid>
+
+        <!-- FİLTRE/EKLEME PANELİ (Alt kısımdan açılan) -->
+        <Grid Grid.RowSpan="3" 
+              BackgroundColor="#80000000" 
+              IsVisible="{Binding IsPostFormVisible}"
+              ZIndex="99">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
+            </Grid.GestureRecognizers>
+
+            <Border BackgroundColor="White" 
+                    VerticalOptions="End" 
+                    StrokeShape="RoundRectangle 24,24,0,0"
+                    Padding="24,30">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Border.GestureRecognizers>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,-4" Radius="15" Opacity="0.2"/>
+                </Border.Shadow>
+
+                <ScrollView>
+                    <VerticalStackLayout Spacing="18">
+                        <!-- Panel Başlığı ve Kapat -->
+                        <Grid>
+                            <Label Text="Yeni Hizmet Paylaş" 
+                                   FontSize="20" 
+                                   FontAttributes="Bold" 
+                                   HorizontalOptions="Center"
+                                   TextColor="#212121"/>
+                            <Button Text="✕"
+                                    Command="{Binding ClosePostFormCommand}"
+                                    HorizontalOptions="End"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#757575"
+                                    FontSize="18"
+                                    Padding="0"
+                                    HeightRequest="30"/>
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#EEEEEE" />
+
+                        <!-- Başlık -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Hizmet Başlığı" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="#212121"/>
+                            <Border StrokeShape="RoundRectangle 12" 
+                                    StrokeThickness="1" 
+                                    Stroke="#E0E0E0"
+                                    Padding="12,8">
+                                <Entry Placeholder="Örn: Bahçe Bakımı, Temizlik..."
+                                       Text="{Binding ServiceTitle}"
+                                       FontSize="15"
+                                       TextColor="#212121"
+                                       PlaceholderColor="#9E9E9E"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Açıklama -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Açıklama" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="#212121"/>
+                            <Border StrokeShape="RoundRectangle 12" 
+                                    StrokeThickness="1" 
+                                    Stroke="#E0E0E0"
+                                    Padding="12,8">
+                                <Editor Placeholder="Hizmetinizin detaylarını yazın..."
+                                        Text="{Binding ServiceDescription}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        PlaceholderColor="#9E9E9E"
+                                        AutoSize="TextChanges"
+                                        MinimumHeightRequest="80"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Kategori -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Kategori" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="#212121"/>
+                            <Border StrokeShape="RoundRectangle 12" 
+                                    StrokeThickness="1" 
+                                    Stroke="#E0E0E0"
+                                    Padding="12,0">
+                                <Picker Title="Kategori Seçin"
+                                        ItemsSource="{Binding Categories}"
+                                        SelectedItem="{Binding SelectedCategory}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        TitleColor="#9E9E9E"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Fiyat -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Fiyat" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="#212121"/>
+                            <Border StrokeShape="RoundRectangle 12" 
+                                    StrokeThickness="1" 
+                                    Stroke="#E0E0E0"
+                                    Padding="12,8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Entry Placeholder="0"
+                                           Text="{Binding ServicePrice}"
+                                           Keyboard="Numeric"
+                                           FontSize="15"
+                                           TextColor="#212121"
+                                           PlaceholderColor="#9E9E9E"/>
+                                    <Label Grid.Column="1" 
+                                           Text="₺" 
+                                           FontSize="15" 
+                                           FontAttributes="Bold"
+                                           TextColor="#4CAF50"
+                                           VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Zaman Kredisi (Süre) -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Süre (Zaman Kredisi)" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="#212121"/>
+                            <Border StrokeShape="RoundRectangle 12" 
+                                    StrokeThickness="1" 
+                                    Stroke="#E0E0E0"
+                                    Padding="16,12">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <Button Text="−" 
+                                            Command="{Binding DecrementTimeCreditsCommand}" 
+                                            WidthRequest="40" 
+                                            HeightRequest="40"
+                                            FontSize="24" 
+                                            BackgroundColor="#F5F5F5" 
+                                            TextColor="#4CAF50" 
+                                            CornerRadius="20"
+                                            Padding="0"/>
+                                    <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Label Text="{Binding TimeCredits}" 
+                                               FontSize="24" 
+                                               FontAttributes="Bold" 
+                                               TextColor="#4CAF50" 
+                                               HorizontalOptions="Center"/>
+                                        <Label Text="Saat" 
+                                               FontSize="12" 
+                                               TextColor="#757575" 
+                                               HorizontalOptions="Center"/>
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="2" 
+                                            Text="+" 
+                                            Command="{Binding IncrementTimeCreditsCommand}" 
+                                            WidthRequest="40" 
+                                            HeightRequest="40"
+                                            FontSize="22" 
+                                            BackgroundColor="#F5F5F5" 
+                                            TextColor="#4CAF50" 
+                                            CornerRadius="20"
+                                            Padding="0"/>
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Yükleniyor Göstergesi -->
+                        <ActivityIndicator IsRunning="{Binding IsPosting}" 
+                                           IsVisible="{Binding IsPosting}"
+                                           Color="#4CAF50"
+                                           HeightRequest="40"/>
+
+                        <!-- Paylaş Butonu -->
+                        <Button Text="Paylaş"
+                                Command="{Binding CreateServiceCommand}"
+                                IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}"
+                                BackgroundColor="#4CAF50"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                CornerRadius="12"
+                                HeightRequest="50"
+                                Margin="0,10,0,0">
+                            <Button.Shadow>
+                                <Shadow Brush="#4CAF50" Offset="0,4" Radius="8" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
         </Grid>
 
     </Grid>

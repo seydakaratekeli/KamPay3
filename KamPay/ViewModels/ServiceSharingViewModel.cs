@@ -382,6 +382,7 @@ namespace KamPay.ViewModels
 
                 var offer = new ServiceOffer
                 {
+                    ServiceId = Guid.NewGuid().ToString(), // <-- EKLEYİN
                     ProviderId = user.UserId,
                     ProviderName = user.FullName,
                     ProviderPhotoUrl = img,

@@ -41,6 +41,9 @@ namespace KamPay.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(offer.ServiceId))
+                    offer.ServiceId = Guid.NewGuid().ToString(); // <-- EKLEYİN
+
                 await _firebaseClient
                     .Child(Constants.ServiceOffersCollection)
                     .Child(offer.ServiceId)
