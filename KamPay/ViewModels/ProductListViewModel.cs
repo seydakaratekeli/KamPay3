@@ -349,6 +349,9 @@ namespace KamPay.ViewModels
                 // 🔥 OPTİMİZASYON: Sadece değişen ürünleri güncelle (Clear() yerine smart update)
                 UpdateProductsCollection(filteredList);
 
+                // 🔥 DÜZELTME: Loading sadece veri yüklenirken true olmalı, filtreleme sonrası kapatılmalı
+                IsLoading = false; 
+
                 EmptyMessage = Products.Any() ? string.Empty : "Arama kriterlerinize uygun ürün bulunamadı";
 
                 System.Diagnostics.Debug.WriteLine($"✅ Filtreleme tamamlandı. Gösterilen: {Products.Count}");
@@ -356,6 +359,8 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ ExecuteFiltering hatası: {ex.Message}");
+                IsLoading = false;
+                EmptyMessage = $"Hata: {ex.Message}";
             }
         }
 

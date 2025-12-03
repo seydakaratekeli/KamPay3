@@ -7,269 +7,338 @@
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:DataType="vm:ProductListViewModel"
              x:Class="KamPay.Views.ProductListPage"
-             Shell.NavBarIsVisible="False">
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F5F5">
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <!-- Renkler -->
+            <Color x:Key="Primary">#4CAF50</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="TextPrimary">#212121</Color>
+            <Color x:Key="TextSecondary">#757575</Color>
+            <Color x:Key="BorderColor">#EEEEEE</Color>
+
+            <!-- Dönüştürücüler -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
             <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter"/>
             <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
-
+            <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
+            <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
+            <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="15,10" BackgroundColor="White">
-            <Label Text="KamPay" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource Primary}" VerticalOptions="Center" />
+        <!-- 1. HEADER (Logo & Bildirim) -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,10" BackgroundColor="{StaticResource Surface}">
+            <Label Text="KamPay" 
+                   FontSize="26" 
+                   FontAttributes="Bold" 
+                   TextColor="{StaticResource Primary}" 
+                   VerticalOptions="Center" />
+
             <Grid Grid.Column="1" VerticalOptions="Center">
-                <Button Text="🔔" FontSize="24" BackgroundColor="Transparent" BorderColor="Transparent" TextColor="{StaticResource Gray600}" Command="{Binding GoToNotificationsCommand}" />
-                <Border StrokeThickness="0" BackgroundColor="Red" HeightRequest="10" WidthRequest="10" HorizontalOptions="End" VerticalOptions="Start" Margin="0,5,10,0" IsVisible="{Binding HasUnreadNotifications}">
+                <Button Text="🔔" 
+                        FontSize="22" 
+                        BackgroundColor="Transparent" 
+                        BorderColor="Transparent" 
+                        TextColor="{StaticResource TextPrimary}" 
+                        Command="{Binding GoToNotificationsCommand}"
+                        WidthRequest="40" HeightRequest="40" Padding="0"/>
+
+                <!-- Bildirim Rozeti -->
+                <Border StrokeThickness="0" 
+                        BackgroundColor="#FF5252" 
+                        HeightRequest="12" 
+                        WidthRequest="12" 
+                        HorizontalOptions="End" 
+                        VerticalOptions="Start" 
+                        Margin="0,6,8,0" 
+                        IsVisible="{Binding HasUnreadNotifications}">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="5" />
+                        <RoundRectangle CornerRadius="6" />
                     </Border.StrokeShape>
                 </Border>
             </Grid>
         </Grid>
 
-        <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" BackgroundColor="#F5F5F5">
+        <!-- 2. ARAMA VE KATEGORİLER -->
+        <VerticalStackLayout Grid.Row="1" Padding="15,10" Spacing="15" BackgroundColor="#F5F5F5">
 
-            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0,0,0,15">
-
+            <!-- Arama ve Filtre Butonu -->
+            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
                 <Border Grid.Column="0"
-        Margin="0,0,10,0"
-        StrokeShape="RoundRectangle 10"
-        StrokeThickness="1"
-        Stroke="{StaticResource Gray300}"
-        BackgroundColor="White"
-        HeightRequest="50"
-        Padding="10,0">
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        HeightRequest="50"
+                        Padding="15,0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05"/>
+                    </Border.Shadow>
 
-                    <Grid ColumnDefinitions="Auto,*"
-          VerticalOptions="Center">
-
-                        <Image Source="search_icon.png"
-               HeightRequest="18"
-               WidthRequest="18"
-               VerticalOptions="Center"
-               Opacity="0.4"/>
-
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Text="🔍" VerticalOptions="Center" Opacity="0.5" FontSize="16"/>
                         <Entry Grid.Column="1"
-               Text="{Binding SearchText}"
-               Placeholder="Ürün ara..."
-               FontSize="14"
-               TextColor="{StaticResource Gray900}"
-               PlaceholderColor="{StaticResource Gray500}"
-               BackgroundColor="Transparent"
-               VerticalOptions="Center"
-               Margin="10,0,0,0"/>
+                               Text="{Binding SearchText}"
+                               Placeholder="Ne arıyorsunuz?"
+                               FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"
+                               PlaceholderColor="{StaticResource TextSecondary}"
+                               BackgroundColor="Transparent"
+                               VerticalOptions="Center"
+                               Margin="10,0,0,0"/>
                     </Grid>
-
                 </Border>
 
                 <Button Grid.Column="1" 
-            Text="🔽"
-            FontSize="15"
-            TextColor="White"
-            BackgroundColor="{StaticResource Primary}"
-            CornerRadius="10"
-            HeightRequest="50"
-            WidthRequest="50"
-            Command="{Binding ToggleFilterPanelCommand}"/>
+                        Text="Filtrele"
+                        ImageSource="{FontImage Glyph='🔽', Color=White, Size=14}"
+                        ContentLayout="Right,8"
+                        FontSize="13"
+                        FontAttributes="Bold"
+                        TextColor="White"
+                        BackgroundColor="{StaticResource Primary}"
+                        CornerRadius="12"
+                        HeightRequest="50"
+                        Padding="15,0"
+                        Command="{Binding ToggleFilterPanelCommand}">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
             </Grid>
 
+            <!-- Kategori Listesi (Chips) -->
             <CollectionView ItemsSource="{Binding Categories}"
                             ItemsLayout="HorizontalList"
                             SelectionMode="None"
-                            HeightRequest="50"
-                            Margin="0,0,0,10">
-
+                            HeightRequest="40"
+                            Margin="0,0,0,5">
                 <CollectionView.Header>
-                    <Frame Padding="15,10" 
-           CornerRadius="20" 
-           HasShadow="False"
-           Margin="0,0,10,0"
-           BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
-           BorderColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
-
-                        <Label Text="Tümü"
-               VerticalOptions="Center"
-               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
-
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer 
-                Command="{Binding CategoryTappedCommand}" 
-                CommandParameter="{x:Null}"/>
-                        </Frame.GestureRecognizers>
-
-                    </Frame>
+                    <Border StrokeShape="RoundRectangle 20"
+                            StrokeThickness="1"
+                            Padding="16,8"
+                            Margin="0,0,8,0"
+                            BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
+                            Stroke="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding CategoryTappedCommand}" CommandParameter="{x:Null}"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="Tümü" 
+                               FontSize="13"
+                               FontAttributes="Bold"
+                               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
+                    </Border>
                 </CollectionView.Header>
-
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Category">
-                        <Frame Padding="15,10" 
-                               CornerRadius="20" 
-                               HasShadow="False"
-                               Margin="5,0"
-                               BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={Binding CategoryId}}"
-                               BorderColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={Binding CategoryId}}">
-                            <Label Text="{Binding Name}"
-                                   VerticalOptions="Center"
-                                   TextColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={Binding CategoryId}}"/>
-                            <Frame.GestureRecognizers>
+                        <Border StrokeShape="RoundRectangle 20"
+                                StrokeThickness="1"
+                                Padding="16,8"
+                                Margin="0,0,8,0"
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={Binding CategoryId}}"
+                                Stroke="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={Binding CategoryId}}">
+                            <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=CategoryTappedCommand}" CommandParameter="{Binding .}"/>
-                            </Frame.GestureRecognizers>
-                        </Frame>
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding Name}" 
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={Binding CategoryId}}"/>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </VerticalStackLayout>
 
+        <!-- 3. ÜRÜN LİSTESİ -->
         <Grid Grid.Row="2" BackgroundColor="#F5F5F5">
-
             <RefreshView Command="{Binding RefreshProductsCommand}"
-                         IsRefreshing="{Binding IsRefreshing}">
+                         IsRefreshing="{Binding IsRefreshing}"
+                         RefreshColor="{StaticResource Primary}">
 
                 <CollectionView ItemsSource="{Binding Products}"
-                SelectionMode="None"
-                RemainingItemsThreshold="5"
-                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}">
+                                SelectionMode="None"
+                                RemainingItemsThreshold="5"
+                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}"
+                                Margin="10,0">
 
+                    <!-- Boş Durum -->
                     <CollectionView.EmptyView>
-                        <Grid VerticalOptions="Center"
-HorizontalOptions="Center"
-Padding="20"
-IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
-
-                            <VerticalStackLayout Spacing="12"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center">
-
-                                <Label Text="{Binding EmptyMessage}"
-         FontSize="14"
-         TextColor="{StaticResource Gray600}"
-         HorizontalTextAlignment="Center"/>
-
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                            <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                                <Label Text="📦" FontSize="60" HorizontalTextAlignment="Center"/>
+                                <Label Text="{Binding EmptyMessage}" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
                             </VerticalStackLayout>
-
                         </Grid>
                     </CollectionView.EmptyView>
 
+                    <!-- Izgara Düzeni -->
                     <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="2" />
+                        <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10"/>
                     </CollectionView.ItemsLayout>
 
+                    <!-- ÜRÜN KARTI ŞABLONU -->
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Product">
-                            <Frame Padding="8"
-                                    CornerRadius="15"
-                                   Margin="3"
-                                   HeightRequest="250"
-                                   HasShadow="True"
-                                   HorizontalOptions="Fill">
+                            <Border StrokeShape="RoundRectangle 16"
+                                    StrokeThickness="0"
+                                    BackgroundColor="White"
+                                    HeightRequest="260">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.08"/>
+                                </Border.Shadow>
 
-                                <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" 
-                                                          CommandParameter="{Binding .}"/>
-                                </Frame.GestureRecognizers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
 
-                                <Grid RowDefinitions="Auto,*,Auto">
-                                    <ffimageloading:CachedImage Grid.Row="0"
-                                                                Source="{Binding ThumbnailUrl}"
-                                                                Aspect="AspectFill"
-                                                                HeightRequest="130"
-                                                                LoadingPlaceholder="loading_image.png"
-                                                                ErrorPlaceholder="error_image.png"
-                                                                DownsampleToViewSize="True"
-                                                                CacheDuration="7"
-                                                                RetryCount="3"
-                                                                RetryDelay="250"
-                                                                FadeAnimationEnabled="True"
-                                                                FadeAnimationDuration="300"/>
+                                <Grid RowDefinitions="150,Auto,*,Auto">
 
-                                    <Border IsVisible="{Binding StatusText, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
-                                            BackgroundColor="{Binding StatusColor}"
-                                            Opacity="0.9"
-                                            Padding="6,2"
-                                            HorizontalOptions="Start"
-                                            VerticalOptions="Start"
-                                            StrokeThickness="0"
-                                            Margin="0">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="0,0,10,0" />
-                                        </Border.StrokeShape>
-                                        <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
-                                    </Border>
+                                    <!-- 1. Görsel ve Etiketler -->
+                                    <Grid Grid.Row="0">
+                                        <ffimageloading:CachedImage Source="{Binding ThumbnailUrl}"
+                                                                    Aspect="AspectFill"
+                                                                    LoadingPlaceholder="loading_image.png"
+                                                                    ErrorPlaceholder="error_image.png"
+                                                                    DownsampleToViewSize="True"
+                                                                    FadeAnimationEnabled="True"/>
 
-                                    <VerticalStackLayout Grid.Row="1" Padding="5,5" Spacing="4">
-                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="14" LineBreakMode="TailTruncation" TextColor="{StaticResource Gray900}"/>
-                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                                            <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" Aspect="AspectFill" HeightRequest="30" WidthRequest="30" DownsampleToViewSize="True" LoadingPlaceholder="person_icon.svg" ErrorPlaceholder="person_icon.svg" FadeAnimationEnabled="True" FadeAnimationDuration="300" VerticalOptions="Center">
-                                                <ffimageloading:CachedImage.Clip>
-                                                    <EllipseGeometry Center="15,15" RadiusX="15" RadiusY="15" />
-                                                </ffimageloading:CachedImage.Clip>
-                                            </ffimageloading:CachedImage>
-                                            <Label Text="{Binding UserName}" FontSize="12" TextColor="{StaticResource Gray600}" VerticalOptions="Center" LineBreakMode="TailTruncation"/>
-                                        </HorizontalStackLayout>
+                                        <!-- Gradient Overlay (Alt kısımda yazı okunabilirliği için) -->
+                                        <BoxView VerticalOptions="End" HeightRequest="40" Color="Transparent"/>
+
+                                        <!-- Durum Badge (Sol Üst) -->
+                                        <Border IsVisible="{Binding StatusText, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+                                                BackgroundColor="{Binding StatusColor}"
+                                                StrokeThickness="0"
+                                                HorizontalOptions="Start"
+                                                VerticalOptions="Start"
+                                                Margin="8"
+                                                Padding="8,4"
+                                                StrokeShape="RoundRectangle 6">
+                                            <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                        </Border>
+
+                                        <!-- Tip Badge (Sağ Üst) -->
+                                        <Border BackgroundColor="White"
+                                                StrokeThickness="0"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="8"
+                                                Padding="8,4"
+                                                StrokeShape="RoundRectangle 6"
+                                                Opacity="0.9">
+                                            <Label Text="{Binding Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}" 
+                                                   TextColor="{Binding Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}" 
+                                                   FontSize="10" 
+                                                   FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- 2. Başlık ve Fiyat -->
+                                    <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" Spacing="4">
+                                        <Label Text="{Binding Title}" 
+                                               FontSize="14" 
+                                               TextColor="{StaticResource TextPrimary}" 
+                                               MaxLines="2" 
+                                               LineBreakMode="TailTruncation"
+                                               FontAttributes="Bold"/>
+
+                                        <Label Text="{Binding Price, StringFormat='₺{0:N0}'}" 
+                                               FontSize="16" 
+                                               FontAttributes="Bold" 
+                                               TextColor="{StaticResource Primary}"
+                                               IsVisible="{Binding Type, Converter={StaticResource ProductTypeShowPriceConverter}}"/>
                                     </VerticalStackLayout>
 
-                                    <HorizontalStackLayout Grid.Row="2" Spacing="5" Padding="0,5">
-                                        <Label Text="⭐" FontSize="12"/>
-                                        <Label Text="❤️" FontSize="12" Margin="5,0,0,0"/>
-                                        <Label Text="{Binding FavoriteCount}" FontSize="12"/>
-                                        <Label Text="👁️" FontSize="12" Margin="5,0,0,0"/>
-                                        <Label Text="{Binding ViewCount}" FontSize="12"/>
-                                    </HorizontalStackLayout>
+                                    <!-- 3. Boşluk Doldurucu -->
+                                    <BoxView Grid.Row="2" Color="Transparent" />
+
+                                    <!-- 4. Alt Bilgi (Satıcı ve İstatistikler) -->
+                                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="10" VerticalOptions="End">
+                                        <!-- Satıcı -->
+                                        <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                                            <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" 
+                                                                        HeightRequest="24" WidthRequest="24" 
+                                                                        Aspect="AspectFill"
+                                                                        LoadingPlaceholder="person_icon.svg"
+                                                                        ErrorPlaceholder="person_icon.svg">
+                                                <ffimageloading:CachedImage.Clip>
+                                                    <EllipseGeometry Center="12,12" RadiusX="12" RadiusY="12"/>
+                                                </ffimageloading:CachedImage.Clip>
+                                            </ffimageloading:CachedImage>
+                                            <Label Text="{Binding UserName}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" LineBreakMode="TailTruncation" MaximumWidthRequest="60"/>
+                                        </HorizontalStackLayout>
+
+                                        <!-- İstatistikler -->
+                                        <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                                            <HorizontalStackLayout Spacing="2">
+                                                <Label Text="❤️" FontSize="10" VerticalOptions="Center"/>
+                                                <Label Text="{Binding FavoriteCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Spacing="2">
+                                                <Label Text="👁️" FontSize="10" VerticalOptions="Center"/>
+                                                <Label Text="{Binding ViewCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                        </HorizontalStackLayout>
+                                    </Grid>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </RefreshView>
 
-            <VerticalStackLayout VerticalOptions="End" HorizontalOptions="End" Spacing="15" Margin="25">
-                <Grid HorizontalOptions="End">
-                    <Button Text="🎁"
-                            Command="{Binding GoToSurpriseBoxCommand}"
-                            BackgroundColor="#FF9800"
-                            TextColor="White"
-                            FontSize="22"
-                            CornerRadius="25"
-                            WidthRequest="50"
-                            HeightRequest="50"
-                            Padding="0">
-                        <Button.Shadow>
-                            <Shadow Brush="Black" Offset="0,4" Opacity="0.3" Radius="5"/>
-                        </Button.Shadow>
-                    </Button>
-                </Grid>
+            <!-- YÜZEN BUTONLAR (FAB) -->
+            <VerticalStackLayout VerticalOptions="End" HorizontalOptions="End" Spacing="16" Margin="20">
+                <!-- Sürpriz Kutu -->
+                <Button Text="🎁"
+                        Command="{Binding GoToSurpriseBoxCommand}"
+                        BackgroundColor="#FF9800"
+                        TextColor="White"
+                        FontSize="24"
+                        WidthRequest="56"
+                        HeightRequest="56"
+                        CornerRadius="28"
+                        Padding="0">
+                    <Button.Shadow>
+                        <Shadow Brush="#FF9800" Offset="0,4" Opacity="0.4" Radius="8"/>
+                    </Button.Shadow>
+                </Button>
 
+                <!-- Ürün Ekle -->
                 <Button Text="+"
                         Command="{Binding GoToAddProductCommand}"
                         BackgroundColor="{StaticResource Primary}"
                         TextColor="White"
                         FontSize="32"
-                        CornerRadius="30"
-                        WidthRequest="60"
-                        HeightRequest="60"
-                        Padding="0">
+                        WidthRequest="64"
+                        HeightRequest="64"
+                        CornerRadius="32"
+                        Padding="0,0,0,4">
                     <Button.Shadow>
-                        <Shadow Brush="Black" Offset="0,5" Opacity="0.4" Radius="8"/>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,6" Opacity="0.5" Radius="10"/>
                     </Button.Shadow>
                 </Button>
             </VerticalStackLayout>
 
+            <!-- Yükleniyor Göstergesi -->
             <ActivityIndicator IsRunning="{Binding IsLoading}" 
                                IsVisible="{Binding IsLoading}" 
                                Color="{StaticResource Primary}" 
                                VerticalOptions="Center" 
-                               HorizontalOptions="Center"/>
+                               HorizontalOptions="Center"
+                               HeightRequest="50" WidthRequest="50"/>
         </Grid>
 
+        <!-- FİLTRE PANELİ (Bottom Sheet) -->
         <Grid Grid.RowSpan="3" 
               BackgroundColor="#80000000" 
               IsVisible="{Binding ShowFilterPanel}"
@@ -280,90 +349,127 @@ IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
 
             <Border BackgroundColor="White" 
                     VerticalOptions="End" 
-                    StrokeShape="RoundRectangle 20,20,0,0"
-                    Padding="20">
+                    StrokeShape="RoundRectangle 24,24,0,0"
+                    Padding="24,30">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer />
                 </Border.GestureRecognizers>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,-4" Radius="15" Opacity="0.2"/>
+                </Border.Shadow>
 
-                <VerticalStackLayout Spacing="15"
-                     HorizontalOptions="FillAndExpand">
-
-                    <Label Text="Filtrele ve Sırala" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
-                    <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
-
-                    <Label Text="Ürün Tipi" FontAttributes="Bold" />
-                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-                        <Button Text="Tümü" Grid.Column="0" Command="{Binding SetProductTypeCommand}" CommandParameter="" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button Text="Satılık" Grid.Column="1" Command="{Binding SetProductTypeCommand}" CommandParameter="Satis" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Satis">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button Text="Bağış" Grid.Column="2" Command="{Binding SetProductTypeCommand}" CommandParameter="Bagis" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button Text="Takas" Grid.Column="3" Command="{Binding SetProductTypeCommand}" CommandParameter="Takas" HeightRequest="35" Padding="0" FontSize="11" TextColor="Black" BackgroundColor="{StaticResource Gray200}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Takas">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                <VerticalStackLayout Spacing="20">
+                    <!-- Panel Başlığı -->
+                    <Grid>
+                        <Label Text="Filtrele ve Sırala" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                        <Button Text="✕" 
+                                Command="{Binding ToggleFilterPanelCommand}"
+                                HorizontalOptions="End" 
+                                BackgroundColor="Transparent" 
+                                TextColor="{StaticResource TextSecondary}"
+                                FontSize="18"
+                                Padding="0"
+                                HeightRequest="30"/>
                     </Grid>
 
-                    <!-- Filter Panel içinde sadece Picker'ı değiştirin: -->
-                    <Label Text="Sıralama" FontAttributes="Bold" Margin="0,10,0,0" />
-                    <Picker Title="Sıralama Seçin" 
-        ItemsSource="{Binding SortOptions}"
-        SelectedItem="{Binding SelectedSortOption}"
-        BackgroundColor="{StaticResource Gray100}"
-        TitleColor="{StaticResource Gray600}">
-                        <Picker.ItemDisplayBinding>
-                            <Binding Converter="{StaticResource ProductSortOptionToTextConverter}" />
-                            </Picker.ItemDisplayBinding>
-                    </Picker>
+                    <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
 
-                    <Grid ColumnDefinitions="*,*" 
-      ColumnSpacing="15" 
-      Margin="0,20,0,10"
-      HorizontalOptions="FillAndExpand">
+                    <!-- Ürün Tipi Filtresi -->
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Ürün Tipi" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                            <!-- Helper style for buttons can be added globally, keeping inline for safety -->
+                            <Button Text="Tümü" Grid.Column="0" Command="{Binding SetProductTypeCommand}" CommandParameter="" 
+                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="TextColor" Value="White" />
+                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
+                                        <Setter Property="BackgroundColor" Value="White" />
+                                        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+
+                            <Button Text="Satılık" Grid.Column="1" Command="{Binding SetProductTypeCommand}" CommandParameter="Satis" 
+                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Satis">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="TextColor" Value="White" />
+                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+
+                            <Button Text="Bağış" Grid.Column="2" Command="{Binding SetProductTypeCommand}" CommandParameter="Bagis" 
+                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="TextColor" Value="White" />
+                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+
+                            <Button Text="Takas" Grid.Column="3" Command="{Binding SetProductTypeCommand}" CommandParameter="Takas" 
+                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Takas">
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="TextColor" Value="White" />
+                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Sıralama -->
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Sıralama" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                        <Border StrokeShape="RoundRectangle 10" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="10,0">
+                            <Picker Title="Sıralama Seçin" 
+                                    ItemsSource="{Binding SortOptions}"
+                                    SelectedItem="{Binding SelectedSortOption}"
+                                    TextColor="{StaticResource TextPrimary}"
+                                    TitleColor="{StaticResource TextSecondary}">
+                                <Picker.ItemDisplayBinding>
+                                    <Binding Converter="{StaticResource ProductSortOptionToTextConverter}" />
+                                </Picker.ItemDisplayBinding>
+                            </Picker>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Aksiyon Butonları -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
+                        <Button Text="Temizle" 
+                                Grid.Column="0"
+                                BackgroundColor="White" 
+                                TextColor="{StaticResource TextSecondary}" 
+                                BorderColor="{StaticResource BorderColor}"
+                                BorderWidth="1"
+                                CornerRadius="12"
+                                HeightRequest="50"
+                                FontAttributes="Bold"
+                                Command="{Binding ClearFiltersCommand}"/>
 
                         <Button Text="Uygula" 
-         Grid.Column="1"
-         BackgroundColor="{StaticResource Primary}" 
-         TextColor="White" 
-         CornerRadius="10"
-         Command="{Binding ApplyFiltersCommand}"/>
-                        
-                        <Button Text="Temizle" 
-            Grid.Column="0"
-            BackgroundColor="White" 
-            TextColor="{StaticResource Gray600}" 
-            BorderColor="{StaticResource Gray300}"
-            BorderWidth="1"
-            CornerRadius="10"
-            Command="{Binding ClearFiltersCommand}"/>
-    
-   
-                    
-                    
+                                Grid.Column="1"
+                                BackgroundColor="{StaticResource Primary}" 
+                                TextColor="White" 
+                                CornerRadius="12"
+                                HeightRequest="50"
+                                FontAttributes="Bold"
+                                Command="{Binding ApplyFiltersCommand}">
+                            <Button.Shadow>
+                                <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
                     </Grid>
                 </VerticalStackLayout>
             </Border>
