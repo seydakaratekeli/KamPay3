@@ -40,6 +40,21 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string verificationCode;
 
+        // YENÝ: ConfirmPassword property'sini ekledik
+        public string ConfirmPassword
+        {
+            get => _confirmPassword;
+            set
+            {
+                if (_confirmPassword != value)
+                {
+                    _confirmPassword = value;
+                    OnPropertyChanged(nameof(ConfirmPassword));
+                }
+            }
+        }
+        private string _confirmPassword;
+
         // YENÝ: Constructor'ý IUserProfileService alacak þekilde güncelledik
         public RegisterViewModel(IAuthenticationService authService, IUserProfileService userProfileService)
         {

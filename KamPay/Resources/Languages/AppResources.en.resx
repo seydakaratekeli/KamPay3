@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -28,7 +87,7 @@
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="0" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
               <xsd:attribute ref="xml:space" />
@@ -58,8 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
-  <!-- Tab Bar Items -->
   <data name="HomePage" xml:space="preserve">
     <value>Home</value>
   </data>
@@ -81,8 +138,6 @@
   <data name="Login" xml:space="preserve">
     <value>Login</value>
   </data>
-  
-  <!-- Common Actions -->
   <data name="Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -146,8 +201,6 @@
   <data name="Request" xml:space="preserve">
     <value>Request</value>
   </data>
-  
-  <!-- Auth Pages -->
   <data name="LoginTitle" xml:space="preserve">
     <value>Login</value>
   </data>
@@ -217,8 +270,6 @@
   <data name="UnexpectedError" xml:space="preserve">
     <value>Unexpected error</value>
   </data>
-  
-  <!-- Profile Related -->
   <data name="EditProfile" xml:space="preserve">
     <value>Edit Profile</value>
   </data>
@@ -306,8 +357,6 @@
   <data name="UserNotFound" xml:space="preserve">
     <value>User information not found.</value>
   </data>
-  
-  <!-- Product Related -->
   <data name="ProductDetail" xml:space="preserve">
     <value>Product Detail</value>
   </data>
@@ -479,8 +528,6 @@
   <data name="LoginRequired" xml:space="preserve">
     <value>You must login for this operation.</value>
   </data>
-  
-  <!-- Product Conditions -->
   <data name="ConditionLikeNew" xml:space="preserve">
     <value>Like New</value>
   </data>
@@ -496,8 +543,6 @@
   <data name="ConditionUsable" xml:space="preserve">
     <value>Usable</value>
   </data>
-  
-  <!-- Messages Related -->
   <data name="MessagesTitle" xml:space="preserve">
     <value>Messages</value>
   </data>
@@ -528,8 +573,6 @@
   <data name="TypeMessage" xml:space="preserve">
     <value>Type your message...</value>
   </data>
-  
-  <!-- Favorites Related -->
   <data name="FavoritesTitle" xml:space="preserve">
     <value>Favorites</value>
   </data>
@@ -548,8 +591,6 @@
   <data name="FavoritesLoading" xml:space="preserve">
     <value>Loading favorites...</value>
   </data>
-  
-  <!-- Notifications Related -->
   <data name="NotificationsTitle" xml:space="preserve">
     <value>Notifications</value>
   </data>
@@ -562,8 +603,6 @@
   <data name="Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
-  
-  <!-- Offers Related -->
   <data name="OffersTitle" xml:space="preserve">
     <value>Offers</value>
   </data>
@@ -606,8 +645,6 @@
   <data name="OffersLoading" xml:space="preserve">
     <value>Loading offers...</value>
   </data>
-  
-  <!-- Service Related -->
   <data name="ServiceSharingTitle" xml:space="preserve">
     <value>Service Sharing</value>
   </data>
@@ -674,8 +711,6 @@
   <data name="Processing" xml:space="preserve">
     <value>Processing...</value>
   </data>
-  
-  <!-- Service Categories -->
   <data name="CategoryTransport" xml:space="preserve">
     <value>Transport</value>
   </data>
@@ -694,8 +729,6 @@
   <data name="CategoryOther" xml:space="preserve">
     <value>Other</value>
   </data>
-  
-  <!-- Service Requests -->
   <data name="ServiceRequestsTitle" xml:space="preserve">
     <value>My Service Requests</value>
   </data>
@@ -717,8 +750,6 @@
   <data name="ServiceRequestsLoading" xml:space="preserve">
     <value>Loading service requests...</value>
   </data>
-  
-  <!-- Good Deed Board -->
   <data name="GoodDeedBoardTitle" xml:space="preserve">
     <value>Good Deed Board</value>
   </data>
@@ -752,8 +783,6 @@
   <data name="WriteComment" xml:space="preserve">
     <value>Write a comment...</value>
   </data>
-  
-  <!-- QR Code Related -->
   <data name="QRCode" xml:space="preserve">
     <value>QR Code</value>
   </data>
@@ -790,8 +819,6 @@
   <data name="ScanOtherCode" xml:space="preserve">
     <value>Scan Other Party's Code</value>
   </data>
-  
-  <!-- Surprise Box -->
   <data name="SurpriseBoxTitle" xml:space="preserve">
     <value>Surprise Box</value>
   </data>
@@ -816,8 +843,6 @@
   <data name="OpeningBox" xml:space="preserve">
     <value>Opening your surprise box...</value>
   </data>
-  
-  <!-- Error Messages -->
   <data name="Error" xml:space="preserve">
     <value>Error</value>
   </data>
@@ -833,8 +858,6 @@
   <data name="OperationSuccess" xml:space="preserve">
     <value>Operation successful</value>
   </data>
-  
-  <!-- Validation Messages -->
   <data name="FillAllFields" xml:space="preserve">
     <value>Please fill in all fields</value>
   </data>
@@ -847,8 +870,6 @@
   <data name="MissingInfo" xml:space="preserve">
     <value>Missing information</value>
   </data>
-  
-  <!-- Success Messages -->
   <data name="SavedSuccessfully" xml:space="preserve">
     <value>Saved successfully</value>
   </data>
@@ -858,21 +879,15 @@
   <data name="DeletedSuccessfully" xml:space="preserve">
     <value>Deleted successfully</value>
   </data>
-  
-  <!-- Empty States -->
   <data name="NoDataYet" xml:space="preserve">
     <value>No data yet</value>
   </data>
-  
-  <!-- Loading States -->
   <data name="Saving" xml:space="preserve">
     <value>Saving...</value>
   </data>
   <data name="Sending" xml:space="preserve">
     <value>Sending...</value>
   </data>
-  
-  <!-- Dialog Messages -->
   <data name="AreYouSure" xml:space="preserve">
     <value>Are you sure?</value>
   </data>
@@ -882,16 +897,12 @@
   <data name="DeleteFailed" xml:space="preserve">
     <value>Delete failed</value>
   </data>
-  
-  <!-- Main Page -->
   <data name="WelcomeMessage" xml:space="preserve">
     <value>Welcome 👋</value>
   </data>
   <data name="ProductList" xml:space="preserve">
     <value>Product List</value>
   </data>
-  
-  <!-- Time Ago -->
   <data name="JustNow" xml:space="preserve">
     <value>Just now</value>
   </data>
@@ -904,8 +915,6 @@
   <data name="DaysAgo" xml:space="preserve">
     <value>days ago</value>
   </data>
-  
-  <!-- Product Types -->
   <data name="ProductTypeSale" xml:space="preserve">
     <value>For Sale</value>
   </data>
@@ -918,8 +927,6 @@
   <data name="NotSpecified" xml:space="preserve">
     <value>Not Specified</value>
   </data>
-  
-  <!-- Post Types -->
   <data name="PostTypeHelpRequest" xml:space="preserve">
     <value>Help Request</value>
   </data>
@@ -932,8 +939,6 @@
   <data name="PostTypeVolunteer" xml:space="preserve">
     <value>Volunteer Needed</value>
   </data>
-  
-  <!-- Service Categories -->
   <data name="ServiceCategoryEducation" xml:space="preserve">
     <value>Education</value>
   </data>
@@ -958,8 +963,6 @@
   <data name="ServiceCategoryOther" xml:space="preserve">
     <value>Other</value>
   </data>
-  
-  <!-- Product Categories -->
   <data name="CategoryElectronics" xml:space="preserve">
     <value>Electronics</value>
   </data>
@@ -984,16 +987,12 @@
   <data name="CategoryBaby" xml:space="preserve">
     <value>Baby Products</value>
   </data>
-  
-  <!-- Post Type for Good Deed -->
   <data name="PostTypeRequest" xml:space="preserve">
     <value>Request</value>
   </data>
   <data name="PostTypeOffer" xml:space="preserve">
     <value>Offer</value>
   </data>
-  
-  <!-- Form Labels -->
   <data name="TitleLabel" xml:space="preserve">
     <value>Title</value>
   </data>
@@ -1018,12 +1017,55 @@
   <data name="FeeLabel" xml:space="preserve">
     <value>Fee</value>
   </data>
-  
-  <!-- Button and Action Labels -->
   <data name="SendRequest" xml:space="preserve">
     <value>Send Request</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Filter</value>
+  </data>
+  <data name="GoodDeedBoard" xml:space="preserve">
+    <value>Good Deed Board</value>
+  </data>
+  <data name="AddService" xml:space="preserve">
+    <value>Add Service</value>
+  </data>
+  <data name="Hour" xml:space="preserve">
+    <value>Hour</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>First Name</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Last Name</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="AlreadyHaveAccount" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Welcome Back</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Remember Me</value>
+  </data>
+  <data name="DontHaveAccount" xml:space="preserve">
+    <value>Don't have an account?</value>
   </data>
 </root>

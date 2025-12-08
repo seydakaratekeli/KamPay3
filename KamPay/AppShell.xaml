@@ -3,58 +3,30 @@
     x:Class="KamPay.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:KamPay.Views"
-    xmlns:converters="clr-namespace:KamPay.Converters"
-    xmlns:res="clr-namespace:KamPay.Services"
-    xmlns:localization="clr-namespace:KamPay.Extensions"
+    xmlns:local="clr-namespace:KamPay.Views"
+    xmlns:services="clr-namespace:KamPay.Services"
     Shell.FlyoutBehavior="Disabled"
-    x:Name="shell">
+    Shell.NavBarIsVisible="False">
 
-    <Shell.Resources>
-        <ResourceDictionary>
-            <converters:UnreadToIconConverter x:Key="UnreadToIconConverter" />
-
-            <Style TargetType="TabBar">
-                <Setter Property="Shell.BackgroundColor" Value="White" />
-                <Setter Property="Shell.ForegroundColor" Value="#4CAF50" />
-                <Setter Property="Shell.TitleColor" Value="#4CAF50" />
-                <Setter Property="Shell.UnselectedColor" Value="#757575" />
-            </Style>
-        </ResourceDictionary>
-    </Shell.Resources>
-
-    <ShellContent
-        Title="{localization:Translate Key=Login}"
-        ContentTemplate="{DataTemplate views:LoginPage}"
-        Route="LoginPage" />
-
-    <TabBar Route="MainApp">
-
-        <Tab Title="{localization:Translate Key=HomePage}" Icon="home_icon.svg">
-            <ShellContent ContentTemplate="{DataTemplate views:ProductListPage}" Route="ProductListPage" />
+    <TabBar>
+        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Home]}" Icon="home_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{localization:Translate Key=Board}" Icon="good_board.svg">
-            <ShellContent ContentTemplate="{DataTemplate views:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
+        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Services]}" Icon="service_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
 
-        <Tab Title="{localization:Translate Key=Messages}"
-             Icon="{Binding BindingContext.HasUnreadMessages, Source={x:Reference shell}, Converter={StaticResource UnreadToIconConverter}}">
-            <ShellContent ContentTemplate="{DataTemplate views:MessagesPage}" Route="MessagesPage" />
+        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[GoodDeedBoard]}" Icon="gooddeed_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab Title="{localization:Translate Key=Service}" Icon="briefcase.svg">
-            <ShellContent ContentTemplate="{DataTemplate views:ServiceSharingPage}" Route="ServiceSharingPage" />
-        </Tab>
-        
-        <Tab Title="{localization:Translate Key=Profile}" Icon="person_icon.svg">
-            <ShellContent ContentTemplate="{DataTemplate views:ProfilePage}" Route="ProfilePage" />
+        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Messages]}" Icon="messages_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{localization:Translate Key=Favorites}" Icon="heart_icon.svg">
-            <ShellContent ContentTemplate="{DataTemplate views:FavoritesPage}" Route="FavoritesPage" />
+        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Profile]}" Icon="profile_icon.svg">
+            <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
         </Tab>
-        
     </TabBar>
-
 </Shell>

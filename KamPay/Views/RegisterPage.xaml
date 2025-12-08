@@ -1,41 +1,90 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:res="clr-namespace:KamPay.Services"
-    x:Class="KamPay.Views.RegisterPage"
-    Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[RegisterTitle]}">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:services="clr-namespace:KamPay.Services"
+             x:DataType="vm:RegisterViewModel"
+             x:Class="KamPay.Views.RegisterPage"
+             BackgroundColor="#6200EA"
+             Shell.NavBarIsVisible="False">
+
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
+        <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">
+            
+            <!-- Logo veya Başlık -->
+            <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Register]}" 
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   HorizontalOptions="Center"/>
 
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[RegisterTitle]}" FontSize="24" HorizontalOptions="Center" />
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    
+                    <!-- İsim -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[FirstName]}"
+                           Text="{Binding FirstName}"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[FirstName]}" Text="{Binding FirstName}" />
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LastName]}" Text="{Binding LastName}" />
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[UniversityEmail]}" Text="{Binding Email}" Keyboard="Email" />
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Password]}" Text="{Binding Password}" IsPassword="True" />
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[PasswordConfirm]}" Text="{Binding PasswordConfirm}" IsPassword="True" />
+                    <!-- Soyisim -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[LastName]}"
+                           Text="{Binding LastName}"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage}" TextColor="Red" />
+                    <!-- Email -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Email]}"
+                           Text="{Binding Email}"
+                           Keyboard="Email"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[RegisterTitle]}" Command="{Binding RegisterCommand}" />
-            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+                    <!-- Şifre -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Password]}"
+                           Text="{Binding Password}"
+                           IsPassword="True"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[HaveAccountLogin]}" Command="{Binding GoToLoginCommand}" BackgroundColor="Transparent" TextColor="Blue" />
+                    <!-- Şifre Tekrar -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ConfirmPassword]}"
+                           Text="{Binding ConfirmPassword}"
+                           IsPassword="True"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <!-- Doğrulama bölümü -->
-            <Frame IsVisible="{Binding ShowVerificationSection}" Padding="12" BorderColor="#DDD" CornerRadius="8">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EmailVerification]}" FontAttributes="Bold" />
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EnterVerificationCode]}" FontSize="12" />
-                    <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[VerificationCode]}" Text="{Binding VerificationCode}" Keyboard="Numeric" />
-                    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage}" TextColor="Red" />
-                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Verify]}" Command="{Binding VerifyEmailCommand}" />
-                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ResendCode]}" Command="{Binding ResendVerificationCommand}" />
-                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Cancel]}" Command="{Binding CancelVerificationCommand}" BackgroundColor="Transparent" TextColor="Gray" />
+                    <!-- Hata Mesajı -->
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+
+                    <!-- Kayıt Ol Butonu -->
+                    <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Register]}"
+                            Command="{Binding RegisterCommand}"
+                            BackgroundColor="#6200EA"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="50"/>
+
+                    <!-- Giriş Yap Linki -->
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[AlreadyHaveAccount]}"
+                               TextColor="#757575"
+                               FontSize="14"/>
+                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Login]}"
+                               TextColor="#6200EA"
+                               FontSize="14"
+                               FontAttributes="Bold">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToLoginCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
-
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

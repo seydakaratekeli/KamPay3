@@ -1,47 +1,31 @@
 using KamPay.ViewModels;
+using KamPay.Services; // LocalizationResourceManager için
 
 namespace KamPay.Views;
 
 public partial class ProductListPage : ContentPage
 {
-    private bool _isInitialized = false;
+    private readonly ProductListViewModel _viewModel;
 
     public ProductListPage(ProductListViewModel vm)
     {
         InitializeComponent();
-        BindingContext = vm;
+        _viewModel = vm;
+        BindingContext = _viewModel;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        await(BindingContext as ProductListViewModel).UltraFastLoadAsync();
-
-        if (BindingContext is ProductListViewModel vm)
-        {
-            // Bu kontrol, sayfa ilk oluþturulduðunda metodun iki kez
-            // (hem constructor hem de OnAppearing tarafýndan) çaðrýlmasýný önler.
-            // Sayfaya geri dönüldüðünde ise dinleyiciyi yeniden baþlatýr.
-            if (_isInitialized)
-            {
-                vm.InitializeViewModel();
-            }
-            _isInitialized = true;
-        }
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        if (BindingContext is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
     }
 
-    // Varsa bu metodu silebilir veya tutabilirsiniz, artýk gerekli deðil.
-    // private async void OnBackClicked(object sender, EventArgs e)
-    // {
-    //     await Shell.Current.GoToAsync("..");
-    // }
+    ~ProductListPage()
+    {
+        _viewModel?.Dispose();
+    }
 }

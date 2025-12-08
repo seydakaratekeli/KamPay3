@@ -16,6 +16,7 @@
             
             <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
             <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
+            <converters:LessThan100Converter x:Key="LessThan100Converter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter" />
             <converters:FirstCharConverter x:Key="FirstCharConverter" />

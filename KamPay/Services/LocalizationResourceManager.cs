@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Resources.Languages;
@@ -12,7 +12,7 @@ namespace KamPay.Services;
 public class LocalizationResourceManager : INotifyPropertyChanged
 {
     private const string LanguagePreferenceKey = "AppLanguage";
-    private const string DefaultLanguage = "tr";
+    private const string DefaultLanguage = "tr"; // ✅ Bu satır mevcut
     
     private static readonly Lazy<LocalizationResourceManager> _instance = 
         new(() => new LocalizationResourceManager());

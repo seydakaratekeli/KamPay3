@@ -1,85 +1,85 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:res="clr-namespace:KamPay.Services"
-    x:Class="KamPay.Views.LoginPage"
-    Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:services="clr-namespace:KamPay.Services"
+             x:DataType="vm:LoginViewModel"
+             x:Class="KamPay.Views.LoginPage"
+             BackgroundColor="#6200EA"
+             Shell.NavBarIsVisible="False">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
-
-            <!-- 💡 DEMO KULLANICI BİLGİLERİ -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DemoUserInfo]}"
+        <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">
+            
+            <!-- Logo veya Başlık -->
+            <Label Text="KamPay" 
+                   FontSize="48"
                    FontAttributes="Bold"
-                   TextColor="#333"
-                   FontSize="14"
-                   HorizontalOptions="Center" />
+                   TextColor="White"
+                   HorizontalOptions="Center"/>
 
-            <HorizontalStackLayout Spacing="10">
-                <!-- Demo Kullanıcı 1 -->
-                <Frame Padding="10"
-                       CornerRadius="10"
-                       BorderColor="#E0E0E0"
-                       BackgroundColor="#F5F5F5"
-                       WidthRequest="160">
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="👤 Kullanıcı 1"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               FontSize="14" />
-                        <Label Text="E-posta: Mehmetakar@bartin.edu.tr"
-                               FontSize="13"
-                               TextColor="#555" />
-                        <Label Text="Şifre: Mehmet1234"
-                               FontSize="13"
-                               TextColor="#555" />
-                    </VerticalStackLayout>
-                </Frame>
+            <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[WelcomeBack]}" 
+                   FontSize="18"
+                   TextColor="White"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,30"/>
 
-                <!-- Demo Kullanıcı 2 -->
-                <Frame Padding="10"
-                       CornerRadius="10"
-                       BorderColor="#E0E0E0"
-                       BackgroundColor="#F5F5F5"
-                       WidthRequest="160">
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="👤 Kullanıcı 2"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               FontSize="14" />
-                        <Label Text="E-posta: Elifguler@bartin.edu.tr"
-                               FontSize="13"
-                               TextColor="#555" />
-                        <Label Text="Şifre: Elif1234"
-                               FontSize="13"
-                               TextColor="#555" />
-                    </VerticalStackLayout>
-                </Frame>
-            </HorizontalStackLayout>
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    
+                    <!-- Email -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Email]}"
+                           Text="{Binding Email}"
+                           Keyboard="Email"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}" FontSize="24" HorizontalOptions="Center" />
+                    <!-- Şifre -->
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Password]}"
+                           Text="{Binding Password}"
+                           IsPassword="True"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"/>
 
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Email]}" Text="{Binding Email}" Keyboard="Email" />
-            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Password]}" Text="{Binding Password}" IsPassword="True" />
+                    <!-- Beni Hatırla -->
+                    <HorizontalStackLayout Spacing="10">
+                        <CheckBox IsChecked="{Binding RememberMe}" Color="#6200EA"/>
+                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[RememberMe]}"
+                               TextColor="#757575"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
 
-            <HorizontalStackLayout VerticalOptions="Center">
-                <Switch IsToggled="{Binding RememberMe}" />
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[RememberMe]}" VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                    <!-- Hata Mesajı -->
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
 
-            <Label Text="{Binding ErrorMessage}" 
-                   IsVisible="{Binding ErrorMessage}" 
-                   TextColor="Red" />
+                    <!-- Giriş Yap Butonu -->
+                    <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Login]}"
+                            Command="{Binding LoginCommand}"
+                            BackgroundColor="#6200EA"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="50"/>
 
-            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LoginTitle]}" Command="{Binding LoginCommand}" />
-            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-
-            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoAccountRegister]}" 
-                    Command="{Binding GoToRegisterCommand}" 
-                    BackgroundColor="Transparent" 
-                    TextColor="Blue" />
-
+                    <!-- Kayıt Ol Linki -->
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" Margin="0,10,0,0">
+                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[DontHaveAccount]}"
+                               TextColor="#757575"
+                               FontSize="14"/>
+                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Register]}"
+                               TextColor="#6200EA"
+                               FontSize="14"
+                               FontAttributes="Bold">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToRegisterCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -166,15 +166,6 @@
   <data name="VerificationCode" xml:space="preserve">
     <value>Doğrulama Kodu</value>
   </data>
-  <data name="FirstName" xml:space="preserve">
-    <value>Ad</value>
-  </data>
-  <data name="LastName" xml:space="preserve">
-    <value>Soyad</value>
-  </data>
-  <data name="UniversityEmail" xml:space="preserve">
-    <value>Üniversite E-posta</value>
-  </data>
   <data name="RememberMe" xml:space="preserve">
     <value>Beni hatırla</value>
   </data>
@@ -1025,5 +1016,79 @@
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Filtrele</value>
+  </data>
+  <!-- Mevcut key'lere ek olarak bunları ekleyin: -->
+
+  <data name="Services" xml:space="preserve">
+    <value>Hizmetler</value>
+  </data>
+  <data name="ServiceRequests" xml:space="preserve">
+    <value>Hizmet Talepleri</value>
+  </data>
+  <data name="GoodDeedBoard" xml:space="preserve">
+    <value>İyilik Panosu</value>
+  </data>
+  <data name="AddService" xml:space="preserve">
+    <value>Hizmet Ekle</value>
+  </data>
+  <data name="ServiceTitle" xml:space="preserve">
+    <value>Hizmet Başlığı</value>
+  </data>
+  <data name="ServiceDescription" xml:space="preserve">
+    <value>Hizmet Açıklaması</value>
+  </data>
+  <data name="SelectCategory" xml:space="preserve">
+    <value>Kategori Seçin</value>
+  </data>
+  <data name="PriceLabel" xml:space="preserve">
+    <value>Fiyat (₺)</value>
+  </data>
+  <data name="TimeCredit" xml:space="preserve">
+    <value>Süre (Zaman Kredisi)</value>
+  </data>
+  <data name="Hour" xml:space="preserve">
+    <value>Saat</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Paylaş</value>
+  </data>
+  <data name="SearchProducts" xml:space="preserve">
+    <value>Ne arıyorsunuz?</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="ProductType" xml:space="preserve">
+    <value>Ürün Tipi</value>
+  </data>
+  <data name="ForSale" xml:space="preserve">
+    <value>Satılık</value>
+  </data>
+  <data name="Donation" xml:space="preserve">
+    <value>Bağış</value>
+  </data>
+  <data name="Exchange" xml:space="preserve">
+    <value>Takas</value>
+  </data>
+  <data name="Sorting" xml:space="preserve">
+    <value>Sıralama</value>
+  </data>
+  <data name="SelectSorting" xml:space="preserve">
+    <value>Sıralama Seçin</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Uygula</value>
+  </data>
+  <data name="NoProductsFound" xml:space="preserve">
+    <value>Arama kriterlerinize uygun ürün bulunamadı</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>ÜCRETSİZ</value>
   </data>
 </root>

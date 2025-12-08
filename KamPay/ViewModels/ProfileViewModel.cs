@@ -375,12 +375,12 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     {
         var action = await Application.Current.MainPage.DisplayActionSheet(
             Res["SelectLanguage"],
+            Res["Cancel"],
             null,
-            null,
-            "English",
-            "Türkçe");
+            "Türkçe",
+            "English");
 
-        if (string.IsNullOrEmpty(action))
+        if (string.IsNullOrEmpty(action) || action == Res["Cancel"])
             return;
 
         var cultureCode = action switch
@@ -390,7 +390,13 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             _ => "tr"
         };
 
-        Services.LocalizationResourceManager.Instance.SetCulture(cultureCode);
+        LocalizationResourceManager.Instance.SetCulture(cultureCode);
+        
+        // Kullanıcıya bilgi ver
+        await Application.Current.MainPage.DisplayAlert(
+            Res["Success"],
+            Res["LanguageChanged"],
+            Res["Ok"]);
     }
 
     [RelayCommand]

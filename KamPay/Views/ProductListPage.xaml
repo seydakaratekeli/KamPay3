@@ -4,7 +4,9 @@
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
+              xmlns:local="clr-namespace:KamPay.Services"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+          
              x:DataType="vm:ProductListViewModel"
              x:Class="KamPay.Views.ProductListPage"
              Shell.NavBarIsVisible="False"
@@ -86,7 +88,8 @@
                         <Label Text="🔍" VerticalOptions="Center" Opacity="0.5" FontSize="16"/>
                         <Entry Grid.Column="1"
                                Text="{Binding SearchText}"
-                               Placeholder="Ne arıyorsunuz?"
+                               Placeholder="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[SearchProducts]}"
+
                                FontSize="14"
                                TextColor="{StaticResource TextPrimary}"
                                PlaceholderColor="{StaticResource TextSecondary}"
@@ -97,7 +100,7 @@
                 </Border>
 
                 <Button Grid.Column="1" 
-                        Text="Filtrele"
+                        Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Filter]}"
                         ImageSource="{FontImage Glyph='🔽', Color=White, Size=14}"
                         ContentLayout="Right,8"
                         FontSize="13"
@@ -395,7 +398,10 @@
                 <VerticalStackLayout Spacing="20">
                     <!-- Panel Başlığı -->
                     <Grid>
-                        <Label Text="Filtrele ve Sırala" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[FilterAndSort]}" 
+                               FontSize="20" 
+                               FontAttributes="Bold" 
+                               HorizontalOptions="Center"/>
                         <Button Text="✕" 
                                 Command="{Binding ToggleFilterPanelCommand}"
                                 HorizontalOptions="End" 
@@ -410,10 +416,15 @@
 
                     <!-- Ürün Tipi Filtresi -->
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Ürün Tipi" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[ProductType]}" 
+                               FontAttributes="Bold" 
+                               TextColor="{StaticResource TextPrimary}" />
                         <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
                             <!-- Helper style for buttons can be added globally, keeping inline for safety -->
-                            <Button Text="Tümü" Grid.Column="0" Command="{Binding SetProductTypeCommand}" CommandParameter="" 
+                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[All]}" 
+                                    Grid.Column="0" 
+                                    Command="{Binding SetProductTypeCommand}" 
+                                    CommandParameter="" 
                                     HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
@@ -428,7 +439,10 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="Satılık" Grid.Column="1" Command="{Binding SetProductTypeCommand}" CommandParameter="Satis" 
+                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[ForSale]}" 
+                                    Grid.Column="1" 
+                                    Command="{Binding SetProductTypeCommand}" 
+                                    CommandParameter="Satis" 
                                     HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Satis">
@@ -439,7 +453,10 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="Bağış" Grid.Column="2" Command="{Binding SetProductTypeCommand}" CommandParameter="Bagis" 
+                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Donation]}" 
+                                    Grid.Column="2" 
+                                    Command="{Binding SetProductTypeCommand}" 
+                                    CommandParameter="Bagis" 
                                     HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
@@ -450,7 +467,10 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="Takas" Grid.Column="3" Command="{Binding SetProductTypeCommand}" CommandParameter="Takas" 
+                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Exchange]}" 
+                                    Grid.Column="3" 
+                                    Command="{Binding SetProductTypeCommand}" 
+                                    CommandParameter="Takas" 
                                     HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Takas">
@@ -465,9 +485,11 @@
 
                     <!-- Sıralama -->
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Sıralama" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Sorting]}" 
+                               FontAttributes="Bold" 
+                               TextColor="{StaticResource TextPrimary}" />
                         <Border StrokeShape="RoundRectangle 10" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="10,0">
-                            <Picker Title="Sıralama Seçin" 
+                            <Picker Title="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[SelectSorting]}" 
                                     ItemsSource="{Binding SortOptions}"
                                     SelectedItem="{Binding SelectedSortOption}"
                                     TextColor="{StaticResource TextPrimary}"
@@ -481,7 +503,7 @@
 
                     <!-- Aksiyon Butonları -->
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
-                        <Button Text="Temizle" 
+                        <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Clear]}" 
                                 Grid.Column="0"
                                 BackgroundColor="White" 
                                 TextColor="{StaticResource TextSecondary}" 
@@ -492,7 +514,7 @@
                                 FontAttributes="Bold"
                                 Command="{Binding ClearFiltersCommand}"/>
 
-                        <Button Text="Uygula" 
+                        <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Apply]}" 
                                 Grid.Column="1"
                                 BackgroundColor="{StaticResource Primary}" 
                                 TextColor="White" 
