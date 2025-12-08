@@ -8,7 +8,14 @@
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="False">
 
-    <TabBar>
+    <!-- Login Page - Giriş ekranı için ayrı route -->
+    <ShellContent
+        Route="LoginPage"
+        ContentTemplate="{DataTemplate local:LoginPage}"
+        Shell.FlyoutBehavior="Disabled" />
+
+    <!-- Main App - Ana uygulama TabBar -->
+    <TabBar Route="MainApp">
         <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Home]}" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>

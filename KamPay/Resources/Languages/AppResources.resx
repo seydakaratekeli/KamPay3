@@ -63,6 +63,9 @@
   <data name="HomePage" xml:space="preserve">
     <value>Ana Sayfa</value>
   </data>
+  <data name="Home" xml:space="preserve">
+    <value>Ana Sayfa</value>
+  </data>
   <data name="Board" xml:space="preserve">
     <value>Pano</value>
   </data>
@@ -71,6 +74,9 @@
   </data>
   <data name="Service" xml:space="preserve">
     <value>Hizmet</value>
+  </data>
+  <data name="Services" xml:space="preserve">
+    <value>Hizmetler</value>
   </data>
   <data name="Profile" xml:space="preserve">
     <value>Profil</value>
