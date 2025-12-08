@@ -10,16 +10,21 @@ namespace KamPay
 
             MainPage = appShell;
 
-            // Token kontrolü ile akıllı yönlendirme
+            // Smart navigation based on token validation
             var token = Preferences.Get("auth_token", string.Empty);
-            if (string.IsNullOrEmpty(token))
+            
+            // Use Dispatcher to ensure navigation happens on the UI thread after initialization
+            Dispatcher.Dispatch(async () =>
             {
-                Shell.Current.GoToAsync("//LoginPage");
-            }
-            else
-            {
-                Shell.Current.GoToAsync("//MainApp");
-            }
+                if (string.IsNullOrEmpty(token))
+                {
+                    await Shell.Current.GoToAsync("//LoginPage");
+                }
+                else
+                {
+                    await Shell.Current.GoToAsync("//MainApp");
+                }
+            });
         }
         protected override void OnStart()
         {
