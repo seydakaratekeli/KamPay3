@@ -60,6 +60,9 @@
   </resheader>
   
   <!-- Tab Bar Items -->
+  <data name="Home" xml:space="preserve">
+    <value>Ana Sayfa</value>
+  </data>
   <data name="HomePage" xml:space="preserve">
     <value>Ana Sayfa</value>
   </data>

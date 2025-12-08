@@ -10,8 +10,16 @@ namespace KamPay
 
             MainPage = appShell;
 
-           Shell.Current.GoToAsync("//LoginPage");
-
+            // Token kontrolü ile akıllı yönlendirme
+            var token = Preferences.Get("auth_token", string.Empty);
+            if (string.IsNullOrEmpty(token))
+            {
+                Shell.Current.GoToAsync("//LoginPage");
+            }
+            else
+            {
+                Shell.Current.GoToAsync("//MainApp");
+            }
         }
         protected override void OnStart()
         {
