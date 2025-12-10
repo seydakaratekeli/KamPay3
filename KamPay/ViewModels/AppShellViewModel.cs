@@ -19,11 +19,27 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool hasUnreadMessages;
 
+        // Tab titles for localization - will be updated when language changes
+        [ObservableProperty]
+        private string homeTitle = string.Empty;
+
+        [ObservableProperty]
+        private string servicesTitle = string.Empty;
+
+        [ObservableProperty]
+        private string goodDeedBoardTitle = string.Empty;
+
+        [ObservableProperty]
+        private string messagesTitle = string.Empty;
+
+        [ObservableProperty]
+        private string profileTitle = string.Empty;
+
         private readonly IAuthenticationService _authService;
         private readonly IMessagingService _messagingService;
         private IDisposable? _messageSubscription;
 
-        // FirebaseClient'ı her seferinde yeniden oluşturmak yerine bir kere oluşturup kullanmak daha verimlidir.
+        // FirebaseClient'Ä± her seferinde yeniden oluÅŸturmak yerine bir kere oluÅŸturup kullanmak daha verimlidir.
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
 
@@ -32,27 +48,36 @@ namespace KamPay.ViewModels
             _authService = authService;
             _messagingService = messagingService;
 
+            // Initialize tab titles with current language
+            UpdateTabTitles();
+
             // Genel bildirimleri dinle
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) =>
             {
                 HasUnreadNotifications = m.Value;
             });
 
-            // Mesaj bildirimlerini dinle (Bu mesaj şu anki kodda kullanılmıyor, ancak gelecekte kullanılabilir)
+            // Mesaj bildirimlerini dinle (Bu mesaj ÅŸu anki kodda kullanÄ±lmÄ±yor, ancak gelecekte kullanÄ±labilir)
             WeakReferenceMessenger.Default.Register<UnreadMessageStatusMessage>(this, (r, m) =>
             {
                 HasUnreadMessages = m.Value;
             });
 
-            // GÜNCELLENDİ: Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
+            // Language change message listener
+            WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
+            {
+                UpdateTabTitles();
+            });
+
+            // GÃœNCELLENDÄ°: KullanÄ±cÄ± giriÅŸ / Ã§Ä±kÄ±ÅŸ yaptÄ±ÄŸÄ±nda asenkron olarak tepki ver
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, async (r, m) =>
             {
-                if (m.Value) // Giriş yapıldı
+                if (m.Value) // GiriÅŸ yapÄ±ldÄ±
                 {
-                    // Artık metodu güvenle 'await' edebiliriz
+                    // ArtÄ±k metodu gÃ¼venle 'await' edebiliriz
                     await StartListeningForMessagesAsync();
                 }
-                else // Çıkış yapıldı
+                else // Ã‡Ä±kÄ±ÅŸ yapÄ±ldÄ±
                 {
                     StopListeningForMessages();
                     HasUnreadMessages = false;
@@ -60,22 +85,32 @@ namespace KamPay.ViewModels
             });
         }
 
-        // GÜNCELLENDİ: Metodun imzası async Task olarak değiştirildi
+        private void UpdateTabTitles()
+        {
+            var res = LocalizationResourceManager.Instance;
+            HomeTitle = res["Home"];
+            ServicesTitle = res["Services"];
+            GoodDeedBoardTitle = res["GoodDeedBoard"];
+            MessagesTitle = res["Messages"];
+            ProfileTitle = res["Profile"];
+        }
+
+        // GÃœNCELLENDÄ°: Metodun imzasÄ± async Task olarak deÄŸiÅŸtirildi
         private async Task StartListeningForMessagesAsync()
         {
-            StopListeningForMessages(); // Önceki dinleyiciyi durdur
+            StopListeningForMessages(); // Ã–nceki dinleyiciyi durdur
 
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null) return;
 
-            // Uygulama açıldığında ilk kontrolü yap
+            // Uygulama aÃ§Ä±ldÄ±ÄŸÄ±nda ilk kontrol yapÄ± yap
             var initialCheckResult = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
             if (initialCheckResult.Success)
             {
                 HasUnreadMessages = initialCheckResult.Data > 0;
             }
 
-            // Gerçek zamanlı dinleyiciyi başlat
+            // GerÃ§ek zamanlÄ± dinleyiciyi baÅŸlat
             _messageSubscription = _firebaseClient
                 .Child(Constants.ConversationsCollection)
                 .AsObservable<Conversation>()
@@ -84,7 +119,7 @@ namespace KamPay.ViewModels
                              (e.Object.User1Id == currentUser.UserId || e.Object.User2Id == currentUser.UserId))
                 .Subscribe(async entry =>
                 {
-                    // Kullanıcıya ait bir konuşma güncellendiğinde, toplam okunmamış sayısını yeniden kontrol et
+                    // KullanÄ±cÄ±ya ait bir konuÅŸma gÃ¼ncellendiÄŸinde, toplam okunmamÄ±ÅŸ sayÄ±sÄ±nÄ± yeniden kontrol et
                     var result = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
                     if (result.Success)
                     {
@@ -110,9 +145,9 @@ namespace KamPay.ViewModels
         }
     }
 
-    // --- Mesaj Sınıfları ---
-    // Bu sınıfların ayrı bir dosyada olması daha temiz bir yapı sağlar,
-    // ancak şimdilik burada kalabilirler.
+    // --- Mesaj SÄ±nÄ±flarÄ± ---
+    // Bu sÄ±nÄ±flarÄ±n ayrÄ± bir dosyada olmasÄ± daha temiz bir yapÄ± saÄŸlar,
+    // ancak ÅŸimdilik burada kalabilirler.
 
     public class UnreadGeneralNotificationStatusMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<bool>
     {

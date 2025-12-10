@@ -4,7 +4,9 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:KamPay.Views"
+    xmlns:vm="clr-namespace:KamPay.ViewModels"
     xmlns:services="clr-namespace:KamPay.Services"
+    x:DataType="vm:AppShellViewModel"
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="False">
 
@@ -16,23 +18,23 @@
 
     <!-- Main App - Ana uygulama TabBar -->
     <TabBar Route="MainApp">
-        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Home]}" Icon="home_icon.svg">
+        <Tab Title="{Binding HomeTitle}" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Services]}" Icon="service_icon.svg">
+        <Tab Title="{Binding ServicesTitle}" Icon="service_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[GoodDeedBoard]}" Icon="gooddeed_icon.svg">
+        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="gooddeed_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Messages]}" Icon="messages_icon.svg">
+        <Tab Title="{Binding MessagesTitle}" Icon="messages_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Profile]}" Icon="profile_icon.svg">
+        <Tab Title="{Binding ProfileTitle}" Icon="profile_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
         </Tab>
     </TabBar>
