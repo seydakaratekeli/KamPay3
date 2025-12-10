@@ -39,7 +39,7 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private IDisposable? _messageSubscription;
 
-        // FirebaseClient'ı her seferinde yeniden oluşturmak yerine bir kere oluşturup kullanmak daha verimlidir.
+        // FirebaseClient'� her seferinde yeniden olu�turmak yerine bir kere olu�turup kullanmak daha verimlidir.
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
 
@@ -48,36 +48,27 @@ namespace KamPay.ViewModels
             _authService = authService;
             _messagingService = messagingService;
 
-            // Initialize tab titles with current language
-            UpdateTabTitles();
-
             // Genel bildirimleri dinle
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) =>
             {
                 HasUnreadNotifications = m.Value;
             });
 
-            // Mesaj bildirimlerini dinle (Bu mesaj şu anki kodda kullanılmıyor, ancak gelecekte kullanılabilir)
+            // Mesaj bildirimlerini dinle (Bu mesaj �u anki kodda kullan�lm�yor, ancak gelecekte kullan�labilir)
             WeakReferenceMessenger.Default.Register<UnreadMessageStatusMessage>(this, (r, m) =>
             {
                 HasUnreadMessages = m.Value;
             });
 
-            // Language change message listener
-            WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
-            {
-                UpdateTabTitles();
-            });
-
-            // GÜNCELLENDİ: Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
+            // G�NCELLEND�: Kullan�c� giri� / ��k�� yapt���nda asenkron olarak tepki ver
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, async (r, m) =>
             {
-                if (m.Value) // Giriş yapıldı
+                if (m.Value) // Giri� yap�ld�
                 {
-                    // Artık metodu güvenle 'await' edebiliriz
+                    // Art�k metodu g�venle 'await' edebiliriz
                     await StartListeningForMessagesAsync();
                 }
-                else // Çıkış yapıldı
+                else // ��k�� yap�ld�
                 {
                     StopListeningForMessages();
                     HasUnreadMessages = false;
@@ -85,32 +76,22 @@ namespace KamPay.ViewModels
             });
         }
 
-        private void UpdateTabTitles()
-        {
-            var res = LocalizationResourceManager.Instance;
-            HomeTitle = res["Home"];
-            ServicesTitle = res["Services"];
-            GoodDeedBoardTitle = res["GoodDeedBoard"];
-            MessagesTitle = res["Messages"];
-            ProfileTitle = res["Profile"];
-        }
-
-        // GÜNCELLENDİ: Metodun imzası async Task olarak değiştirildi
+        // G�NCELLEND�: Metodun imzas� async Task olarak de�i�tirildi
         private async Task StartListeningForMessagesAsync()
         {
-            StopListeningForMessages(); // Önceki dinleyiciyi durdur
+            StopListeningForMessages(); // �nceki dinleyiciyi durdur
 
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null) return;
 
-            // Uygulama açıldığında ilk kontrol yapı yap
+            // Uygulama a��ld���nda ilk kontrol� yap
             var initialCheckResult = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
             if (initialCheckResult.Success)
             {
                 HasUnreadMessages = initialCheckResult.Data > 0;
             }
 
-            // Gerçek zamanlı dinleyiciyi başlat
+            // Ger�ek zamanl� dinleyiciyi ba�lat
             _messageSubscription = _firebaseClient
                 .Child(Constants.ConversationsCollection)
                 .AsObservable<Conversation>()
@@ -119,7 +100,7 @@ namespace KamPay.ViewModels
                              (e.Object.User1Id == currentUser.UserId || e.Object.User2Id == currentUser.UserId))
                 .Subscribe(async entry =>
                 {
-                    // Kullanıcıya ait bir konuşma güncellendiğinde, toplam okunmamış sayısını yeniden kontrol et
+                    // Kullan�c�ya ait bir konu�ma g�ncellendi�inde, toplam okunmam�� say�s�n� yeniden kontrol et
                     var result = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
                     if (result.Success)
                     {
@@ -145,9 +126,9 @@ namespace KamPay.ViewModels
         }
     }
 
-    // --- Mesaj Sınıfları ---
-    // Bu sınıfların ayrı bir dosyada olması daha temiz bir yapı sağlar,
-    // ancak şimdilik burada kalabilirler.
+    // --- Mesaj S�n�flar� ---
+    // Bu s�n�flar�n ayr� bir dosyada olmas� daha temiz bir yap� sa�lar,
+    // ancak �imdilik burada kalabilirler.
 
     public class UnreadGeneralNotificationStatusMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<bool>
     {
