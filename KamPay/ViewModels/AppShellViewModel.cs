@@ -21,19 +21,19 @@ namespace KamPay.ViewModels
 
         // Tab titles for localization - will be updated when language changes
         [ObservableProperty]
-        private string homeTitle;
+        private string homeTitle = string.Empty;
 
         [ObservableProperty]
-        private string servicesTitle;
+        private string servicesTitle = string.Empty;
 
         [ObservableProperty]
-        private string goodDeedBoardTitle;
+        private string goodDeedBoardTitle = string.Empty;
 
         [ObservableProperty]
-        private string messagesTitle;
+        private string messagesTitle = string.Empty;
 
         [ObservableProperty]
-        private string profileTitle;
+        private string profileTitle = string.Empty;
 
         private readonly IAuthenticationService _authService;
         private readonly IMessagingService _messagingService;
