@@ -28,14 +28,15 @@ namespace KamPay.ViewModels
         // Cache ve Durum Kontrolü
         private readonly HashSet<string> _incomingIds = new();
         private readonly HashSet<string> _outgoingIds = new();
-        private bool _incomingInitialLoadComplete = false;
-        private bool _outgoingInitialLoadComplete = false;
+        private bool _initialLoadComplete = false;
 
         // Yükleme kontrolü
         private bool _isInitialized = false;
-
-        // 🔥 DÜZELTME 1: Kullanıcı ID'sini saklamak için değişken ekledik
         private string _currentUserId;
+        
+        // 🔥 YENİ: Timeout kontrolü için CancellationTokenSource
+        private CancellationTokenSource _loadingTimeoutCts;
+        private const int LoadingTimeoutMs = 5000; // 5 saniye timeout
 
         public ObservableCollection<Transaction> IncomingOffers { get; } = new();
         public ObservableCollection<Transaction> OutgoingOffers { get; } = new();
@@ -52,9 +53,16 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isOutgoingSelected = false;
 
-        // Boş durum mesajı
+        // 🔥 YENİ: Skeleton loader kontrolü
         [ObservableProperty]
-        private string emptyMessage = "Teklifler yükleniyor...";
+        private bool isSkeletonVisible = true;
+
+        // 🔥 YENİ: Veri var mı kontrolü (empty message için)
+        [ObservableProperty]
+        private bool hasIncomingOffers = false;
+
+        [ObservableProperty]
+        private bool hasOutgoingOffers = false;
 
         public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService, IUserStateService userStateService)
         {
@@ -73,7 +81,6 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 // Gelen tekliflerdeki kullanıcı bilgilerini güncelle (alıcı bilgisi)
@@ -95,42 +102,61 @@ namespace KamPay.ViewModels
             if (_isInitialized) return;
 
             IsLoading = true;
-            EmptyMessage = "Teklifler yükleniyor...";
+            IsSkeletonVisible = true;
 
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
                 IsLoading = false;
-                EmptyMessage = "Giriş yapmalısınız.";
+                IsSkeletonVisible = false;
+                UpdateHasOffers();
+                Debug.WriteLine("⚠️ Kullanıcı oturum açmamış");
                 return;
             }
 
-            // 🔥 DÜZELTME 2: Kullanıcı ID'sini kaydet
             _currentUserId = currentUser.UserId;
-
             StartListeningForOffers(_currentUserId);
             _isInitialized = true;
-
-            // GÜVENLİK: 3 Saniye içinde veri gelmezse loading'i kapat
-            await Task.Delay(3000);
-            if (IsLoading)
-            {
-                IsLoading = false;
-                UpdateEmptyMessage();
-            }
         }
 
         private void StartListeningForOffers(string userId)
         {
             if (_allOffersSubscription != null) return;
 
-            Console.WriteLine($"🔥 Offers listener başlatılıyor: {userId}");
+            Debug.WriteLine($"🔥 Offers listener başlatılıyor: {userId}");
 
+            // 🔥 YENİ: Timeout mekanizması
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts?.Dispose();
+            _loadingTimeoutCts = new CancellationTokenSource();
+            var timeoutToken = _loadingTimeoutCts.Token;
+
+            // 🔥 YENİ: Snapshot ile hızlı ilk yükleme
+            _ = LoadInitialSnapshotAsync(userId, timeoutToken);
+
+            // 🔥 YENİ: Loading timeout - belirlenen süre içinde veri gelmezse loading'i kapat
+            Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
+            {
+                if (t.IsCanceled) return;
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!_initialLoadComplete)
+                    {
+                        Debug.WriteLine("⏳ Loading timeout - veri gelmedi.");
+                        IsLoading = false;
+                        IsSkeletonVisible = false;
+                        UpdateHasOffers();
+                    }
+                });
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+
+            // 🔥 Realtime listener
             _allOffersSubscription = _firebaseClient
                 .Child(Constants.TransactionsCollection)
                 .AsObservable<Transaction>()
                 .Where(e => e.Object != null)
-                .Buffer(TimeSpan.FromMilliseconds(300))
+                .Buffer(TimeSpan.FromMilliseconds(400))
                 .Where(batch => batch.Any())
                 .Subscribe(
                     events =>
@@ -139,28 +165,130 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
+                                // Veri geldi → timeout'u iptal et
+                                _loadingTimeoutCts?.Cancel();
+
                                 ProcessOfferBatch(events, userId);
+
+                                // 🔥 SADECE GERÇEK VERİ GELİNCE loading kapat
+                                if (!_initialLoadComplete && ContainsRealOffer(events, userId))
+                                {
+                                    _initialLoadComplete = true;
+                                    IsLoading = false;
+                                    IsSkeletonVisible = false;
+                                    Debug.WriteLine("✅ İlk gerçek realtime offer geldi — loading kapatıldı.");
+                                }
+
+                                UpdateHasOffers();
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"❌ Offer batch hatası: {ex.Message}");
-                            }
-                            finally
-                            {
-                                IsLoading = false;
-                                UpdateEmptyMessage();
+                                Debug.WriteLine($"❌ Offer batch hatası: {ex.Message}");
                             }
                         });
                     },
                     error =>
                     {
-                        Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
+                        Debug.WriteLine($"❌ Firebase listener hatası: {error.Message}");
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             IsLoading = false;
-                            EmptyMessage = "Bağlantı hatası.";
+                            IsSkeletonVisible = false;
+                            UpdateHasOffers();
                         });
                     });
+        }
+
+        // 🔥 YENİ: Snapshot ile hızlı ilk yükleme
+        private async Task LoadInitialSnapshotAsync(string userId, CancellationToken token)
+        {
+            try
+            {
+                if (token.IsCancellationRequested) return;
+
+                Debug.WriteLine("📸 Snapshot yükleniyor...");
+
+                var snapshot = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .OnceAsync<Transaction>();
+
+                if (token.IsCancellationRequested) return;
+
+                var userOffers = snapshot
+                    .Where(s => s.Object != null && 
+                               (s.Object.SellerId == userId || s.Object.BuyerId == userId))
+                    .Select(s =>
+                    {
+                        var transaction = s.Object;
+                        transaction.TransactionId = s.Key;
+                        return transaction;
+                    })
+                    .OrderByDescending(t => t.CreatedAt)
+                    .ToList();
+
+                if (!userOffers.Any())
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        if (!_initialLoadComplete)
+                        {
+                            _initialLoadComplete = true;
+                            IsLoading = false;
+                            IsSkeletonVisible = false;
+                            UpdateHasOffers();
+                            Debug.WriteLine("✅ Snapshot yüklendi — teklif yok.");
+                        }
+                    });
+                    return;
+                }
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    foreach (var transaction in userOffers)
+                    {
+                        if (transaction.SellerId == userId)
+                        {
+                            if (!_incomingIds.Contains(transaction.TransactionId))
+                            {
+                                IncomingOffers.Add(transaction);
+                                _incomingIds.Add(transaction.TransactionId);
+                            }
+                        }
+                        else if (transaction.BuyerId == userId)
+                        {
+                            if (!_outgoingIds.Contains(transaction.TransactionId))
+                            {
+                                OutgoingOffers.Add(transaction);
+                                _outgoingIds.Add(transaction.TransactionId);
+                            }
+                        }
+                    }
+
+                    if (!_initialLoadComplete)
+                    {
+                        _initialLoadComplete = true;
+                        IsLoading = false;
+                        IsSkeletonVisible = false;
+                        UpdateHasOffers();
+                        Debug.WriteLine($"✅ Snapshot yüklendi — {userOffers.Count} teklif bulundu.");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
+            }
+        }
+
+        // 🔥 YENİ: Gerçek teklif geldi mi kontrol et
+        private bool ContainsRealOffer(IList<FirebaseEvent<Transaction>> events, string userId)
+        {
+            return events.Any(e =>
+                e.Object != null &&
+                !string.IsNullOrWhiteSpace(e.Key) &&
+                !string.IsNullOrWhiteSpace(e.Object?.TransactionId) &&
+                (e.Object.SellerId == userId || e.Object.BuyerId == userId)
+            );
         }
 
         private void ProcessOfferBatch(IList<FirebaseEvent<Transaction>> events, string userId)
@@ -175,6 +303,10 @@ namespace KamPay.ViewModels
                 var transaction = e.Object;
                 transaction.TransactionId = e.Key;
 
+                // Sadece ilgili kullanıcıya ait teklifleri işle
+                if (transaction.SellerId != userId && transaction.BuyerId != userId)
+                    continue;
+
                 if (transaction.SellerId == userId)
                 {
                     if (UpdateOfferInCollection(IncomingOffers, _incomingIds, transaction, e.EventType))
@@ -187,15 +319,10 @@ namespace KamPay.ViewModels
                 }
             }
 
-            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
-            if ((hasIncomingChanges || hasOutgoingChanges) && IsLoading)
-            {
-                IsLoading = false;
-            }
-
             if (hasIncomingChanges) SortOffersInPlace(IncomingOffers);
             if (hasOutgoingChanges) SortOffersInPlace(OutgoingOffers);
         }
+
         private bool UpdateOfferInCollection(ObservableCollection<Transaction> collection, HashSet<string> idTracker, Transaction transaction, FirebaseEventType eventType)
         {
             var existing = collection.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
@@ -239,49 +366,53 @@ namespace KamPay.ViewModels
             }
         }
 
-        private void UpdateEmptyMessage()
+        // 🔥 YENİ: Veri durumunu güncelle
+        private void UpdateHasOffers()
         {
-            if (IsIncomingSelected)
-            {
-                EmptyMessage = IncomingOffers.Any() ? string.Empty : "Henüz gelen bir teklif yok.";
-            }
-            else
-            {
-                EmptyMessage = OutgoingOffers.Any() ? string.Empty : "Henüz yaptığınız bir teklif yok.";
-            }
+            HasIncomingOffers = IncomingOffers.Any();
+            HasOutgoingOffers = OutgoingOffers.Any();
+            Debug.WriteLine($"📊 UpdateHasOffers: Gelen={IncomingOffers.Count} (HasIncoming={HasIncomingOffers}), Giden={OutgoingOffers.Count} (HasOutgoing={HasOutgoingOffers})");
         }
 
         [RelayCommand]
         private async Task RefreshOffersAsync()
         {
             if (IsRefreshing) return;
+            
             try
             {
                 IsRefreshing = true;
+                
+                // Listener'ı durdur
                 _allOffersSubscription?.Dispose();
                 _allOffersSubscription = null;
+                
+                // Cache'i temizle
                 _incomingIds.Clear();
                 _outgoingIds.Clear();
-
                 IncomingOffers.Clear();
                 OutgoingOffers.Clear();
 
+                _initialLoadComplete = false;
                 _isInitialized = false;
+
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser != null)
                 {
-                    _currentUserId = currentUser.UserId; // ID'yi güncelle
+                    _currentUserId = currentUser.UserId;
                     StartListeningForOffers(currentUser.UserId);
                 }
 
                 await Task.Delay(500);
-                UpdateEmptyMessage();
             }
-            catch (Exception ex) { Console.WriteLine($"❌ Refresh hatası: {ex.Message}"); }
+            catch (Exception ex) 
+            { 
+                Debug.WriteLine($"❌ Refresh hatası: {ex.Message}"); 
+            }
             finally
             {
                 IsRefreshing = false;
-                IsLoading = false;
+                UpdateHasOffers();
             }
         }
 
@@ -290,7 +421,6 @@ namespace KamPay.ViewModels
         {
             IsIncomingSelected = true;
             IsOutgoingSelected = false;
-            UpdateEmptyMessage();
         }
 
         [RelayCommand]
@@ -298,7 +428,6 @@ namespace KamPay.ViewModels
         {
             IsIncomingSelected = false;
             IsOutgoingSelected = true;
-            UpdateEmptyMessage();
         }
 
         [RelayCommand]
@@ -320,10 +449,15 @@ namespace KamPay.ViewModels
             try
             {
                 var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
-                if (result.Success) await Application.Current.MainPage.DisplayAlert("Başarılı", $"Teklif {(accept ? "kabul edildi" : "reddedildi")}.", "Tamam");
-                else await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                if (result.Success) 
+                    await Application.Current.MainPage.DisplayAlert("Başarılı", $"Teklif {(accept ? "kabul edildi" : "reddedildi")}.", "Tamam");
+                else 
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
             }
-            catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); }
+            catch (Exception ex) 
+            { 
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); 
+            }
         }
 
         [RelayCommand]
@@ -354,13 +488,21 @@ namespace KamPay.ViewModels
                     if (currentUser != null)
                     {
                         var result = await firebaseService.CompletePaymentAsync(transaction.TransactionId, currentUser.UserId);
-                        if (result.Success) await Application.Current.MainPage.DisplayAlert("Başarılı", "Ödeme tamamlandı.", "Tamam");
-                        else await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        if (result.Success) 
+                            await Application.Current.MainPage.DisplayAlert("Başarılı", "Ödeme tamamlandı.", "Tamam");
+                        else 
+                            await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }
             }
-            catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); }
-            finally { IsLoading = false; }
+            catch (Exception ex) 
+            { 
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); 
+            }
+            finally 
+            { 
+                IsLoading = false; 
+            }
         }
 
         [RelayCommand]
@@ -384,38 +526,51 @@ namespace KamPay.ViewModels
                     if (currentUser != null)
                     {
                         var result = await firebaseService.ConfirmDonationAsync(transaction.TransactionId, currentUser.UserId);
-                        if (result.Success) await Application.Current.MainPage.DisplayAlert("Başarılı", "Bağış alındı.", "Tamam");
-                        else await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        if (result.Success) 
+                            await Application.Current.MainPage.DisplayAlert("Başarılı", "Bağış alındı.", "Tamam");
+                        else 
+                            await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }
             }
-            catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); }
-            finally { IsLoading = false; }
+            catch (Exception ex) 
+            { 
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); 
+            }
+            finally 
+            { 
+                IsLoading = false; 
+            }
         }
 
         public void StopListening()
         {
+            Debug.WriteLine("🛑 Offers listener durduruluyor...");
+            _loadingTimeoutCts?.Cancel();
             _allOffersSubscription?.Dispose();
             _allOffersSubscription = null;
         }
 
-        // 🔥 DÜZELTME 3: ResumeListening artık _currentUserId kullanıyor
         public void ResumeListening()
         {
             if (_allOffersSubscription == null && !string.IsNullOrEmpty(_currentUserId))
             {
+                Debug.WriteLine("▶️ Offers listener devam ediyor...");
                 StartListeningForOffers(_currentUserId);
             }
         }
 
         public void Dispose()
         {
-            Console.WriteLine("🧹 OffersViewModel dispose ediliyor...");
+            Debug.WriteLine("🧹 OffersViewModel dispose ediliyor...");
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts?.Dispose();
             _allOffersSubscription?.Dispose();
             _allOffersSubscription = null;
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
             _incomingIds.Clear();
             _outgoingIds.Clear();
+            _initialLoadComplete = false;
             _isInitialized = false;
         }
     }

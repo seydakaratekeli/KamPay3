@@ -37,7 +37,6 @@
                     BorderColor="{StaticResource Primary}"
                     BorderWidth="2">
                 <Button.Triggers>
-
                     <DataTrigger TargetType="Button"
                                  Binding="{Binding IsIncomingSelected}"
                                  Value="True">
@@ -51,7 +50,6 @@
                         <Setter Property="BackgroundColor" Value="White" />
                         <Setter Property="TextColor" Value="{StaticResource Primary}" />
                     </DataTrigger>
-
                 </Button.Triggers>
             </Button>
 
@@ -66,7 +64,6 @@
                     BorderColor="{StaticResource Primary}"
                     BorderWidth="2">
                 <Button.Triggers>
-
                     <DataTrigger TargetType="Button"
                                  Binding="{Binding IsOutgoingSelected}"
                                  Value="True">
@@ -80,7 +77,6 @@
                         <Setter Property="BackgroundColor" Value="White" />
                         <Setter Property="TextColor" Value="{StaticResource Primary}" />
                     </DataTrigger>
-
                 </Button.Triggers>
             </Button>
         </Grid>
@@ -88,11 +84,76 @@
         <!-- ANA İÇERİK -->
         <Grid Grid.Row="1">
 
-            <!-- RefreshView: Yükleme bitince görünür -->
+            <!-- 🔥 1. SKELETON LOADER (İlk yükleme - En üstte) -->
+            <ScrollView IsVisible="{Binding IsSkeletonVisible}">
+                <VerticalStackLayout Padding="15" Spacing="12">
+                    <!-- Skeleton Item 1 -->
+                    <Frame CornerRadius="15" 
+                           Padding="12" 
+                           HasShadow="False" 
+                           BackgroundColor="White"
+                           BorderColor="{StaticResource Gray200}">
+                        <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
+                            <BoxView Grid.Column="0" 
+                                     WidthRequest="80" 
+                                     HeightRequest="80" 
+                                     CornerRadius="10"
+                                     BackgroundColor="{StaticResource Gray200}"/>
+                            <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                <BoxView HeightRequest="20" CornerRadius="4" BackgroundColor="{StaticResource Gray200}"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="150" HorizontalOptions="Start"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="200" HorizontalOptions="Start"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Frame>
+
+                    <!-- Skeleton Item 2 -->
+                    <Frame CornerRadius="15" 
+                           Padding="12" 
+                           HasShadow="False" 
+                           BackgroundColor="White"
+                           BorderColor="{StaticResource Gray200}">
+                        <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
+                            <BoxView Grid.Column="0" 
+                                     WidthRequest="80" 
+                                     HeightRequest="80" 
+                                     CornerRadius="10"
+                                     BackgroundColor="{StaticResource Gray200}"/>
+                            <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                <BoxView HeightRequest="20" CornerRadius="4" BackgroundColor="{StaticResource Gray200}"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="150" HorizontalOptions="Start"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="200" HorizontalOptions="Start"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Frame>
+
+                    <!-- Skeleton Item 3 -->
+                    <Frame CornerRadius="15" 
+                           Padding="12" 
+                           HasShadow="False" 
+                           BackgroundColor="White"
+                           BorderColor="{StaticResource Gray200}">
+                        <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
+                            <BoxView Grid.Column="0" 
+                                     WidthRequest="80" 
+                                     HeightRequest="80" 
+                                     CornerRadius="10"
+                                     BackgroundColor="{StaticResource Gray200}"/>
+                            <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                <BoxView HeightRequest="20" CornerRadius="4" BackgroundColor="{StaticResource Gray200}"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="150" HorizontalOptions="Start"/>
+                                <BoxView HeightRequest="16" CornerRadius="4" BackgroundColor="{StaticResource Gray300}" WidthRequest="200" HorizontalOptions="Start"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Frame>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- 🔥 2. NORMAL İÇERİK (Skeleton kapandıktan sonra) -->
             <RefreshView Command="{Binding RefreshOffersCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}"
-                         IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                         IsVisible="{Binding IsSkeletonVisible, Converter={StaticResource InvertedBoolConverter}}">
 
                 <Grid>
 
@@ -102,7 +163,11 @@
                                     Margin="10">
 
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="30">
+                            <VerticalStackLayout VerticalOptions="Center" 
+                                                 HorizontalOptions="Center" 
+                                                 Spacing="10" 
+                                                 Padding="30"
+                                                 IsVisible="{Binding HasIncomingOffers, Converter={StaticResource InvertedBoolConverter}}">
                                 <Label Text="📥" FontSize="50" HorizontalTextAlignment="Center"/>
                                 <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingOffers]}"
                                        TextColor="{StaticResource Gray600}"
@@ -224,7 +289,11 @@
                                     Margin="10">
 
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="30">
+                            <VerticalStackLayout VerticalOptions="Center" 
+                                                 HorizontalOptions="Center" 
+                                                 Spacing="10" 
+                                                 Padding="30"
+                                                 IsVisible="{Binding HasOutgoingOffers, Converter={StaticResource InvertedBoolConverter}}">
                                 <Label Text="📤" FontSize="50" HorizontalTextAlignment="Center"/>
                                 <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingOffers]}"
                                        TextColor="{StaticResource Gray600}"
@@ -341,25 +410,21 @@
                 </Grid>
             </RefreshView>
 
-            <!-- LOADING -->
+            <!-- 🔥 3. LOADING INDICATOR (Tüm ekranın ortasında - En üstte) -->
             <Grid IsVisible="{Binding IsLoading}"
-                  BackgroundColor="{StaticResource Gray100}">
-
+                  BackgroundColor="Transparent">
                 <VerticalStackLayout VerticalOptions="Center"
                                       HorizontalOptions="Center"
                                       Spacing="15">
-
                     <ActivityIndicator IsRunning="True"
                                        Color="{StaticResource Primary}"
                                        WidthRequest="50"
                                        HeightRequest="50"/>
-
                     <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OffersLoading]}"
                            TextColor="{StaticResource Gray600}"
                            FontSize="14"
                            HorizontalTextAlignment="Center"/>
                 </VerticalStackLayout>
-
             </Grid>
 
         </Grid>
