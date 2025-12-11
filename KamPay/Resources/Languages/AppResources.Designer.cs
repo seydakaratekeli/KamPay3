@@ -97,6 +97,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   📷 Görsel Ekle benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string AddImageButton {
+            get {
+                return ResourceManager.GetString("AddImageButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürün Ekle benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string AddProduct {
@@ -201,6 +210,15 @@ namespace KamPay.Resources.Languages {
         internal static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   İptal benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string CancelButton {
+            get {
+                return ResourceManager.GetString("CancelButton", resourceCulture);
             }
         }
         
@@ -412,6 +430,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Tamamlandı! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string Completed {
+            get {
+                return ResourceManager.GetString("Completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Hizmeti Tamamla benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string CompleteService {
@@ -466,6 +493,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Ürün Durumu * benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ConditionTitle {
+            get {
+                return ResourceManager.GetString("ConditionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Kullanılabilir benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string ConditionUsable {
@@ -498,6 +534,15 @@ namespace KamPay.Resources.Languages {
         internal static string Confirmation {
             get {
                 return ResourceManager.GetString("Confirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün eklemeyi iptal etmek istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ConfirmCancelMessage {
+            get {
+                return ResourceManager.GetString("ConfirmCancelMessage", resourceCulture);
             }
         }
         
@@ -691,6 +736,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Bu ürünü Sürpriz Kutu&apos;ya bağışla benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string DonateToSurpriseBox {
+            get {
+                return ResourceManager.GetString("DonateToSurpriseBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Bağış benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string Donation {
@@ -835,6 +889,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Ne ile takas yapmak istersiniz? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ExchangePreferencePlaceholder {
+            get {
+                return ResourceManager.GetString("ExchangePreferencePlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sahte ürün benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string FakeProduct {
@@ -934,6 +997,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Konum alınıyor... benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string GettingLocation {
+            get {
+                return ResourceManager.GetString("GettingLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   İyilik Panosu benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string GoodDeedBoard {
@@ -1002,6 +1074,33 @@ namespace KamPay.Resources.Languages {
         internal static string HoursAgo {
             get {
                 return ResourceManager.GetString("HoursAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Görsel seçilirken hata oluştu benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ImageSelectionError {
+            get {
+                return ResourceManager.GetString("ImageSelectionError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün Görselleri (Maksimum 5) * benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ImagesTitle {
+            get {
+                return ResourceManager.GetString("ImagesTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Resimler yüklenemedi. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ImagesUploadError {
+            get {
+                return ResourceManager.GetString("ImagesUploadError", resourceCulture);
             }
         }
         
@@ -1114,11 +1213,56 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Konum alınırken hata oluştu. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string LocationError {
+            get {
+                return ResourceManager.GetString("LocationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Konum benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string LocationLabel {
             get {
                 return ResourceManager.GetString("LocationLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Konum servisi desteklenmiyor. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string LocationNotSupported {
+            get {
+                return ResourceManager.GetString("LocationNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Konum izni verilmedi. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string LocationPermissionDenied {
+            get {
+                return ResourceManager.GetString("LocationPermissionDenied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Konum almak için izin vermeniz gerekmektedir. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string LocationPermissionMessage {
+            get {
+                return ResourceManager.GetString("LocationPermissionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Konum * benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string LocationTitle {
+            get {
+                return ResourceManager.GetString("LocationTitle", resourceCulture);
             }
         }
         
@@ -1206,6 +1350,15 @@ namespace KamPay.Resources.Languages {
         /// <summary>
         ///   Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
+        internal static string MapInstruction {
+            get {
+                return ResourceManager.GetString("MapInstruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
         internal static string MapLocationInfo {
             get {
                 return ResourceManager.GetString("MapLocationInfo", resourceCulture);
@@ -1227,6 +1380,15 @@ namespace KamPay.Resources.Languages {
         internal static string MarkAsSold {
             get {
                 return ResourceManager.GetString("MarkAsSold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   En fazla 5 görsel ekleyebilirsiniz benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string MaxImagesWarning {
+            get {
+                return ResourceManager.GetString("MaxImagesWarning", resourceCulture);
             }
         }
         
@@ -1276,11 +1438,29 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Lütfen başlık, kategori ve en az bir resim eklediğinizden emin olun. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string MissingFieldsError {
+            get {
+                return ResourceManager.GetString("MissingFieldsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Eksik bilgi benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string MissingInfo {
             get {
                 return ResourceManager.GetString("MissingInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Lütfen ürün konumu alın. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string MissingLocationError {
+            get {
+                return ResourceManager.GetString("MissingLocationError", resourceCulture);
             }
         }
         
@@ -1636,6 +1816,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   İzin Gerekli benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string PermissionRequired {
+            get {
+                return ResourceManager.GetString("PermissionRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Fotoğraf yüklenemedi benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string PhotoUploadFailed {
@@ -1834,6 +2023,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Ürününüz başarıyla eklendi! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ProductAddedSuccess {
+            get {
+                return ResourceManager.GetString("ProductAddedSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürün Durumu benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string ProductCondition {
@@ -1857,6 +2055,15 @@ namespace KamPay.Resources.Languages {
         internal static string ProductDescription {
             get {
                 return ResourceManager.GetString("ProductDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün Açıklaması * benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ProductDescriptionPlaceholder {
+            get {
+                return ResourceManager.GetString("ProductDescriptionPlaceholder", resourceCulture);
             }
         }
         
@@ -1893,6 +2100,15 @@ namespace KamPay.Resources.Languages {
         internal static string ProductInfo {
             get {
                 return ResourceManager.GetString("ProductInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün Bilgileri benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ProductInfoTitle {
+            get {
+                return ResourceManager.GetString("ProductInfoTitle", resourceCulture);
             }
         }
         
@@ -1938,6 +2154,15 @@ namespace KamPay.Resources.Languages {
         internal static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün Başlığı * benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ProductTitlePlaceholder {
+            get {
+                return ResourceManager.GetString("ProductTitlePlaceholder", resourceCulture);
             }
         }
         
@@ -2185,6 +2410,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Kaydet benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SaveButton {
+            get {
+                return ResourceManager.GetString("SaveButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Başarıyla kaydedildi benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string SavedSuccessfully {
@@ -2199,6 +2433,15 @@ namespace KamPay.Resources.Languages {
         internal static string Saving {
             get {
                 return ResourceManager.GetString("Saving", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ürün kaydediliyor... benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SavingProduct {
+            get {
+                return ResourceManager.GetString("SavingProduct", resourceCulture);
             }
         }
         
@@ -2311,11 +2554,29 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Kategori Seçin benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SelectCategoryTitle {
+            get {
+                return ResourceManager.GetString("SelectCategoryTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Durum Seçin benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string SelectCondition {
             get {
                 return ResourceManager.GetString("SelectCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Durum Seçin benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SelectConditionTitle {
+            get {
+                return ResourceManager.GetString("SelectConditionTitle", resourceCulture);
             }
         }
         
@@ -2352,6 +2613,15 @@ namespace KamPay.Resources.Languages {
         internal static string SelectType {
             get {
                 return ResourceManager.GetString("SelectType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Tip Seçin benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SelectTypeTitle {
+            get {
+                return ResourceManager.GetString("SelectTypeTitle", resourceCulture);
             }
         }
         
@@ -2644,6 +2914,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Oturum bulunamadı. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SessionNotFoundError {
+            get {
+                return ResourceManager.GetString("SessionNotFoundError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Paylaş benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string Share {
@@ -2928,6 +3207,15 @@ namespace KamPay.Resources.Languages {
         internal static string UpdateProfile {
             get {
                 return ResourceManager.GetString("UpdateProfile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Resimler yükleniyor... benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string UploadingImages {
+            get {
+                return ResourceManager.GetString("UploadingImages", resourceCulture);
             }
         }
         

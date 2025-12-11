@@ -285,6 +285,41 @@
   <data name="Product" xml:space="preserve">
     <value>Product</value>
   </data>
+
+	<data name="ProductInfoTitle" xml:space="preserve"><value>Product Information</value></data>
+	<data name="ProductTitlePlaceholder" xml:space="preserve"><value>Product Title *</value></data>
+	<data name="ProductDescriptionPlaceholder" xml:space="preserve"><value>Product Description *</value></data>
+	<data name="SelectCategoryTitle" xml:space="preserve"><value>Select Category</value></data>
+	<data name="SelectTypeTitle" xml:space="preserve"><value>Select Type</value></data>
+	<data name="SelectConditionTitle" xml:space="preserve"><value>Select Condition</value></data>
+	<data name="DonateToSurpriseBox" xml:space="preserve"><value>Donate this product to Surprise Box</value></data>
+	<data name="PricePlaceholder" xml:space="preserve"><value>Price</value></data>
+	<data name="ExchangePreferencePlaceholder" xml:space="preserve"><value>What would you like to exchange for?</value></data>
+	<data name="ConditionTitle" xml:space="preserve"><value>Product Condition *</value></data>
+	<data name="LocationTitle" xml:space="preserve"><value>Location *</value></data>
+	<data name="MapInstruction" xml:space="preserve"><value>Tap on the map to select location or press 📍 to use current location</value></data>
+	<data name="ImagesTitle" xml:space="preserve"><value>Product Images (Max 5) *</value></data>
+	<data name="AddImageButton" xml:space="preserve"><value>📷 Add Image</value></data>
+	<data name="CancelButton" xml:space="preserve"><value>Cancel</value></data>
+	<data name="SaveButton" xml:space="preserve"><value>Save</value></data>
+
+	<data name="GettingLocation" xml:space="preserve"><value>Getting location...</value></data>
+	<data name="LocationNotSupported" xml:space="preserve"><value>Location service not supported.</value></data>
+	<data name="LocationPermissionDenied" xml:space="preserve"><value>Location permission denied.</value></data>
+	<data name="LocationError" xml:space="preserve"><value>Error getting location.</value></data>
+	<data name="MaxImagesWarning" xml:space="preserve"><value>You can add a maximum of 5 images</value></data>
+	<data name="ImageSelectionError" xml:space="preserve"><value>Error selecting image</value></data>
+	<data name="MissingFieldsError" xml:space="preserve"><value>Please ensure title, category and at least one image are added.</value></data>
+	<data name="MissingLocationError" xml:space="preserve"><value>Please get the product location.</value></data>
+	<data name="SessionNotFoundError" xml:space="preserve"><value>Session not found.</value></data>
+	<data name="UploadingImages" xml:space="preserve"><value>Uploading images...</value></data>
+	<data name="SavingProduct" xml:space="preserve"><value>Saving product...</value></data>
+	<data name="Completed" xml:space="preserve"><value>Completed!</value></data>
+	<data name="ProductAddedSuccess" xml:space="preserve"><value>Product added successfully!</value></data>
+	<data name="ConfirmCancelMessage" xml:space="preserve"><value>Are you sure you want to cancel adding product?</value></data>
+	<data name="PermissionRequired" xml:space="preserve"><value>Permission Required</value></data>
+	<data name="LocationPermissionMessage" xml:space="preserve"><value>You need to grant permission to get location.</value></data>
+	<data name="ImagesUploadError" xml:space="preserve"><value>Failed to upload images.</value></data>
   <data name="Points" xml:space="preserve">
     <value>Points</value>
   </data>

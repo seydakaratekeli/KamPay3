@@ -408,6 +408,40 @@
   <data name="ProductDetail" xml:space="preserve">
     <value>Ürün Detayı</value>
   </data>
+	<data name="ProductInfoTitle" xml:space="preserve"><value>Ürün Bilgileri</value></data>
+	<data name="ProductTitlePlaceholder" xml:space="preserve"><value>Ürün Başlığı *</value></data>
+	<data name="ProductDescriptionPlaceholder" xml:space="preserve"><value>Ürün Açıklaması *</value></data>
+	<data name="SelectCategoryTitle" xml:space="preserve"><value>Kategori Seçin</value></data>
+	<data name="SelectTypeTitle" xml:space="preserve"><value>Tip Seçin</value></data>
+	<data name="SelectConditionTitle" xml:space="preserve"><value>Durum Seçin</value></data>
+	<data name="DonateToSurpriseBox" xml:space="preserve"><value>Bu ürünü Sürpriz Kutu'ya bağışla</value></data>
+	<data name="PricePlaceholder" xml:space="preserve"><value>Fiyat</value></data>
+	<data name="ExchangePreferencePlaceholder" xml:space="preserve"><value>Ne ile takas yapmak istersiniz?</value></data>
+	<data name="ConditionTitle" xml:space="preserve"><value>Ürün Durumu *</value></data>
+	<data name="LocationTitle" xml:space="preserve"><value>Konum *</value></data>
+	<data name="MapInstruction" xml:space="preserve"><value>Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın</value></data>
+	<data name="ImagesTitle" xml:space="preserve"><value>Ürün Görselleri (Maksimum 5) *</value></data>
+	<data name="AddImageButton" xml:space="preserve"><value>📷 Görsel Ekle</value></data>
+	<data name="CancelButton" xml:space="preserve"><value>İptal</value></data>
+	<data name="SaveButton" xml:space="preserve"><value>Kaydet</value></data>
+
+	<data name="GettingLocation" xml:space="preserve"><value>Konum alınıyor...</value></data>
+	<data name="LocationNotSupported" xml:space="preserve"><value>Konum servisi desteklenmiyor.</value></data>
+	<data name="LocationPermissionDenied" xml:space="preserve"><value>Konum izni verilmedi.</value></data>
+	<data name="LocationError" xml:space="preserve"><value>Konum alınırken hata oluştu.</value></data>
+	<data name="MaxImagesWarning" xml:space="preserve"><value>En fazla 5 görsel ekleyebilirsiniz</value></data>
+	<data name="ImageSelectionError" xml:space="preserve"><value>Görsel seçilirken hata oluştu</value></data>
+	<data name="MissingFieldsError" xml:space="preserve"><value>Lütfen başlık, kategori ve en az bir resim eklediğinizden emin olun.</value></data>
+	<data name="MissingLocationError" xml:space="preserve"><value>Lütfen ürün konumu alın.</value></data>
+	<data name="SessionNotFoundError" xml:space="preserve"><value>Oturum bulunamadı.</value></data>
+	<data name="UploadingImages" xml:space="preserve"><value>Resimler yükleniyor...</value></data>
+	<data name="SavingProduct" xml:space="preserve"><value>Ürün kaydediliyor...</value></data>
+	<data name="Completed" xml:space="preserve"><value>Tamamlandı!</value></data>
+	<data name="ProductAddedSuccess" xml:space="preserve"><value>Ürününüz başarıyla eklendi!</value></data>
+	<data name="ConfirmCancelMessage" xml:space="preserve"><value>Ürün eklemeyi iptal etmek istediğinize emin misiniz?</value></data>
+	<data name="PermissionRequired" xml:space="preserve"><value>İzin Gerekli</value></data>
+	<data name="LocationPermissionMessage" xml:space="preserve"><value>Konum almak için izin vermeniz gerekmektedir.</value></data>
+	<data name="ImagesUploadError" xml:space="preserve"><value>Resimler yüklenemedi.</value></data>
   <data name="AddProduct" xml:space="preserve">
     <value>Ürün Ekle</value>
   </data>

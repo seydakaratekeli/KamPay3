@@ -18,82 +18,57 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _userProfileService;
         private readonly ICategoryService _categoryService;
-        private readonly IStorageService _storageService; // 🔥 YENİ: Direct access
+        private readonly IStorageService _storageService;
 
-        // 🔥 YENİ: Cache flag
         private bool _categoriesLoaded = false;
-        private static List<Category> _cachedCategories; // Static cache
+        private static List<Category> _cachedCategories;
 
-        [ObservableProperty]
-        private double? latitude;
+        [ObservableProperty] private double? latitude;
+        [ObservableProperty] private double? longitude;
+        [ObservableProperty] private string title;
+        [ObservableProperty] private string description;
+        [ObservableProperty] private Category selectedCategory;
 
-        [ObservableProperty]
-        private double? longitude;
+        // Enum değerlerini arka planda tutuyoruz
+        [ObservableProperty] private ProductCondition selectedCondition;
+        [ObservableProperty] private ProductType selectedType;
 
-        [ObservableProperty]
-        private string title;
+        [ObservableProperty] private decimal price;
+        [ObservableProperty] private string location;
+        [ObservableProperty] private string exchangePreference;
+        [ObservableProperty] private bool isLoading;
+        [ObservableProperty] private string errorMessage;
+        [ObservableProperty] private bool showPriceField;
+        [ObservableProperty] private bool showExchangeField;
+        [ObservableProperty] private bool isForSurpriseBox;
+        [ObservableProperty] private string uploadProgress;
+        [ObservableProperty] private double uploadPercentage;
 
-        [ObservableProperty]
-        private string description;
+        // Localization Kısayolu
+        private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
-        [ObservableProperty]
-        private Category selectedCategory;
+        // 🔥 YENİ: Enum Referans Listeleri (Değişmez)
+        private readonly List<ProductCondition> _conditionEnums = Enum.GetValues(typeof(ProductCondition)).Cast<ProductCondition>().ToList();
+        private readonly List<ProductType> _typeEnums = Enum.GetValues(typeof(ProductType)).Cast<ProductType>().ToList();
 
-        [ObservableProperty]
-        private ProductCondition selectedCondition;
+        // 🔥 YENİ: UI için Dinamik String Listeleri
+        public List<string> ConditionStrings => _conditionEnums.Select(GetConditionText).ToList();
+        public List<string> TypeStrings => _typeEnums.Select(GetTypeText).ToList();
 
-        [ObservableProperty]
-        private ProductType selectedType;
+        // 🔥 YENİ: Picker İndeksleri
+        [ObservableProperty] private int selectedConditionIndex;
+        [ObservableProperty] private int selectedTypeIndex;
 
-        [ObservableProperty]
-        private decimal price;
-
-        [ObservableProperty]
-        private string location;
-
-        [ObservableProperty]
-        private string exchangePreference;
-
-        [ObservableProperty]
-        private bool isLoading;
-
-        [ObservableProperty]
-        private string errorMessage;
-
-        [ObservableProperty]
-        private bool showPriceField;
-
-        [ObservableProperty]
-        private bool showExchangeField;
-
-        [ObservableProperty]
-        private bool isForSurpriseBox;
-
-        // 🔥 YENİ: Upload progress
-        [ObservableProperty]
-        private string uploadProgress;
-
-        [ObservableProperty]
-        private double uploadPercentage;
 
         public bool IsDonationTypeSelected => SelectedType == ProductType.Bagis;
 
-        // HasLocation property - checks if a valid location is set
-        public bool HasLocation => !string.IsNullOrEmpty(Location) && 
-                                   Location != "Konum alınıyor..." &&
-                                   Latitude.HasValue && 
+        public bool HasLocation => !string.IsNullOrEmpty(Location) &&
+                                   Location != Res["GettingLocation"] &&
+                                   Latitude.HasValue &&
                                    Longitude.HasValue;
 
         public ObservableCollection<Category> Categories { get; } = new();
         public ObservableCollection<string> ImagePaths { get; } = new();
-
-        public List<ProductCondition> Conditions { get; } = Enum.GetValues(typeof(ProductCondition))
-            .Cast<ProductCondition>()
-            .ToList();
-
-        public List<ProductType> ProductTypes { get; } = Enum.GetValues(typeof(ProductType))
-            .Cast<ProductType>()
-            .ToList();
 
         public AddProductViewModel(
             IProductService productService,
@@ -108,19 +83,112 @@ namespace KamPay.ViewModels
             _userProfileService = userProfileService;
             _categoryService = categoryService;
             _reverseGeocodeService = reverseGeocodeService;
-            _storageService = storageService; // 🔥 YENİ
+            _storageService = storageService;
 
-            // Varsayılan değerler
+            // Varsayılan Değerler ve İndeksleri Ayarla
             SelectedCondition = ProductCondition.Iyi;
             SelectedType = ProductType.Satis;
+
+            // İndeksleri Enum değerlerine göre eşle
+            SelectedTypeIndex = _typeEnums.IndexOf(SelectedType);
+            SelectedConditionIndex = _conditionEnums.IndexOf(SelectedCondition);
+
             ShowPriceField = true;
             ShowExchangeField = false;
 
-            // 🔥 Kategorileri cache'den yükle
             LoadCachedCategories();
+
+            // 🔥 DİL DEĞİŞİMİNİ DİNLE
+            LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
+            {
+                // String Listelerini Yenile
+                OnPropertyChanged(nameof(ConditionStrings));
+                OnPropertyChanged(nameof(TypeStrings));
+
+                // Seçili indeksleri tetikle (UI güncellemesi için)
+                OnPropertyChanged(nameof(SelectedConditionIndex));
+                OnPropertyChanged(nameof(SelectedTypeIndex));
+
+                // Kategori listesini de yenile (isimlerin çevrilmesi için)
+                if (Categories.Any())
+                {
+                    var temp = Categories.ToList();
+                    Categories.Clear();
+                    foreach (var item in temp) Categories.Add(item);
+
+                    // Seçili kategoriyi koru
+                    if (SelectedCategory != null)
+                    {
+                        var currentId = SelectedCategory.CategoryId;
+                        SelectedCategory = Categories.FirstOrDefault(c => c.CategoryId == currentId);
+                    }
+                }
+            };
         }
 
-        // 🔥 YENİ: Cache'den hızlı yükleme
+        // 🔥 İndeks Değişince Enum'ı Güncelle
+        partial void OnSelectedTypeIndexChanged(int value)
+        {
+            if (value >= 0 && value < _typeEnums.Count)
+            {
+                SelectedType = _typeEnums[value];
+            }
+        }
+
+        partial void OnSelectedConditionIndexChanged(int value)
+        {
+            if (value >= 0 && value < _conditionEnums.Count)
+            {
+                SelectedCondition = _conditionEnums[value];
+            }
+        }
+
+        // 🔥 Enum Değişince Görünürlük Ayarlarını Yap
+        partial void OnSelectedTypeChanged(ProductType value)
+        {
+            ShowPriceField = value == ProductType.Satis;
+            ShowExchangeField = value == ProductType.Takas;
+            OnPropertyChanged(nameof(IsDonationTypeSelected));
+
+            if (value != ProductType.Satis) Price = 0;
+            if (value != ProductType.Bagis) IsForSurpriseBox = false;
+
+            // Eğer kod tarafından Enum değiştirilirse (örn: temizle butonuna basınca), indeksi de güncelle
+            var index = _typeEnums.IndexOf(value);
+            if (SelectedTypeIndex != index) SelectedTypeIndex = index;
+        }
+
+        partial void OnSelectedConditionChanged(ProductCondition value)
+        {
+            var index = _conditionEnums.IndexOf(value);
+            if (SelectedConditionIndex != index) SelectedConditionIndex = index;
+        }
+
+        // 🔥 Çeviri Yardımcı Metotları
+        private string GetConditionText(ProductCondition condition)
+        {
+            return condition switch
+            {
+                ProductCondition.YeniGibi => Res["ConditionLikeNew"],
+                ProductCondition.CokIyi => Res["ConditionVeryGood"],
+                ProductCondition.Iyi => Res["ConditionGood"],
+                ProductCondition.Orta => Res["ConditionFair"],
+                ProductCondition.Kullanilabilir => Res["ConditionUsable"],
+                _ => condition.ToString()
+            };
+        }
+
+        private string GetTypeText(ProductType type)
+        {
+            return type switch
+            {
+                ProductType.Satis => Res["ProductTypeSale"],
+                ProductType.Bagis => Res["ProductTypeDonation"],
+                ProductType.Takas => Res["ProductTypeExchange"],
+                _ => type.ToString()
+            };
+        }
+
         private void LoadCachedCategories()
         {
             if (_cachedCategories != null && _cachedCategories.Any())
@@ -132,28 +200,9 @@ namespace KamPay.ViewModels
                 }
                 SelectedCategory = Categories.FirstOrDefault();
                 _categoriesLoaded = true;
-                Console.WriteLine("✅ Kategoriler cache'den yüklendi");
             }
         }
 
-        partial void OnSelectedTypeChanged(ProductType value)
-        {
-            ShowPriceField = value == ProductType.Satis;
-            ShowExchangeField = value == ProductType.Takas;
-            OnPropertyChanged(nameof(IsDonationTypeSelected));
-
-            if (value != ProductType.Satis)
-            {
-                Price = 0;
-            }
-
-            if (value != ProductType.Bagis)
-            {
-                IsForSurpriseBox = false;
-            }
-        }
-
-        // 🔥 OPTİMİZE: Konum alma - Harita ile entegre
         [RelayCommand]
         private async Task UseCurrentLocationAsync()
         {
@@ -162,7 +211,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
                 ErrorMessage = string.Empty;
-                Location = "Konum alınıyor...";
+                Location = Res["GettingLocation"];
                 OnPropertyChanged(nameof(HasLocation));
 
                 var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
@@ -175,14 +224,11 @@ namespace KamPay.ViewModels
                 {
                     Location = string.Empty;
                     OnPropertyChanged(nameof(HasLocation));
-                    await Shell.Current.DisplayAlert("İzin Gerekli", "Konum almak için izin vermeniz gerekmektedir.", "Tamam");
+                    await Shell.Current.DisplayAlert(Res["PermissionRequired"], Res["LocationPermissionMessage"], Res["Ok"]);
                     return;
                 }
 
-                // 🔥 5 saniye timeout (10'dan düştük)
                 var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(5));
-
-                // 🔥 CancellationToken ile timeout kontrolü
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 var deviceLocation = await Geolocation.GetLocationAsync(request, cts.Token);
 
@@ -191,32 +237,28 @@ namespace KamPay.ViewModels
                     Latitude = deviceLocation.Latitude;
                     Longitude = deviceLocation.Longitude;
 
-                    // Harita güncelleme mesajı gönder
-                    WeakReferenceMessenger.Default.Send(new MapLocationUpdateMessage(
-                        deviceLocation.Latitude, 
-                        deviceLocation.Longitude));
-
+                    WeakReferenceMessenger.Default.Send(new MapLocationUpdateMessage(deviceLocation.Latitude, deviceLocation.Longitude));
                     await UpdateLocationFromCoordinatesAsync(deviceLocation.Latitude, deviceLocation.Longitude);
                 }
                 else
                 {
-                    Location = "Konum alınamadı. GPS'inizi kontrol edin.";
+                    Location = Res["LocationError"];
                     OnPropertyChanged(nameof(HasLocation));
                 }
             }
             catch (FeatureNotSupportedException)
             {
-                Location = "Konum servisi desteklenmiyor.";
+                Location = Res["LocationNotSupported"];
                 OnPropertyChanged(nameof(HasLocation));
             }
             catch (PermissionException)
             {
-                Location = "Konum izni verilmedi.";
+                Location = Res["LocationPermissionDenied"];
                 OnPropertyChanged(nameof(HasLocation));
             }
             catch (Exception ex)
             {
-                Location = "Konum alınırken hata oluştu.";
+                Location = Res["LocationError"];
                 OnPropertyChanged(nameof(HasLocation));
                 Console.WriteLine($"❌ Konum Hatası: {ex.Message}");
             }
@@ -226,7 +268,6 @@ namespace KamPay.ViewModels
             }
         }
 
-        // Yeni metod: Koordinatlardan adres çözümleme
         public async Task UpdateLocationFromCoordinatesAsync(double latitude, double longitude)
         {
             try
@@ -240,21 +281,13 @@ namespace KamPay.ViewModels
             {
                 Location = $"{latitude:F4}, {longitude:F4}";
                 OnPropertyChanged(nameof(HasLocation));
-                Console.WriteLine($"Adres çözümleme hatası: {ex.Message}");
             }
         }
 
-        // 🔥 OPTİMİZE: Kategori yükleme - Cache ile
         [RelayCommand]
         private async Task LoadCategoriesAsync()
         {
-            // 🔥 Eğer zaten yüklendiyse tekrar yükleme
-            if (_categoriesLoaded && Categories.Any())
-            {
-                Console.WriteLine("✅ Kategoriler zaten yüklü");
-                return;
-            }
-
+            if (_categoriesLoaded && Categories.Any()) return;
             if (IsLoading) return;
 
             try
@@ -269,23 +302,15 @@ namespace KamPay.ViewModels
                     {
                         Categories.Add(category);
                     }
-
-                    // 🔥 Static cache'e kaydet
                     _cachedCategories = categoryList.ToList();
                     _categoriesLoaded = true;
 
-                    if (Categories.Any())
-                    {
-                        SelectedCategory = Categories.First();
-                    }
-
-                    Console.WriteLine($"✅ {Categories.Count} kategori yüklendi");
+                    if (Categories.Any()) SelectedCategory = Categories.First();
                 }
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Kategoriler yüklenemedi: {ex.Message}";
-                Console.WriteLine($"❌ Kategori yükleme hatası: {ex.Message}");
             }
             finally
             {
@@ -298,31 +323,22 @@ namespace KamPay.ViewModels
         {
             try
             {
-                // Maksimum görsel sayısı kontrolü
                 if (ImagePaths.Count >= 5)
                 {
-                    await Application.Current.MainPage.DisplayAlert(
-                        "Uyarı",
-                        "En fazla 5 görsel ekleyebilirsiniz",
-                        "Tamam"
-                    );
+                    await Application.Current.MainPage.DisplayAlert(Res["Warning"], Res["MaxImagesWarning"], Res["Ok"]);
                     return;
                 }
 
-                var photos = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
-                {
-                    Title = "Ürün Görseli Seçin"
-                });
+                var photos = await MediaPicker.PickPhotoAsync(new MediaPickerOptions { Title = "Ürün Görseli Seçin" });
 
                 if (photos != null)
                 {
                     ImagePaths.Add(photos.FullPath);
-                    Console.WriteLine($"✅ Görsel eklendi: {ImagePaths.Count}/5");
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Görsel seçilirken hata oluştu: {ex.Message}";
+                ErrorMessage = $"{Res["ImageSelectionError"]}: {ex.Message}";
             }
         }
 
@@ -330,28 +346,24 @@ namespace KamPay.ViewModels
         private void RemoveImage(string imagePath)
         {
             if (ImagePaths.Contains(imagePath))
-            {
                 ImagePaths.Remove(imagePath);
-            }
         }
 
-        // 🔥 OPTİMİZE: Paralel resim upload + Progress tracking
         [RelayCommand]
         private async Task SaveProductAsync()
         {
             if (IsLoading) return;
 
-            // Validation
             if (string.IsNullOrWhiteSpace(Title) || SelectedCategory == null || !ImagePaths.Any())
             {
-                ErrorMessage = "Lütfen başlık, kategori ve en az bir resim eklediğinizden emin olun.";
-                await Shell.Current.DisplayAlert("Eksik Bilgi", ErrorMessage, "Tamam");
+                ErrorMessage = Res["MissingFieldsError"];
+                await Shell.Current.DisplayAlert(Res["MissingInfo"], ErrorMessage, Res["Ok"]);
                 return;
             }
 
             if (Latitude == null || Longitude == null)
             {
-                await Shell.Current.DisplayAlert("Eksik Bilgi", "Lütfen ürün konumu alın.", "Tamam");
+                await Shell.Current.DisplayAlert(Res["MissingInfo"], Res["MissingLocationError"], Res["Ok"]);
                 return;
             }
 
@@ -359,17 +371,16 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
                 ErrorMessage = string.Empty;
-                UploadProgress = "Ürün kaydediliyor...";
+                UploadProgress = Res["SavingProduct"];
                 UploadPercentage = 0;
 
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Oturum bulunamadı.", "Tamam");
+                    await Shell.Current.DisplayAlert(Res["Error"], Res["SessionNotFoundError"], Res["Ok"]);
                     return;
                 }
 
-                // 🔥 1. Ürün nesnesini oluştur (resim URL'leri olmadan)
                 var productId = Guid.NewGuid().ToString();
                 var product = new Product
                 {
@@ -394,38 +405,28 @@ namespace KamPay.ViewModels
                     IsSold = false,
                     IsReserved = false,
                     CreatedAt = DateTime.UtcNow,
-                    ImageUrls = new List<string>() // Boş liste
+                    ImageUrls = new List<string>()
                 };
 
                 UploadPercentage = 10;
-                UploadProgress = "Resimler yükleniyor...";
+                UploadProgress = Res["UploadingImages"];
 
-                // 🔥 2. Resimleri PARALEL yükle (Background thread)
                 var imageUrls = await Task.Run(async () =>
                 {
                     var urls = new List<string>();
                     var uploadTasks = new List<Task<ServiceResult<string>>>();
 
-                    // Tüm upload işlemlerini başlat
                     for (int i = 0; i < Math.Min(ImagePaths.Count, 5); i++)
                     {
-                        var imagePath = ImagePaths[i];
-                        var task = _storageService.UploadProductImageAsync(imagePath, productId, i);
+                        var task = _storageService.UploadProductImageAsync(ImagePaths[i], productId, i);
                         uploadTasks.Add(task);
                     }
 
-                    // Paralel bekle
                     var results = await Task.WhenAll(uploadTasks);
-
-                    // Başarılı URL'leri topla
                     foreach (var result in results)
                     {
-                        if (result.Success)
-                        {
-                            urls.Add(result.Data);
-                        }
+                        if (result.Success) urls.Add(result.Data);
                     }
-
                     return urls;
                 });
 
@@ -433,16 +434,15 @@ namespace KamPay.ViewModels
 
                 if (!imageUrls.Any())
                 {
-                    throw new Exception("Resimler yüklenemedi.");
+                    throw new Exception(Res["ImagesUploadError"]);
                 }
 
                 product.ImageUrls = imageUrls;
                 product.ThumbnailUrl = imageUrls.First();
 
-                UploadProgress = "Ürün kaydediliyor...";
+                UploadProgress = Res["SavingProduct"];
                 UploadPercentage = 80;
 
-                // 🔥 3. Ürünü Firebase'e kaydet
                 var saveResult = await _productService.SaveProductDirectlyAsync(product);
 
                 if (!saveResult.Success)
@@ -452,25 +452,23 @@ namespace KamPay.ViewModels
 
                 UploadPercentage = 90;
 
-                // 🔥 4. Puan ekle (arka planda)
                 _ = Task.Run(async () =>
                 {
                     await _userProfileService.AddPointsForAction(currentUser.UserId, UserAction.AddProduct);
                 });
 
                 UploadPercentage = 100;
-                UploadProgress = "Tamamlandı!";
+                UploadProgress = Res["Completed"];
 
-                await Shell.Current.DisplayAlert("Başarılı", "Ürününüz başarıyla eklendi!", "Harika!");
+                await Shell.Current.DisplayAlert(Res["Success"], Res["ProductAddedSuccess"], Res["Ok"]);
 
                 ClearForm();
                 await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Ürün kaydedilirken hata oluştu: {ex.Message}";
-                Console.WriteLine($"❌ SaveProduct hatası: {ex.Message}");
-                await Shell.Current.DisplayAlert("Hata", ErrorMessage, "Tamam");
+                ErrorMessage = $"{Res["Error"]}: {ex.Message}";
+                await Shell.Current.DisplayAlert(Res["Error"], ErrorMessage, Res["Ok"]);
             }
             finally
             {
@@ -484,10 +482,10 @@ namespace KamPay.ViewModels
         private async Task CancelAsync()
         {
             var confirm = await Application.Current.MainPage.DisplayAlert(
-                "İptal",
-                "Ürün eklemeyi iptal etmek istediğinize emin misiniz?",
-                "Evet",
-                "Hayır"
+                Res["Cancel"],
+                Res["ConfirmCancelMessage"],
+                Res["Yes"],
+                Res["No"]
             );
 
             if (confirm)
@@ -510,13 +508,12 @@ namespace KamPay.ViewModels
             Longitude = null;
             IsForSurpriseBox = false;
 
-            if (Categories.Any())
-            {
-                SelectedCategory = Categories.First();
-            }
-
+            if (Categories.Any()) SelectedCategory = Categories.First();
             SelectedCondition = ProductCondition.Iyi;
             SelectedType = ProductType.Satis;
+            // İndeksleri de sıfırla
+            SelectedConditionIndex = _conditionEnums.IndexOf(SelectedCondition);
+            SelectedTypeIndex = _typeEnums.IndexOf(SelectedType);
         }
     }
 }

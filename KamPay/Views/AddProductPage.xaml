@@ -5,17 +5,23 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:conv="clr-namespace:KamPay.Converters"
              xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
+             xmlns:extensions="clr-namespace:KamPay.Extensions"
              x:Class="KamPay.Views.AddProductPage"
              x:DataType="vm:AddProductViewModel"
-             Title="Ürün Ekle"
+             Title="{extensions:Translate AddProduct}"
              Shell.BackgroundColor="#4CAF50">
 
-    <!-- 🔥 Ana Grid: ScrollView + Loading Overlay -->
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <conv:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
     <Grid>
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="15">
 
-                <!-- Hata Mesajı -->
                 <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
                        BackgroundColor="#FFEBEE"
                        BorderColor="#F44336"
@@ -26,7 +32,6 @@
                            FontSize="14" />
                 </Frame>
 
-                <!-- 🔥 Upload Progress -->
                 <Frame IsVisible="{Binding IsLoading}"
                        BackgroundColor="#E3F2FD"
                        BorderColor="#2196F3"
@@ -47,27 +52,24 @@
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Başlık -->
-                <Label Text="Ürün Bilgileri" 
+                <Label Text="{extensions:Translate ProductInfoTitle}" 
                        FontSize="20" 
                        FontAttributes="Bold"
                        TextColor="#333" />
 
-                <!-- Ürün Başlığı -->
                 <Frame Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
-                    <Entry Placeholder="Ürün Başlığı *"
+                    <Entry Placeholder="{extensions:Translate ProductTitlePlaceholder}"
                            Text="{Binding Title}"
                            MaxLength="100"
                            FontSize="16" />
                 </Frame>
 
-                <!-- Açıklama -->
                 <Frame Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
-                    <Editor Placeholder="Ürün Açıklaması *"
+                    <Editor Placeholder="{extensions:Translate ProductDescriptionPlaceholder}"
                             Text="{Binding Description}"
                             HeightRequest="120"
                             MaxLength="1000"
@@ -75,8 +77,7 @@
                             AutoSize="TextChanges" />
                 </Frame>
 
-                <!-- Kategori Seçimi -->
-                <Label Text="Kategori *" 
+                <Label Text="{extensions:Translate CategoryLabel}" 
                        FontSize="16" 
                        FontAttributes="Bold"
                        TextColor="#666" />
@@ -86,13 +87,15 @@
                        CornerRadius="8">
                     <Picker ItemsSource="{Binding Categories}"
                             SelectedItem="{Binding SelectedCategory}"
-                            ItemDisplayBinding="{Binding Name}"
                             FontSize="16"
-                            Title="Kategori Seçin" />
+                            Title="{extensions:Translate SelectCategoryTitle}">
+                        <Picker.ItemDisplayBinding>
+                            <Binding Path="Name" Converter="{StaticResource ProductCategoryToTextConverter}" />
+                        </Picker.ItemDisplayBinding>
+                    </Picker>
                 </Frame>
 
-                <!-- Ürün Tipi -->
-                <Label Text="Ürün Tipi *" 
+                <Label Text="{extensions:Translate ProductType}" 
                        FontSize="16" 
                        FontAttributes="Bold"
                        TextColor="#666" />
@@ -100,17 +103,17 @@
                 <Frame Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
-                    <Picker ItemsSource="{Binding ProductTypes}"
-                            SelectedItem="{Binding SelectedType}"
+                    <Picker ItemsSource="{Binding TypeStrings}"
+                            SelectedIndex="{Binding SelectedTypeIndex}"
                             FontSize="16"
-                            Title="Tip Seçin" />
+                            Title="{extensions:Translate SelectTypeTitle}">
+                    </Picker>
                 </Frame>
 
-                <!-- Sürpriz Kutu Switch -->
                 <StackLayout Orientation="Horizontal" 
                              Padding="5,10" 
                              IsVisible="{Binding IsDonationTypeSelected}">
-                    <Label Text="Bu ürünü Sürpriz Kutu'ya bağışla" 
+                    <Label Text="{extensions:Translate DonateToSurpriseBox}" 
                            VerticalOptions="Center"
                            TextColor="#333"/>
                     <Switch IsToggled="{Binding IsForSurpriseBox}" 
@@ -118,13 +121,12 @@
                             OnColor="#4CAF50"/>
                 </StackLayout>
 
-                <!-- Fiyat (Satış ise) -->
                 <Frame IsVisible="{Binding ShowPriceField}"
                        Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
                     <HorizontalStackLayout Padding="10">
-                        <Entry Placeholder="Fiyat"
+                        <Entry Placeholder="{extensions:Translate PricePlaceholder}"
                                Text="{Binding Price}"
                                Keyboard="Numeric"
                                FontSize="16"
@@ -137,18 +139,16 @@
                     </HorizontalStackLayout>
                 </Frame>
 
-                <!-- Takas Tercihi (Takas ise) -->
                 <Frame IsVisible="{Binding ShowExchangeField}"
                        Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
-                    <Entry Placeholder="Ne ile takas yapmak istersiniz?"
+                    <Entry Placeholder="{extensions:Translate ExchangePreferencePlaceholder}"
                            Text="{Binding ExchangePreference}"
                            FontSize="16" />
                 </Frame>
 
-                <!-- Durum -->
-                <Label Text="Ürün Durumu *" 
+                <Label Text="{extensions:Translate ConditionTitle}" 
                        FontSize="16" 
                        FontAttributes="Bold"
                        TextColor="#666" />
@@ -156,27 +156,18 @@
                 <Frame Padding="0" 
                        BorderColor="#E0E0E0"
                        CornerRadius="8">
-                    <Picker ItemsSource="{Binding Conditions}"
-                            SelectedItem="{Binding SelectedCondition}"
+                    <Picker ItemsSource="{Binding ConditionStrings}"
+                            SelectedIndex="{Binding SelectedConditionIndex}"
                             FontSize="16"
-                            Title="Durum Seçin">
-                        <Picker.ItemDisplayBinding>
-                            <Binding>
-                                <Binding.Converter>
-                                    <conv:ProductConditionConverter />
-                                </Binding.Converter>
-                            </Binding>
-                        </Picker.ItemDisplayBinding>
+                            Title="{extensions:Translate SelectConditionTitle}">
                     </Picker>
                 </Frame>
 
-                <!-- Konum -->
-                <Label Text="Konum *"
+                <Label Text="{extensions:Translate LocationTitle}"
                        FontSize="16" 
                        FontAttributes="Bold"
                        TextColor="#666" />
 
-                <!-- Etkileşimli Harita -->
                 <Border StrokeShape="RoundRectangle 12" 
                         StrokeThickness="0"
                         HeightRequest="250"
@@ -185,61 +176,11 @@
                         <mapsui:MapControl x:Name="ProductMap"
                                            VerticalOptions="FillAndExpand"
                                            HorizontalOptions="FillAndExpand" />
-                        
-                        <!-- Zoom and Navigation Controls -->
+
                         <VerticalStackLayout HorizontalOptions="End" 
                                             VerticalOptions="Start"
                                             Margin="12"
                                             Spacing="8">
-                            
-                            <!-- Zoom In Button -->
-                            <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="White"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                </Border.Shadow>
-                                <Button Text="+"
-                                        Clicked="OnZoomInClicked"
-                                        FontSize="22"
-                                        FontAttributes="Bold"
-                                        BackgroundColor="Transparent"
-                                        TextColor="#333"
-                                        WidthRequest="40"
-                                        HeightRequest="40"
-                                        Padding="0"/>
-                            </Border>
-                            
-                            <!-- Zoom Out Button -->
-                            <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="White"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                </Border.Shadow>
-                                <Button Text="−"
-                                        Clicked="OnZoomOutClicked"
-                                        FontSize="22"
-                                        FontAttributes="Bold"
-                                        BackgroundColor="Transparent"
-                                        TextColor="#333"
-                                        WidthRequest="40"
-                                        HeightRequest="40"
-                                        Padding="0"/>
-                            </Border>
-                            
-                            <!-- Separator -->
-                            <BoxView HeightRequest="1" 
-                                     WidthRequest="30"
-                                     BackgroundColor="#E0E0E0"
-                                     HorizontalOptions="Center"
-                                     Margin="0,4"/>
-                            
-                            <!-- My Location Button -->
                             <Border StrokeShape="RoundRectangle 20"
                                     BackgroundColor="White"
                                     WidthRequest="40"
@@ -257,28 +198,8 @@
                                         HeightRequest="40"
                                         Padding="0"/>
                             </Border>
-                            
-                            <!-- Reset/Center Button -->
-                            <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="White"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                </Border.Shadow>
-                                <Button Text="🎯"
-                                        Clicked="OnResetLocationClicked"
-                                        FontSize="18"
-                                        BackgroundColor="Transparent"
-                                        TextColor="#2196F3"
-                                        WidthRequest="40"
-                                        HeightRequest="40"
-                                        Padding="0"/>
-                            </Border>
                         </VerticalStackLayout>
-                        
-                        <!-- Seçili konum bilgisi -->
+
                         <Border StrokeShape="RoundRectangle 12"
                                 BackgroundColor="#F5F5F5"
                                 Padding="12,8"
@@ -305,26 +226,23 @@
                     </Grid>
                 </Border>
 
-                <!-- Konum bilgi metni -->
-                <Label Text="Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın"
+                <Label Text="{extensions:Translate MapInstruction}"
                        FontSize="12"
                        TextColor="{StaticResource Gray600}"
                        Margin="0,4,0,0"/>
 
-                <!-- Görseller -->
-                <Label Text="Ürün Görselleri (Maksimum 5) *" 
+                <Label Text="{extensions:Translate ImagesTitle}" 
                        FontSize="16" 
                        FontAttributes="Bold"
                        TextColor="#666" />
 
-                <Button Text="📷 Görsel Ekle"
+                <Button Text="{extensions:Translate AddImageButton}"
                         Command="{Binding PickImagesCommand}"
                         BackgroundColor="#2196F3"
                         TextColor="White"
                         CornerRadius="8"
                         HeightRequest="50" />
 
-                <!-- Seçili Görseller -->
                 <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
                             Wrap="Wrap"
                             JustifyContent="Start"
@@ -356,12 +274,11 @@
                     </BindableLayout.ItemTemplate>
                 </FlexLayout>
 
-                <!-- Butonlar -->
                 <Grid ColumnDefinitions="*,*" 
                       ColumnSpacing="10"
                       Margin="0,20,0,0">
                     <Button Grid.Column="0"
-                            Text="İptal"
+                            Text="{extensions:Translate CancelButton}"
                             Command="{Binding CancelCommand}"
                             BackgroundColor="#757575"
                             TextColor="White"
@@ -369,7 +286,7 @@
                             HeightRequest="50" />
 
                     <Button Grid.Column="1"
-                            Text="Kaydet"
+                            Text="{extensions:Translate SaveButton}"
                             Command="{Binding SaveProductCommand}"
                             BackgroundColor="#4CAF50"
                             TextColor="White"
@@ -380,7 +297,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- 🔥 Loading Overlay - En üstte, tam ekran -->
         <Grid IsVisible="{Binding IsLoading}"
               BackgroundColor="#80000000"
               InputTransparent="False">
