@@ -6,7 +6,7 @@
              x:DataType="vm:LoginViewModel"
              x:Class="KamPay.Views.LoginPage"
              BackgroundColor="#6200EA"
-             Shell.NavBarIsVisible="False">
+             Shell.NavBarIsVisible="False" InputTransparent="True" Title="extensions:Translate">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">

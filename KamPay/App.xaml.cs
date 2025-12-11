@@ -1,5 +1,6 @@
 ﻿using KamPay.Views;
-using KamPay.ViewModels; 
+using KamPay.ViewModels;
+using KamPay.Services;
 namespace KamPay
 {
     public partial class App : Application
@@ -7,6 +8,9 @@ namespace KamPay
         public App(AppShell appShell)
         {
             InitializeComponent();
+
+            // Varsayılan dili Türkçe olarak ayarla
+            LocalizationResourceManager.Instance.SetCulture("tr");
 
             MainPage = appShell;
 

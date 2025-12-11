@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:resx="clr-namespace:KamPay.Resources.Languages"
              x:Class="KamPay.Views.ServiceSharingPage"
              x:DataType="vm:ServiceSharingViewModel"
              BackgroundColor="{StaticResource Gray100}">
@@ -30,7 +31,7 @@
                     BackgroundColor="White"
                     Padding="10"
                     StrokeShape="RoundRectangle 12">
-                <Entry Placeholder="Hizmet ara..."
+                <Entry Placeholder="{x:Static resx:AppResources.ServiceSearchPlaceholder}"
                        Text="{Binding SearchText}"
                        ClearButtonVisibility="WhileEditing"
                        FontSize="15" />
@@ -46,7 +47,7 @@
                         BackgroundColor="White"
                         Padding="8,0"
                         StrokeShape="RoundRectangle 12">
-                    <Picker Title="Kategori"
+                    <Picker Title="{x:Static resx:AppResources.Category}"
                             ItemsSource="{Binding Categories}"
                             SelectedItem="{Binding FilterCategory}"
                             FontSize="13">
@@ -62,13 +63,13 @@
                         BackgroundColor="White"
                         Padding="8,0"
                         StrokeShape="RoundRectangle 12">
-                    <Picker Title="Fiyat"
+                    <Picker Title="{x:Static resx:AppResources.PriceSortTitle}"
                             SelectedItem="{Binding PriceSort}"
                             FontSize="13">
                         <Picker.Items>
-                            <x:String>Hepsi</x:String>
-                            <x:String>Artan</x:String>
-                            <x:String>Azalan</x:String>
+                            <x:String>{x:Static resx:AppResources.All}</x:String>
+                            <x:String>{x:Static resx:AppResources.PriceSortAscending}</x:String>
+                            <x:String>{x:Static resx:AppResources.PriceSortDescending}</x:String>
                         </Picker.Items>
                     </Picker>
                 </Border>
@@ -105,7 +106,7 @@
                                 SelectionMode="None">
 
                     <CollectionView.Header>
-                        <Label Text="Mevcut Hizmetler"
+                        <Label Text="{x:Static resx:AppResources.AvailableServices}"
                                FontSize="20"
                                FontAttributes="Bold"
                                TextColor="{StaticResource Primary}"
@@ -118,11 +119,11 @@
                                              HorizontalOptions="Center"
                                              Spacing="15">
                             <Label Text="💼" FontSize="60" Opacity="0.3" HorizontalTextAlignment="Center" />
-                            <Label Text="Sonuç bulunamadı."
+                            <Label Text="{x:Static resx:AppResources.NoResultsFound}"
                                    FontSize="17" FontAttributes="Bold"
                                    TextColor="{StaticResource Gray600}"
                                    HorizontalTextAlignment="Center" />
-                            <Label Text="Filtreleri değiştirin veya aramayı temizleyin."
+                            <Label Text="{x:Static resx:AppResources.ChangeFiltersOrClearSearch}"
                                    FontSize="14" TextColor="{StaticResource Primary}"
                                    HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
@@ -226,7 +227,7 @@
                                                    FontAttributes="Bold"
                                                    FontSize="18"
                                                    TextColor="{StaticResource Primary}" />
-                                            <Label Text="{Binding TimeCredits, StringFormat='⏱ {0} Saat'}"
+                                            <Label Text="{Binding TimeCredits, StringFormat='{x:Static resx:AppResources.TimeCreditsFormat}'}"
                                                    FontSize="11"
                                                    TextColor="{StaticResource Secondary}" />
                                         </VerticalStackLayout>
@@ -248,10 +249,10 @@
                                                     WidthRequest="38"
                                                     FontSize="16"
                                                     Padding="0"
-                                                    ToolTipProperties.Text="Mesaj Gönder" />
+                                                    ToolTipProperties.Text="{x:Static resx:AppResources.SendMessage}" />
 
                                             <!-- Talep Et Butonu -->
-                                            <Button Text="Talep Et"
+                                            <Button Text="{x:Static resx:AppResources.RequestService}"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}"
                                                     CommandParameter="{Binding .}"
                                                     BackgroundColor="{StaticResource Primary}"
@@ -295,7 +296,7 @@
                             <VerticalStackLayout Spacing="18">
                                 <!-- Panel Başlığı ve Kapat -->
                                 <Grid>
-                                    <Label Text="Yeni Hizmet Paylaş" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                    <Label Text="{x:Static resx:AppResources.NewServiceShare}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"/>
                                     <Button Text="✕"
                                             Command="{Binding ClosePostFormCommand}"
                                             HorizontalOptions="End"
@@ -309,26 +310,26 @@
                                 <BoxView HeightRequest="1" Color="#EEEEEE" />
 
                                 <!-- Başlık -->
-                                <Entry Placeholder="Hizmet Başlığı"
+                                <Entry Placeholder="{x:Static resx:AppResources.ServiceTitlePlaceholder}"
                                        Text="{Binding ServiceTitle}"
                                        FontSize="16"
                                        Margin="0,0,0,0"/>
 
                                 <!-- Açıklama -->
-                                <Editor Placeholder="Açıklama"
+                                <Editor Placeholder="{x:Static resx:AppResources.ServiceDescriptionPlaceholder}"
                                         Text="{Binding ServiceDescription}"
                                         FontSize="15"
                                         AutoSize="TextChanges"
                                         Margin="0,0,0,0"/>
 
                                 <!-- Kategori -->
-                                <Picker Title="Kategori Seçin"
+                                <Picker Title="{x:Static resx:AppResources.SelectCategory}"
                                         ItemsSource="{Binding Categories}"
                                         SelectedItem="{Binding SelectedCategory}"
                                         Margin="0,0,0,0"/>
 
                                 <!-- Fiyat -->
-                                <Entry Placeholder="Fiyat (₺)"
+                                <Entry Placeholder="{x:Static resx:AppResources.PricePlaceholder}"
                                        Text="{Binding ServicePrice}"
                                        Keyboard="Numeric"
                                        FontSize="16"
@@ -339,16 +340,16 @@
                                     <Button Text="−" Command="{Binding DecrementTimeCreditsCommand}" WidthRequest="36" HeightRequest="36"
                                             FontSize="22" BackgroundColor="#F5F5F5" TextColor="#4CAF50" CornerRadius="18"/>
                                     <VerticalStackLayout>
-                                        <Label Text="Süre (Zaman Kredisi)" FontSize="13" TextColor="#757575" HorizontalOptions="Center"/>
+                                        <Label Text="{x:Static resx:AppResources.TimeCredits}" FontSize="13" TextColor="#757575" HorizontalOptions="Center"/>
                                         <Label Text="{Binding TimeCredits}" FontSize="18" FontAttributes="Bold" TextColor="#4CAF50" HorizontalOptions="Center"/>
-                                        <Label Text="Saat" FontSize="12" TextColor="#757575" HorizontalOptions="Center"/>
+                                        <Label Text="{x:Static resx:AppResources.Hour}" FontSize="12" TextColor="#757575" HorizontalOptions="Center"/>
                                     </VerticalStackLayout>
                                     <Button Text="+" Command="{Binding IncrementTimeCreditsCommand}" WidthRequest="36" HeightRequest="36"
                                             FontSize="22" BackgroundColor="#F5F5F5" TextColor="#4CAF50" CornerRadius="18"/>
                                 </Grid>
 
                                 <!-- Kaydet Butonu -->
-                                <Button Text="Paylaş"
+                                <Button Text="{x:Static resx:AppResources.Share}"
                                         Command="{Binding CreateServiceCommand}"
                                         BackgroundColor="#4CAF50"
                                         TextColor="White"
@@ -370,7 +371,7 @@
                                      HorizontalOptions="Center"
                                      Spacing="10">
                     <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" />
-                    <Label Text="İşlem yapılıyor..." TextColor="White" FontSize="15" />
+                    <Label Text="{x:Static resx:AppResources.Processing}" TextColor="White" FontSize="15" />
                 </VerticalStackLayout>
             </Grid>
 
@@ -419,7 +420,7 @@
                     <VerticalStackLayout Spacing="18">
                         <!-- Panel Başlığı ve Kapat -->
                         <Grid>
-                            <Label Text="Yeni Hizmet Paylaş" 
+                            <Label Text="{x:Static resx:AppResources.NewServiceShare}" 
                                    FontSize="20" 
                                    FontAttributes="Bold" 
                                    HorizontalOptions="Center"
@@ -438,7 +439,7 @@
 
                         <!-- Başlık -->
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Hizmet Başlığı" 
+                            <Label Text="{x:Static resx:AppResources.ServiceTitle}" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
                                    TextColor="#212121"/>
@@ -446,7 +447,7 @@
                                     StrokeThickness="1" 
                                     Stroke="#E0E0E0"
                                     Padding="12,8">
-                                <Entry Placeholder="Örn: Bahçe Bakımı, Temizlik..."
+                                <Entry Placeholder="{x:Static resx:AppResources.ServiceTitlePlaceholder}"
                                        Text="{Binding ServiceTitle}"
                                        FontSize="15"
                                        TextColor="#212121"
@@ -456,7 +457,7 @@
 
                         <!-- Açıklama -->
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Açıklama" 
+                            <Label Text="{x:Static resx:AppResources.ServiceDescription}" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
                                    TextColor="#212121"/>
@@ -464,7 +465,7 @@
                                     StrokeThickness="1" 
                                     Stroke="#E0E0E0"
                                     Padding="12,8">
-                                <Editor Placeholder="Hizmetinizin detaylarını yazın..."
+                                <Editor Placeholder="{x:Static resx:AppResources.ServiceDescriptionPlaceholder}"
                                         Text="{Binding ServiceDescription}"
                                         FontSize="15"
                                         TextColor="#212121"
@@ -476,7 +477,7 @@
 
                         <!-- Kategori -->
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Kategori" 
+                            <Label Text="{x:Static resx:AppResources.Category}" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
                                    TextColor="#212121"/>
@@ -484,7 +485,7 @@
                                     StrokeThickness="1" 
                                     Stroke="#E0E0E0"
                                     Padding="12,0">
-                                <Picker Title="Kategori Seçin"
+                                <Picker Title="{x:Static resx:AppResources.SelectCategory}"
                                         ItemsSource="{Binding Categories}"
                                         SelectedItem="{Binding SelectedCategory}"
                                         FontSize="15"
@@ -495,7 +496,7 @@
 
                         <!-- Fiyat -->
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Fiyat" 
+                            <Label Text="{x:Static resx:AppResources.Price}" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
                                    TextColor="#212121"/>
@@ -522,7 +523,7 @@
 
                         <!-- Zaman Kredisi (Süre) -->
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Süre (Zaman Kredisi)" 
+                            <Label Text="{x:Static resx:AppResources.TimeCredits}" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
                                    TextColor="#212121"/>
@@ -546,7 +547,7 @@
                                                FontAttributes="Bold" 
                                                TextColor="#4CAF50" 
                                                HorizontalOptions="Center"/>
-                                        <Label Text="Saat" 
+                                        <Label Text="{x:Static resx:AppResources.Hour}" 
                                                FontSize="12" 
                                                TextColor="#757575" 
                                                HorizontalOptions="Center"/>
@@ -572,7 +573,7 @@
                                            HeightRequest="40"/>
 
                         <!-- Paylaş Butonu -->
-                        <Button Text="Paylaş"
+                        <Button Text="{x:Static resx:AppResources.Share}"
                                 Command="{Binding CreateServiceCommand}"
                                 IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}"
                                 BackgroundColor="#4CAF50"

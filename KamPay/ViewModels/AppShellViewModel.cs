@@ -1,13 +1,15 @@
 // KamPay/ViewModels/AppShellViewModel.cs
 
+using System;
+using System.Linq;
+using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using KamPay.Services;
-using KamPay.Helpers;
 using Firebase.Database;
 using Firebase.Database.Query;
-using System.Reactive.Linq;
+using KamPay.Helpers;
 using KamPay.Models;
+using KamPay.Services;
 
 namespace KamPay.ViewModels
 {
@@ -34,6 +36,9 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private string profileTitle = string.Empty;
+
+        [ObservableProperty]
+        private string favoritesTitle = string.Empty;
 
         private readonly IAuthenticationService _authService;
         private readonly IMessagingService _messagingService;
@@ -66,7 +71,11 @@ namespace KamPay.ViewModels
             // Language change message listener
             WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
             {
-                UpdateTabTitles();
+                // UI thread'de güncelleme yap
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    UpdateTabTitles();
+                });
             });
 
             // GÜNCELLENDİ: Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
@@ -93,6 +102,7 @@ namespace KamPay.ViewModels
             GoodDeedBoardTitle = res["GoodDeedBoard"];
             MessagesTitle = res["Messages"];
             ProfileTitle = res["Profile"];
+            FavoritesTitle = res["Favorites"];
         }
 
         // GÜNCELLENDİ: Metodun imzası async Task olarak değiştirildi

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="TimeCredits" xml:space="preserve">
+    <value>Time Credits</value>
+  </data>
   <data name="HomePage" xml:space="preserve">
     <value>Home</value>
   </data>
@@ -225,17 +228,8 @@
   <data name="VerificationCode" xml:space="preserve">
     <value>Verification Code</value>
   </data>
-  <data name="FirstName" xml:space="preserve">
-    <value>First Name</value>
-  </data>
-  <data name="LastName" xml:space="preserve">
-    <value>Last Name</value>
-  </data>
-  <data name="UniversityEmail" xml:space="preserve">
-    <value>University Email</value>
-  </data>
   <data name="RememberMe" xml:space="preserve">
-    <value>Remember me</value>
+    <value>Remember Me</value>
   </data>
   <data name="NoAccountRegister" xml:space="preserve">
     <value>Don't have an account? Register</value>
@@ -759,23 +753,14 @@
   <data name="GoodDeedBoardTitle" xml:space="preserve">
     <value>Good Deed Board</value>
   </data>
-  <data name="SharePost" xml:space="preserve">
-    <value>Share Post</value>
-  </data>
-  <data name="Comment" xml:space="preserve">
-    <value>Comment</value>
-  </data>
-  <data name="Like" xml:space="preserve">
-    <value>Like</value>
-  </data>
   <data name="CommunityPosts" xml:space="preserve">
     <value>Community Posts</value>
   </data>
   <data name="ShareNewGoodDeed" xml:space="preserve">
-    <value>Share New Good Deed</value>
+    <value>Share a New Good Deed</value>
   </data>
   <data name="TopicTitle" xml:space="preserve">
-    <value>Topic Title</value>
+    <value>Subject Title</value>
   </data>
   <data name="ShareYourThoughts" xml:space="preserve">
     <value>Share your thoughts...</value>
@@ -1038,11 +1023,47 @@
   <data name="Hour" xml:space="preserve">
     <value>Hour</value>
   </data>
+  <data name="SearchProducts" xml:space="preserve">
+    <value>What are you looking for?</value>
+  </data>
+  <data name="NoProductsFound" xml:space="preserve">
+    <value>No products were found matching your search criteria.</value>
+  </data>
   <data name="Free" xml:space="preserve">
     <value>Free</value>
   </data>
-  <data name="Register" xml:space="preserve">
-    <value>Register</value>
+  <data name="ServiceSearchPlaceholder" xml:space="preserve">
+    <value>Search service...</value>
+  </data>
+  <data name="PriceSortTitle" xml:space="preserve">
+    <value>Price Sort</value>
+  </data>
+  <data name="PriceSortAscending" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="PriceSortDescending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="TimeCreditsFormat" xml:space="preserve">
+    <value>{0} Time Credits</value>
+  </data>
+  <data name="RequestService" xml:space="preserve">
+    <value>Request Service</value>
+  </data>
+  <data name="NewServiceShare" xml:space="preserve">
+    <value>Share New Service</value>
+  </data>
+  <data name="ServiceTitlePlaceholder" xml:space="preserve">
+    <value>Enter service title</value>
+  </data>
+  <data name="ServiceDescriptionPlaceholder" xml:space="preserve">
+    <value>Enter service description</value>
+  </data>
+  <data name="PricePlaceholder" xml:space="preserve">
+    <value>Enter price</value>
+  </data>
+  <data name="ChangeFiltersOrClearSearch" xml:space="preserve">
+    <value>Change filters or clear search.</value>
   </data>
   <data name="FirstName" xml:space="preserve">
     <value>First Name</value>
@@ -1050,11 +1071,11 @@
   <data name="LastName" xml:space="preserve">
     <value>Last Name</value>
   </data>
-  <data name="Email" xml:space="preserve">
-    <value>Email</value>
+  <data name="UniversityEmail" xml:space="preserve">
+    <value>University Email</value>
   </data>
-  <data name="Password" xml:space="preserve">
-    <value>Password</value>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
   </data>
   <data name="ConfirmPassword" xml:space="preserve">
     <value>Confirm Password</value>
@@ -1062,14 +1083,8 @@
   <data name="AlreadyHaveAccount" xml:space="preserve">
     <value>Already have an account?</value>
   </data>
-  <data name="Login" xml:space="preserve">
-    <value>Login</value>
-  </data>
   <data name="WelcomeBack" xml:space="preserve">
     <value>Welcome Back</value>
-  </data>
-  <data name="RememberMe" xml:space="preserve">
-    <value>Remember Me</value>
   </data>
   <data name="DontHaveAccount" xml:space="preserve">
     <value>Don't have an account?</value>

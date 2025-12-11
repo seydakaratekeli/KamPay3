@@ -6,9 +6,10 @@
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:resources="clr-namespace:KamPay.Resources.Languages"
              x:Class="KamPay.Views.GoodDeedBoardPage"
              x:DataType="vm:GoodDeedBoardViewModel"
-             Title="İyilik Panosu"
+             Title="{x:Static resources:AppResources.GoodDeedBoardTitle}"
              BackgroundColor="{StaticResource Gray100}">
 
     <ContentPage.Resources>
@@ -35,7 +36,7 @@
                         IsVisible="{Binding IsSkeletonVisible}"
                         Margin="10,0">
             <CollectionView.Header>
-                <Label Text="Topluluk Paylaşımları"
+                <Label Text="{x:Static resources:AppResources.CommunityPosts}"
                        FontSize="20"
                        FontAttributes="Bold"
                        TextColor="{StaticResource Primary}"
@@ -117,7 +118,7 @@
 
             <CollectionView ItemsSource="{Binding Posts}" Margin="10,0">
                 <CollectionView.Header>
-                    <Label Text="Topluluk Paylaşımları" 
+                    <Label Text="{x:Static resources:AppResources.CommunityPosts}" 
                            FontSize="20" 
                            FontAttributes="Bold" 
                            TextColor="{StaticResource Primary}"
@@ -225,7 +226,7 @@
 
                                 <Border StrokeShape="RoundRectangle 20" Stroke="{StaticResource Gray300}" Padding="10,0" Margin="0,5,0,0" HeightRequest="45">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <Entry Grid.Column="0" Placeholder="Yorum yaz..." FontSize="13" Text="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NewCommentText}" ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" ReturnCommandParameter="{Binding .}" BackgroundColor="Transparent"/>
+                                        <Entry Grid.Column="0" Placeholder="{x:Static resources:AppResources.WriteComment}" FontSize="13" Text="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NewCommentText}" ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" ReturnCommandParameter="{Binding .}" BackgroundColor="Transparent"/>
                                         <Button Grid.Column="1" Text="✈️" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" CommandParameter="{Binding .}" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" Padding="0" WidthRequest="40"/>
                                     </Grid>
                                 </Border>
@@ -257,27 +258,27 @@
 
                 <VerticalStackLayout Spacing="15">
                     <Grid ColumnDefinitions="*, Auto">
-                        <Label Text="Yeni İyilik Paylaş" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Gray900}" VerticalOptions="Center"/>
+                        <Label Text="{x:Static resources:AppResources.ShareNewGoodDeed}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Gray900}" VerticalOptions="Center"/>
                         <Button Text="✕" Command="{Binding ClosePostFormCommand}" BackgroundColor="Transparent" TextColor="{StaticResource Gray600}" FontSize="20" WidthRequest="40" Padding="0"/>
                     </Grid>
                     <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
 
-                    <Entry Placeholder="Konu Başlığı" Text="{Binding Title}" FontSize="15" />
+                    <Entry Placeholder="{x:Static resources:AppResources.TopicTitle}" Text="{Binding Title}" FontSize="15" />
 
                     <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 10" Padding="10">
-                        <Editor Placeholder="Düşüncelerinizi paylaşın..." Text="{Binding Description}" HeightRequest="100" AutoSize="TextChanges" BackgroundColor="Transparent" />
+                        <Editor Placeholder="{x:Static resources:AppResources.ShareYourThoughts}" Text="{Binding Description}" HeightRequest="100" AutoSize="TextChanges" BackgroundColor="Transparent" />
                     </Border>
 
-                    <Label Text="Kategori Seçin" FontSize="12" TextColor="{StaticResource Gray600}" Margin="0,5,0,0"/>
+                    <Label Text="{x:Static resources:AppResources.SelectCategoryPost}" FontSize="12" TextColor="{StaticResource Gray600}" Margin="0,5,0,0"/>
                     <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 10" HeightRequest="50" Padding="10,0">
-                        <Picker Title="İlan Tipi" ItemsSource="{Binding PostTypes}" SelectedItem="{Binding SelectedType}" VerticalOptions="Center">
+                        <Picker Title="{x:Static resources:AppResources.PostType}" ItemsSource="{Binding PostTypes}" SelectedItem="{Binding SelectedType}" VerticalOptions="Center">
                             <Picker.ItemDisplayBinding>
                                 <Binding Converter="{StaticResource PostTypeToTextConverter}" />
                             </Picker.ItemDisplayBinding>
                         </Picker>
                     </Border>
 
-                    <Button Text="Paylaş" 
+                    <Button Text="{x:Static resources:AppResources.Share}" 
                             Command="{Binding CreatePostCommand}" 
                             BackgroundColor="{StaticResource Primary}" 
                             TextColor="White" 

@@ -390,6 +390,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             _ => "tr"
         };
 
+        // Dil değişikliğini uygula (bu zaten LanguageChangedMessage gönderir)
         LocalizationResourceManager.Instance.SetCulture(cultureCode);
         
         // Kullanıcıya bilgi ver

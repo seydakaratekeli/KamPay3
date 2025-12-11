@@ -22,20 +22,24 @@
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{Binding ServicesTitle}" Icon="service_icon.svg">
+        <Tab Title="{Binding ServicesTitle}" Icon="briefcase.png">
             <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
 
-        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="gooddeed_icon.svg">
+        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="good_board.png">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab Title="{Binding MessagesTitle}" Icon="messages_icon.svg">
+        <Tab Title="{Binding MessagesTitle}" Icon="message_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{Binding ProfileTitle}" Icon="profile_icon.svg">
+        <Tab Title="{Binding ProfileTitle}" Icon="person_icon.png">
             <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
+        </Tab>
+        
+        <Tab Title="{Binding FavoritesTitle}" Icon="heart_icon.png">
+            <ShellContent ContentTemplate="{DataTemplate local:FavoritesPage}" Route="FavoritesPage" />
         </Tab>
     </TabBar>
 </Shell>

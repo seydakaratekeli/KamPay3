@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -28,7 +87,7 @@
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="0" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
               <xsd:attribute ref="xml:space" />
@@ -58,8 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
-  <!-- Tab Bar Items -->
+  <data name="TimeCredits" xml:space="preserve">
+    <value>Zaman Kredisi</value>
+  </data>
   <data name="HomePage" xml:space="preserve">
     <value>Ana Sayfa</value>
   </data>
@@ -87,8 +147,6 @@
   <data name="Login" xml:space="preserve">
     <value>Giriş</value>
   </data>
-  
-  <!-- Common Actions -->
   <data name="Save" xml:space="preserve">
     <value>Kaydet</value>
   </data>
@@ -152,8 +210,6 @@
   <data name="Request" xml:space="preserve">
     <value>Talep Et</value>
   </data>
-  
-  <!-- Auth Pages -->
   <data name="LoginTitle" xml:space="preserve">
     <value>Giriş Yap</value>
   </data>
@@ -214,8 +270,6 @@
   <data name="UnexpectedError" xml:space="preserve">
     <value>Beklenmeyen hata</value>
   </data>
-  
-  <!-- Profile Related -->
   <data name="EditProfile" xml:space="preserve">
     <value>Profili Düzenle</value>
   </data>
@@ -250,7 +304,7 @@
     <value>Tekliflerim</value>
   </data>
   <data name="ServiceRequests" xml:space="preserve">
-    <value>Hizmet Taleplerim</value>
+    <value>Hizmet Talepleri</value>
   </data>
   <data name="LanguageDil" xml:space="preserve">
     <value>🌐 Language / Dil</value>
@@ -303,8 +357,6 @@
   <data name="UserNotFound" xml:space="preserve">
     <value>Kullanıcı bilgisi bulunamadı.</value>
   </data>
-  
-  <!-- Product Related -->
   <data name="ProductDetail" xml:space="preserve">
     <value>Ürün Detayı</value>
   </data>
@@ -476,8 +528,6 @@
   <data name="LoginRequired" xml:space="preserve">
     <value>Bu işlem için giriş yapmalısınız.</value>
   </data>
-  
-  <!-- Product Conditions -->
   <data name="ConditionLikeNew" xml:space="preserve">
     <value>Yeni Gibi</value>
   </data>
@@ -493,8 +543,6 @@
   <data name="ConditionUsable" xml:space="preserve">
     <value>Kullanılabilir</value>
   </data>
-  
-  <!-- Messages Related -->
   <data name="MessagesTitle" xml:space="preserve">
     <value>Mesajlar</value>
   </data>
@@ -525,8 +573,6 @@
   <data name="TypeMessage" xml:space="preserve">
     <value>Mesajınızı yazın...</value>
   </data>
-  
-  <!-- Favorites Related -->
   <data name="FavoritesTitle" xml:space="preserve">
     <value>Favoriler</value>
   </data>
@@ -545,8 +591,6 @@
   <data name="FavoritesLoading" xml:space="preserve">
     <value>Favoriler yükleniyor...</value>
   </data>
-  
-  <!-- Notifications Related -->
   <data name="NotificationsTitle" xml:space="preserve">
     <value>Bildirimler</value>
   </data>
@@ -559,8 +603,6 @@
   <data name="Loading" xml:space="preserve">
     <value>Yükleniyor...</value>
   </data>
-  
-  <!-- Offers Related -->
   <data name="OffersTitle" xml:space="preserve">
     <value>Teklifler</value>
   </data>
@@ -603,8 +645,6 @@
   <data name="OffersLoading" xml:space="preserve">
     <value>Teklifler yükleniyor...</value>
   </data>
-  
-  <!-- Service Related -->
   <data name="ServiceSharingTitle" xml:space="preserve">
     <value>Hizmet Paylaşımı</value>
   </data>
@@ -612,7 +652,7 @@
     <value>Hizmet Talebi</value>
   </data>
   <data name="TimeCredit" xml:space="preserve">
-    <value>Zaman Kredisi</value>
+    <value>Süre (Zaman Kredisi)</value>
   </data>
   <data name="AvailableServices" xml:space="preserve">
     <value>Mevcut Hizmetler</value>
@@ -621,13 +661,13 @@
     <value>Yeni Hizmet Paylaş</value>
   </data>
   <data name="ServiceTitle" xml:space="preserve">
-    <value>Başlık</value>
+    <value>Hizmet Başlığı</value>
   </data>
   <data name="ServiceDetails" xml:space="preserve">
     <value>Detaylar</value>
   </data>
   <data name="ServiceDescription" xml:space="preserve">
-    <value>Hizmet açıklaması...</value>
+    <value>Hizmet Açıklaması</value>
   </data>
   <data name="PriceTL" xml:space="preserve">
     <value>Fiyat (₺)</value>
@@ -671,8 +711,6 @@
   <data name="Processing" xml:space="preserve">
     <value>İşlem yapılıyor...</value>
   </data>
-  
-  <!-- Service Categories -->
   <data name="CategoryTransport" xml:space="preserve">
     <value>Taşıma</value>
   </data>
@@ -691,8 +729,6 @@
   <data name="CategoryOther" xml:space="preserve">
     <value>Diğer</value>
   </data>
-  
-  <!-- Service Requests -->
   <data name="ServiceRequestsTitle" xml:space="preserve">
     <value>Hizmet Taleplerim</value>
   </data>
@@ -714,19 +750,8 @@
   <data name="ServiceRequestsLoading" xml:space="preserve">
     <value>Hizmet talepleri yükleniyor...</value>
   </data>
-  
-  <!-- Good Deed Board -->
   <data name="GoodDeedBoardTitle" xml:space="preserve">
     <value>İyilik Panosu</value>
-  </data>
-  <data name="SharePost" xml:space="preserve">
-    <value>İlan Paylaş</value>
-  </data>
-  <data name="Comment" xml:space="preserve">
-    <value>Yorum Yap</value>
-  </data>
-  <data name="Like" xml:space="preserve">
-    <value>Beğen</value>
   </data>
   <data name="CommunityPosts" xml:space="preserve">
     <value>Topluluk Paylaşımları</value>
@@ -749,8 +774,6 @@
   <data name="WriteComment" xml:space="preserve">
     <value>Yorum yaz...</value>
   </data>
-  
-  <!-- QR Code Related -->
   <data name="QRCode" xml:space="preserve">
     <value>QR Kod</value>
   </data>
@@ -787,8 +810,6 @@
   <data name="ScanOtherCode" xml:space="preserve">
     <value>Karşı Tarafın Kodunu Tara</value>
   </data>
-  
-  <!-- Surprise Box -->
   <data name="SurpriseBoxTitle" xml:space="preserve">
     <value>Sürpriz Kutu</value>
   </data>
@@ -813,8 +834,6 @@
   <data name="OpeningBox" xml:space="preserve">
     <value>Sürpriz kutunuz açılıyor...</value>
   </data>
-  
-  <!-- Error Messages -->
   <data name="Error" xml:space="preserve">
     <value>Hata</value>
   </data>
@@ -830,8 +849,6 @@
   <data name="OperationSuccess" xml:space="preserve">
     <value>İşlem başarılı</value>
   </data>
-  
-  <!-- Validation Messages -->
   <data name="FillAllFields" xml:space="preserve">
     <value>Lütfen tüm alanları doldurun</value>
   </data>
@@ -844,8 +861,6 @@
   <data name="MissingInfo" xml:space="preserve">
     <value>Eksik bilgi</value>
   </data>
-  
-  <!-- Success Messages -->
   <data name="SavedSuccessfully" xml:space="preserve">
     <value>Başarıyla kaydedildi</value>
   </data>
@@ -855,21 +870,15 @@
   <data name="DeletedSuccessfully" xml:space="preserve">
     <value>Başarıyla silindi</value>
   </data>
-  
-  <!-- Empty States -->
   <data name="NoDataYet" xml:space="preserve">
     <value>Henüz veri yok</value>
   </data>
-  
-  <!-- Loading States -->
   <data name="Saving" xml:space="preserve">
     <value>Kaydediliyor...</value>
   </data>
   <data name="Sending" xml:space="preserve">
     <value>Gönderiliyor...</value>
   </data>
-  
-  <!-- Dialog Messages -->
   <data name="AreYouSure" xml:space="preserve">
     <value>Emin misiniz?</value>
   </data>
@@ -879,16 +888,12 @@
   <data name="DeleteFailed" xml:space="preserve">
     <value>Silme başarısız</value>
   </data>
-  
-  <!-- Main Page -->
   <data name="WelcomeMessage" xml:space="preserve">
     <value>Hoş geldiniz 👋</value>
   </data>
   <data name="ProductList" xml:space="preserve">
     <value>Ürün Listesi</value>
   </data>
-  
-  <!-- Time Ago -->
   <data name="JustNow" xml:space="preserve">
     <value>Az önce</value>
   </data>
@@ -901,8 +906,6 @@
   <data name="DaysAgo" xml:space="preserve">
     <value>gün önce</value>
   </data>
-  
-  <!-- Product Types -->
   <data name="ProductTypeSale" xml:space="preserve">
     <value>Satılık</value>
   </data>
@@ -915,8 +918,6 @@
   <data name="NotSpecified" xml:space="preserve">
     <value>Belirtilmemiş</value>
   </data>
-  
-  <!-- Post Types -->
   <data name="PostTypeHelpRequest" xml:space="preserve">
     <value>Yardım Talebi</value>
   </data>
@@ -929,8 +930,6 @@
   <data name="PostTypeVolunteer" xml:space="preserve">
     <value>Gönüllü Aranıyor</value>
   </data>
-  
-  <!-- Service Categories -->
   <data name="ServiceCategoryEducation" xml:space="preserve">
     <value>Eğitim</value>
   </data>
@@ -955,8 +954,6 @@
   <data name="ServiceCategoryOther" xml:space="preserve">
     <value>Diğer</value>
   </data>
-  
-  <!-- Product Categories -->
   <data name="CategoryElectronics" xml:space="preserve">
     <value>Elektronik</value>
   </data>
@@ -981,16 +978,12 @@
   <data name="CategoryBaby" xml:space="preserve">
     <value>Bebek Ürünleri</value>
   </data>
-  
-  <!-- Post Type for Good Deed -->
   <data name="PostTypeRequest" xml:space="preserve">
     <value>Talep</value>
   </data>
   <data name="PostTypeOffer" xml:space="preserve">
     <value>Teklif</value>
   </data>
-  
-  <!-- Form Labels -->
   <data name="TitleLabel" xml:space="preserve">
     <value>Başlık</value>
   </data>
@@ -1001,7 +994,7 @@
     <value>Kategori</value>
   </data>
   <data name="PriceLabel" xml:space="preserve">
-    <value>Fiyat</value>
+    <value>Fiyat (₺)</value>
   </data>
   <data name="LocationLabel" xml:space="preserve">
     <value>Konum</value>
@@ -1015,21 +1008,11 @@
   <data name="FeeLabel" xml:space="preserve">
     <value>Ücret</value>
   </data>
-  
-  <!-- Button and Action Labels -->
   <data name="SendRequest" xml:space="preserve">
     <value>Talep Gönder</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Filtrele</value>
-  </data>
-  <!-- Mevcut key'lere ek olarak bunları ekleyin: -->
-
-  <data name="Services" xml:space="preserve">
-    <value>Hizmetler</value>
-  </data>
-  <data name="ServiceRequests" xml:space="preserve">
-    <value>Hizmet Talepleri</value>
   </data>
   <data name="GoodDeedBoard" xml:space="preserve">
     <value>İyilik Panosu</value>
@@ -1037,64 +1020,73 @@
   <data name="AddService" xml:space="preserve">
     <value>Hizmet Ekle</value>
   </data>
-  <data name="ServiceTitle" xml:space="preserve">
-    <value>Hizmet Başlığı</value>
-  </data>
-  <data name="ServiceDescription" xml:space="preserve">
-    <value>Hizmet Açıklaması</value>
-  </data>
-  <data name="SelectCategory" xml:space="preserve">
-    <value>Kategori Seçin</value>
-  </data>
-  <data name="PriceLabel" xml:space="preserve">
-    <value>Fiyat (₺)</value>
-  </data>
-  <data name="TimeCredit" xml:space="preserve">
-    <value>Süre (Zaman Kredisi)</value>
-  </data>
   <data name="Hour" xml:space="preserve">
     <value>Saat</value>
   </data>
-  <data name="Share" xml:space="preserve">
-    <value>Paylaş</value>
-  </data>
   <data name="SearchProducts" xml:space="preserve">
     <value>Ne arıyorsunuz?</value>
-  </data>
-  <data name="Filter" xml:space="preserve">
-    <value>Filtrele</value>
-  </data>
-  <data name="All" xml:space="preserve">
-    <value>Tümü</value>
-  </data>
-  <data name="ProductType" xml:space="preserve">
-    <value>Ürün Tipi</value>
-  </data>
-  <data name="ForSale" xml:space="preserve">
-    <value>Satılık</value>
-  </data>
-  <data name="Donation" xml:space="preserve">
-    <value>Bağış</value>
-  </data>
-  <data name="Exchange" xml:space="preserve">
-    <value>Takas</value>
-  </data>
-  <data name="Sorting" xml:space="preserve">
-    <value>Sıralama</value>
-  </data>
-  <data name="SelectSorting" xml:space="preserve">
-    <value>Sıralama Seçin</value>
-  </data>
-  <data name="Clear" xml:space="preserve">
-    <value>Temizle</value>
-  </data>
-  <data name="Apply" xml:space="preserve">
-    <value>Uygula</value>
   </data>
   <data name="NoProductsFound" xml:space="preserve">
     <value>Arama kriterlerinize uygun ürün bulunamadı</value>
   </data>
   <data name="Free" xml:space="preserve">
     <value>ÜCRETSİZ</value>
+  </data>
+  <data name="ServiceSearchPlaceholder" xml:space="preserve">
+    <value>Hizmet ara...</value>
+  </data>
+  <data name="PriceSortTitle" xml:space="preserve">
+    <value>Fiyat Sıralama</value>
+  </data>
+  <data name="PriceSortAscending" xml:space="preserve">
+    <value>Artan</value>
+  </data>
+  <data name="PriceSortDescending" xml:space="preserve">
+    <value>Azalan</value>
+  </data>
+  <data name="TimeCreditsFormat" xml:space="preserve">
+    <value>{0} Zaman Kredisi</value>
+  </data>
+  <data name="RequestService" xml:space="preserve">
+    <value>Hizmeti Talep Et</value>
+  </data>
+  <data name="NewServiceShare" xml:space="preserve">
+    <value>Yeni Hizmet Paylaş</value>
+  </data>
+  <data name="ServiceTitlePlaceholder" xml:space="preserve">
+    <value>Hizmet başlığı girin</value>
+  </data>
+  <data name="ServiceDescriptionPlaceholder" xml:space="preserve">
+    <value>Hizmet açıklaması girin</value>
+  </data>
+  <data name="PricePlaceholder" xml:space="preserve">
+    <value>Fiyat girin</value>
+  </data>
+  <data name="ChangeFiltersOrClearSearch" xml:space="preserve">
+    <value>Filtreleri değiştirin veya aramayı temizleyin.</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>İsim</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Soyisim</value>
+  </data>
+  <data name="UniversityEmail" xml:space="preserve">
+    <value>Üniversite E-maili</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Kayıt Ol</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Şifreyi Onayla</value>
+  </data>
+  <data name="AlreadyHaveAccount" xml:space="preserve">
+    <value>Zaten Hesabım Var</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Tekrar Hoşgeldiniz</value>
+  </data>
+  <data name="DontHaveAccount" xml:space="preserve">
+    <value>Hesabın yok mu?</value>
   </data>
 </root>
