@@ -17,15 +17,37 @@ namespace KamPay.Models
         public string ReceiverName { get; set; }
         public string ReceiverPhotoUrl { get; set; }
         public string Content { get; set; }
+        
+        // Alternatif property adı için backward compatibility
+        [JsonIgnore]
+        public string Text 
+        { 
+            get => Content; 
+            set => Content = value; 
+        }
+        
         public MessageType Type { get; set; } = MessageType.Text;
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
+        
+        // Alternatif property adı için backward compatibility
+        [JsonIgnore]
+        public DateTime Timestamp 
+        { 
+            get => SentAt; 
+            set => SentAt = value; 
+        }
+        
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
         public bool IsDeleted { get; set; } = false;
-        // Mesaj durumu �zellikleri
+        
+        // Mesaj durumu özellikleri
         public bool IsDelivered { get; set; } = true;
+        
+        // Sistem mesajı kontrolü için
+        public bool IsSystemMessage { get; set; } = false;
 
-        // �r�n referans� (opsiyonel)
+        // Ürün referansı (opsiyonel)
         public string ProductId { get; set; }
         public string ProductTitle { get; set; }
         public string ProductThumbnail { get; set; }

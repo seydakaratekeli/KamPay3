@@ -18,6 +18,14 @@
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
+            
+            <!-- 🔥 YENİ: Pazarlık Converter'ları -->
+            <converters:IsSaleConverter x:Key="IsSaleConverter"/>
+            <converters:IsTradeConverter x:Key="IsTradeConverter"/>
+            <converters:AllTrueConverter x:Key="AllTrueConverter"/>
+            <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
+            <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
+            <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -184,98 +192,186 @@
                                        CornerRadius="15"
                                        HasShadow="True">
 
-                                    <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="8">
+                                        
+                                        <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
 
-                                        <!-- Ürün Foto -->
-                                        <ffimageloading:CachedImage Grid.Column="0"
-                                                                    Source="{Binding ProductThumbnailUrl}"
-                                                                    Aspect="AspectFill"
-                                                                    HeightRequest="80"
-                                                                    WidthRequest="80"
-                                                                    LoadingPlaceholder="loading_image.png"
-                                                                    ErrorPlaceholder="error_image.png">
-                                            <ffimageloading:CachedImage.Clip>
-                                                <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
-                                            </ffimageloading:CachedImage.Clip>
-                                        </ffimageloading:CachedImage>
+                                            <!-- Ürün Foto -->
+                                            <ffimageloading:CachedImage Grid.Column="0"
+                                                                        Source="{Binding ProductThumbnailUrl}"
+                                                                        Aspect="AspectFill"
+                                                                        HeightRequest="80"
+                                                                        WidthRequest="80"
+                                                                        LoadingPlaceholder="loading_image.png"
+                                                                        ErrorPlaceholder="error_image.png">
+                                                <ffimageloading:CachedImage.Clip>
+                                                    <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
+                                                </ffimageloading:CachedImage.Clip>
+                                            </ffimageloading:CachedImage>
 
-                                        <!-- Sağ içerik -->
-                                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                                            <!-- Sağ içerik -->
+                                            <VerticalStackLayout Grid.Column="1" Spacing="5">
 
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <Label Grid.Column="0"
-                                                       Text="{Binding ProductTitle}"
-                                                       TextColor="{StaticResource Gray900}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="15"
-                                                       LineBreakMode="TailTruncation"/>
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <Label Grid.Column="0"
+                                                           Text="{Binding ProductTitle}"
+                                                           TextColor="{StaticResource Gray900}"
+                                                           FontAttributes="Bold"
+                                                           FontSize="15"
+                                                           LineBreakMode="TailTruncation"/>
 
-                                                <Label Grid.Column="1"
-                                                       Text="{Binding StatusText}"
-                                                       FontSize="11"
-                                                       TextColor="{StaticResource Primary}"
-                                                       FontAttributes="Bold"/>
-                                            </Grid>
+                                                    <Label Grid.Column="1"
+                                                           Text="{Binding StatusText}"
+                                                           FontSize="11"
+                                                           TextColor="{StaticResource Primary}"
+                                                           FontAttributes="Bold"/>
+                                                </Grid>
 
-                                            <Label Text="{Binding BuyerName, StringFormat='Talep Eden: {0}'}"
-                                                   FontSize="12"
-                                                   TextColor="{StaticResource Gray600}"/>
+                                                <Label Text="{Binding BuyerName, StringFormat='Talep Eden: {0}'}"
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource Gray600}"/>
 
-                                            <Label Text="{Binding Message}"
-                                                   FontSize="13"
-                                                   MaxLines="2"
-                                                   LineBreakMode="TailTruncation"
-                                                   TextColor="{StaticResource Gray900}"/>
+                                                <Label Text="{Binding Message}"
+                                                       FontSize="13"
+                                                       MaxLines="2"
+                                                       LineBreakMode="TailTruncation"
+                                                       TextColor="{StaticResource Gray900}"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
 
-                                            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
+                                        <!-- 🔥 YENİ: Pazarlık Bilgi Paneli -->
+                                        <Frame IsVisible="{Binding IsNegotiating}"
+                                               BackgroundColor="#FF9800"
+                                               Padding="10"
+                                               Margin="0,5,0,0"
+                                               CornerRadius="8"
+                                               HasShadow="False">
+                                            <VerticalStackLayout Spacing="5">
+                                                <Label FontAttributes="Bold" TextColor="White" FontSize="12">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="{Binding Type, Converter={StaticResource ProductTypeToEmojiConverter}}"/>
+                                                            <Span Text=" Pazarlık Devam Ediyor"/>
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                                <Label Text="{Binding NegotiationStatusText}"
+                                                       TextColor="White"
+                                                       FontSize="11"/>
+                                            </VerticalStackLayout>
+                                        </Frame>
 
-                                            <!-- Butonlar -->
-                                            <Grid ColumnDefinitions="Auto,*">
+                                        <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
 
-                                                <Label Text="{Binding Price, StringFormat='{0} ₺'}"
-                                                       TextColor="{StaticResource Primary}"
-                                                       FontAttributes="Bold"
-                                                       VerticalOptions="Center"/>
+                                        <!-- Butonlar -->
+                                        <Grid ColumnDefinitions="Auto,*">
 
-                                                <HorizontalStackLayout Grid.Column="1"
-                                                                       HorizontalOptions="End"
-                                                                       Spacing="8">
+                                            <Label Text="{Binding Price, StringFormat='{0} ₺'}"
+                                                   TextColor="{StaticResource Primary}"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center"/>
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Reject]}"
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
-                                                            CommandParameter="{Binding .}"
-                                                            BackgroundColor="{StaticResource Tertiary}"
-                                                            TextColor="White"
-                                                            HeightRequest="30"
-                                                            CornerRadius="5"
-                                                            FontSize="11"
-                                                            IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                            <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="5">
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Accept]}"
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
-                                                            CommandParameter="{Binding .}"
-                                                            BackgroundColor="{StaticResource Primary}"
-                                                            TextColor="White"
-                                                            HeightRequest="30"
-                                                            CornerRadius="5"
-                                                            FontSize="11"
-                                                            IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                <!-- 💬 Mesaj Butonu -->
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0"/>
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
-                                                            CommandParameter="{Binding .}"
-                                                            BackgroundColor="{StaticResource Secondary}"
-                                                            TextColor="White"
-                                                            HeightRequest="30"
-                                                            CornerRadius="5"
-                                                            FontSize="11"
-                                                            IsVisible="{Binding CanManageDelivery}"/>
+                                                <!-- 💰 Karşı Teklif (SATIŞ + Satıcı + Pending) -->
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Tertiary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                            <Binding Path="SellerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
 
-                                                </HorizontalStackLayout>
-                                            </Grid>
+                                                <!-- 💰 Karşı Nakit (TAKAS + Sahip + Pending) -->
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Tertiary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                            <Binding Path="SellerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
 
-                                        </VerticalStackLayout>
-                                    </Grid>
+                                                <!-- ✓ Kabul (Pazarlık devam ederken) -->
+                                                <Button Text="✓"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        IsVisible="{Binding IsNegotiating}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0"/>
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Reject]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Tertiary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Accept]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Primary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding CanManageDelivery}"/>
+
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                    </VerticalStackLayout>
 
                                 </Frame>
                             </DataTemplate>
@@ -311,95 +407,184 @@
                                        HasShadow="True"
                                        BackgroundColor="#FAFAFA">
 
-                                    <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="8">
+                                        
+                                        <Grid ColumnDefinitions="80,*" ColumnSpacing="10">
 
-                                        <ffimageloading:CachedImage Grid.Column="0"
-                                                                    Source="{Binding ProductThumbnailUrl}"
-                                                                    Aspect="AspectFill"
-                                                                    HeightRequest="80"
-                                                                    WidthRequest="80"
-                                                                    LoadingPlaceholder="loading_image.png"
-                                                                    ErrorPlaceholder="error_image.png">
-                                            <ffimageloading:CachedImage.Clip>
-                                                <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
-                                            </ffimageloading:CachedImage.Clip>
-                                        </ffimageloading:CachedImage>
+                                            <ffimageloading:CachedImage Grid.Column="0"
+                                                                        Source="{Binding ProductThumbnailUrl}"
+                                                                        Aspect="AspectFill"
+                                                                        HeightRequest="80"
+                                                                        WidthRequest="80"
+                                                                        LoadingPlaceholder="loading_image.png"
+                                                                        ErrorPlaceholder="error_image.png">
+                                                <ffimageloading:CachedImage.Clip>
+                                                    <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
+                                                </ffimageloading:CachedImage.Clip>
+                                            </ffimageloading:CachedImage>
 
-                                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                                            <VerticalStackLayout Grid.Column="1" Spacing="5">
 
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <Label Grid.Column="0"
-                                                       Text="{Binding ProductTitle}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="15"
-                                                       TextColor="{StaticResource Gray900}"
-                                                       LineBreakMode="TailTruncation" />
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <Label Grid.Column="0"
+                                                           Text="{Binding ProductTitle}"
+                                                           FontAttributes="Bold"
+                                                           FontSize="15"
+                                                           TextColor="{StaticResource Gray900}"
+                                                           LineBreakMode="TailTruncation" />
 
-                                                <Label Grid.Column="1"
-                                                       Text="{Binding StatusText}"
-                                                       FontSize="11"
-                                                       TextColor="{StaticResource Secondary}"
-                                                       FontAttributes="Bold"/>
-                                            </Grid>
+                                                    <Label Grid.Column="1"
+                                                           Text="{Binding StatusText}"
+                                                           FontSize="11"
+                                                           TextColor="{StaticResource Secondary}"
+                                                           FontAttributes="Bold"/>
+                                                </Grid>
 
-                                            <Label Text="{Binding SellerName, StringFormat='Satıcı: {0}'}"
-                                                   FontSize="12"
-                                                   TextColor="{StaticResource Gray600}"/>
+                                                <Label Text="{Binding SellerName, StringFormat='Satıcı: {0}'}"
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource Gray600}"/>
 
-                                            <Label Text="{Binding Message}"
-                                                   FontSize="13"
-                                                   MaxLines="2"
-                                                   LineBreakMode="TailTruncation"
-                                                   TextColor="{StaticResource Gray900}"/>
+                                                <Label Text="{Binding Message}"
+                                                       FontSize="13"
+                                                       MaxLines="2"
+                                                       LineBreakMode="TailTruncation"
+                                                       TextColor="{StaticResource Gray900}"/>
 
-                                            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
 
-                                            <Grid ColumnDefinitions="Auto,*">
+                                        <!-- 🔥 YENİ: Pazarlık Bilgi Paneli -->
+                                        <Frame IsVisible="{Binding IsNegotiating}"
+                                               BackgroundColor="#FF9800"
+                                               Padding="10"
+                                               Margin="0,5,0,0"
+                                               CornerRadius="8"
+                                               HasShadow="False">
+                                            <VerticalStackLayout Spacing="5">
+                                                <Label FontAttributes="Bold" TextColor="White" FontSize="12">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="{Binding Type, Converter={StaticResource ProductTypeToEmojiConverter}}"/>
+                                                            <Span Text=" Pazarlık Devam Ediyor"/>
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                                <Label Text="{Binding NegotiationStatusText}"
+                                                       TextColor="White"
+                                                       FontSize="11"/>
+                                            </VerticalStackLayout>
+                                        </Frame>
 
-                                                <Label Text="{Binding Price, StringFormat='{0} ₺'}"
-                                                     TextColor="{StaticResource Primary}"
-                                                     FontAttributes="Bold"
-                                                     VerticalOptions="Center"/>
+                                        <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
 
-                                                <HorizontalStackLayout Grid.Column="1"
-                                                                     HorizontalOptions="End"
-                                                                     Spacing="8">
+                                        <Grid ColumnDefinitions="Auto,*">
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MakePayment]}"
-                                                          Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
-                                                          CommandParameter="{Binding .}"
-                                                          BackgroundColor="{StaticResource Primary}"
-                                                          TextColor="White"
-                                                          HeightRequest="30"
-                                                          CornerRadius="5"
-                                                          FontSize="11"
-                                                          IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}" />
+                                            <Label Text="{Binding Price, StringFormat='{0} ₺'}"
+                                                   TextColor="{StaticResource Primary}"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center"/>
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ConfirmReceived]}"
-                                                          Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ConfirmDonationReceivedCommand}"
-                                                          CommandParameter="{Binding .}"
-                                                          BackgroundColor="#4CAF50"
-                                                          TextColor="White"
-                                                          HeightRequest="30"
-                                                          CornerRadius="5"
-                                                          FontSize="11"
-                                                          IsVisible="{Binding Path=., Converter={StaticResource ConfirmDonationButtonVisibilityConverter}}" />
+                                            <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="5">
 
-                                                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
-                                                          Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
-                                                          CommandParameter="{Binding .}"
-                                                          BackgroundColor="{StaticResource Secondary}"
-                                                          TextColor="White"
-                                                          HeightRequest="30"
-                                                          CornerRadius="5"
-                                                          FontSize="11"
-                                                          IsVisible="{Binding CanManageDelivery}" />
+                                                <!-- 💬 Mesaj Butonu -->
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0"/>
 
-                                                </HorizontalStackLayout>
-                                            </Grid>
+                                                <!-- 💰 Fiyat Teklifi (SATIŞ + Alıcı + Pending) -->
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Tertiary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                            <Binding Path="BuyerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
 
-                                        </VerticalStackLayout>
-                                    </Grid>
+                                                <!-- 💰 Ek Nakit (TAKAS + Talep Eden + Pending) -->
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Tertiary}"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                            <Binding Path="BuyerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
+
+                                                <!-- ✓ Kabul (Pazarlık devam ederken) -->
+                                                <Button Text="✓"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        IsVisible="{Binding IsNegotiating}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="40"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="14"
+                                                        Padding="0"/>
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MakePayment]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Primary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}" />
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ConfirmReceived]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ConfirmDonationReceivedCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding Path=., Converter={StaticResource ConfirmDonationButtonVisibilityConverter}}" />
+
+                                                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[DeliveryQR]}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Secondary}"
+                                                        TextColor="White"
+                                                        HeightRequest="30"
+                                                        CornerRadius="5"
+                                                        FontSize="11"
+                                                        IsVisible="{Binding CanManageDelivery}" />
+
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                    </VerticalStackLayout>
 
                                 </Frame>
                             </DataTemplate>
@@ -411,11 +596,8 @@
             </RefreshView>
 
             <!-- 🔥 3. LOADING INDICATOR (Tüm ekranın ortasında - En üstte) -->
-            <Grid IsVisible="{Binding IsLoading}"
-                  BackgroundColor="Transparent">
-                <VerticalStackLayout VerticalOptions="Center"
-                                      HorizontalOptions="Center"
-                                      Spacing="15">
+            <Grid IsVisible="{Binding IsLoading}" BackgroundColor="Transparent">
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
                     <ActivityIndicator IsRunning="True"
                                        Color="{StaticResource Primary}"
                                        WidthRequest="50"

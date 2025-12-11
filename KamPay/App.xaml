@@ -12,7 +12,8 @@
             </ResourceDictionary.MergedDictionaries>
 
             <converters:UnreadToIconConverter x:Key="UnreadToIconConverter" />
-
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:IsNotZeroConverter x:Key="IsNotZeroConverter" />
             
             <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
             <converters:IntToBoolConverter x:Key="IntToBoolConverter" />

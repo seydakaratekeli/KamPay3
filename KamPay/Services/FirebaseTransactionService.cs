@@ -557,5 +557,492 @@ namespace KamPay.Services
                 return ServiceResult<List<Transaction>>.FailureResult("Gönderilen teklifler alınamadı.", ex.Message);
             }
         }
+
+        #region 💰 SATIŞ PAZARLIK METODLARI
+
+        /// <summary>
+        /// Satış için fiyat teklifi (Alıcı)
+        /// </summary>
+        public async Task<ServiceResult<bool>> ProposePriceForSaleAsync(
+            string transactionId,
+            decimal proposedPrice,
+            string currentUserId)
+        {
+            try
+            {
+                if (proposedPrice <= 0)
+                    return ServiceResult<bool>.FailureResult("Fiyat 0'dan büyük olmalı");
+
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı");
+
+                // Sadece alıcı teklif verebilir
+                if (transaction.BuyerId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Yetkiniz yok");
+
+                // Sadece satış işlemlerinde
+                if (transaction.Type != ProductType.Satis)
+                    return ServiceResult<bool>.FailureResult("Bu işlem satış değil");
+
+                // Sadece Pending durumunda
+                if (transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                // Güncelle
+                transaction.ProposedPriceByBuyer = proposedPrice;
+                transaction.IsNegotiating = true;
+                transaction.LastNegotiationDate = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.SellerId,
+                    Type = NotificationType.NewOffer,
+                    Title = "Yeni Fiyat Teklifi",
+                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {proposedPrice:N2}₺ teklif etti.",
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // Konuşma mesajı
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    await AddSystemMessageAsync(
+                        transaction.ConversationId,
+                        $"💰 Fiyat Teklifi: {proposedPrice:N2} ₺"
+                    );
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Fiyat teklifiniz gönderildi");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ ProposePriceForSale hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif gönderilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Satış için karşı teklif (Satıcı)
+        /// </summary>
+        public async Task<ServiceResult<bool>> SendCounterOfferForSaleAsync(
+            string transactionId,
+            decimal counterOffer,
+            string currentUserId)
+        {
+            try
+            {
+                if (counterOffer <= 0)
+                    return ServiceResult<bool>.FailureResult("Fiyat 0'dan büyük olmalı");
+
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı");
+
+                // Sadece satıcı karşı teklif verebilir
+                if (transaction.SellerId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Yetkiniz yok");
+
+                if (transaction.Type != ProductType.Satis)
+                    return ServiceResult<bool>.FailureResult("Bu işlem satış değil");
+
+                if (transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                transaction.CounterOfferBySeller = counterOffer;
+                transaction.IsNegotiating = true;
+                transaction.LastNegotiationDate = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.BuyerId,
+                    Type = NotificationType.NewOffer,
+                    Title = "Karşı Teklif Alındı",
+                    Message = $"'{transaction.ProductTitle}' için karşı teklif: {counterOffer:N2}₺",
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // Konuşma mesajı
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    await AddSystemMessageAsync(
+                        transaction.ConversationId,
+                        $"💰 Karşı Teklif: {counterOffer:N2} ₺"
+                    );
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Karşı teklifiniz gönderildi");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ SendCounterOfferForSale hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif gönderilemedi", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region 🔄 TAKAS PAZARLIK METODLARI
+
+        /// <summary>
+        /// Takas için ek nakit teklifi (Talep Eden)
+        /// </summary>
+        public async Task<ServiceResult<bool>> ProposeAdditionalCashAsync(
+            string transactionId,
+            decimal additionalCash,
+            string currentUserId)
+        {
+            try
+            {
+                if (additionalCash < 0)
+                    return ServiceResult<bool>.FailureResult("Tutar negatif olamaz");
+
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı");
+
+                // Sadece talep eden
+                if (transaction.BuyerId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Yetkiniz yok");
+
+                if (transaction.Type != ProductType.Takas)
+                    return ServiceResult<bool>.FailureResult("Bu işlem takas değil");
+
+                if (transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                transaction.AdditionalCashByRequester = additionalCash;
+                transaction.IsNegotiating = true;
+                transaction.LastNegotiationDate = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.SellerId,
+                    Type = NotificationType.NewOffer,
+                    Title = "Yeni Nakit Teklifi",
+                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' takası için {additionalCash:N2}₺ ek ödeme teklif etti.",
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // Konuşma mesajı
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    await AddSystemMessageAsync(
+                        transaction.ConversationId,
+                        $"💰 Ek Nakit Teklifi: {additionalCash:N2} ₺"
+                    );
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Nakit teklifiniz gönderildi");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ ProposeAdditionalCash hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif gönderilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Takas için karşı nakit teklifi (Sahip)
+        /// </summary>
+        public async Task<ServiceResult<bool>> SendCounterCashOfferAsync(
+            string transactionId,
+            decimal counterCash,
+            string currentUserId)
+        {
+            try
+            {
+                if (counterCash < 0)
+                    return ServiceResult<bool>.FailureResult("Tutar negatif olamaz");
+
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı");
+
+                // Sadece sahip
+                if (transaction.SellerId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Yetkiniz yok");
+
+                if (transaction.Type != ProductType.Takas)
+                    return ServiceResult<bool>.FailureResult("Bu işlem takas değil");
+
+                if (transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                transaction.CounterCashByOwner = counterCash;
+                transaction.IsNegotiating = true;
+                transaction.LastNegotiationDate = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.BuyerId,
+                    Type = NotificationType.NewOffer,
+                    Title = "Karşı Teklif Alındı",
+                    Message = $"'{transaction.ProductTitle}' takası için karşı teklif: {counterCash:N2}₺",
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // Konuşma mesajı
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    await AddSystemMessageAsync(
+                        transaction.ConversationId,
+                        $"💰 Karşı Teklif: {counterCash:N2} ₺"
+                    );
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, "Karşı teklifiniz gönderildi");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ SendCounterCashOffer hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif gönderilemedi", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region 🤝 ORTAK PAZARLIK METODLARI
+
+        /// <summary>
+        /// Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas)
+        /// </summary>
+        public async Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(
+            string transactionId,
+            string currentUserId)
+        {
+            try
+            {
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı");
+
+                // Yetki: her iki taraf da kabul edebilir
+                if (transaction.BuyerId != currentUserId && transaction.SellerId != currentUserId)
+                    return ServiceResult<bool>.FailureResult("Yetkiniz yok");
+
+                if (!transaction.IsNegotiating)
+                    return ServiceResult<bool>.FailureResult("Aktif pazarlık yok");
+
+                // Anlaşılan tutarı belirle
+                decimal agreedAmount = transaction.AgreedAmount;
+
+                // Güncelle
+                if (transaction.Type == ProductType.Satis)
+                {
+                    transaction.QuotedPrice = agreedAmount;
+                    transaction.Price = agreedAmount;
+                }
+                else if (transaction.Type == ProductType.Takas)
+                {
+                    transaction.QuotedPrice = agreedAmount;
+                }
+
+                transaction.IsNegotiating = false;
+                transaction.NegotiationNotes = $"Anlaşılan tutar: {agreedAmount:N2}₺ - {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                transaction.UpdatedAt = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Diğer tarafa bildirim
+                var otherUserId = transaction.BuyerId == currentUserId 
+                    ? transaction.SellerId 
+                    : transaction.BuyerId;
+
+                var notificationMessage = transaction.Type == ProductType.Satis
+                    ? $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatı kabul edildi."
+                    : $"'{transaction.ProductTitle}' takası için {agreedAmount:N2}₺ ek ödeme kabul edildi.";
+
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = otherUserId,
+                    Type = NotificationType.OfferAccepted,
+                    Title = "Fiyat Anlaşması",
+                    Message = notificationMessage,
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // Sistem mesajı
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    await AddSystemMessageAsync(
+                        transaction.ConversationId,
+                        $"✅ Anlaşma sağlandı: {agreedAmount:N2} ₺"
+                    );
+                }
+
+                return ServiceResult<bool>.SuccessResult(true, $"Anlaşılan tutar: {agreedAmount:N2}₺");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ AcceptNegotiatedPrice hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Kabul işlemi başarısız", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Transaction için konuşma başlat
+        /// </summary>
+        public async Task<ServiceResult<string>> StartConversationForTransactionAsync(
+            string transactionId,
+            string currentUserId)
+        {
+            try
+            {
+                var transaction = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<string>.FailureResult("İşlem bulunamadı");
+
+                // Mevcut konuşma varsa döndür
+                if (!string.IsNullOrEmpty(transaction.ConversationId))
+                {
+                    return ServiceResult<string>.SuccessResult(
+                        transaction.ConversationId,
+                        "Mevcut konuşmaya yönlendiriliyorsunuz"
+                    );
+                }
+
+                // Yeni konuşma oluştur
+                var conversation = new Conversation
+                {
+                    ConversationId = Guid.NewGuid().ToString(),
+                    User1Id = transaction.BuyerId,
+                    User1Name = transaction.BuyerName,
+                    User1PhotoUrl = transaction.BuyerPhotoUrl ?? "",
+                    User2Id = transaction.SellerId,
+                    User2Name = transaction.SellerName,
+                    User2PhotoUrl = transaction.SellerPhotoUrl ?? "",
+                    LastMessage = "Görüşme başlatıldı",
+                    LastMessageTime = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                await _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .Child(conversation.ConversationId)
+                    .PutAsync(conversation);
+
+                // Transaction'a conversation ID'sini ekle
+                transaction.ConversationId = conversation.ConversationId;
+                transaction.HasActiveConversation = true;
+
+                await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .Child(transactionId)
+                    .PutAsync(transaction);
+
+                // Sistem mesajı ekle
+                var typeText = transaction.Type == ProductType.Satis ? "satış" : 
+                              transaction.Type == ProductType.Takas ? "takas" : "bağış";
+                await AddSystemMessageAsync(
+                    conversation.ConversationId,
+                    $"'{transaction.ProductTitle}' {typeText} için görüşme başlatıldı."
+                );
+
+                return ServiceResult<string>.SuccessResult(
+                    conversation.ConversationId,
+                    "Konuşma başlatıldı"
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ StartConversationForTransaction hatası: {ex.Message}");
+                return ServiceResult<string>.FailureResult("Konuşma başlatılamadı", ex.Message);
+            }
+        }
+
+        // Yardımcı metod
+        private async Task AddSystemMessageAsync(string conversationId, string messageText)
+        {
+            try
+            {
+                var systemMessage = new Message
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    ConversationId = conversationId,
+                    SenderId = "system",
+                    SenderName = "Sistem",
+                    Text = messageText,
+                    Timestamp = DateTime.UtcNow,
+                    IsRead = false,
+                    IsSystemMessage = true
+                };
+
+                await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(systemMessage.MessageId)
+                    .PutAsync(systemMessage);
+
+                // Konuşmanın son mesajını güncelle
+                var conversationRef = _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .Child(conversationId);
+
+                var conversation = await conversationRef.OnceSingleAsync<Conversation>();
+                if (conversation != null)
+                {
+                    conversation.LastMessage = messageText;
+                    conversation.LastMessageTime = DateTime.UtcNow;
+                    await conversationRef.PutAsync(conversation);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Sistem mesajı eklenemedi: {ex.Message}");
+            }
+        }
+
+        #endregion
     }
 }

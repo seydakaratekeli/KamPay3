@@ -573,5 +573,226 @@ namespace KamPay.ViewModels
             _initialLoadComplete = false;
             _isInitialized = false;
         }
+
+        #region 💰 PAZARLIK KOMUTLARI
+
+        [RelayCommand]
+        private async Task MessagePartnerAsync(Transaction transaction)
+        {
+            if (transaction == null)
+                return;
+
+            try
+            {
+                var result = await _transactionService.StartConversationForTransactionAsync(
+                    transaction.TransactionId,
+                    _currentUserId
+                );
+
+                if (result.Success)
+                {
+                    await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={result.Data}");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ProposePriceAsync(Transaction transaction)
+        {
+            if (transaction == null || transaction.BuyerId != _currentUserId)
+                return;
+
+            try
+            {
+                var currentPriceText = transaction.Type == ProductType.Satis 
+                    ? $"Mevcut Fiyat: {transaction.Price:N2}₺\n\n"
+                    : "";
+
+                var amountText = await Application.Current.MainPage.DisplayPromptAsync(
+                    transaction.Type == ProductType.Satis ? "Fiyat Teklifi" : "Ek Nakit Teklifi",
+                    $"{currentPriceText}Ne kadar teklif etmek istiyorsunuz?",
+                    placeholder: "Örn: 150",
+                    keyboard: Keyboard.Numeric
+                );
+
+                if (string.IsNullOrWhiteSpace(amountText))
+                    return;
+
+                if (!decimal.TryParse(amountText, out var amount) || amount < 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin", "Tamam");
+                    return;
+                }
+
+                IsLoading = true;
+                ServiceResult<bool> result;
+
+                if (transaction.Type == ProductType.Satis)
+                {
+                    result = await _transactionService.ProposePriceForSaleAsync(
+                        transaction.TransactionId,
+                        amount,
+                        _currentUserId
+                    );
+                }
+                else // Takas
+                {
+                    result = await _transactionService.ProposeAdditionalCashAsync(
+                        transaction.TransactionId,
+                        amount,
+                        _currentUserId
+                    );
+                }
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Başarılı", result.Message, "Tamam");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task SendCounterOfferAsync(Transaction transaction)
+        {
+            if (transaction == null || transaction.SellerId != _currentUserId)
+                return;
+
+            try
+            {
+                string currentOfferText = "";
+                if (transaction.Type == ProductType.Satis && transaction.ProposedPriceByBuyer.HasValue)
+                {
+                    currentOfferText = $"Mevcut Teklif: {transaction.ProposedPriceByBuyer:N2}₺\n";
+                }
+                else if (transaction.Type == ProductType.Takas && transaction.AdditionalCashByRequester.HasValue)
+                {
+                    currentOfferText = $"Mevcut Teklif: {transaction.AdditionalCashByRequester:N2}₺\n";
+                }
+
+                var amountText = await Application.Current.MainPage.DisplayPromptAsync(
+                    "Karşı Teklif",
+                    $"{currentOfferText}'{transaction.ProductTitle}' için karşı teklifiniz nedir?",
+                    placeholder: "Örn: 175",
+                    keyboard: Keyboard.Numeric
+                );
+
+                if (string.IsNullOrWhiteSpace(amountText))
+                    return;
+
+                if (!decimal.TryParse(amountText, out var amount) || amount < 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin", "Tamam");
+                    return;
+                }
+
+                IsLoading = true;
+                ServiceResult<bool> result;
+
+                if (transaction.Type == ProductType.Satis)
+                {
+                    result = await _transactionService.SendCounterOfferForSaleAsync(
+                        transaction.TransactionId,
+                        amount,
+                        _currentUserId
+                    );
+                }
+                else // Takas
+                {
+                    result = await _transactionService.SendCounterCashOfferAsync(
+                        transaction.TransactionId,
+                        amount,
+                        _currentUserId
+                    );
+                }
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Başarılı", result.Message, "Tamam");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task AcceptNegotiatedPriceAsync(Transaction transaction)
+        {
+            if (transaction == null || !transaction.IsNegotiating)
+                return;
+
+            try
+            {
+                decimal agreedAmount = transaction.AgreedAmount;
+                string agreementText = transaction.Type == ProductType.Satis
+                    ? $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatını kabul ediyor musunuz?"
+                    : $"'{transaction.ProductTitle}' takası için {agreedAmount:N2}₺ ek ödemeyi kabul ediyor musunuz?";
+
+                var confirm = await Application.Current.MainPage.DisplayAlert(
+                    "Pazarlık Onayı",
+                    agreementText,
+                    "Evet, Kabul Ediyorum",
+                    "Hayır"
+                );
+
+                if (!confirm)
+                    return;
+
+                IsLoading = true;
+                var result = await _transactionService.AcceptNegotiatedPriceAsync(
+                    transaction.TransactionId,
+                    _currentUserId
+                );
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Başarılı", 
+                        result.Message, "Tamam");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        #endregion
     }
 }
