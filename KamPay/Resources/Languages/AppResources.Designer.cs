@@ -826,6 +826,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Takas Tercihi benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ExchangePreferenceLabel {
+            get {
+                return ResourceManager.GetString("ExchangePreferenceLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sahte ürün benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string FakeProduct {
@@ -1047,6 +1056,15 @@ namespace KamPay.Resources.Languages {
         internal static string InvalidEmail {
             get {
                 return ResourceManager.GetString("InvalidEmail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Almak İstiyorum benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string IWantToTake {
+            get {
+                return ResourceManager.GetString("IWantToTake", resourceCulture);
             }
         }
         
@@ -1501,6 +1519,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Takas Teklif Et benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string OfferTrade {
+            get {
+                return ResourceManager.GetString("OfferTrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Tamam benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string Ok {
@@ -1843,6 +1870,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Ürün Detayı benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ProductDetailTitle {
+            get {
+                return ResourceManager.GetString("ProductDetailTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürün Görselleri (Maksimum 5) benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string ProductImages {
@@ -1978,6 +2014,15 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   Yayın Tarihi: benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string PublishDateLabel {
+            get {
+                return ResourceManager.GetString("PublishDateLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   QR Kod benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string QRCode {
@@ -2109,6 +2154,15 @@ namespace KamPay.Resources.Languages {
         internal static string RequestService {
             get {
                 return ResourceManager.GetString("RequestService", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Satın Almak İste benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string RequestToBuy {
+            get {
+                return ResourceManager.GetString("RequestToBuy", resourceCulture);
             }
         }
         
@@ -2307,6 +2361,15 @@ namespace KamPay.Resources.Languages {
         internal static string Seller {
             get {
                 return ResourceManager.GetString("Seller", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Satıcı benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SellerLabel {
+            get {
+                return ResourceManager.GetString("SellerLabel", resourceCulture);
             }
         }
         
@@ -2662,6 +2725,60 @@ namespace KamPay.Resources.Languages {
         }
         
         /// <summary>
+        ///   En Çok Favorilenen benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortMostFavorited {
+            get {
+                return ResourceManager.GetString("SortMostFavorited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   En Çok Görüntülenen benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortMostViewed {
+            get {
+                return ResourceManager.GetString("SortMostViewed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   En Yeni benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortNewest {
+            get {
+                return ResourceManager.GetString("SortNewest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   En Eski benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortOldest {
+            get {
+                return ResourceManager.GetString("SortOldest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Fiyat (Artan) benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortPriceAsc {
+            get {
+                return ResourceManager.GetString("SortPriceAsc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Fiyat (Azalan) benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string SortPriceDesc {
+            get {
+                return ResourceManager.GetString("SortPriceDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz. benzeri yerelleştirilmiş bir dize arar.
         /// </summary>
         internal static string StartChatFromProduct {
@@ -2874,6 +2991,15 @@ namespace KamPay.Resources.Languages {
         internal static string ViewMyProduct {
             get {
                 return ResourceManager.GetString("ViewMyProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Görüntülenme benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        internal static string ViewsLabel {
+            get {
+                return ResourceManager.GetString("ViewsLabel", resourceCulture);
             }
         }
         

@@ -6,10 +6,10 @@
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
-             xmlns:resources="clr-namespace:KamPay.Resources.Languages"
+             xmlns:extensions="clr-namespace:KamPay.Extensions"
              x:Class="KamPay.Views.GoodDeedBoardPage"
              x:DataType="vm:GoodDeedBoardViewModel"
-             Title="{x:Static resources:AppResources.GoodDeedBoardTitle}"
+             Title="{extensions:Translate GoodDeedBoardTitle}"
              BackgroundColor="{StaticResource Gray100}">
 
     <ContentPage.Resources>
@@ -20,7 +20,6 @@
                                              TrueColor="#F44336"
                                              FalseColor="{StaticResource Gray400}"/>
 
-            <!-- Skeleton için sahte item listesi -->
             <x:Array x:Key="SkeletonItems" Type="{x:Type x:Int32}">
                 <x:Int32>1</x:Int32>
                 <x:Int32>2</x:Int32>
@@ -31,12 +30,11 @@
 
     <Grid>
 
-        <!-- 🦴 SKELETON LISTESI (VERİ YÜKLENİRKEN) -->
         <CollectionView ItemsSource="{StaticResource SkeletonItems}"
                         IsVisible="{Binding IsSkeletonVisible}"
                         Margin="10,0">
             <CollectionView.Header>
-                <Label Text="{x:Static resources:AppResources.CommunityPosts}"
+                <Label Text="{extensions:Translate CommunityPosts}"
                        FontSize="20"
                        FontAttributes="Bold"
                        TextColor="{StaticResource Primary}"
@@ -52,7 +50,6 @@
                            BackgroundColor="White">
                         <VerticalStackLayout Spacing="10">
 
-                            <!-- Başlık ve chip skeleton -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <BoxView HeightRequest="18"
                                          CornerRadius="4"
@@ -66,12 +63,10 @@
                                          Color="{StaticResource Gray200}"/>
                             </Grid>
 
-                            <!-- Açıklama skeleton -->
                             <BoxView HeightRequest="40"
                                      CornerRadius="4"
                                      Color="{StaticResource Gray200}"/>
 
-                            <!-- Kullanıcı + tarih skeleton -->
                             <Grid ColumnDefinitions="Auto,*"
                                   ColumnSpacing="10"
                                   Margin="0,10,0,0">
@@ -93,12 +88,10 @@
                                 </VerticalStackLayout>
                             </Grid>
 
-                            <!-- Alt çizgi -->
                             <BoxView HeightRequest="1"
                                      Color="{StaticResource Gray200}"
                                      Margin="0,5"/>
 
-                            <!-- Yorum/satır skeleton -->
                             <BoxView HeightRequest="20"
                                      CornerRadius="4"
                                      Color="{StaticResource Gray200}"
@@ -109,7 +102,6 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- 📜 GERÇEK LISTE (VERİ GELİNCE) -->
         <RefreshView Grid.Row="0" 
                      Command="{Binding RefreshPostsCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
@@ -118,7 +110,7 @@
 
             <CollectionView ItemsSource="{Binding Posts}" Margin="10,0">
                 <CollectionView.Header>
-                    <Label Text="{x:Static resources:AppResources.CommunityPosts}" 
+                    <Label Text="{extensions:Translate CommunityPosts}" 
                            FontSize="20" 
                            FontAttributes="Bold" 
                            TextColor="{StaticResource Primary}"
@@ -226,7 +218,7 @@
 
                                 <Border StrokeShape="RoundRectangle 20" Stroke="{StaticResource Gray300}" Padding="10,0" Margin="0,5,0,0" HeightRequest="45">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <Entry Grid.Column="0" Placeholder="{x:Static resources:AppResources.WriteComment}" FontSize="13" Text="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NewCommentText}" ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" ReturnCommandParameter="{Binding .}" BackgroundColor="Transparent"/>
+                                        <Entry Grid.Column="0" Placeholder="{extensions:Translate WriteComment}" FontSize="13" Text="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NewCommentText}" ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" ReturnCommandParameter="{Binding .}" BackgroundColor="Transparent"/>
                                         <Button Grid.Column="1" Text="✈️" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" CommandParameter="{Binding .}" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" Padding="0" WidthRequest="40"/>
                                     </Grid>
                                 </Border>
@@ -238,14 +230,12 @@
             </CollectionView>
         </RefreshView>
 
-        <!-- ➕ FAB -->
         <Button Text="+" Command="{Binding OpenPostFormCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="32" CornerRadius="30" WidthRequest="60" HeightRequest="60" Padding="0" VerticalOptions="End" HorizontalOptions="End" Margin="20">
             <Button.Shadow>
                 <Shadow Brush="Black" Offset="0,5" Opacity="0.4" Radius="8"/>
             </Button.Shadow>
         </Button>
 
-        <!-- 📄 Yeni post formu -->
         <Grid IsVisible="{Binding IsPostFormVisible}" BackgroundColor="#80000000" ZIndex="99">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
@@ -258,27 +248,27 @@
 
                 <VerticalStackLayout Spacing="15">
                     <Grid ColumnDefinitions="*, Auto">
-                        <Label Text="{x:Static resources:AppResources.ShareNewGoodDeed}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Gray900}" VerticalOptions="Center"/>
+                        <Label Text="{extensions:Translate ShareNewGoodDeed}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Gray900}" VerticalOptions="Center"/>
                         <Button Text="✕" Command="{Binding ClosePostFormCommand}" BackgroundColor="Transparent" TextColor="{StaticResource Gray600}" FontSize="20" WidthRequest="40" Padding="0"/>
                     </Grid>
                     <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
 
-                    <Entry Placeholder="{x:Static resources:AppResources.TopicTitle}" Text="{Binding Title}" FontSize="15" />
+                    <Entry Placeholder="{extensions:Translate TopicTitle}" Text="{Binding Title}" FontSize="15" />
 
                     <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 10" Padding="10">
-                        <Editor Placeholder="{x:Static resources:AppResources.ShareYourThoughts}" Text="{Binding Description}" HeightRequest="100" AutoSize="TextChanges" BackgroundColor="Transparent" />
+                        <Editor Placeholder="{extensions:Translate ShareYourThoughts}" Text="{Binding Description}" HeightRequest="100" AutoSize="TextChanges" BackgroundColor="Transparent" />
                     </Border>
 
-                    <Label Text="{x:Static resources:AppResources.SelectCategoryPost}" FontSize="12" TextColor="{StaticResource Gray600}" Margin="0,5,0,0"/>
+                    <Label Text="{extensions:Translate SelectCategoryPost}" FontSize="12" TextColor="{StaticResource Gray600}" Margin="0,5,0,0"/>
                     <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 10" HeightRequest="50" Padding="10,0">
-                        <Picker Title="{x:Static resources:AppResources.PostType}" ItemsSource="{Binding PostTypes}" SelectedItem="{Binding SelectedType}" VerticalOptions="Center">
+                        <Picker Title="{extensions:Translate PostType}" ItemsSource="{Binding PostTypes}" SelectedItem="{Binding SelectedType}" VerticalOptions="Center">
                             <Picker.ItemDisplayBinding>
                                 <Binding Converter="{StaticResource PostTypeToTextConverter}" />
                             </Picker.ItemDisplayBinding>
                         </Picker>
                     </Border>
 
-                    <Button Text="{x:Static resources:AppResources.Share}" 
+                    <Button Text="{extensions:Translate SharePost}" 
                             Command="{Binding CreatePostCommand}" 
                             BackgroundColor="{StaticResource Primary}" 
                             TextColor="White" 
@@ -291,7 +281,6 @@
             </Border>
         </Grid>
 
-        <!-- 🔄 Orta ActivityIndicator (isteğe bağlı, kalsın) -->
         <ActivityIndicator IsRunning="{Binding IsLoading}" 
                            IsVisible="{Binding IsLoading}" 
                            VerticalOptions="Center" 

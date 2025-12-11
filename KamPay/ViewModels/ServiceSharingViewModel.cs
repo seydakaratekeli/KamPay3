@@ -19,14 +19,13 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
-        private readonly IMessagingService _messagingService; // 🔥 YENİ
+        private readonly IMessagingService _messagingService;
 
         private readonly RealtimeSnapshotService<ServiceOffer> _loader;
         private IDisposable _listener;
 
         private readonly HashSet<string> _serviceIds = new();
         private bool _initialLoadComplete = false;
-
 
         // ------------ UI STATE ----------
         [ObservableProperty] private bool isPostFormVisible;
@@ -44,19 +43,25 @@ namespace KamPay.ViewModels
         // ------------ FILTERS ------------
         [ObservableProperty] private string searchText;
 
-        // null → Hepsi
+        // null -> Hepsi
         [ObservableProperty] private ServiceCategory? filterCategory = null;
 
-        // “asc”, “desc”, null (Hepsi)
+        // Seçilen sıralama metni (Örn: "Artan", "Ascending" vb.)
         [ObservableProperty] private string priceSort = null;
 
+        // 🔥 YENİ: Dinamik Sıralama Seçenekleri
+        // Dil değiştiğinde bu liste otomatik olarak yeni dildeki karşılıklarını döndürür.
+        public List<string> PriceSortOptions => new List<string>
+        {
+            LocalizationResourceManager.Instance["PriceAll"],       // Hepsi / All
+            LocalizationResourceManager.Instance["PriceAscending"], // Artan / Ascending
+            LocalizationResourceManager.Instance["PriceDescending"] // Azalan / Descending
+        };
 
         // ------------ DATA COLLECTIONS --------
         public ObservableCollection<ServiceOffer> Services { get; } = new();
         public ObservableCollection<ServiceOffer> FilteredServices { get; } = new();
 
-        // ⚠️ Değişiklik: Tipi 'ServiceCategory?' (nullable) yaptık ve başa 'null' ekledik.
-        // Bu 'null' değeri Picker'da "Tümü" seçeneği olarak işlev görecek.
         public List<ServiceCategory?> Categories { get; } =
             new List<ServiceCategory?> { null }
             .Concat(Enum.GetValues(typeof(ServiceCategory)).Cast<ServiceCategory?>())
@@ -68,21 +73,28 @@ namespace KamPay.ViewModels
             IAuthenticationService authService,
             IUserProfileService userProfileService,
             IUserStateService userStateService,
-            IMessagingService messagingService) // 🔥 YENİ
+            IMessagingService messagingService)
         {
             _serviceService = serviceService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
-            _messagingService = messagingService; // 🔥 YENİ
+            _messagingService = messagingService;
 
             _loader = new RealtimeSnapshotService<ServiceOffer>(Constants.FirebaseRealtimeDbUrl);
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
+            // 🔥 YENİ: Dil değiştiğinde sıralama listesini (Picker) güncelle
+            LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
+            {
+                OnPropertyChanged(nameof(PriceSortOptions));
+                // Dil değişince filtreyi tekrar uygula (gerekirse sıralamayı varsayılana çekebiliriz)
+                ApplyFilter();
+            };
+
             _ = InitializeAsync();
         }
-
 
         private void OnUserProfileChanged(object sender, User u)
         {
@@ -100,13 +112,11 @@ namespace KamPay.ViewModels
             });
         }
 
-
         private async Task InitializeAsync()
         {
             IsLoading = true;
             await UltraFastLoadAsync();
         }
-
 
         // ----------------------------------------------------
         // 🔥 ULTRA FAST LOADING (Snapshot + Realtime)
@@ -228,7 +238,6 @@ namespace KamPay.ViewModels
                 ApplyFilter();
         }
 
-
         private void InsertSorted(ServiceOffer s)
         {
             if (Services.Count == 0)
@@ -248,7 +257,6 @@ namespace KamPay.ViewModels
 
             Services.Add(s);
         }
-
 
         // ----------------------------------------------------
         // 🔍 FILTERING
@@ -274,13 +282,15 @@ namespace KamPay.ViewModels
                 q = q.Where(s => s.Category == FilterCategory.Value);
             }
 
-            // Price sort
-            if (PriceSort == "Artan")
+            // 🔥 YENİ: Price sort (Dil bağımsız kontrol)
+            var loc = LocalizationResourceManager.Instance;
+
+            if (PriceSort == loc["PriceAscending"]) // "Artan" veya "Ascending" kontrolü
                 q = q.OrderBy(s => s.Price);
-            else if (PriceSort == "Azalan")
+            else if (PriceSort == loc["PriceDescending"]) // "Azalan" veya "Descending" kontrolü
                 q = q.OrderByDescending(s => s.Price);
             else
-                q = q.OrderByDescending(s => s.CreatedAt);
+                q = q.OrderByDescending(s => s.CreatedAt); // "Hepsi" veya null durumu
 
             // Update Filtered list
             FilteredServices.Clear();
@@ -288,23 +298,20 @@ namespace KamPay.ViewModels
                 FilteredServices.Add(s);
         }
 
-
         [RelayCommand]
         private void ApplyFilter()
         {
             FilterServices();
         }
 
-
         partial void OnSearchTextChanged(string value) => ApplyFilter();
         partial void OnFilterCategoryChanged(ServiceCategory? value) => ApplyFilter();
 
         partial void OnPriceSortChanged(string value)
         {
-            PriceSort = value == "Hepsi" ? null : value;
+            // Seçim değiştiğinde filtreyi uygula
             ApplyFilter();
         }
-
 
         // ----------------------------------------------------
         // 🔄 REFRESH
@@ -334,13 +341,11 @@ namespace KamPay.ViewModels
             }
         }
 
-
         // ----------------------------------------------------
         // FORM OPEN/CLOSE
         // ----------------------------------------------------
         [RelayCommand] private void OpenPostForm() => IsPostFormVisible = true;
         [RelayCommand] private void ClosePostForm() => IsPostFormVisible = false;
-
 
         // ----------------------------------------------------
         // 🔥 CREATE SERVICE
@@ -382,7 +387,7 @@ namespace KamPay.ViewModels
 
                 var offer = new ServiceOffer
                 {
-                    ServiceId = Guid.NewGuid().ToString(), // <-- EKLEYİN
+                    ServiceId = Guid.NewGuid().ToString(),
                     ProviderId = user.UserId,
                     ProviderName = user.FullName,
                     ProviderPhotoUrl = img,
@@ -423,7 +428,6 @@ namespace KamPay.ViewModels
                 IsPosting = false;
             }
         }
-
 
         // ----------------------------------------------------
         // REQUEST SERVICE
@@ -476,10 +480,9 @@ namespace KamPay.ViewModels
                 IsPosting = false;
             }
         }
-        // ServiceSharingViewModel.cs içine ekleyin:
 
         // ----------------------------------------------------
-        // 🔥 MESSAGE PROVIDER - ProductDetailViewModel'deki gibi
+        // 🔥 MESSAGE PROVIDER
         // ----------------------------------------------------
         [RelayCommand]
         private async Task MessageProviderAsync(ServiceOffer offer)
@@ -503,11 +506,10 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // Konuşma oluştur veya mevcut konuşmaya git
                 var conversationResult = await _messagingService.GetOrCreateConversationAsync(
                     currentUser.UserId,
                     offer.ProviderId,
-                    offer.ServiceId); // ServiceId'yi de geçebilirsiniz
+                    offer.ServiceId);
 
                 if (conversationResult.Success)
                 {
@@ -545,13 +547,10 @@ namespace KamPay.ViewModels
                 TimeCredits--;
         }
 
-
-
         private Task Display(string t, string m)
         {
             return Application.Current.MainPage.DisplayAlert(t, m, "Tamam");
         }
-
 
         // ----------------------------------------------------
         // DISPOSE
@@ -566,7 +565,6 @@ namespace KamPay.ViewModels
             _serviceIds.Clear();
         }
     }
-
 
     // ----------------------------------------------------
     // 🌟 SMALL EXTENSION FOR SORTING

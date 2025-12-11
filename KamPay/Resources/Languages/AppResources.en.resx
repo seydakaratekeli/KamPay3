@@ -873,6 +873,24 @@
   <data name="NoDataYet" xml:space="preserve">
     <value>No data yet</value>
   </data>
+  <data name="SortNewest" xml:space="preserve">
+    <value>Newest</value>
+  </data>
+  <data name="SortOldest" xml:space="preserve">
+    <value>Oldest</value>
+  </data>
+  <data name="SortPriceAsc" xml:space="preserve">
+    <value>Price (Low to High)</value>
+  </data>
+  <data name="SortPriceDesc" xml:space="preserve">
+    <value>Price (Low to High)</value>
+  </data>
+  <data name="SortMostViewed" xml:space="preserve">
+    <value>Most Viewed</value>
+  </data>
+  <data name="SortMostFavorited" xml:space="preserve">
+    <value>Most Favorited</value>
+  </data>
   <data name="Saving" xml:space="preserve">
     <value>Saving...</value>
   </data>
@@ -1088,5 +1106,29 @@
   </data>
   <data name="DontHaveAccount" xml:space="preserve">
     <value>Don't have an account?</value>
+  </data>
+  <data name="ProductDetailTitle" xml:space="preserve">
+    <value>Product Details</value>
+  </data>
+  <data name="PublishDateLabel" xml:space="preserve">
+    <value>Published:</value>
+  </data>
+  <data name="ExchangePreferenceLabel" xml:space="preserve">
+    <value>Exchange Preference</value>
+  </data>
+  <data name="SellerLabel" xml:space="preserve">
+    <value>Seller</value>
+  </data>
+  <data name="ViewsLabel" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="RequestToBuy" xml:space="preserve">
+    <value>Request to Buy</value>
+  </data>
+  <data name="IWantToTake" xml:space="preserve">
+    <value>I Want This</value>
+  </data>
+  <data name="OfferTrade" xml:space="preserve">
+    <value>Offer Trade</value>
   </data>
 </root>

@@ -357,6 +357,54 @@
   <data name="UserNotFound" xml:space="preserve">
     <value>Kullanıcı bilgisi bulunamadı.</value>
   </data>
+	<data name="ProductDetailTitle" xml:space="preserve">
+    <value>Ürün Detayı</value>
+  </data>
+	<data name="ConditionLabel" xml:space="preserve">
+    <value>Durum:</value>
+  </data>
+	<data name="CategoryLabel" xml:space="preserve">
+    <value>Kategori:</value>
+  </data>
+	<data name="PublishDateLabel" xml:space="preserve">
+    <value>Yayın Tarihi:</value>
+  </data>
+	<data name="DescriptionLabel" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+	<data name="ExchangePreferenceLabel" xml:space="preserve">
+    <value>Takas Tercihi</value>
+  </data>
+	<data name="SellerLabel" xml:space="preserve">
+    <value>Satıcı</value>
+  </data>
+	<data name="ViewsLabel" xml:space="preserve">
+    <value>Görüntülenme</value>
+  </data>
+	<data name="Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+	<data name="MarkAsSold" xml:space="preserve">
+    <value>Satıldı İşaretle</value>
+  </data>
+	<data name="Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+	<data name="SendMessage" xml:space="preserve">
+    <value>Mesaj Gönder</value>
+  </data>
+	<data name="RequestToBuy" xml:space="preserve">
+    <value>Satın Almak İste</value>
+  </data>
+	<data name="IWantToTake" xml:space="preserve">
+    <value>Almak İstiyorum</value>
+  </data>
+	<data name="OfferTrade" xml:space="preserve">
+    <value>Takas Teklif Et</value>
+  </data>
+	<data name="Report" xml:space="preserve">
+    <value>Şikayet Et</value>
+  </data>
   <data name="ProductDetail" xml:space="preserve">
     <value>Ürün Detayı</value>
   </data>
@@ -428,6 +476,7 @@
   </data>
   <data name="ViewCount" xml:space="preserve">
     <value>Görüntülenme</value>
+    <comment>Elektroni</comment>
   </data>
   <data name="ProductImages" xml:space="preserve">
     <value>Ürün Görselleri (Maksimum 5)</value>
@@ -872,6 +921,24 @@
   </data>
   <data name="NoDataYet" xml:space="preserve">
     <value>Henüz veri yok</value>
+  </data>
+  <data name="SortNewest" xml:space="preserve">
+    <value>En Yeni</value>
+  </data>
+  <data name="SortOldest" xml:space="preserve">
+    <value>En Eski</value>
+  </data>
+  <data name="SortPriceAsc" xml:space="preserve">
+    <value>Fiyat (Artan)</value>
+  </data>
+  <data name="SortPriceDesc" xml:space="preserve">
+    <value>Fiyat (Azalan)</value>
+  </data>
+  <data name="SortMostViewed" xml:space="preserve">
+    <value>En Çok Görüntülenen</value>
+  </data>
+  <data name="SortMostFavorited" xml:space="preserve">
+    <value>En Çok Favorilenen</value>
   </data>
   <data name="Saving" xml:space="preserve">
     <value>Kaydediliyor...</value>

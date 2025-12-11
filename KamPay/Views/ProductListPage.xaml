@@ -4,9 +4,9 @@
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
-              xmlns:local="clr-namespace:KamPay.Services"
+             xmlns:local="clr-namespace:KamPay.Services"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
-          
+             xmlns:extensions="clr-namespace:KamPay.Extensions"
              x:DataType="vm:ProductListViewModel"
              x:Class="KamPay.Views.ProductListPage"
              Shell.NavBarIsVisible="False"
@@ -14,14 +14,12 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <!-- Renkler -->
             <Color x:Key="Primary">#4CAF50</Color>
             <Color x:Key="Surface">#FFFFFF</Color>
             <Color x:Key="TextPrimary">#212121</Color>
             <Color x:Key="TextSecondary">#757575</Color>
             <Color x:Key="BorderColor">#EEEEEE</Color>
 
-            <!-- Dönüştürücüler -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
@@ -31,12 +29,12 @@
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
             <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
             <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter"/>
+            <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *">
 
-        <!-- 1. HEADER (Logo & Bildirim) -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,10" BackgroundColor="{StaticResource Surface}">
             <Label Text="KamPay" 
                    FontSize="26" 
@@ -53,7 +51,6 @@
                         Command="{Binding GoToNotificationsCommand}"
                         WidthRequest="40" HeightRequest="40" Padding="0"/>
 
-                <!-- Bildirim Rozeti -->
                 <Border StrokeThickness="0" 
                         BackgroundColor="#FF5252" 
                         HeightRequest="12" 
@@ -69,10 +66,8 @@
             </Grid>
         </Grid>
 
-        <!-- 2. ARAMA VE KATEGORİLER -->
         <VerticalStackLayout Grid.Row="1" Padding="15,10" Spacing="15" BackgroundColor="#F5F5F5">
 
-            <!-- Arama ve Filtre Butonu -->
             <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
                 <Border Grid.Column="0"
                         StrokeShape="RoundRectangle 12"
@@ -88,8 +83,7 @@
                         <Label Text="🔍" VerticalOptions="Center" Opacity="0.5" FontSize="16"/>
                         <Entry Grid.Column="1"
                                Text="{Binding SearchText}"
-                               Placeholder="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[SearchProducts]}"
-
+                               Placeholder="{extensions:Translate SearchProduct}"
                                FontSize="14"
                                TextColor="{StaticResource TextPrimary}"
                                PlaceholderColor="{StaticResource TextSecondary}"
@@ -100,7 +94,7 @@
                 </Border>
 
                 <Button Grid.Column="1" 
-                        Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Filter]}"
+                        Text="{extensions:Translate Filter}"
                         ImageSource="{FontImage Glyph='🔽', Color=White, Size=14}"
                         ContentLayout="Right,8"
                         FontSize="13"
@@ -117,7 +111,6 @@
                 </Button>
             </Grid>
 
-            <!-- Kategori Listesi (Chips) -->
             <CollectionView ItemsSource="{Binding Categories}"
                             ItemsLayout="HorizontalList"
                             SelectionMode="None"
@@ -133,7 +126,7 @@
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding CategoryTappedCommand}" CommandParameter="{x:Null}"/>
                         </Border.GestureRecognizers>
-                        <Label Text="Tümü" 
+                        <Label Text="{extensions:Translate All}" 
                                FontSize="13"
                                FontAttributes="Bold"
                                TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
@@ -151,7 +144,7 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=CategoryTappedCommand}" CommandParameter="{Binding .}"/>
                             </Border.GestureRecognizers>
-                            <Label Text="{Binding Name}" 
+                            <Label Text="{Binding Name, Converter={StaticResource ProductCategoryToTextConverter}}" 
                                    FontSize="13"
                                    FontAttributes="Bold"
                                    TextColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={Binding CategoryId}}"/>
@@ -161,7 +154,6 @@
             </CollectionView>
         </VerticalStackLayout>
 
-        <!-- 3. ÜRÜN LİSTESİ -->
         <Grid Grid.Row="2" BackgroundColor="#F5F5F5">
             <RefreshView Command="{Binding RefreshProductsCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
@@ -173,22 +165,19 @@
                                 RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}"
                                 Margin="10,0">
 
-                    <!-- Boş Durum -->
                     <CollectionView.EmptyView>
                         <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
                             <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
                                 <Label Text="📦" FontSize="60" HorizontalTextAlignment="Center"/>
-                                <Label Text="{Binding EmptyMessage}" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
+                                <Label Text="{extensions:Translate NoDataYet}" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
                             </VerticalStackLayout>
                         </Grid>
                     </CollectionView.EmptyView>
 
-                    <!-- Izgara Düzeni -->
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10"/>
                     </CollectionView.ItemsLayout>
 
-                    <!-- ÜRÜN KARTI ŞABLONU -->
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Product">
                             <Border StrokeShape="RoundRectangle 16"
@@ -205,7 +194,6 @@
 
                                 <Grid RowDefinitions="150,Auto,*,Auto">
 
-                                    <!-- 1. Görsel ve Etiketler -->
                                     <Grid Grid.Row="0">
                                         <ffimageloading:CachedImage Source="{Binding ThumbnailUrl}"
                                                                     Aspect="AspectFill"
@@ -214,10 +202,8 @@
                                                                     DownsampleToViewSize="True"
                                                                     FadeAnimationEnabled="True"/>
 
-                                        <!-- Gradient Overlay (Alt kısımda yazı okunabilirliği için) -->
                                         <BoxView VerticalOptions="End" HeightRequest="40" Color="Transparent"/>
 
-                                        <!-- Durum Badge (Sol Üst) -->
                                         <Border IsVisible="{Binding StatusText, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
                                                 BackgroundColor="{Binding StatusColor}"
                                                 StrokeThickness="0"
@@ -229,7 +215,6 @@
                                             <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
                                         </Border>
 
-                                        <!-- Tip Badge (Sağ Üst) -->
                                         <Border BackgroundColor="White"
                                                 StrokeThickness="0"
                                                 HorizontalOptions="End"
@@ -248,17 +233,17 @@
                                     <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" Spacing="4">
 
                                         <Label Text="{Binding Title}" 
-           FontSize="15" 
-           TextColor="{StaticResource TextPrimary}" 
-           MaxLines="2" 
-           LineBreakMode="TailTruncation"
-           FontAttributes="Bold"/>
+                                               FontSize="15" 
+                                               TextColor="{StaticResource TextPrimary}" 
+                                               MaxLines="2" 
+                                               LineBreakMode="TailTruncation"
+                                               FontAttributes="Bold"/>
 
                                         <Grid>
                                             <Label Text="{Binding Price, StringFormat='₺{0:N0}'}" 
-               FontSize="13" 
-               FontAttributes="Bold" 
-               TextColor="{StaticResource Primary}">
+                                                   FontSize="13" 
+                                                   FontAttributes="Bold" 
+                                                   TextColor="{StaticResource Primary}">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Bagis">
                                                         <Setter Property="IsVisible" Value="False" />
@@ -269,11 +254,11 @@
                                                 </Label.Triggers>
                                             </Label>
 
-                                            <Label Text="Ücretsiz" 
-               FontSize="13" 
-               FontAttributes="Bold" 
-               TextColor="{StaticResource Primary}"
-               IsVisible="False">
+                                            <Label Text="{extensions:Translate Donation}" 
+                                                   FontSize="13" 
+                                                   FontAttributes="Bold" 
+                                                   TextColor="{StaticResource Primary}"
+                                                   IsVisible="False">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Bagis">
                                                         <Setter Property="IsVisible" Value="True" />
@@ -281,11 +266,11 @@
                                                 </Label.Triggers>
                                             </Label>
 
-                                            <Label Text="Takaslık" 
-               FontSize="13" 
-               FontAttributes="Bold" 
-               TextColor="#FF9800"
-               IsVisible="False">
+                                            <Label Text="{extensions:Translate Exchange}" 
+                                                   FontSize="13" 
+                                                   FontAttributes="Bold" 
+                                                   TextColor="#FF9800"
+                                                   IsVisible="False">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Takas">
                                                         <Setter Property="IsVisible" Value="True" />
@@ -295,12 +280,9 @@
                                         </Grid>
                                     </VerticalStackLayout>
 
-                                    <!-- 3. Boşluk Doldurucu -->
                                     <BoxView Grid.Row="2" Color="Transparent" />
 
-                                    <!-- 4. Alt Bilgi (Satıcı ve İstatistikler) -->
                                     <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="10" VerticalOptions="End">
-                                        <!-- Satıcı -->
                                         <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
                                             <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" 
                                                                         HeightRequest="24" WidthRequest="24" 
@@ -314,7 +296,6 @@
                                             <Label Text="{Binding UserName}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" LineBreakMode="TailTruncation" MaximumWidthRequest="60"/>
                                         </HorizontalStackLayout>
 
-                                        <!-- İstatistikler -->
                                         <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
                                             <HorizontalStackLayout Spacing="2">
                                                 <Label Text="❤️" FontSize="10" VerticalOptions="Center"/>
@@ -333,9 +314,7 @@
                 </CollectionView>
             </RefreshView>
 
-            <!-- YÜZEN BUTONLAR (FAB) -->
             <VerticalStackLayout VerticalOptions="End" HorizontalOptions="End" Spacing="16" Margin="20">
-                <!-- Sürpriz Kutu -->
                 <Button Text="🎁"
                         Command="{Binding GoToSurpriseBoxCommand}"
                         BackgroundColor="#FF9800"
@@ -350,7 +329,6 @@
                     </Button.Shadow>
                 </Button>
 
-                <!-- Ürün Ekle -->
                 <Button Text="+"
                         Command="{Binding GoToAddProductCommand}"
                         BackgroundColor="{StaticResource Primary}"
@@ -366,7 +344,6 @@
                 </Button>
             </VerticalStackLayout>
 
-            <!-- Yükleniyor Göstergesi -->
             <ActivityIndicator IsRunning="{Binding IsLoading}" 
                                IsVisible="{Binding IsLoading}" 
                                Color="{StaticResource Primary}" 
@@ -375,7 +352,6 @@
                                HeightRequest="50" WidthRequest="50"/>
         </Grid>
 
-        <!-- FİLTRE PANELİ (Bottom Sheet) -->
         <Grid Grid.RowSpan="3" 
               BackgroundColor="#80000000" 
               IsVisible="{Binding ShowFilterPanel}"
@@ -396,9 +372,8 @@
                 </Border.Shadow>
 
                 <VerticalStackLayout Spacing="20">
-                    <!-- Panel Başlığı -->
                     <Grid>
-                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[FilterAndSort]}" 
+                        <Label Text="{extensions:Translate FilterAndSort}" 
                                FontSize="20" 
                                FontAttributes="Bold" 
                                HorizontalOptions="Center"/>
@@ -414,14 +389,12 @@
 
                     <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
 
-                    <!-- Ürün Tipi Filtresi -->
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[ProductType]}" 
+                        <Label Text="{extensions:Translate ProductType}" 
                                FontAttributes="Bold" 
                                TextColor="{StaticResource TextPrimary}" />
                         <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-                            <!-- Helper style for buttons can be added globally, keeping inline for safety -->
-                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[All]}" 
+                            <Button Text="{extensions:Translate All}" 
                                     Grid.Column="0" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="" 
@@ -439,7 +412,7 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[ForSale]}" 
+                            <Button Text="{extensions:Translate ForSale}" 
                                     Grid.Column="1" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Satis" 
@@ -453,7 +426,7 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Donation]}" 
+                            <Button Text="{extensions:Translate Donation}" 
                                     Grid.Column="2" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Bagis" 
@@ -467,7 +440,7 @@
                                 </Button.Triggers>
                             </Button>
 
-                            <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Exchange]}" 
+                            <Button Text="{extensions:Translate Exchange}" 
                                     Grid.Column="3" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Takas" 
@@ -483,27 +456,23 @@
                         </Grid>
                     </VerticalStackLayout>
 
-                    <!-- Sıralama -->
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Sorting]}" 
-                               FontAttributes="Bold" 
-                               TextColor="{StaticResource TextPrimary}" />
+                        <Label Text="{extensions:Translate Sorting}" 
+           FontAttributes="Bold" 
+           TextColor="{StaticResource TextPrimary}" />
+
                         <Border StrokeShape="RoundRectangle 10" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="10,0">
-                            <Picker Title="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[SelectSorting]}" 
-                                    ItemsSource="{Binding SortOptions}"
-                                    SelectedItem="{Binding SelectedSortOption}"
-                                    TextColor="{StaticResource TextPrimary}"
-                                    TitleColor="{StaticResource TextSecondary}">
-                                <Picker.ItemDisplayBinding>
-                                    <Binding Converter="{StaticResource ProductSortOptionToTextConverter}" />
-                                </Picker.ItemDisplayBinding>
+                            <Picker Title="{extensions:Translate SelectSorting}" 
+                ItemsSource="{Binding SortOptionStrings}"
+                SelectedIndex="{Binding SelectedSortIndex}"
+                TextColor="{StaticResource TextPrimary}"
+                TitleColor="{StaticResource TextSecondary}">
                             </Picker>
                         </Border>
                     </VerticalStackLayout>
 
-                    <!-- Aksiyon Butonları -->
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
-                        <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Clear]}" 
+                        <Button Text="{extensions:Translate Clear}" 
                                 Grid.Column="0"
                                 BackgroundColor="White" 
                                 TextColor="{StaticResource TextSecondary}" 
@@ -514,7 +483,7 @@
                                 FontAttributes="Bold"
                                 Command="{Binding ClearFiltersCommand}"/>
 
-                        <Button Text="{Binding Source={x:Static local:LocalizationResourceManager.Instance}, Path=[Apply]}" 
+                        <Button Text="{extensions:Translate Apply}" 
                                 Grid.Column="1"
                                 BackgroundColor="{StaticResource Primary}" 
                                 TextColor="White" 
