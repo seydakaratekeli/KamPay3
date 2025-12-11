@@ -56,6 +56,13 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isFavorite;
 
+        // 🔥 YENİ: Aktif transaction bilgisi
+        [ObservableProperty]
+        private Transaction activeTransaction;
+
+        [ObservableProperty]
+        private bool hasActiveTransaction;
+
         // HasLocation property - checks if product has valid location
         public bool HasLocation => Product != null && 
                                    !string.IsNullOrEmpty(Product.Location) &&
@@ -141,7 +148,7 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null)
                 {
                     Product = result.Data;
-                    await _productService.IncrementViewCountAsync(ProductId); // Servis hazırsa bunu aç
+                    await _productService.IncrementViewCountAsync(ProductId);
 
                     ProductImages.Clear();
                     if (Product.ImageUrls != null && Product.ImageUrls.Any())
@@ -160,6 +167,9 @@ namespace KamPay.ViewModels
 
                         var favResult = await _favoriteService.IsFavoriteAsync(currentUser.UserId, ProductId);
                         IsFavorite = favResult.Success && favResult.Data;
+
+                        // 🔥 YENİ: Aktif transaction'ı yükle
+                        await LoadActiveTransactionAsync(currentUser.UserId);
                     }
                 }
                 else
@@ -175,6 +185,34 @@ namespace KamPay.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Aktif transaction'ı yükle
+        private async Task LoadActiveTransactionAsync(string currentUserId)
+        {
+            try
+            {
+                // Kullanıcının gönderdiği teklifleri kontrol et
+                var myOffersResult = await _transactionService.GetMyOffersAsync(currentUserId);
+                
+                if (myOffersResult.Success && myOffersResult.Data != null)
+                {
+                    // Bu ürün için pending durumda bir transaction var mı?
+                    var existingTransaction = myOffersResult.Data
+                        .FirstOrDefault(t => t.ProductId == ProductId && 
+                                           t.Status == TransactionStatus.Pending);
+                    
+                    if (existingTransaction != null)
+                    {
+                        ActiveTransaction = existingTransaction;
+                        HasActiveTransaction = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ LoadActiveTransaction hatası: {ex.Message}");
             }
         }
 
@@ -228,14 +266,29 @@ namespace KamPay.ViewModels
                 switch (Product.Type)
                 {
                     case ProductType.Takas:
-                        
                         WeakReferenceMessenger.Default.Send(new ShowTradeOfferPopupMessage(Product));
                         break;
 
                     case ProductType.Satis:
                     case ProductType.Bagis:
+                        // 🔥 YENİ: Transaction oluştur
                         var result = await _transactionService.CreateRequestAsync(Product, currentUser);
-                        await Application.Current.MainPage.DisplayAlert(result.Success ? Res["Success"] : Res["Error"], result.Message, Res["Ok"]);
+                        
+                        if (result.Success)
+                        {
+                            ActiveTransaction = result.Data;
+                            HasActiveTransaction = true;
+                            
+                            await Application.Current.MainPage.DisplayAlert(
+                                Res["Success"], 
+                                "Talebiniz gönderildi. Artık satıcıyla mesajlaşabilir ve fiyat pazarlığı yapabilirsiniz.", 
+                                Res["Ok"]
+                            );
+                        }
+                        else
+                        {
+                            await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                        }
                         break;
                 }
             }
@@ -249,6 +302,218 @@ namespace KamPay.ViewModels
             }
         }
 
+        // 🔥 YENİ: Satıcıya mesaj gönder (Transaction üzerinden)
+        [RelayCommand]
+        private async Task MessageSellerAsync()
+        {
+            if (ActiveTransaction == null || IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var result = await _transactionService.StartConversationForTransactionAsync(
+                    ActiveTransaction.TransactionId,
+                    ActiveTransaction.BuyerId
+                );
+
+                if (result.Success)
+                {
+                    await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={result.Data}");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"Mesaj gönderilemedi: {ex.Message}", Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Fiyat teklifi (Satış için - Alıcı)
+        [RelayCommand]
+        private async Task ProposePriceAsync()
+        {
+            if (ActiveTransaction == null || Product.Type != ProductType.Satis) return;
+
+            try
+            {
+                var currentPriceText = Product.Price > 0 
+                    ? $"Mevcut Fiyat: {Product.Price:N2} ₺\n\n" 
+                    : "";
+
+                var proposedText = ActiveTransaction.ProposedPriceByBuyer.HasValue
+                    ? $"Sizin Teklifiniz: {ActiveTransaction.ProposedPriceByBuyer:N2} ₺\n"
+                    : "";
+
+                var counterText = ActiveTransaction.CounterOfferBySeller.HasValue
+                    ? $"Satıcının Karşı Teklifi: {ActiveTransaction.CounterOfferBySeller:N2} ₺\n\n"
+                    : "";
+
+                var result = await Application.Current.MainPage.DisplayPromptAsync(
+                    "💰 Fiyat Teklifi",
+                    $"{currentPriceText}{proposedText}{counterText}Teklif etmek istediğiniz fiyatı girin:",
+                    "Gönder",
+                    "İptal",
+                    "Fiyat (TL)",
+                    keyboard: Keyboard.Numeric
+                );
+
+                if (string.IsNullOrWhiteSpace(result)) return;
+
+                if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Geçerli bir fiyat girin", Res["Ok"]);
+                    return;
+                }
+
+                IsLoading = true;
+                var currentUser = await _authService.GetCurrentUserAsync();
+                var proposeResult = await _transactionService.ProposePriceForSaleAsync(
+                    ActiveTransaction.TransactionId,
+                    proposedPrice,
+                    currentUser.UserId
+                );
+
+                if (proposeResult.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Success"], "Fiyat teklifiniz gönderildi", Res["Ok"]);
+                    await LoadActiveTransactionAsync(currentUser.UserId);
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], proposeResult.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Ek nakit teklifi (Takas için - Talep Eden)
+        [RelayCommand]
+        private async Task ProposeAdditionalCashAsync()
+        {
+            if (ActiveTransaction == null || Product.Type != ProductType.Takas) return;
+
+            try
+            {
+                var currentText = ActiveTransaction.AdditionalCashByRequester.HasValue
+                    ? $"Sizin Teklifiniz: {ActiveTransaction.AdditionalCashByRequester:N2} ₺\n"
+                    : "";
+
+                var counterText = ActiveTransaction.CounterCashByOwner.HasValue
+                    ? $"Satıcının İsteği: {ActiveTransaction.CounterCashByOwner:N2} ₺\n\n"
+                    : "";
+
+                var result = await Application.Current.MainPage.DisplayPromptAsync(
+                    "💰 Ek Nakit Teklifi",
+                    $"{currentText}{counterText}Takas için eklemek istediğiniz nakit tutarını girin (0 girebilirsiniz):",
+                    "Gönder",
+                    "İptal",
+                    "Tutar (TL)",
+                    keyboard: Keyboard.Numeric
+                );
+
+                if (string.IsNullOrWhiteSpace(result)) return;
+
+                if (!decimal.TryParse(result, out var cashAmount) || cashAmount < 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Geçerli bir tutar girin", Res["Ok"]);
+                    return;
+                }
+
+                IsLoading = true;
+                var currentUser = await _authService.GetCurrentUserAsync();
+                var proposeResult = await _transactionService.ProposeAdditionalCashAsync(
+                    ActiveTransaction.TransactionId,
+                    cashAmount,
+                    currentUser.UserId
+                );
+
+                if (proposeResult.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Success"], "Nakit teklifiniz gönderildi", Res["Ok"]);
+                    await LoadActiveTransactionAsync(currentUser.UserId);
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], proposeResult.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // 🔥 YENİ: Anlaşılan fiyatı kabul et
+        [RelayCommand]
+        private async Task AcceptNegotiatedPriceAsync()
+        {
+            if (ActiveTransaction == null || !ActiveTransaction.IsNegotiating) return;
+
+            try
+            {
+                var agreedAmount = ActiveTransaction.AgreedAmount;
+                var message = Product.Type == ProductType.Satis
+                    ? $"'{Product.Title}' ürünü için {agreedAmount:N2}₺ fiyatını kabul ediyor musunuz?"
+                    : $"'{Product.Title}' takası için {agreedAmount:N2}₺ ek ödemeyi kabul ediyor musunuz?";
+
+                var confirm = await Application.Current.MainPage.DisplayAlert(
+                    "✅ Fiyat Onayı",
+                    message,
+                    "Evet, Kabul Ediyorum",
+                    "İptal"
+                );
+
+                if (!confirm) return;
+
+                IsLoading = true;
+                var currentUser = await _authService.GetCurrentUserAsync();
+                var acceptResult = await _transactionService.AcceptNegotiatedPriceAsync(
+                    ActiveTransaction.TransactionId,
+                    currentUser.UserId
+                );
+
+                if (acceptResult.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        Res["Success"], 
+                        $"Anlaşma sağlandı: {agreedAmount:N2}₺", 
+                        Res["Ok"]
+                    );
+                    await LoadActiveTransactionAsync(currentUser.UserId);
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], acceptResult.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
 
         [RelayCommand]
         private async Task ToggleFavoriteAsync()
@@ -282,13 +547,6 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser != null)
                 {
-                    // Not: Yukarıda IsFavorite'ı değiştirdiğimiz için ters mantık kurmuyoruz.
-                    // Şu anki durum neyse serviste de onu yapmaya çalışıyoruz.
-
-                    // Ancak bir önceki adımda durumu değiştirdiğimiz için:
-                    // Eğer şu an True ise -> Ekleme işlemi yapılmıştır.
-                    // Eğer şu an False ise -> Çıkarma işlemi yapılmıştır.
-
                     if (IsFavorite)
                     {
                         await _favoriteService.AddToFavoritesAsync(currentUser.UserId, ProductId);
@@ -318,6 +576,7 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
+        
         [RelayCommand]
         private async Task ShareProductAsync()
         {
