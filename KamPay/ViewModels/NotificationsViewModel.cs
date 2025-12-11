@@ -1,19 +1,21 @@
-
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
 using KamPay.Services;
-using System.Linq;
-using KamPay.Views;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace KamPay.ViewModels
 {
-    public partial class NotificationsViewModel : ObservableObject
+    public partial class NotificationsViewModel : ObservableObject, IDisposable
     {
         private readonly INotificationService _notificationService;
         private readonly IAuthenticationService _authService;
+        private bool _disposed = false;
+
+        // Localization Kısayolu
+        private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
         [ObservableProperty]
         private bool isLoading;
@@ -21,17 +23,22 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isRefreshing;
 
-        [ObservableProperty]
-        private string emptyMessage = "Hen�z bildiriminiz yok.";
-
         public ObservableCollection<Notification> Notifications { get; } = new();
 
-        public NotificationsViewModel(INotificationService notificationService, IAuthenticationService authService)
-        {
-            _notificationService = notificationService;
-            _authService = authService;
+        public bool HasNotifications => Notifications.Count > 0;
 
-            _ = LoadNotificationsAsync();
+        public NotificationsViewModel(
+            INotificationService notificationService,
+            IAuthenticationService authService)
+        {
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        }
+
+        // 🔥 Sayfa göründüğünde otomatik yükleme için
+        public async Task InitializeAsync()
+        {
+            await LoadNotificationsAsync();
         }
 
         [RelayCommand]
@@ -43,33 +50,114 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                var currentUser = await _authService.GetCurrentUserAsync();
-                if (currentUser == null)
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
                 {
-                    EmptyMessage = "Bildirimleri g�rmek i�in giri� yapmal�s�n�z.";
+                    await Shell.Current.DisplayAlert(Res["Error"], Res["LoginRequired"], Res["Ok"]);
                     return;
                 }
 
-                var result = await _notificationService.GetUserNotificationsAsync(currentUser.UserId);
+                var result = await _notificationService.GetUserNotificationsAsync(user.UserId);
 
                 if (result.Success && result.Data != null)
                 {
-                    Notifications.Clear();
-                    foreach (var notification in result.Data)
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        Notifications.Add(notification);
-                    }
-                    EmptyMessage = Notifications.Any() ? string.Empty : "Hen�z bildiriminiz yok.";
+                        Notifications.Clear();
+                        foreach (var item in result.Data.OrderByDescending(n => n.CreatedAt))
+                        {
+                            Notifications.Add(item);
+                        }
+                        OnPropertyChanged(nameof(HasNotifications));
+                    });
+
+                    // Okunmamış bildirim sayısını sıfırlamak için global mesaj gönder
+                    WeakReferenceMessenger.Default.Send(new UnreadGeneralNotificationStatusMessage(false));
                 }
-                else
+                else if (!result.Success)
                 {
-                    EmptyMessage = "Bildirimler y�klenemedi.";
+                    await Shell.Current.DisplayAlert(Res["Error"], result.Message ?? Res["NotificationsLoadError"], Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                EmptyMessage = "Bir hata olu�tu.";
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                Console.WriteLine($"❌ LoadNotifications hatası: {ex}");
+                await Shell.Current.DisplayAlert(Res["Error"], $"{Res["NotificationsLoadError"]}: {ex.Message}", Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+                IsRefreshing = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task RefreshNotificationsAsync()
+        {
+            IsRefreshing = true;
+            await LoadNotificationsAsync();
+        }
+
+        [RelayCommand]
+        private async Task MarkAsReadAsync(Notification notification)
+        {
+            if (notification == null) return;
+
+            try
+            {
+                notification.IsRead = true; // UI'ı hemen güncelle
+                OnPropertyChanged(nameof(Notifications));
+
+                var result = await _notificationService.MarkAsReadAsync(notification.NotificationId);
+                
+                if (!result.Success)
+                {
+                    // Hata durumunda geri al
+                    notification.IsRead = false;
+                    OnPropertyChanged(nameof(Notifications));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ MarkAsRead hatası: {ex.Message}");
+                notification.IsRead = false;
+                OnPropertyChanged(nameof(Notifications));
+            }
+        }
+
+        [RelayCommand]
+        private async Task MarkAllAsReadAsync()
+        {
+            if (!Notifications.Any() || IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null) return;
+
+                // UI güncelle
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    foreach (var n in Notifications)
+                    {
+                        n.IsRead = true;
+                    }
+                    OnPropertyChanged(nameof(Notifications));
+                });
+
+                var result = await _notificationService.MarkAllAsReadAsync(user.UserId);
+
+                if (!result.Success)
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ MarkAllAsRead hatası: {ex.Message}");
+                await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -77,60 +165,106 @@ namespace KamPay.ViewModels
             }
         }
 
-
         [RelayCommand]
-        private async Task NotificationTappedAsync(Notification notification)
+        private async Task DeleteNotificationAsync(Notification notification)
         {
-            if (notification == null || string.IsNullOrEmpty(notification.ActionUrl)) return;
+            if (notification == null || IsLoading) return;
 
             try
             {
-                // Bildirimi okundu olarak i�aretle
-                if (!notification.IsRead)
-                {
-                    await _notificationService.MarkAsReadAsync(notification.NotificationId);
-                    notification.IsRead = true;
-                }
+                IsLoading = true;
 
-                await Shell.Current.GoToAsync(notification.ActionUrl);
+                var result = await _notificationService.DeleteNotificationAsync(notification.NotificationId);
+                
+                if (result.Success)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Notifications.Remove(notification);
+                        OnPropertyChanged(nameof(HasNotifications));
+                    });
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", $"Sayfa a��lamad�: {ex.Message}", "Tamam");
+                Console.WriteLine($"❌ DeleteNotification hatası: {ex.Message}");
+                await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
-        }
-
-
-        [RelayCommand]
-        private async Task RefreshNotificationsAsync()
-        {
-            IsRefreshing = true;
-            await LoadNotificationsAsync();
-            IsRefreshing = false;
-        }
-
-        [RelayCommand]
-        private async Task MarkAsReadAsync(Notification notification)
-        {
-            if (notification == null || notification.IsRead) return;
-
-            var result = await _notificationService.MarkAsReadAsync(notification.NotificationId);
-            if (result.Success)
+            finally
             {
-                notification.IsRead = true; // UI'da an�nda g�ncelleme i�in
+                IsLoading = false;
             }
         }
 
-
         [RelayCommand]
-        private async Task GoToRelatedPageAsync(Notification notification)
+        private async Task ClearAllAsync()
         {
-            if (notification == null || string.IsNullOrEmpty(notification.ActionUrl)) return;
+            if (!Notifications.Any() || IsLoading) return;
 
-            // Bildirimi okundu olarak i�aretle
-            await MarkAsReadAsync(notification);
+            var confirm = await Shell.Current.DisplayAlert(
+                Res["Warning"],
+                Res["ConfirmClearAllNotifications"],
+                Res["Yes"],
+                Res["Cancel"]);
 
-            await Shell.Current.GoToAsync(notification.ActionUrl);
+            if (!confirm) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null) return;
+
+                var result = await _notificationService.DeleteAllNotificationsAsync(user.UserId);
+
+                if (result.Success)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Notifications.Clear();
+                        OnPropertyChanged(nameof(HasNotifications));
+                    });
+                    
+                    await Shell.Current.DisplayAlert(Res["Success"], Res["AllNotificationsDeleted"], Res["Ok"]);
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ClearAll hatası: {ex.Message}");
+                await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Messenger temizliği (eğer gelecekte kullanırsanız)
+                    // WeakReferenceMessenger.Default.UnregisterAll(this);
+                }
+                _disposed = true;
+            }
         }
     }
 }

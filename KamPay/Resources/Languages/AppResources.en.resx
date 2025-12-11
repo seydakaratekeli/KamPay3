@@ -195,7 +195,30 @@
   <data name="Back" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="Confirm" xml:space="preserve">
+	<data name="SurpriseBoxTitle" xml:space="preserve"><value>Surprise Box</value></data>
+	<data name="CurrentPoints" xml:space="preserve"><value>Your Current Points</value></data>
+	<data name="SurpriseBoxDescription" xml:space="preserve"><value>For 100 points, open a surprise box and get a chance to win a donated product!</value></data>
+	<data name="Congratulations" xml:space="preserve"><value>🎉 Congratulations! 🎉</value></data>
+	<data name="ProductWonMessage" xml:space="preserve"><value>You won "{0}"! The owner has been notified.</value></data>
+	<data name="ViewMyProduct" xml:space="preserve"><value>🎁 I Want to See My Product</value></data>
+	<data name="InsufficientPoints" xml:space="preserve"><value>Insufficient points!</value></data>
+	<data name="InsufficientPointsMessage" xml:space="preserve"><value>You can earn more points by trading or adding products.</value></data>
+	<data name="OpenBoxFor100Points" xml:space="preserve"><value>🎁 Open Box for 100 Points!</value></data>
+	<data name="OpeningBox" xml:space="preserve"><value>Opening your surprise box...</value></data>
+	<data name="NoDonationAvailable" xml:space="preserve"><value>No donation products available at the moment.</value></data>
+	<data name="BoxEmptyMessage" xml:space="preserve"><value>Unfortunately, the box is empty right now. Please try again later.</value></data>
+	<data name="Processing" xml:space="preserve"><value>Processing...</value></data>
+	<data name="MarkAllAsRead" xml:space="preserve"><value>Mark All as Read</value></data>
+	<data name="ClearAllNotifications" xml:space="preserve"><value>Clear All</value></data>
+	<data name="ConfirmClearAllNotifications" xml:space="preserve"><value>Are you sure you want to delete all notifications?</value></data>
+	<data name="NotificationDeleted" xml:space="preserve"><value>Notification deleted</value></data>
+	<data name="AllNotificationsDeleted" xml:space="preserve"><value>All notifications deleted</value></data>
+	<data name="NoNotificationsMessage" xml:space="preserve"><value>You have no new notifications right now.</value></data>
+	<data name="SystemNotification" xml:space="preserve"><value>System</value></data>
+	<data name="OrderNotification" xml:space="preserve"><value>Order</value></data>
+	<data name="MessageNotification" xml:space="preserve"><value>Message</value></data>
+	<data name="AlertNotification" xml:space="preserve"><value>Alert</value></data>
+	<data name="Confirm" xml:space="preserve">
     <value>Confirm</value>
   </data>
   <data name="Reject" xml:space="preserve">

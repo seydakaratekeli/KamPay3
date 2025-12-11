@@ -1,4 +1,4 @@
-// KamPay/Services/FirebaseNotificationService.cs
+ï»¿// KamPay/Services/FirebaseNotificationService.cs
 
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -29,14 +29,14 @@ namespace KamPay.Services
             WeakReferenceMessenger.Default.Send(new UnreadGeneralNotificationStatusMessage(hasUnread));
         }
 
-        // Yeni bir bildirim oluþturur ve Firebase'e kaydeder.
+        // Yeni bir bildirim oluÅŸturur ve Firebase'e kaydeder.
         public async Task<ServiceResult<bool>> CreateNotificationAsync(Notification notification)
         {
             try
             {
                 if (notification == null || string.IsNullOrEmpty(notification.UserId))
                 {
-                    return ServiceResult<bool>.FailureResult("Bildirim veya kullanýcý ID'si geçersiz.");
+                    return ServiceResult<bool>.FailureResult("Bildirim veya kullanÄ±cÄ± ID'si geÃ§ersiz.");
                 }
 
                 await _firebaseClient
@@ -47,15 +47,15 @@ namespace KamPay.Services
               //  WeakReferenceMessenger.Default.Send(new UnreadGeneralNotificationStatusMessage(true));
 
 
-                return ServiceResult<bool>.SuccessResult(true, "Bildirim oluþturuldu.");
+                return ServiceResult<bool>.SuccessResult(true, "Bildirim oluÅŸturuldu.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Bildirim oluþturulurken hata oluþtu.", ex.Message);
+                return ServiceResult<bool>.FailureResult("Bildirim oluÅŸturulurken hata oluÅŸtu.", ex.Message);
             }
         }
 
-        /// Belirli bir kullanýcýnýn tüm bildirimlerini getirir.
+        /// Belirli bir kullanÄ±cÄ±nÄ±n tÃ¼m bildirimlerini getirir.
         public async Task<ServiceResult<List<Notification>>> GetUserNotificationsAsync(string userId)
         {
             try
@@ -75,11 +75,11 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<Notification>>.FailureResult("Bildirimler alýnamadý.", ex.Message);
+                return ServiceResult<List<Notification>>.FailureResult("Bildirimler alÄ±namadÄ±.", ex.Message);
             }
         }
 
-        /// Belirli bir bildirimi okundu olarak iþaretler.
+        /// Belirli bir bildirimi okundu olarak iÅŸaretler.
         public async Task<ServiceResult<bool>> MarkAsReadAsync(string notificationId)
         {
             try
@@ -91,12 +91,12 @@ namespace KamPay.Services
 
                 if (notification == null)
                 {
-                    return ServiceResult<bool>.FailureResult("Bildirim bulunamadý.");
+                    return ServiceResult<bool>.FailureResult("Bildirim bulunamadÄ±.");
                 }
 
                 if (notification.IsRead)
                 {
-                    return ServiceResult<bool>.SuccessResult(true, "Bildirim zaten okunmuþ.");
+                    return ServiceResult<bool>.SuccessResult(true, "Bildirim zaten okunmuÅŸ.");
                 }
 
                 notification.IsRead = true;
@@ -109,12 +109,87 @@ namespace KamPay.Services
 
                 await CheckAndBroadcastUnreadStatus(notification.UserId);
 
-                return ServiceResult<bool>.SuccessResult(true, "Bildirim okundu olarak iþaretlendi.");
+                return ServiceResult<bool>.SuccessResult(true, "Bildirim okundu olarak iÅŸaretlendi.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Ýþlem sýrasýnda hata oluþtu.", ex.Message);
+                return ServiceResult<bool>.FailureResult("Ä°ÅŸlem sÄ±rasÄ±nda hata oluÅŸtu.", ex.Message);
+            }
+        }
+
+        // ðŸ”¥ YENÄ° EKLENEN METOTLAR
+
+        public async Task<ServiceResult<bool>> MarkAllAsReadAsync(string userId)
+        {
+            try
+            {
+                var allNotifications = await GetUserNotificationsAsync(userId);
+                if (allNotifications.Success && allNotifications.Data != null)
+                {
+                    var unreadNotifications = allNotifications.Data.Where(n => !n.IsRead).ToList();
+
+                    // Paralel gÃ¼ncelleme yerine dÃ¶ngÃ¼yle gÃ¼ncelleme (Firebase Realtime DB iÃ§in daha gÃ¼venli)
+                    foreach (var notification in unreadNotifications)
+                    {
+                        notification.IsRead = true;
+                        notification.ReadAt = DateTime.UtcNow;
+
+                        await _firebaseClient
+                            .Child(Constants.NotificationsCollection)
+                            .Child(notification.NotificationId)
+                            .PutAsync(notification);
+                    }
+
+                    await CheckAndBroadcastUnreadStatus(userId);
+                }
+                return ServiceResult<bool>.SuccessResult(true);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("TÃ¼mÃ¼nÃ¼ okundu iÅŸaretlerken hata.", ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult<bool>> DeleteNotificationAsync(string notificationId)
+        {
+            try
+            {
+                await _firebaseClient
+                    .Child(Constants.NotificationsCollection)
+                    .Child(notificationId)
+                    .DeleteAsync();
+
+                return ServiceResult<bool>.SuccessResult(true);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Silme hatasÄ±.", ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult<bool>> DeleteAllNotificationsAsync(string userId)
+        {
+            try
+            {
+                var allNotifications = await GetUserNotificationsAsync(userId);
+                if (allNotifications.Success && allNotifications.Data != null)
+                {
+                    foreach (var notification in allNotifications.Data)
+                    {
+                        await _firebaseClient
+                            .Child(Constants.NotificationsCollection)
+                            .Child(notification.NotificationId)
+                            .DeleteAsync();
+                    }
+                }
+                return ServiceResult<bool>.SuccessResult(true);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Toplu silme hatasÄ±.", ex.Message);
             }
         }
     }
 }
+    
+    

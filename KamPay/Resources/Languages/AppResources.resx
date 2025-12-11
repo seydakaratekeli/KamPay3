@@ -270,7 +270,31 @@
   <data name="UnexpectedError" xml:space="preserve">
     <value>Beklenmeyen hata</value>
   </data>
-  <data name="EditProfile" xml:space="preserve">
+	<data name="SurpriseBoxTitle" xml:space="preserve"><value>Sürpriz Kutu</value></data>
+	<data name="CurrentPoints" xml:space="preserve"><value>Mevcut Puanınız</value></data>
+	<data name="SurpriseBoxDescription" xml:space="preserve"><value>100 puan karşılığında bir sürpriz kutu açarak bağışlanmış ürünlerden birini kazanma şansı yakala!</value></data>
+	<data name="Congratulations" xml:space="preserve"><value>🎉 Tebrikler! 🎉</value></data>
+	<data name="ProductWonMessage" xml:space="preserve"><value>"{0}" ürününü kazandınız! Ürün sahibine bildirim gönderildi.</value></data>
+	<data name="ViewMyProduct" xml:space="preserve"><value>🎁 Ürünümü Görmek İstiyorum</value></data>
+	<data name="InsufficientPoints" xml:space="preserve"><value>Yetersiz puan!</value></data>
+	<data name="InsufficientPointsMessage" xml:space="preserve"><value>Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz.</value></data>
+	<data name="OpenBoxFor100Points" xml:space="preserve"><value>🎁 100 Puana Kutu Aç!</value></data>
+	<data name="OpeningBox" xml:space="preserve"><value>Sürpriz kutunuz açılıyor...</value></data>
+	<data name="NoDonationAvailable" xml:space="preserve"><value>Şu an müsait bağış ürünü yok.</value></data>
+	<data name="BoxEmptyMessage" xml:space="preserve"><value>Maalesef şu an kutuda ürün kalmadı. Daha sonra tekrar deneyin.</value></data>
+	<data name="Processing" xml:space="preserve"><value>İşlem yapılıyor...</value></data>
+ <data name="MarkAllAsRead" xml:space="preserve"><value>Tümünü Okundu İşaretle</value></data>
+  <data name="ClearAllNotifications" xml:space="preserve"><value>Tümünü Temizle</value></data>
+  <data name="ConfirmClearAllNotifications" xml:space="preserve"><value>Tüm bildirimleri silmek istediğinize emin misiniz?</value></data>
+  <data name="NotificationDeleted" xml:space="preserve"><value>Bildirim silindi</value></data>
+  <data name="AllNotificationsDeleted" xml:space="preserve"><value>Tüm bildirimler silindi</value></data>
+  <data name="NoNotificationsMessage" xml:space="preserve"><value>Şu an yeni bir bildiriminiz yok.</value></data>
+  <data name="SystemNotification" xml:space="preserve"><value>Sistem</value></data>
+  <data name="OrderNotification" xml:space="preserve"><value>Sipariş</value></data>
+  <data name="MessageNotification" xml:space="preserve"><value>Mesaj</value></data>
+  <data name="AlertNotification" xml:space="preserve"><value>Uyarı</value></data>
+	 
+ <data name="EditProfile" xml:space="preserve">
     <value>Profili Düzenle</value>
   </data>
   <data name="Logout" xml:space="preserve">
