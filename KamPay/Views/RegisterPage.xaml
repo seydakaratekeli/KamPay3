@@ -18,7 +18,9 @@
                    TextColor="White"
                    HorizontalOptions="Center"/>
 
-            <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True">
+            <!-- Kayıt Formu -->
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True"
+                   IsVisible="{Binding ShowVerificationSection, Converter={StaticResource InvertedBoolConverter}}">
                 <VerticalStackLayout Spacing="15">
                     
                     <!-- İsim -->
@@ -49,7 +51,7 @@
 
                     <!-- Şifre Tekrar -->
                     <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ConfirmPassword]}"
-                           Text="{Binding ConfirmPassword}"
+                           Text="{Binding PasswordConfirm}"
                            IsPassword="True"
                            TextColor="#212121"
                            PlaceholderColor="#757575"/>
@@ -67,7 +69,8 @@
                             TextColor="White"
                             FontAttributes="Bold"
                             CornerRadius="10"
-                            HeightRequest="50"/>
+                            HeightRequest="50"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
 
                     <!-- Giriş Yap Linki -->
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
@@ -85,6 +88,69 @@
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
+
+            <!-- Doğrulama Kodu Bölümü -->
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True"
+                   IsVisible="{Binding ShowVerificationSection}">
+                <VerticalStackLayout Spacing="15">
+                    
+                    <!-- Bilgilendirme -->
+                    <Label Text="E-posta adresinize gönderilen doğrulama kodunu girin"
+                           FontSize="16"
+                           TextColor="#212121"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+
+                    <!-- Doğrulama Kodu Entry -->
+                    <Entry Placeholder="Doğrulama Kodu"
+                           Text="{Binding VerificationCode}"
+                           Keyboard="Numeric"
+                           MaxLength="6"
+                           TextColor="#212121"
+                           PlaceholderColor="#757575"
+                           HorizontalTextAlignment="Center"
+                           FontSize="20"
+                           FontAttributes="Bold"/>
+
+                    <!-- Hata Mesajı -->
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+
+                    <!-- Doğrula Butonu -->
+                    <Button Text="Doğrula"
+                            Command="{Binding VerifyEmailCommand}"
+                            BackgroundColor="#6200EA"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
+
+                    <!-- Kodu Yeniden Gönder -->
+                    <Button Text="Kodu Yeniden Gönder"
+                            Command="{Binding ResendVerificationCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#6200EA"
+                            FontAttributes="Bold"
+                            BorderColor="#6200EA"
+                            BorderWidth="2"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
+
+                    <!-- İptal -->
+                    <Button Text="İptal"
+                            Command="{Binding CancelVerificationCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#757575"
+                            CornerRadius="10"
+                            HeightRequest="40"/>
+
+                </VerticalStackLayout>
+            </Frame>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

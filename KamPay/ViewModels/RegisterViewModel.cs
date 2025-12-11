@@ -10,7 +10,6 @@ namespace KamPay.ViewModels
     public partial class RegisterViewModel : ObservableObject
     {
         private readonly IAuthenticationService _authService;
-        // YENÝ: IUserProfileService'i ekledik
         private readonly IUserProfileService _userProfileService;
 
         [ObservableProperty]
@@ -40,22 +39,6 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string verificationCode;
 
-        // YENÝ: ConfirmPassword property'sini ekledik
-        public string ConfirmPassword
-        {
-            get => _confirmPassword;
-            set
-            {
-                if (_confirmPassword != value)
-                {
-                    _confirmPassword = value;
-                    OnPropertyChanged(nameof(ConfirmPassword));
-                }
-            }
-        }
-        private string _confirmPassword;
-
-        // YENÝ: Constructor'ý IUserProfileService alacak þekilde güncelledik
         public RegisterViewModel(IAuthenticationService authService, IUserProfileService userProfileService)
         {
             _authService = authService;
@@ -79,8 +62,6 @@ namespace KamPay.ViewModels
                     PasswordConfirm = PasswordConfirm
                 };
 
-                // ÖNEMLÝ: FirebaseAuthService'de RegisterAsync'in adý RegisterUserAsync olabilir.
-                // Projendeki isme göre burayý RegisterUserAsync olarak deðiþtirmen gerekebilir.
                 var result = await _authService.RegisterAsync(request);
 
                 if (result.Success)
@@ -122,28 +103,22 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    // E-posta doðrulandý, þimdi giriþ yapalým
                     var loginRequest = new LoginRequest { Email = Email, Password = Password, RememberMe = true };
                     var loginResult = await _authService.LoginAsync(loginRequest);
 
                     if (loginResult.Success)
                     {
-                        // GÝRÝÞ BAÞARILI, ÞÝMDÝ PROFÝLÝ OLUÞTURALIM
-                        // Mevcut kullanýcýyý alarak UserId'ye eriþiyoruz.
                         var currentUser = await _authService.GetCurrentUserAsync();
                         if (currentUser != null && !string.IsNullOrEmpty(currentUser.UserId))
                         {
-                            // Ad ve soyadý birleþtirerek tam isim oluþturuyoruz
                             string fullName = $"{FirstName} {LastName}".Trim();
                             await _userProfileService.CreateUserProfileAsync(currentUser.UserId, fullName, Email);
                         }
 
-                        // Her þey tamam, ana sayfaya yönlendir
                         await Shell.Current.GoToAsync("//MainApp");
                     }
                     else
                     {
-                        // Doðrulama baþarýlý ama giriþ baþarýsýzsa, kullanýcýyý login sayfasýna gönderelim
                         await Application.Current.MainPage.DisplayAlert("Doðrulandý", "E-postanýz doðrulandý. Lütfen giriþ yapýn.", "Tamam");
                         await Shell.Current.GoToAsync("//LoginPage");
                     }
@@ -163,8 +138,6 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ... (Diðer komutlar ayný kalacak: ResendVerificationAsync, CancelVerificationAsync, GoToLoginAsync) ...
-        #region Other Commands
         [RelayCommand]
         private async Task ResendVerificationAsync()
         {
@@ -213,6 +186,5 @@ namespace KamPay.ViewModels
         {
             await Shell.Current.GoToAsync("..");
         }
-        #endregion
     }
 }
