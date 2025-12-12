@@ -275,6 +275,9 @@ namespace KamPay.ViewModels
                             IsOtherUserOnline = false;
                             OnlineStatusText = "Çevrimdışı";
                         }
+
+                        // 🔥 YENİ: Diğer kullanıcının profil fotoğrafını yükle (fallback)
+                        await EnsureOtherUserPhotoAsync();
                     }
                     else
                     {
@@ -946,6 +949,31 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ ViewImage hatası: {ex.Message}");
+            }
+        }
+
+        // After setting OtherUserPhoto from conversation or Firebase, try loading cached profile from IUserProfileService if still empty.
+        // Add this helper method in ChatViewModel
+        private async Task EnsureOtherUserPhotoAsync()
+        {
+            if (!string.IsNullOrEmpty(OtherUserPhoto) && OtherUserPhoto != "person_icon.svg")
+                return;
+
+            try
+            {
+                if (Conversation == null || _currentUser == null) return;
+                var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
+                if (string.IsNullOrEmpty(otherUserId)) return;
+
+                var profileResult = await new FirebaseUserProfileService().GetUserProfileAsync(otherUserId);
+                if (profileResult.Success && profileResult.Data != null && !string.IsNullOrEmpty(profileResult.Data.ProfileImageUrl))
+                {
+                    OtherUserPhoto = profileResult.Data.ProfileImageUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ EnsureOtherUserPhotoAsync hata: {ex.Message}");
             }
         }
     }
