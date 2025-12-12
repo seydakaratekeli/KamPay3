@@ -201,38 +201,72 @@ namespace KamPay.ViewModels
         {
             if (post == null) return;
 
+            // Çift tıklamayı önlemek için basit bir kontrol (isteğe bağlı)
+            // if (IsBusy) return; 
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null) return;
+
+            // 1. ANLIK GÜNCELLEME (Optimistik): Sunucuyu beklemeden arayüzü değiştir
+            bool isLikedNewState = !post.IsLiked;
+
+            // UI'ı hemen güncelle
+            post.IsLiked = isLikedNewState;
+
+            if (isLikedNewState)
+            {
+                post.LikeCount++;
+                // Sözlüğe de ekle ki tutarlı olsun
+                if (!post.Likes.ContainsKey(currentUser.UserId))
+                    post.Likes[currentUser.UserId] = true;
+            }
+            else
+            {
+                post.LikeCount = Math.Max(0, post.LikeCount - 1);
+                // Sözlükten çıkar
+                if (post.Likes.ContainsKey(currentUser.UserId))
+                    post.Likes.Remove(currentUser.UserId);
+            }
+
             try
             {
-                var currentUser = await _authService.GetCurrentUserAsync();
-                if (currentUser == null) return;
-
+                // 2. Arka planda sunucuya gönder
                 var result = await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
 
-                if (result.Success)
+                if (!result.Success)
                 {
-                    var updatedPost = await _firebaseClient
-                        .Child("good_deed_posts")
-                        .Child(post.PostId)
-                        .OnceSingleAsync<GoodDeedPost>();
+                    // 3. HATA OLURSA: Yapılan değişikliği geri al (Rollback)
+                    post.IsLiked = !isLikedNewState;
 
-                    if (updatedPost != null)
+                    if (isLikedNewState) // Beğenmiştik, geri alıyoruz (azalt)
                     {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            post.LikeCount = updatedPost.LikeCount;
-                            post.Likes = updatedPost.Likes ?? new Dictionary<string, bool>();
-                            post.UpdateLikeStatus(currentUser.UserId);
-                        });
+                        post.LikeCount = Math.Max(0, post.LikeCount - 1);
+                        post.Likes.Remove(currentUser.UserId);
                     }
+                    else // Beğenmekten vazgeçmiştik, geri alıyoruz (arttır)
+                    {
+                        post.LikeCount++;
+                        post.Likes[currentUser.UserId] = true;
+                    }
+
+                    await Application.Current.MainPage.DisplayAlert("Hata", "İşlem başarısız oldu.", "Tamam");
                 }
+
+                // BAŞARILI OLURSA: Hiçbir şey yapmana gerek yok. 
+                // Zaten en başta güncelledik. Realtime Listener ileride veriyi doğrulayacaktır.
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"❌ Beğeni hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", "Beğeni işlemi başarısız oldu.", "Tamam");
+                // Hata durumunda rollback (yukarıdakiyle aynı mantık)
+                post.IsLiked = !isLikedNewState;
+                if (isLikedNewState)
+                    post.LikeCount = Math.Max(0, post.LikeCount - 1);
+                else
+                    post.LikeCount++;
+
+                System.Diagnostics.Debug.WriteLine($"❌ Beğeni hatası: {ex.Message}");
             }
         }
-
         [RelayCommand]
         private async Task DeletePostAsync(GoodDeedPost post)
         {

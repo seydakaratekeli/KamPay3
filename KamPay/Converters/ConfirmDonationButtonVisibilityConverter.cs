@@ -1,4 +1,4 @@
-﻿// KamPay/Converters/ConfirmDonationButtonVisibilityConverter.cs
+﻿
 using KamPay.Models;
 using System.Globalization;
 
