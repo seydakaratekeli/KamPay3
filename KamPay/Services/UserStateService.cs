@@ -48,21 +48,36 @@ namespace KamPay.Services
         {
             try
             {
+                // 1. Auth servisinden temel kullanıcıyı al (Bu genellikle doludur)
                 var user = await _authService.GetCurrentUserAsync();
                 if (user == null)
                 {
                     return ServiceResult<User>.FailureResult("Kullanıcı oturumu bulunamadı");
                 }
 
-                // Profil bilgilerini Firebase'den al
+                // 2. Profil bilgilerini Firebase'den al
                 var profileResult = await _profileService.GetUserProfileAsync(user.UserId);
+
+                // 3. EĞER profil servisi başarılıysa ve veri geldiyse KONTROLLÜ GÜNCELLE
                 if (profileResult.Success && profileResult.Data != null)
                 {
                     var profile = profileResult.Data;
-                    user.FirstName = profile.FirstName;
-                    user.LastName = profile.LastName;
-                    user.ProfileImageUrl = profile.ProfileImageUrl;
-                    user.Email = profile.Email;
+
+                    // 🔥 KRİTİK DÜZELTME: Doğrudan atama YAPMA.
+                    // Sadece gelen veri doluysa (null veya boş değilse) üzerine yaz.
+
+                    if (!string.IsNullOrWhiteSpace(profile.FirstName))
+                        user.FirstName = profile.FirstName;
+
+                    if (!string.IsNullOrWhiteSpace(profile.LastName))
+                        user.LastName = profile.LastName;
+
+                    if (!string.IsNullOrWhiteSpace(profile.ProfileImageUrl))
+                        user.ProfileImageUrl = profile.ProfileImageUrl;
+
+                    // Email genellikle Auth'dan gelir ama yine de kontrol edelim
+                    if (!string.IsNullOrWhiteSpace(profile.Email))
+                        user.Email = profile.Email;
                 }
 
                 CurrentUser = user;
@@ -73,7 +88,6 @@ namespace KamPay.Services
                 return ServiceResult<User>.FailureResult("Kullanıcı bilgileri yüklenemedi", ex.Message);
             }
         }
-
         public async Task<ServiceResult<bool>> UpdateUserProfileAsync(
             string firstName = null,
             string lastName = null,
