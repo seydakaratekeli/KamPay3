@@ -4,10 +4,23 @@ namespace KamPay.Views
 {
     public partial class NotificationsPage : ContentPage
     {
+        private readonly NotificationsViewModel _viewModel;
+
         public NotificationsPage(NotificationsViewModel vm)
         {
             InitializeComponent();
-            BindingContext = vm;
+            _viewModel = vm;
+            BindingContext = _viewModel;
+        }
+
+        //  Sayfa göründüðünde verileri yükle
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            if (_viewModel != null)
+            {
+                await _viewModel.InitializeAsync();
+            }
         }
     }
 }

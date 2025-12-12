@@ -126,18 +126,22 @@
                                                     Padding="6,2">
                                                 <Label FontSize="10" TextColor="#757575">
                                                     <Label.Triggers>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="System">
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SystemNotice">
                                                             <Setter Property="Text" Value="{extensions:Translate SystemNotification}"/>
                                                         </DataTrigger>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Order">
+
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ProductSold">
                                                             <Setter Property="Text" Value="{extensions:Translate OrderNotification}"/>
                                                         </DataTrigger>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Message">
+
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewMessage">
                                                             <Setter Property="Text" Value="{extensions:Translate MessageNotification}"/>
                                                         </DataTrigger>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Alert">
+
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="BadgeEarned">
                                                             <Setter Property="Text" Value="{extensions:Translate AlertNotification}"/>
                                                         </DataTrigger>
+
                                                     </Label.Triggers>
                                                 </Label>
                                             </Border>
