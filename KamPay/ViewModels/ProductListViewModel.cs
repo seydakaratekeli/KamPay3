@@ -60,13 +60,13 @@ namespace KamPay.ViewModels
         [ObservableProperty] private bool _isRefreshing;
         #endregion
 
-        // 🔥 YENİ: Enum listesini referans olarak tutuyoruz (Sıralama mantığı için)
+        //  Enum listesini referans olarak tutuyoruz (Sıralama mantığı için)
         private readonly List<ProductSortOption> _sortOptionEnums = Enum.GetValues(typeof(ProductSortOption)).Cast<ProductSortOption>().ToList();
 
-        // 🔥 YENİ: Arayüzde (Picker) görünecek dinamik metin listesi
+        //  Arayüzde (Picker) görünecek dinamik metin listesi
         public List<string> SortOptionStrings => _sortOptionEnums.Select(GetSortOptionText).ToList();
 
-        // 🔥 YENİ: Picker'ın SelectedIndex özelliği için
+        // : Picker'ın SelectedIndex özelliği için
         private int _selectedSortIndex;
         public int SelectedSortIndex
         {
@@ -605,7 +605,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Enum -> Localized String Çevirici
+        //  Enum -> Localized String Çevirici
         private string GetSortOptionText(ProductSortOption option)
         {
             var loc = LocalizationResourceManager.Instance;

@@ -49,7 +49,7 @@ namespace KamPay.ViewModels
         // Seçilen sıralama metni (Örn: "Artan", "Ascending" vb.)
         [ObservableProperty] private string priceSort = null;
 
-        // 🔥 YENİ: Dinamik Sıralama Seçenekleri
+        // / Dinamik Sıralama Seçenekleri
         // Dil değiştiğinde bu liste otomatik olarak yeni dildeki karşılıklarını döndürür.
         public List<string> PriceSortOptions => new List<string>
         {
@@ -85,7 +85,7 @@ namespace KamPay.ViewModels
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
-            // 🔥 YENİ: Dil değiştiğinde sıralama listesini (Picker) güncelle
+            // / Dil değiştiğinde sıralama listesini (Picker) güncelle
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
                 OnPropertyChanged(nameof(PriceSortOptions));
@@ -282,7 +282,7 @@ namespace KamPay.ViewModels
                 q = q.Where(s => s.Category == FilterCategory.Value);
             }
 
-            // 🔥 YENİ: Price sort (Dil bağımsız kontrol)
+            // / Price sort (Dil bağımsız kontrol)
             var loc = LocalizationResourceManager.Instance;
 
             if (PriceSort == loc["PriceAscending"]) // "Artan" veya "Ascending" kontrolü

@@ -17,7 +17,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private readonly IStorageService _storageService;
     private bool _disposed = false;
 
-    // 🔥 YENİ: Cache flag - Sadece bir kez yükle
+    //  Cache flag - Sadece bir kez yükle
     private bool _isDataLoaded = false;
     private DateTime _lastLoadTime = DateTime.MinValue;
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
@@ -80,9 +80,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(CurrentUser));
     }
 
-    /// <summary>
-    /// Cleanup method to unsubscribe from events and prevent memory leaks
-    /// </summary>
+    // bellek sızıntılarını önlemek için temizleme yöntemi
     public void Dispose()
     {
         Dispose(true);
@@ -95,7 +93,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         {
             if (disposing)
             {
-                // Unsubscribe from event to prevent memory leaks
+                // Bellek sızıntılarını önlemek için iptal 
                 _userStateService.UserProfileChanged -= OnUserProfileChanged;
             }
             _disposed = true;
@@ -143,7 +141,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             
             if (CurrentUser == null) return;
 
-            // 🔥 PARALEL YÜKLEME: 3 işlemi aynı anda başlat (profil artık UserStateService'den geliyor)
+            //  PARALEL YÜKLEME: 3 işlemi aynı anda başlat (profil artık UserStateService'den geliyor)
             var statsTask = _profileService.GetUserStatsAsync(CurrentUser.UserId);
             var productsTask = _productService.GetUserProductsAsync(CurrentUser.UserId);
             var badgesTask = _profileService.GetUserBadgesAsync(CurrentUser.UserId);
@@ -186,7 +184,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // 🔥 Cache'i işaretle
+            //  Cache'i işaretle
             _isDataLoaded = true;
             _lastLoadTime = DateTime.UtcNow;
             Console.WriteLine("✅ Profil verileri yüklendi ve cache'lendi");
@@ -205,7 +203,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private async Task RefreshProfileAsync()
     {
         IsRefreshing = true;
-        // 🔥 Refresh'te cache'i sıfırla ve yeniden yükle
+        //  Refresh'te cache'i sıfırla ve yeniden yükle
         _isDataLoaded = false;
         await LoadProfileAsync();
         IsRefreshing = false;
@@ -294,7 +292,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
                 await Application.Current.MainPage.DisplayAlert(Res["Success"], Res["ProfileUpdated"], Res["Ok"]);
 
-                // 🔥 Cache'i sıfırla ve yeniden yükle
+                //  Cache'i sıfırla ve yeniden yükle
                 _isDataLoaded = false;
                 await LoadProfileAsync();
             }
@@ -313,7 +311,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
     }
 
-    // YENİ HELPER METOD: ViewModel'i fabrika ayarlarına döndürür
+    //  HELPER METOD: ViewModel'i fabrika ayarlarına döndürür
     private void ResetViewModelState()
     {
         // Cache flag'ini sıfırla
@@ -461,7 +459,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         await Shell.Current.GoToAsync($"productdetail?productId={product.ProductId}");
     }
 
-    // 🔥 YENİ: Cache'i manuel sıfırlama metodu (ihtiyaç halinde)
+    //  Cache'i manuel sıfırlama metodu (ihtiyaç halinde)
     public void InvalidateCache()
     {
         _isDataLoaded = false;

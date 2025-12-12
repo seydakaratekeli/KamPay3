@@ -27,7 +27,7 @@ namespace KamPay.Services
         /// </summary>
         Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl);
 
-        // 🔥 YENİ: Mesajlaşma ve Pazarlık Metodları
+        // / Mesajlaşma ve Pazarlık Metodları
         
         /// <summary>
         /// Hizmet talebi için konuşma başlatır (veya mevcut konuşmayı döndürür)

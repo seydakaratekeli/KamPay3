@@ -19,7 +19,7 @@ namespace KamPay.Services
         private readonly IUserProfileService _userProfileService; // Puan için eklendi
 
 
-        // Üst kısıma ekle (FirebaseTransactionService sınıfı içinde, constructor'dan önce)
+       
         internal class TempOtpModel
         {
             public string Otp { get; set; }
@@ -268,7 +268,7 @@ namespace KamPay.Services
         }
 
 
-        // --- YENİ METOT: Sadece SATIŞ Modülü İçin Hızlı Ödeme Tamamlama ---
+        //  Sadece SATIŞ Modülü İçin Hızlı Ödeme Tamamlama
         public async Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId)
         {
             try
@@ -315,7 +315,7 @@ namespace KamPay.Services
             }
         }
 
-        // --- YENİ PRIVATE METOT: Ortak Tamamlama İşlemleri (Satış, Bağış, Takas için) ---
+        // Ortak Tamamlama İşlemleri (Satış, Bağış, Takas için) 
         private async Task<ServiceResult<Transaction>> CompleteTransactionInternalAsync(Transaction transaction)
         {
             try
@@ -474,7 +474,7 @@ namespace KamPay.Services
             }
         }
 
-        // --- YENİ METOT: BAĞIŞ Onaylama ---
+        // BAĞIŞ Onaylama 
         public async Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId)
         {
             try
@@ -996,7 +996,7 @@ namespace KamPay.Services
                     }
                 }
 
-                // 🔥 YENİ: Kullanıcılar arasında mevcut konuşma var mı kontrol et
+                //  Kullanıcılar arasında mevcut konuşma var mı kontrol et
                 var otherUserId = transaction.BuyerId == currentUserId 
                     ? transaction.SellerId 
                     : transaction.BuyerId;
@@ -1068,7 +1068,7 @@ namespace KamPay.Services
                     .Child(conversation.ConversationId)
                     .PutAsync(conversation);
 
-                // Transaction'a conversation ID'sini ekle
+                // Transaction'a conversation ID'sini eklendi
                 transaction.ConversationId = conversation.ConversationId;
                 transaction.HasActiveConversation = true;
 

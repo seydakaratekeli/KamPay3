@@ -161,7 +161,7 @@
                                         <BoxView HeightRequest="1" 
                                                  Color="{StaticResource Gray200}" />
 
-                                        <!-- 🔥 YENİ: Pazarlık Bilgileri -->
+                                        <!--  Pazarlık Bilgileri -->
                                         <VerticalStackLayout Spacing="5"
                                                              IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}">
                                             <Label Text="💰 Pazarlık Devam Ediyor"
@@ -193,7 +193,7 @@
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
 
-                                                <!-- 🔥 YENİ: Mesaj Gönder Butonu -->
+                                                <!--  Mesaj Gönder Butonu -->
                                                 <Button Text="💬"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
                                                         CommandParameter="{Binding .}"
@@ -205,7 +205,7 @@
                                                         FontSize="14"
                                                         ToolTipProperties.Text="Mesaj Gönder" />
 
-                                                <!-- 🔥 YENİ: Karşı Teklif Butonu (Pending durumunda) -->
+                                                <!--  Karşı Teklif Butonu (Pending durumunda) -->
                                                 <Button Text="💰 Teklif"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=SendCounterOfferCommand}"
                                                         CommandParameter="{Binding .}"
@@ -216,7 +216,7 @@
                                                         FontSize="10"
                                                         IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}" />
 
-                                                <!-- 🔥 YENİ: Fiyat Kabul Butonu (Pazarlık devam ederken) -->
+                                                <!-- Fiyat Kabul Butonu (Pazarlık devam ederken) -->
                                                 <Button Text="✓ Kabul"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -316,7 +316,7 @@
 
                                         <BoxView HeightRequest="1" Color="{StaticResource Gray200}" />
 
-                                        <!-- 🔥 YENİ: Pazarlık Bilgileri -->
+                                        <!--  Pazarlık Bilgileri -->
                                         <VerticalStackLayout Spacing="5"
                                                              IsVisible="{Binding IsNegotiating, Converter={StaticResource IsNegotiatingConverter}}">
                                             <Label Text="💰 Pazarlık Devam Ediyor"
@@ -348,7 +348,7 @@
                                                                    HorizontalOptions="End"
                                                                    Spacing="8">
 
-                                                <!-- 🔥 YENİ: Mesaj Gönder Butonu -->
+                                                <!-- Mesaj Gönder Butonu -->
                                                 <Button Text="💬"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
                                                         CommandParameter="{Binding .}"
@@ -360,7 +360,7 @@
                                                         FontSize="14"
                                                         ToolTipProperties.Text="Mesaj Gönder" />
 
-                                                <!-- 🔥 YENİ: Fiyat Teklifi Butonu (Pending durumunda) -->
+                                                <!--  Fiyat Teklifi Butonu (Pending durumunda) -->
                                                 <Button Text="💰 Teklif"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=ProposePriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -371,7 +371,7 @@
                                                         FontSize="10"
                                                         IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}" />
 
-                                                <!-- 🔥 YENİ: Fiyat Kabul Butonu (Pazarlık devam ederken) -->
+                                                <!--  Fiyat Kabul Butonu (Pazarlık devam ederken) -->
                                                 <Button Text="✓ Kabul"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
                                                         CommandParameter="{Binding .}"

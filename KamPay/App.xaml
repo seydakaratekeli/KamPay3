@@ -33,7 +33,7 @@
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:LessThan100Converter x:Key="LessThan100Converter"/>
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
-            <!-- 🔥 YENİ -->
+           
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -37,7 +37,7 @@ namespace KamPay
                 .UseSkiaSharp()
                 .UseBarcodeReader()
                 .UseMauiCommunityToolkit()
-                            .UseFFImageLoading() // ✅ BURAYA EKLE
+                            .UseFFImageLoading() 
 
                 .ConfigureFonts(fonts =>
                 {
@@ -65,7 +65,7 @@ namespace KamPay
             builder.Services.AddSingleton(emailSettings);
             builder.Services.AddSingleton<IEmailService, EmailService>();
 
-            // 👇 FirebaseAuthService, constructor'da IEmailService beklediği için bu şekilde ekliyoruz:
+            
             builder.Services.AddSingleton<IAuthenticationService>(sp =>
                 new FirebaseAuthService(sp.GetRequiredService<IEmailService>())
             );
@@ -90,7 +90,7 @@ namespace KamPay
                     sp.GetRequiredService<IStorageService>())
             );
 
-            // ✅ SERVICES BÖLÜMÜNE EKLE (mevcut satırlardan sonra)
+            
             builder.Services.AddSingleton<IFirebaseObserverService, FirebaseObserverService>();
             builder.Services.AddSingleton<IProductCacheService, ProductCacheService>();
             builder.Services.AddSingleton<IReverseGeocodeService, ReverseGeocodeService>();
@@ -98,7 +98,7 @@ namespace KamPay
                 new FirebaseSurpriseBoxService(
                     sp.GetRequiredService<IUserProfileService>(),
                     sp.GetRequiredService<IProductService>(),
-                    sp.GetRequiredService<INotificationService>() // 🔥 YENİ
+                    sp.GetRequiredService<INotificationService>() 
                 )
             ); builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
@@ -106,7 +106,7 @@ namespace KamPay
     new FirebaseServiceSharingService(
         sp.GetRequiredService<INotificationService>(),
         sp.GetRequiredService<IUserProfileService>(),
-        sp.GetRequiredService<IMessagingService>() // <-- EKLENDİ
+        sp.GetRequiredService<IMessagingService>() 
     )
  );
             builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
@@ -116,11 +116,11 @@ namespace KamPay
           sp.GetRequiredService<INotificationService>(),
           sp.GetRequiredService<IProductService>(),
           sp.GetRequiredService<IQRCodeService>(),
-            sp.GetRequiredService<IUserProfileService>()) // IQRCodeService'i buraya ekleyin
+            sp.GetRequiredService<IUserProfileService>()) 
   );
 
             // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
-            // ✅ Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
+            //  Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
             builder.Services.AddSingleton<IUserStateService>(sp =>
                 new UserStateService(
                     sp.GetRequiredService<IAuthenticationService>(),
@@ -150,7 +150,7 @@ namespace KamPay
             builder.Services.AddTransient<SurpriseBoxViewModel>();
             builder.Services.AddTransient<GoodDeedBoardViewModel>();
             builder.Services.AddTransient<ServiceSharingViewModel>();
-            builder.Services.AddTransient<ServiceRequestsViewModel>(); // Bu satırı ekleyin
+            builder.Services.AddTransient<ServiceRequestsViewModel>(); 
             builder.Services.AddTransient<SurpriseBoxViewModel>();
             builder.Services.AddTransient<ImageViewerViewModel>();
 
@@ -168,7 +168,7 @@ namespace KamPay
             builder.Services.AddTransient<FavoritesPage>();
             builder.Services.AddTransient<ProfilePage>();
             builder.Services.AddTransient<NotificationsPage>();
-            // 🔥 Singleton yaptık: Sayfa ve ViewModel bir kere oluşturulur ve hafızada kalır.
+           
             builder.Services.AddSingleton<OffersViewModel>();
             builder.Services.AddSingleton<OffersPage>();
             builder.Services.AddTransient<TradeOfferView>();
@@ -178,6 +178,8 @@ namespace KamPay
             builder.Services.AddTransient<QRScannerPage>();
             builder.Services.AddTransient<ServiceRequestsPage>(); 
             builder.Services.AddTransient<ImageViewerPage>();
+
+            //  Singleton yaptık: Sayfa ve ViewModel bir kere oluşturulur ve hafızada kalır.
             builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();
 
 

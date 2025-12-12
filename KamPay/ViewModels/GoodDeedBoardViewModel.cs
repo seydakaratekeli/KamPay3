@@ -512,7 +512,7 @@ namespace KamPay.ViewModels
                     if (currentUser != null)
                     {
                         post.IsOwner = post.UserId == currentUser.UserId;
-                        // 🔥 YENİ: Beğeni durumunu güncelle
+                        // Beğeni durumunu güncelle
                         post.UpdateLikeStatus(currentUser.UserId);
                     }
 

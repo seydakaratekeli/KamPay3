@@ -22,7 +22,7 @@ namespace KamPay.ViewModels
         private readonly FirebaseClient _firebaseClient;
         private IDisposable _requestsSubscription;
 
-        // 🔥 CACHE: Request tracking
+        //  CACHE: Request tracking
         private readonly HashSet<string> _incomingRequestIds = new();
         private readonly HashSet<string> _outgoingRequestIds = new();
         private bool _initialLoadComplete = false;
@@ -69,7 +69,7 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            //  Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 // Gelen taleplerdeki talep eden kişi bilgilerini güncelle
@@ -116,7 +116,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 OPTİMİZE: Real-time listener + batch processing
+        //  OPTİMİZE: Real-time listener + batch processing
         private void StartListeningForRequests()
         {
             if (_requestsSubscription != null || string.IsNullOrEmpty(_currentUserId)) return;
@@ -188,13 +188,13 @@ namespace KamPay.ViewModels
                 }
             }
 
-            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            //  İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
             if ((hasIncomingChanges || hasOutgoingChanges) && IsLoading)
             {
                 IsLoading = false;
             }
 
-            // 🔥 Sadece değişenler için sıralama
+            //  Sadece değişenler için sıralama
             if (hasIncomingChanges)
             {
                 SortRequestsInPlace(IncomingRequests);
@@ -206,7 +206,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Smart collection update
+        //  Smart collection update
         private bool UpdateRequestInCollection(
             ObservableCollection<ServiceRequest> collection,
             HashSet<string> idTracker,
@@ -227,7 +227,7 @@ namespace KamPay.ViewModels
                     }
                     else
                     {
-                        // 🔥 Duplicate check
+                        //  Duplicate check
                         if (!idTracker.Contains(request.RequestId))
                         {
                             collection.Add(request);
@@ -250,7 +250,7 @@ namespace KamPay.ViewModels
             return false;
         }
 
-        // 🔥 YENİ: In-place sorting (en yeni üstte)
+        //  In-place sorting (en yeni üstte)
         private void SortRequestsInPlace(ObservableCollection<ServiceRequest> collection)
         {
             var sorted = collection.OrderByDescending(r => r.RequestedAt).ToList();
@@ -265,7 +265,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 OPTİMİZE: Refresh command
+        //  OPTİMİZE: Refresh command
         [RelayCommand]
         private async Task RefreshRequestsAsync()
         {
@@ -427,7 +427,7 @@ namespace KamPay.ViewModels
             }
         }
     
-        // 🔥 YENİ: Mesajlaşma Başlatma Komutu
+        //  Mesajlaşma Başlatma Komutu
         [RelayCommand]
         private async Task StartConversationAsync(ServiceRequest request)
         {
@@ -448,7 +448,7 @@ namespace KamPay.ViewModels
                 
                 if (result.Success)
                 {
-                    // 🔥 DÜZELTİLDİ: ChatPage kullanılıyor, MessagingPage değil
+                    //  DÜZELTİLDİ: ChatPage kullanılıyor, MessagingPage değil
                     Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(Views.ChatPage)}?conversationId={result.Data}");
                 }
@@ -468,7 +468,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Fiyat Teklifi Gönderme Komutu
+        //  Fiyat Teklifi Gönderme Komutu
         [RelayCommand]
         private async Task ProposePriceAsync(ServiceRequest request)
         {
@@ -523,7 +523,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Karşı Teklif Gönderme Komutu
+        // : Karşı Teklif Gönderme Komutu
         [RelayCommand]
         private async Task SendCounterOfferAsync(ServiceRequest request)
         {
@@ -582,7 +582,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Anlaşılan Fiyatı Kabul Etme Komutu
+        //  Anlaşılan Fiyatı Kabul Etme Komutu
         [RelayCommand]
         private async Task AcceptNegotiatedPriceAsync(ServiceRequest request)
         {

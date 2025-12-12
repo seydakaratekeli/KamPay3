@@ -56,7 +56,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isFavorite;
 
-        // 🔥 YENİ: Aktif transaction bilgisi
+        //  Aktif transaction bilgisi
         [ObservableProperty]
         private Transaction activeTransaction;
 
@@ -168,7 +168,7 @@ namespace KamPay.ViewModels
                         var favResult = await _favoriteService.IsFavoriteAsync(currentUser.UserId, ProductId);
                         IsFavorite = favResult.Success && favResult.Data;
 
-                        // 🔥 YENİ: Aktif transaction'ı yükle
+                        //  Aktif transaction'ı yükle
                         await LoadActiveTransactionAsync(currentUser.UserId);
                     }
                 }
@@ -188,7 +188,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Aktif transaction'ı yükle
+        //  Aktif transaction'ı yükle
         private async Task LoadActiveTransactionAsync(string currentUserId)
         {
             try
@@ -271,7 +271,7 @@ namespace KamPay.ViewModels
 
                     case ProductType.Satis:
                     case ProductType.Bagis:
-                        // 🔥 YENİ: Transaction oluştur
+                        //  Transaction oluştur
                         var result = await _transactionService.CreateRequestAsync(Product, currentUser);
                         
                         if (result.Success)
@@ -302,7 +302,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Satıcıya mesaj gönder (Transaction üzerinden)
+        //  Satıcıya mesaj gönder (Transaction üzerinden)
         [RelayCommand]
         private async Task MessageSellerAsync()
         {
@@ -336,7 +336,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Fiyat teklifi (Satış için - Alıcı)
+        //  Fiyat teklifi (Satış için - Alıcı)
         [RelayCommand]
         private async Task ProposePriceAsync()
         {
@@ -405,7 +405,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Ek nakit teklifi (Takas için - Talep Eden)
+        //  Ek nakit teklifi (Takas için - Talep Eden)
         [RelayCommand]
         private async Task ProposeAdditionalCashAsync()
         {
@@ -470,7 +470,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Anlaşılan fiyatı kabul et
+        //  Anlaşılan fiyatı kabul et
         [RelayCommand]
         private async Task AcceptNegotiatedPriceAsync()
         {

@@ -19,7 +19,7 @@
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
             
-            <!-- 🔥 YENİ: Pazarlık Converter'ları -->
+            <!--  Pazarlık Converter'ları -->
             <converters:IsSaleConverter x:Key="IsSaleConverter"/>
             <converters:IsTradeConverter x:Key="IsTradeConverter"/>
             <converters:AllTrueConverter x:Key="AllTrueConverter"/>
@@ -239,7 +239,7 @@
                                             </VerticalStackLayout>
                                         </Grid>
 
-                                        <!-- 🔥 YENİ: Pazarlık Bilgi Paneli -->
+                                        <!--  Pazarlık Bilgi Paneli -->
                                         <Frame IsVisible="{Binding IsNegotiating}"
                                                BackgroundColor="#FF9800"
                                                Padding="10"
@@ -453,7 +453,7 @@
                                             </VerticalStackLayout>
                                         </Grid>
 
-                                        <!-- 🔥 YENİ: Pazarlık Bilgi Paneli -->
+                                        <!--  Pazarlık Bilgi Paneli -->
                                         <Frame IsVisible="{Binding IsNegotiating}"
                                                BackgroundColor="#FF9800"
                                                Padding="10"

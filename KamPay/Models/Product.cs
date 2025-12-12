@@ -80,7 +80,7 @@ namespace KamPay.Models
                 if (IsSold && Type == ProductType.Satis)
                     return "SATILDI ✓";
 
-                if (IsSold && Type == ProductType.Bagis) // YENİ EKLENDİ
+                if (IsSold && Type == ProductType.Bagis) 
                     return "BAĞIŞLANDI ✓";
 
                 // Sonra BEKLEYEN durumlar (IsReserved)
@@ -90,7 +90,7 @@ namespace KamPay.Models
                 if (IsReserved && Type == ProductType.Satis)
                     return "SATIŞ SÜRECİNDE";
 
-                if (IsReserved && Type == ProductType.Bagis) // YENİ EKLENDİ
+                if (IsReserved && Type == ProductType.Bagis) 
                     return "BAĞIŞ SÜRECİNDE"; // Veya "BAĞIŞ İÇİN AYRILDI"
 
                 return string.Empty;

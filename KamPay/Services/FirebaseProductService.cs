@@ -31,7 +31,7 @@ public class FirebaseProductService : IProductService
                 return product;
             }).AsQueryable(); // Sorgulanabilir hale getiriyoruz
 
-            // Filtreleme
+           
             // Filtreleme
             if (filter != null)
             {
@@ -43,7 +43,7 @@ public class FirebaseProductService : IProductService
 
                 // 🔹 YENİ: Satılmış ürünleri göstermeyi AÇIK bırakıyoruz
                 // Anasayfada "TAKAS YAPILDI" etiketiyle görünsünler
-                // ❌ KALDIRILDI: ExcludeSold filtresi (zaten yorumlanmış)
+                // ❌ KALDIRILDI: ExcludeSold filtresi
 
                 // SATILMIŞ ÜRÜNLER FİLTRESİNİ DEVRE DIŞI BIRAKTIK
                 /*
@@ -127,7 +127,6 @@ public class FirebaseProductService : IProductService
         }
     }
 
-    // ... BU DOSYADAKİ DİĞER TÜM METOTLARINIZ (AddProductAsync, UpdateProductAsync vb.) AYNI KALACAK ...
     #region Diğer Metotlar
     public async Task<ServiceResult<Product>> AddProductAsync(ProductRequest request, User currentUser)
     {
@@ -160,7 +159,7 @@ public class FirebaseProductService : IProductService
                 UserEmail = currentUser.Email,
                 UserPhotoUrl = currentUser.ProfileImageUrl,
                 ExchangePreference = request.ExchangePreference?.Trim(),
-                // --- EKSİK SATIRI BURAYA EKLEYİN ---
+              
                 IsForSurpriseBox = request.IsForSurpriseBox,
 
                 // Durum bilgilerini ayarlıyoruz
@@ -198,7 +197,7 @@ public class FirebaseProductService : IProductService
                 .PutAsync(product);
 
 
-            // 🔹 Kullanıcının toplam ürün sayısını artır
+            //  Kullanıcının toplam ürün sayısını artır
             var userStatsRef = _firebaseClient
                 .Child("user_stats")
                 .Child(currentUser.UserId);
@@ -331,7 +330,7 @@ public class FirebaseProductService : IProductService
                 .Child(productId)
                 .DeleteAsync();
 
-            // 🔹 Kullanıcının toplam ürün sayısını azalt
+            //  Kullanıcının toplam ürün sayısını azalt
             var userStatsRef = _firebaseClient
                 .Child("user_stats")
                 .Child(product.UserId);
@@ -401,9 +400,9 @@ public class FirebaseProductService : IProductService
             return ServiceResult<List<Product>>.FailureResult("Kullanıcının ürünleri alınamadı.", ex.Message);
         }
     }
-    /// <summary>
-    /// TAKAS işlemlerinde kullanılır - Ürün anasayfada kalır, "TAKAS YAPILDI" etiketi ile görünür
-    /// </summary>
+   
+    // TAKAS işlemlerinde kullanılır - Ürün anasayfada kalır, "TAKAS YAPILDI" etiketi ile görünür
+  
     public async Task<ServiceResult<bool>> MarkAsExchangedAsync(string productId)
     {
         try
@@ -418,7 +417,7 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<bool>.FailureResult("Ürün bulunamadı");
             }
 
-            // 🔹 Takas için: Görünür kalır
+            //  Takas için: Görünür kalır
             product.IsSold = true;
             product.IsReserved = false;
             product.SoldAt = DateTime.UtcNow;
@@ -437,10 +436,9 @@ public class FirebaseProductService : IProductService
         }
     }
 
-    /// <summary>
-    /// SATIŞ işlemlerinde kullanılır - Ürün anasayfadan kaldırılır
-    /// </summary>
-    // KamPay/Services/FirebaseProductService.cs
+    
+    // SATIŞ işlemlerinde kullanılır - Ürün anasayfadan kaldırılır
+   
 
     public async Task<ServiceResult<bool>> MarkAsSoldAsync(string productId)
     {
@@ -639,9 +637,9 @@ public class FirebaseProductService : IProductService
         return result;
     }
     #endregion
-    // ... (Mevcut metotlarınızın sonu) ...
+    
 
-    // --- YENİ EKLENEN METOT 1 ---
+   
     public async Task<ServiceResult<List<Product>>> GetProductsAsync(string categoryId = null, string searchText = null)
     {
         try
@@ -678,9 +676,9 @@ public class FirebaseProductService : IProductService
             return ServiceResult<List<Product>>.FailureResult("Hata", ex.Message);
         }
     }
-    // FirebaseProductService.cs içine ekleyin:
 
-    // 🔥 YENİ METOD: Direkt kaydetme (resimler zaten yüklenmiş)
+
+    //  Direkt kaydetme (resimler zaten yüklenmiş)
     public async Task<ServiceResult<Product>> SaveProductDirectlyAsync(Product product)
     {
         try
@@ -691,7 +689,7 @@ public class FirebaseProductService : IProductService
                 .Child(product.ProductId)
                 .PutAsync(product);
 
-            // 🔥 Kullanıcı istatistiklerini güncelle
+            //  Kullanıcı istatistiklerini güncelle
             var userStatsRef = _firebaseClient
                 .Child(Constants.UserStatsCollection)
                 .Child(product.UserId);
@@ -722,7 +720,7 @@ public class FirebaseProductService : IProductService
     {
         try
         {
-            // 🔥 Firebase query'yi doğru şekilde oluştur
+            //  Firebase query'yi doğru şekilde oluştur
             var productsRef = _firebaseClient.Child(Constants.ProductsCollection);
 
             // Önce OrderBy uygula
@@ -747,7 +745,7 @@ public class FirebaseProductService : IProductService
                     .OnceAsync<Product>();
             }
 
-            // 🔥 Product listesine dönüştür
+            //  Product listesine dönüştür
             var products = items.Select(p =>
             {
                 var product = p.Object;
@@ -761,7 +759,7 @@ public class FirebaseProductService : IProductService
                 products.RemoveAt(0);
             }
 
-            // 🔥 Hafif filtreleme (ağır işlemler UI thread'de yapılmayacak)
+            //  Hafif filtreleme (ağır işlemler UI thread'de yapılmayacak)
             if (filter != null)
             {
                 if (filter.OnlyActive)
@@ -798,7 +796,7 @@ public class FirebaseProductService : IProductService
     }
 
 
-    // --- YENİ EKLENEN METOT 2 ---
+    
     public async Task<ServiceResult<bool>> UpdateProductOwnerAsync(string productId, string newOwnerId, bool markAsSold = true)
     {
         try

@@ -13,7 +13,7 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        // 🔥 Sayfa her göründüğünde SADECE cache kontrolü yap
+        //  Sayfa her göründüğünde SADECE cache kontrolü yap
         protected override async void OnAppearing()
         {
             base.OnAppearing();

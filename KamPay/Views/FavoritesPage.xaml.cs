@@ -5,7 +5,7 @@ namespace KamPay.Views;
 public partial class FavoritesPage : ContentPage
 {
     private readonly FavoritesViewModel _viewModel;
-    private bool _isFirstLoad = true; // 🔥 YENİ: İlk yüklenme kontrolü
+    private bool _isFirstLoad = true; // : İlk yüklenme kontrolü
 
     public FavoritesPage(FavoritesViewModel vm)
     {
@@ -14,12 +14,12 @@ public partial class FavoritesPage : ContentPage
         BindingContext = _viewModel;
     }
 
-    // 🔥 Sayfa her göründüğünde çağrılır
+    //  Sayfa her göründüğünde çağrılır
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        // 🔥 Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
+        //  Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
         if (_isFirstLoad)
         {
             await _viewModel.InitializeAsync();

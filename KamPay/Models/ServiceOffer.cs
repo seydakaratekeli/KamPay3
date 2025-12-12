@@ -9,7 +9,7 @@ public class ServiceOffer
     public string ProviderId { get; set; }
     public string ProviderName { get; set; }
 
-    // 🔥 YENİ: Hizmeti veren kişinin profil fotoğrafı
+    // : Hizmeti veren kişinin profil fotoğrafı
     public string ProviderPhotoUrl { get; set; } = "default_avatar.png";
 
     public ServiceCategory Category { get; set; }
@@ -44,7 +44,7 @@ public enum ServiceCategory
     Other = 7           // Diğer
 }
 
-// --- YENİ EKLENEN MODELLER ---
+
 
 public class ServiceRequest
 {
@@ -59,13 +59,13 @@ public class ServiceRequest
     public decimal Price { get; set; } = 0; // Hizmet fiyatı (örneğin 150 TL)
     public string Currency { get; set; } = "TRY";
 
-    // ServiceRequest.cs içinde:
+    
     public ServicePaymentStatus PaymentStatus { get; set; } = ServicePaymentStatus.None;
     public string? PaymentSimulationId { get; set; }
     public PaymentMethodType? PaymentMethod { get; set; } = PaymentMethodType.None;
     public decimal? QuotedPrice { get; set; }   // Kabul anında kilitlenmiş fiyat (istersen)
 
-    // --- YENİ EKLENECEK PROPERTY ---
+    
     public int TimeCreditValue { get; set; } // İşlemin yapıldığı andaki kredi değeri
 
     public string Message { get; set; }
@@ -73,7 +73,7 @@ public class ServiceRequest
     public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Pending;
     public DateTime? CompletedAt { get; set; } // Hizmetin tamamlandığı zamanı tutmak için
 
-    // 🔥 YENİ: Mesajlaşma ve Pazarlık Özellikleri
+    // : Mesajlaşma ve Pazarlık Özellikleri
     public string ConversationId { get; set; } // İlgili konuşma ID'si
     public bool HasActiveConversation { get; set; } = false; // Konuşma başladı mı?
     

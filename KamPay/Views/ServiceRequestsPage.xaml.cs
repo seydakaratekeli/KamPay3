@@ -5,7 +5,7 @@ namespace KamPay.Views
     public partial class ServiceRequestsPage : ContentPage
     {
         private readonly ServiceRequestsViewModel _viewModel;
-        private bool _isFirstLoad = true; // 🔥 YENİ: İlk yüklenme kontrolü
+        private bool _isFirstLoad = true; // / İlk yüklenme kontrolü
 
         public ServiceRequestsPage(ServiceRequestsViewModel vm)
         {

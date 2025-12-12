@@ -54,54 +54,54 @@ namespace KamPay.Models
         public string? OfferedProductTitle { get; set; }
         public string? OfferMessage { get; set; }
 
-        // 🔥 YENİ: Pazarlık Özellikleri
+        //  Pazarlık Özellikleri
         
-        /// <summary>
-        /// Alıcının teklif ettiği fiyat (Satış için)
-        /// </summary>
+       
+        // Alıcının teklif ettiği fiyat (Satış için)
+       
         public decimal? ProposedPriceByBuyer { get; set; }
         
-        /// <summary>
-        /// Satıcının karşı teklifi (Satış için)
-        /// </summary>
+        
+        // Satıcının karşı teklifi (Satış için)
+      
         public decimal? CounterOfferBySeller { get; set; }
         
-        /// <summary>
-        /// Talep edenin teklif ettiği ek nakit (Takas için)
-        /// </summary>
+       
+        // Talep edenin teklif ettiği ek nakit (Takas için)
+        
         public decimal? AdditionalCashByRequester { get; set; }
         
-        /// <summary>
-        /// Sahip'in istediği ek nakit (Takas için)
-        /// </summary>
+       
+        // Sahip'in istediği ek nakit (Takas için)
+        
         public decimal? CounterCashByOwner { get; set; }
         
-        /// <summary>
-        /// Pazarlık devam ediyor mu?
-        /// </summary>
+      
+        // Pazarlık devam ediyor mu?
+        
         public bool IsNegotiating { get; set; } = false;
         
-        /// <summary>
-        /// Son pazarlık tarihi
-        /// </summary>
+       
+        // Son pazarlık tarihi
+        
         public DateTime? LastNegotiationDate { get; set; }
         
-        /// <summary>
-        /// Pazarlık notları
-        /// </summary>
+       
+        // Pazarlık notları
+        
         public string NegotiationNotes { get; set; }
         
-        /// <summary>
-        /// Mesajlaşma için conversation ID
-        /// </summary>
+       
+        // Mesajlaşma için conversation ID
+      
         public string ConversationId { get; set; }
         
-        /// <summary>
-        /// Aktif konuşma var mı?
-        /// </summary>
+      
+        // Aktif konuşma var mı?
+        
         public bool HasActiveConversation { get; set; } = false;
 
-        // 🔹 Görsel durum metni
+        //  Görsel durum metni
         public string StatusText
         {
             get
@@ -130,11 +130,11 @@ namespace KamPay.Models
             Status == TransactionStatus.Completed ||
             (Status == TransactionStatus.Accepted && DeliveryQRCodes.Any() && DeliveryQRCodes.All(qr => qr.IsUsed));
 
-        // 🔥 YENİ: Hesaplanan Özellikler
+        //  Hesaplanan Özellikler
         
-        /// <summary>
-        /// Pazarlık durumu metni
-        /// </summary>
+        
+        // Pazarlık durumu metni
+       
         public string NegotiationStatusText
         {
             get
@@ -179,9 +179,9 @@ namespace KamPay.Models
             }
         }
         
-        /// <summary>
-        /// Hangi fiyat/tutar üzerinde anlaşıldı?
-        /// </summary>
+      
+        // Hangi fiyat/tutar üzerinde anlaşıldı?
+        
         public decimal AgreedAmount
         {
             get
@@ -202,7 +202,7 @@ namespace KamPay.Models
         }
     }
 
-    // 🔸 İşlem Durumu
+    //  İşlem Durumu
     public enum TransactionStatus
     {
         Pending,     // Teklif yapıldı, satıcının onayı bekliyor
@@ -212,7 +212,7 @@ namespace KamPay.Models
         Cancelled    // Taraflardan biri iptal etti
     }
 
-    // 🔸 Ödeme Durumu
+    //  Ödeme Durumu
     public enum PaymentStatus
     {
         Pending, // Ödeme bekleniyor

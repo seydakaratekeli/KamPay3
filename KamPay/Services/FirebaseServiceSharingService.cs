@@ -6,17 +6,17 @@ using System;
 using System.Collections.Generic; 
 using System.Linq; 
 using System.Threading.Tasks;
-using System.Threading; // Delay için
+using System.Threading; 
 
 namespace KamPay.Services
 {
     public class FirebaseServiceSharingService : IServiceSharingService
     {
         private readonly FirebaseClient _firebaseClient;
-        private readonly INotificationService _notificationService; // Bildirim servisini ekleyin
-        private readonly IUserProfileService _userProfileService; // YENİ SERVİS
-        private readonly IMessagingService _messagingService; // 🔥 YENİ: Mesajlaşma servisi
-                                                                  // Basit OTP modeli (geçici koleksiyon için)
+        private readonly INotificationService _notificationService; 
+        private readonly IUserProfileService _userProfileService; 
+        private readonly IMessagingService _messagingService; 
+                                                                  // Basit OTP modeli (geçici koleksiyon için) bunu yaptık ta kullanıcaz mı bakalım ?? TEKRAR BAK
         internal class TempOtpModel
         {
             public string Otp { get; set; }
@@ -32,8 +32,8 @@ namespace KamPay.Services
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
             _notificationService = notificationService;
-            _userProfileService = userProfileService; // Ata
-            _messagingService = messagingService; // 🔥 YENİ
+            _userProfileService = userProfileService; 
+            _messagingService = messagingService; 
         }
 
         // ... CreateServiceOfferAsync ve GetServiceOffersAsync metotları aynı kalacak ...
@@ -135,7 +135,7 @@ namespace KamPay.Services
             }
         }
 
-        // YENİ METODU IMPLEMENTE EDİN
+        
         public async Task<ServiceResult<bool>> CompleteRequestAsync(string requestId, string currentUserId)
         {
             try
@@ -264,7 +264,7 @@ namespace KamPay.Services
                 {
                     var otp = GenerateOtp();
 
-                    // 🔽🔽🔽 BURAYA EKLE:
+                   
                     await _firebaseClient
                         .Child(Constants.TempOtpsCollection)
                         .Child(payment.PaymentId)
@@ -273,9 +273,9 @@ namespace KamPay.Services
                             Otp = otp,
                             ExpiresAt = DateTime.UtcNow.AddMinutes(2)
                         });
-                    // 🔼🔼🔼 BURAYA EKLE
+                    
 
-                    // İstersen burada log veya debug:
+                    // burada log veya debug:
                     // Console.WriteLine($"OTP oluşturuldu: {otp}");
                 }
 
@@ -484,11 +484,11 @@ namespace KamPay.Services
             }
         }
 
-        // 🔥 YENİ METODLAR: Mesajlaşma ve Pazarlık
+        //  Mesajlaşma ve Pazarlık
         
-        /// <summary>
-        /// Hizmet talebi için konuşma başlatır veya mevcut konuşma ID'sini döndürür
-        /// </summary>
+        
+        // Hizmet talebi için konuşma başlatır veya mevcut konuşma ID'sini döndürür
+       
         public async Task<ServiceResult<string>> StartConversationForRequestAsync(string requestId, string currentUserId)
         {
             try
@@ -550,7 +550,7 @@ namespace KamPay.Services
                     Console.WriteLine($"   ConversationId yok, yeni oluşturulacak");
                 }
 
-                // 🔥 YENİ: Eğer ConversationId yoksa veya konuşma geçersizse, yeni oluştur
+                //  Eğer ConversationId yoksa veya konuşma geçersizse, yeni oluştur
                 var otherUserId = request.RequesterId == currentUserId ? request.ProviderId : request.RequesterId;
                 Console.WriteLine($"   OtherUserId: {otherUserId}");
                 

@@ -47,15 +47,15 @@ namespace KamPay.ViewModels
         // Localization Kısayolu
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
-        // 🔥 YENİ: Enum Referans Listeleri (Değişmez)
+        //  Enum Referans Listeleri (Değişmez)
         private readonly List<ProductCondition> _conditionEnums = Enum.GetValues(typeof(ProductCondition)).Cast<ProductCondition>().ToList();
         private readonly List<ProductType> _typeEnums = Enum.GetValues(typeof(ProductType)).Cast<ProductType>().ToList();
 
-        // 🔥 YENİ: UI için Dinamik String Listeleri
+        //  UI için Dinamik String Listeleri
         public List<string> ConditionStrings => _conditionEnums.Select(GetConditionText).ToList();
         public List<string> TypeStrings => _typeEnums.Select(GetTypeText).ToList();
 
-        // 🔥 YENİ: Picker İndeksleri
+        //  Picker İndeksleri
         [ObservableProperty] private int selectedConditionIndex;
         [ObservableProperty] private int selectedTypeIndex;
 

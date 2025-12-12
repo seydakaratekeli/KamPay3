@@ -223,7 +223,7 @@ namespace KamPay.ViewModels
                         OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId);
                         OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId);
 
-                        // 🔥 YENİ: Profil fotoğrafı kontrolü (varsayılan)
+                        // / Profil fotoğrafı kontrolü (varsayılan)
                         if (string.IsNullOrEmpty(OtherUserPhoto))
                         {
                             OtherUserPhoto = "person_icon.svg";
@@ -232,7 +232,7 @@ namespace KamPay.ViewModels
                         Console.WriteLine($"👤 OtherUserName: {OtherUserName}");
                         Console.WriteLine($"📷 OtherUserPhoto: {OtherUserPhoto}");
 
-                        // 🔥 YENİ: Online durumunu sorgula - Users koleksiyonundan LastLoginAt kontrolü
+                        // / Online durumunu sorgula - Users koleksiyonundan LastLoginAt kontrolü
                         try
                         {
                             var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
@@ -276,7 +276,7 @@ namespace KamPay.ViewModels
                             OnlineStatusText = "Çevrimdışı";
                         }
 
-                        // 🔥 YENİ: Diğer kullanıcının profil fotoğrafını yükle (fallback)
+                        // / Diğer kullanıcının profil fotoğrafını yükle (fallback)
                         await EnsureOtherUserPhotoAsync();
                     }
                     else

@@ -21,11 +21,11 @@ namespace KamPay.Services
         // Kullanıcıya gelen teklifleri listeler
         Task<ServiceResult<List<Transaction>>> GetIncomingOffersAsync(string userId);
 
-        Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId); // YENİ METOT
+        Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId); 
 
         Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId);
 
-        // 🔥 YENİ: SATIŞ Pazarlık Metodları
+        //  SATIŞ Pazarlık Metodları
 
         /// <summary>
         /// Satış için fiyat teklifi (Alıcı)
@@ -45,7 +45,7 @@ namespace KamPay.Services
             string currentUserId
         );
 
-        // 🔥 YENİ: TAKAS Pazarlık Metodları
+        //  TAKAS Pazarlık Metodları
 
         /// <summary>
         /// Takas için ek nakit teklifi (Talep Eden)
@@ -65,7 +65,7 @@ namespace KamPay.Services
             string currentUserId
         );
 
-        // 🔥 YENİ: Ortak Pazarlık Metodu
+        //  Ortak Pazarlık Metodu
 
         /// <summary>
         /// Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas)

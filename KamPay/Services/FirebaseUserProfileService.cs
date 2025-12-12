@@ -289,7 +289,7 @@ namespace KamPay.Services
             }
         }
 
-        // YENİ METODU IMPLEMENTE EDİN
+       
         public async Task<ServiceResult<bool>> TransferTimeCreditsAsync(string fromUserId, string toUserId, int amount, string reason)
         {
             try
@@ -320,7 +320,7 @@ namespace KamPay.Services
                 await UpdateUserStatsAsync(fromUserStats);
                 await UpdateUserStatsAsync(toUserStats);
 
-                // ✅ IMPLEMENTED: Transaction history logging for audit trail and reliability
+                //  IMPLEMENTED: Transaction history logging for audit trail and reliability
                 var transactionHistory = new TransactionHistory
                 {
                     FromUserId = fromUserId,
@@ -346,7 +346,7 @@ namespace KamPay.Services
                 return ServiceResult<bool>.FailureResult("Kredi transferi sırasında hata oluştu.", ex.Message);
             }
         }
-        // MEVCUT KODUNUZ (DEĞİŞİKLİK YOK)
+        
         public async Task<ServiceResult<bool>> CheckAndAwardBadgesAsync(string userId)
         {
             try

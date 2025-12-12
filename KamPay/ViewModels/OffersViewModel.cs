@@ -34,7 +34,7 @@ namespace KamPay.ViewModels
         private bool _isInitialized = false;
         private string _currentUserId;
         
-        // 🔥 YENİ: Timeout kontrolü için CancellationTokenSource
+        //  Timeout kontrolü için CancellationTokenSource
         private CancellationTokenSource _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 5000; // 5 saniye timeout
 
@@ -53,11 +53,11 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isOutgoingSelected = false;
 
-        // 🔥 YENİ: Skeleton loader kontrolü
+        //  Skeleton loader kontrolü
         [ObservableProperty]
         private bool isSkeletonVisible = true;
 
-        // 🔥 YENİ: Veri var mı kontrolü (empty message için)
+        //  Veri var mı kontrolü (empty message için)
         [ObservableProperty]
         private bool hasIncomingOffers = false;
 
@@ -125,16 +125,16 @@ namespace KamPay.ViewModels
 
             Debug.WriteLine($"🔥 Offers listener başlatılıyor: {userId}");
 
-            // 🔥 YENİ: Timeout mekanizması
+            //  Timeout mekanizması
             _loadingTimeoutCts?.Cancel();
             _loadingTimeoutCts?.Dispose();
             _loadingTimeoutCts = new CancellationTokenSource();
             var timeoutToken = _loadingTimeoutCts.Token;
 
-            // 🔥 YENİ: Snapshot ile hızlı ilk yükleme
+            //  Snapshot ile hızlı ilk yükleme
             _ = LoadInitialSnapshotAsync(userId, timeoutToken);
 
-            // 🔥 YENİ: Loading timeout - belirlenen süre içinde veri gelmezse loading'i kapat
+            //  Loading timeout - belirlenen süre içinde veri gelmezse loading'i kapat
             Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
             {
                 if (t.IsCanceled) return;
@@ -199,7 +199,7 @@ namespace KamPay.ViewModels
                     });
         }
 
-        // 🔥 YENİ: Snapshot ile hızlı ilk yükleme
+        //  Snapshot ile hızlı ilk yükleme
         private async Task LoadInitialSnapshotAsync(string userId, CancellationToken token)
         {
             try
@@ -280,7 +280,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Gerçek teklif geldi mi kontrol et
+        //  Gerçek teklif geldi mi kontrol et
         private bool ContainsRealOffer(IList<FirebaseEvent<Transaction>> events, string userId)
         {
             return events.Any(e =>
@@ -366,7 +366,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 YENİ: Veri durumunu güncelle
+        //  Veri durumunu güncelle
         private void UpdateHasOffers()
         {
             HasIncomingOffers = IncomingOffers.Any();
