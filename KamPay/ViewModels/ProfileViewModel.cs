@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamPay.Models;
 using KamPay.Services;
 using KamPay.Views;
+using KamPay.Helpers;
 
 namespace KamPay.ViewModels;
 
@@ -59,10 +60,23 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         _userStateService.UserProfileChanged += OnUserProfileChanged;
     }
 
+    // Olay dinleyicisini güncelle: Kullanıcı değiştiğinde cache'i patlatmalıyız.
     private void OnUserProfileChanged(object sender, User updatedUser)
     {
         CurrentUser = updatedUser;
         HasProfileImage = !string.IsNullOrWhiteSpace(updatedUser?.ProfileImageUrl);
+
+        // EĞER KULLANICI NULL İSE (ÇIKIŞ YAPILDIYSA) VEYA DEĞİŞTİYSE VERİLERİ TEMİZLE
+        if (updatedUser == null)
+        {
+            ResetViewModelState();
+        }
+        else
+        {
+            // Yeni bir kullanıcı geldiyse cache'i geçersiz kıl ki veriler tekrar çekilsin
+            _isDataLoaded = false;
+        }
+
         OnPropertyChanged(nameof(CurrentUser));
     }
 
@@ -88,10 +102,16 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
     }
 
-    // 🔥 YENİ: Public initialize metodu - Sayfa OnAppearing'den çağrılacak
+    //  Sayfa OnAppearing'den çağrılacak
     public async Task InitializeAsync()
     {
-        // Cache kontrolü: Eğer veri yüklenmişse ve süre dolmamışsa yeniden yükleme
+        // Eğer kullanıcı yoksa yükleme yapma (Logout durumunda tetiklenirse diye)
+        if (_userStateService.CurrentUser == null && !_authService.IsUserLoggedIn())
+        {
+            return;
+        }
+
+        // Cache kontrolü
         if (_isDataLoaded && (DateTime.UtcNow - _lastLoadTime) < _cacheExpiration)
         {
             Console.WriteLine("✅ Profil cache'den yüklendi");
@@ -293,6 +313,25 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
     }
 
+    // YENİ HELPER METOD: ViewModel'i fabrika ayarlarına döndürür
+    private void ResetViewModelState()
+    {
+        // Cache flag'ini sıfırla
+        _isDataLoaded = false;
+        _lastLoadTime = DateTime.MinValue;
+
+        // Listeleri temizle
+        MyProducts.Clear();
+        MyBadges.Clear();
+
+        // İstatistikleri sıfırla
+        UserStats = new UserStats(); // veya null
+        CurrentUser = null;
+        HasProfileImage = false;
+
+        Console.WriteLine("🧹 ViewModel state temizlendi.");
+    }
+
     [RelayCommand]
     private async Task ViewAllProductsAsync()
     {
@@ -347,16 +386,31 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Global user state'i temizle
+            IsLoading = true; // Yükleniyor göster
+
+            // 1. Önce ViewModel üzerindeki verileri manuel temizle
+            ResetViewModelState();
+
+            // 2. Global user state'i temizle
             _userStateService.ClearUser();
+
+            // 3. Auth servisinden çıkış yap
             await _authService.LogoutAsync();
+
+            // 4. Login sayfasına yönlendir
+            // "///" kullanımı stack'i tamamen sıfırlar
             await Shell.Current.GoToAsync("//LoginPage");
         }
         catch (Exception ex)
         {
             await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
+        finally
+        {
+            IsLoading = false;
+        }
     }
+
 
     [RelayCommand]
     private async Task GoToOffersAsync()
