@@ -51,8 +51,8 @@ public class Notification
 
 public enum NotificationType
 {
-    SurpriseBoxWon,      // 🔥 YENİ: Sürpriz kutu kazanıldı
-    DonationClaimed,     // 🔥 YENİ: Bağış değerlendirildi
+    SurpriseBoxWon,      // Sürpriz kutu kazanıldı
+    DonationClaimed,     //  Bağış değerlendirildi
     NewMessage = 0,      // Yeni mesaj
     ProductSold = 1,     // Ürün satıldı
     ProductViewed = 2,   // Ürününüz görüntülendi

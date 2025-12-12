@@ -1,8 +1,8 @@
 namespace KamPay.Models.Messages
 {
-    /// <summary>
-    /// Message sent when the map location needs to be updated
-    /// </summary>
+    
+    // Harita konumunun güncellenmesi gerektiðinde gönderilen mesaj.
+    
     public class MapLocationUpdateMessage
     {
         public double Latitude { get; }

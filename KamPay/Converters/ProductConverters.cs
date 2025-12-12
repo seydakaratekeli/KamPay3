@@ -322,10 +322,30 @@ namespace KamPay.Converters
             if (value == null || parameter == null)
                 return false;
 
-            string enumValue = value.ToString();
-            string parameterValue = parameter.ToString();
+            // Parameter'ı parse et
+            var paramString = parameter.ToString();
+            bool invert = false;
+            
+            // Invert kontrolü (örn: "System,Invert=True")
+            if (paramString.Contains(","))
+            {
+                var parts = paramString.Split(',');
+                paramString = parts[0].Trim();
+                
+                if (parts.Length > 1 && parts[1].Trim().Equals("Invert=True", StringComparison.OrdinalIgnoreCase))
+                {
+                    invert = true;
+                }
+            }
 
-            return enumValue.Equals(parameterValue);
+            // Enum değerini string'e çevir
+            string enumValue = value.ToString();
+
+            // Karşılaştır
+            bool result = enumValue.Equals(paramString, StringComparison.OrdinalIgnoreCase);
+            
+            // Invert varsa tersine çevir
+            return invert ? !result : result;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

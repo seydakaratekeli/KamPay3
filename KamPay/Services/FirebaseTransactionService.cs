@@ -613,12 +613,12 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // Konuşma mesajı
+                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
-                        $"💰 Fiyat Teklifi: {proposedPrice:N2} ₺"
+                        $"📦 [{transaction.ProductTitle} - Satış]\n💰 Fiyat Teklifi: {proposedPrice:N2} ₺\n(Orijinal fiyat: {transaction.Price:N2} ₺)"
                     );
                 }
 
@@ -681,12 +681,16 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // Konuşma mesajı
+                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
+                    var buyerOffer = transaction.ProposedPriceByBuyer.HasValue 
+                        ? $"\n(Alıcının teklifi: {transaction.ProposedPriceByBuyer:N2} ₺)" 
+                        : "";
+            
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
-                        $"💰 Karşı Teklif: {counterOffer:N2} ₺"
+                        $"📦 [{transaction.ProductTitle} - Satış]\n💰 Karşı Teklif: {counterOffer:N2} ₺{buyerOffer}"
                     );
                 }
 
@@ -753,12 +757,16 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // Konuşma mesajı
+                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
+                    var exchangeInfo = !string.IsNullOrEmpty(transaction.OfferedProductTitle)
+                        ? $"\n(Takas: {transaction.OfferedProductTitle} ↔ {transaction.ProductTitle})"
+                        : "";
+                    
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
-                        $"💰 Ek Nakit Teklifi: {additionalCash:N2} ₺"
+                        $"🔄 [{transaction.ProductTitle} - Takas]\n💰 Ek Nakit Teklifi: {additionalCash:N2} ₺{exchangeInfo}"
                     );
                 }
 
@@ -821,12 +829,20 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // Konuşma mesajı
+                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
+                    var requesterOffer = transaction.AdditionalCashByRequester.HasValue
+                        ? $"\n(Talep edenin teklifi: {transaction.AdditionalCashByRequester:N2} ₺)"
+                        : "";
+            
+                    var exchangeInfo = !string.IsNullOrEmpty(transaction.OfferedProductTitle)
+                        ? $"\n(Takas: {transaction.OfferedProductTitle} ↔ {transaction.ProductTitle})"
+                        : "";
+            
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
-                        $"💰 Karşı Teklif: {counterCash:N2} ₺"
+                        $"🔄 [{transaction.ProductTitle} - Takas]\n💰 Karşı Teklif: {counterCash:N2} ₺{requesterOffer}{exchangeInfo}"
                     );
                 }
 
@@ -908,12 +924,19 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // Sistem mesajı
+                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
+                    var typeIcon = transaction.Type == ProductType.Satis ? "📦" : "🔄";
+                    var typeText = transaction.Type == ProductType.Satis ? "Satış" : "Takas";
+                    
+                    var exchangeInfo = transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductTitle)
+                        ? $"\n(Takas: {transaction.OfferedProductTitle} ↔ {transaction.ProductTitle})"
+                        : "";
+            
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
-                        $"✅ Anlaşma sağlandı: {agreedAmount:N2} ₺"
+                        $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n✅ Anlaşma Sağlandı: {agreedAmount:N2} ₺{exchangeInfo}"
                     );
                 }
 
@@ -943,12 +966,83 @@ namespace KamPay.Services
                 if (transaction == null)
                     return ServiceResult<string>.FailureResult("İşlem bulunamadı");
 
-                // Mevcut konuşma varsa döndür
+                // Kullanıcının işleme dahil olduğunu doğrula
+                if (transaction.BuyerId != currentUserId && transaction.SellerId != currentUserId)
+                    return ServiceResult<string>.FailureResult("Bu işleme erişim yetkiniz yok");
+
+                // 🔥 ÖNCELİKLE: Mevcut ConversationId'yi kontrol et
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
+                    // Konuşmanın hala aktif olduğunu doğrula
+                    try
+                    {
+                        var existingConversation = await _firebaseClient
+                            .Child(Constants.ConversationsCollection)
+                            .Child(transaction.ConversationId)
+                            .OnceSingleAsync<Conversation>();
+
+                        if (existingConversation != null && existingConversation.IsActive)
+                        {
+                            Console.WriteLine($"✅ Mevcut konuşma bulundu: {transaction.ConversationId}");
+                            return ServiceResult<string>.SuccessResult(
+                                transaction.ConversationId,
+                                "Mevcut konuşma bulundu"
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Mevcut konuşma kontrol hatası: {ex.Message}");
+                    }
+                }
+
+                // 🔥 YENİ: Kullanıcılar arasında mevcut konuşma var mı kontrol et
+                var otherUserId = transaction.BuyerId == currentUserId 
+                    ? transaction.SellerId 
+                    : transaction.BuyerId;
+
+                // Önce User1Id ile kontrol et
+                var existingConversations1 = await _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .OrderBy("User1Id")
+                    .EqualTo(currentUserId)
+                    .OnceAsync<Conversation>();
+
+                var existingWithOtherUser = existingConversations1
+                    .FirstOrDefault(c => c.Object != null && 
+                                        c.Object.IsActive &&
+                                        (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId));
+
+                if (existingWithOtherUser == null)
+                {
+                    // User2Id ile de kontrol et
+                    var existingConversations2 = await _firebaseClient
+                        .Child(Constants.ConversationsCollection)
+                        .OrderBy("User2Id")
+                        .EqualTo(currentUserId)
+                        .OnceAsync<Conversation>();
+
+                    existingWithOtherUser = existingConversations2
+                        .FirstOrDefault(c => c.Object != null && 
+                                            c.Object.IsActive &&
+                                            (c.Object.User1Id == otherUserId || c.Object.User2Id == otherUserId));
+                }
+
+                if (existingWithOtherUser != null)
+                {
+                    // Mevcut konuşma bulundu - transaction'a kaydet
+                    transaction.ConversationId = existingWithOtherUser.Key;
+                    transaction.HasActiveConversation = true;
+                    
+                    await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .Child(transactionId)
+                        .PutAsync(transaction);
+                    
+                    Console.WriteLine($"✅ Mevcut kullanıcı konuşması bulundu: {existingWithOtherUser.Key}");
                     return ServiceResult<string>.SuccessResult(
-                        transaction.ConversationId,
-                        "Mevcut konuşmaya yönlendiriliyorsunuz"
+                        existingWithOtherUser.Key,
+                        "Mevcut konuşma bulundu"
                     );
                 }
 
@@ -956,15 +1050,16 @@ namespace KamPay.Services
                 var conversation = new Conversation
                 {
                     ConversationId = Guid.NewGuid().ToString(),
-                    User1Id = transaction.BuyerId,
-                    User1Name = transaction.BuyerName,
-                    User1PhotoUrl = transaction.BuyerPhotoUrl ?? "",
-                    User2Id = transaction.SellerId,
-                    User2Name = transaction.SellerName,
-                    User2PhotoUrl = transaction.SellerPhotoUrl ?? "",
+                    User1Id = currentUserId,
+                    User1Name = transaction.BuyerId == currentUserId ? transaction.BuyerName : transaction.SellerName,
+                    User1PhotoUrl = transaction.BuyerId == currentUserId ? transaction.BuyerPhotoUrl : transaction.SellerPhotoUrl,
+                    User2Id = otherUserId,
+                    User2Name = transaction.BuyerId == currentUserId ? transaction.SellerName : transaction.BuyerName,
+                    User2PhotoUrl = transaction.BuyerId == currentUserId ? transaction.SellerPhotoUrl : transaction.BuyerPhotoUrl,
                     LastMessage = "Görüşme başlatıldı",
                     LastMessageTime = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
                     IsActive = true
                 };
 
@@ -982,14 +1077,26 @@ namespace KamPay.Services
                     .Child(transactionId)
                     .PutAsync(transaction);
 
-                // Sistem mesajı ekle
-                var typeText = transaction.Type == ProductType.Satis ? "satış" : 
-                              transaction.Type == ProductType.Takas ? "takas" : "bağış";
+                // 🔥 DÜZELTİLDİ: Sistem mesajına ürün bilgisi eklendi
+                var typeIcon = transaction.Type == ProductType.Satis ? "📦" : 
+                              transaction.Type == ProductType.Takas ? "🔄" : "🎁";
+                var typeText = transaction.Type == ProductType.Satis ? "Satış" : 
+                              transaction.Type == ProductType.Takas ? "Takas" : "Bağış";
+        
+                var priceInfo = transaction.Type == ProductType.Satis 
+                    ? $"\nFiyat: {transaction.Price:N2} ₺" 
+                    : "";
+        
+                var exchangeInfo = transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductTitle)
+                    ? $"\n(Takas: {transaction.OfferedProductTitle} ↔ {transaction.ProductTitle})"
+                    : "";
+        
                 await AddSystemMessageAsync(
                     conversation.ConversationId,
-                    $"'{transaction.ProductTitle}' {typeText} için görüşme başlatıldı."
+                    $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n📝 Görüşme başlatıldı{priceInfo}{exchangeInfo}"
                 );
 
+                Console.WriteLine($"✅ Yeni konuşma oluşturuldu: {conversation.ConversationId}");
                 return ServiceResult<string>.SuccessResult(
                     conversation.ConversationId,
                     "Konuşma başlatıldı"
@@ -1007,6 +1114,10 @@ namespace KamPay.Services
         {
             try
             {
+                Console.WriteLine($"📝 AddSystemMessageAsync çağrıldı:");
+                Console.WriteLine($"   ConversationId: {conversationId}");
+                Console.WriteLine($"   Mesaj: {messageText}");
+
                 var systemMessage = new Message
                 {
                     MessageId = Guid.NewGuid().ToString(),
@@ -1020,12 +1131,21 @@ namespace KamPay.Services
                     Type = MessageType.System // ✅ Type System olarak işaretlendi
                 };
 
+                Console.WriteLine($"   MessageId: {systemMessage.MessageId}");
+                Console.WriteLine($"   Type: {systemMessage.Type}");
+                Console.WriteLine($"   IsSystemMessage: {systemMessage.IsSystemMessage}");
+
                 // 🔥 ÖNEMLİ: Mesajları ConversationId altında saklıyoruz
+                var messagePath = $"{Constants.MessagesCollection}/{conversationId}/{systemMessage.MessageId}";
+                Console.WriteLine($"   Firebase Path: {messagePath}");
+
                 await _firebaseClient
                     .Child(Constants.MessagesCollection)
                     .Child(conversationId) // ✅ Conversation ID'ye göre mesajları grupla
                     .Child(systemMessage.MessageId)
                     .PutAsync(systemMessage);
+
+                Console.WriteLine($"✅ Sistem mesajı Firebase'e kaydedildi!");
 
                 // Konuşmanın son mesajını güncelle
                 var conversationRef = _firebaseClient
@@ -1039,10 +1159,18 @@ namespace KamPay.Services
                     conversation.LastMessageTime = DateTime.UtcNow;
                     conversation.UpdatedAt = DateTime.UtcNow;
                     await conversationRef.PutAsync(conversation);
+                    
+                    Console.WriteLine($"✅ Conversation LastMessage güncellendi: {messageText}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Conversation bulunamadı: {conversationId}");
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ AddSystemMessageAsync hatası: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 System.Diagnostics.Debug.WriteLine($"⚠️ Sistem mesajı eklenemedi: {ex.Message}");
             }
         }

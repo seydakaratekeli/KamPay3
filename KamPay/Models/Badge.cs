@@ -15,13 +15,13 @@ public class Badge
     public int RequiredCount { get; set; } // Örn: 10 ürün sat
     public string Color { get; set; }
 
-    // 🔥 YENİ: CreatedAt property'si eklendi
+   
     public DateTime CreatedAt { get; set; }
 
     public Badge()
     {
         BadgeId = Guid.NewGuid().ToString();
-        CreatedAt = DateTime.UtcNow; // 🔥 YENİ
+        CreatedAt = DateTime.UtcNow; 
     }
 
     // Varsayılan rozetler

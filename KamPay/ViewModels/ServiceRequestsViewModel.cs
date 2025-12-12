@@ -448,9 +448,9 @@ namespace KamPay.ViewModels
                 
                 if (result.Success)
                 {
-                    // Mesajlaşma sayfasına yönlendir
-                    var otherUserId = request.RequesterId == currentUser.UserId ? request.ProviderId : request.RequesterId;
-                    await Shell.Current.GoToAsync($"///MessagingPage?conversationId={result.Data}&otherUserId={otherUserId}");
+                    // 🔥 DÜZELTİLDİ: ChatPage kullanılıyor, MessagingPage değil
+                    Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
+                    await Shell.Current.GoToAsync($"{nameof(Views.ChatPage)}?conversationId={result.Data}");
                 }
                 else
                 {
@@ -459,6 +459,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ StartConversation hatası: {ex.Message}");
                 await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
             }
             finally

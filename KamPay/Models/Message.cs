@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace KamPay.Models
 {
-    // Mesaj modeli
+    
     public class Message
     {
         public string MessageId { get; set; } = Guid.NewGuid().ToString();
@@ -47,7 +47,7 @@ namespace KamPay.Models
         // Sistem mesajı kontrolü için
         public bool IsSystemMessage { get; set; } = false;
 
-        // Ürün referansı (opsiyonel)
+        // Ürün referansı 
         public string ProductId { get; set; }
         public string ProductTitle { get; set; }
         public string ProductThumbnail { get; set; }

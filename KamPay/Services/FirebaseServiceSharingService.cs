@@ -135,7 +135,6 @@ namespace KamPay.Services
             }
         }
 
-
         // YENİ METODU IMPLEMENTE EDİN
         public async Task<ServiceResult<bool>> CompleteRequestAsync(string requestId, string currentUserId)
         {
@@ -337,7 +336,6 @@ namespace KamPay.Services
                     // Şimdi kontrol et
                     if (saved.Otp != otp)
                         return ServiceResult<bool>.FailureResult("OTP geçersiz.");
-
                 }
 
                 // EFT ise bu noktada direkt onaylayabilir veya ayrı bir "beklemede" süreci de kurgulanabilir
@@ -495,47 +493,136 @@ namespace KamPay.Services
         {
             try
             {
+                Console.WriteLine($"🔥 StartConversationForRequestAsync başladı:");
+                Console.WriteLine($"   RequestId: {requestId}");
+                Console.WriteLine($"   CurrentUserId: {currentUserId}");
+
                 var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
                 var request = await requestNode.OnceSingleAsync<ServiceRequest>();
 
                 if (request == null)
+                {
+                    Console.WriteLine($"❌ Talep bulunamadı: {requestId}");
                     return ServiceResult<string>.FailureResult("Talep bulunamadı.");
+                }
+
+                Console.WriteLine($"   ServiceTitle: {request.ServiceTitle}");
+                Console.WriteLine($"   ProviderId: {request.ProviderId}");
+                Console.WriteLine($"   RequesterId: {request.RequesterId}");
 
                 // Kullanıcının talep eden veya sağlayıcı olduğunu doğrula
                 if (request.RequesterId != currentUserId && request.ProviderId != currentUserId)
-                    return ServiceResult<string>.FailureResult("Bu talebe erişim yetkiniz yok.");
-
-                // Eğer zaten bir konuşma varsa onu döndür
-                if (!string.IsNullOrEmpty(request.ConversationId))
                 {
-                    return ServiceResult<string>.SuccessResult(request.ConversationId, "Mevcut konuşma bulundu.");
+                    Console.WriteLine($"❌ Erişim yetkiniz yok!");
+                    return ServiceResult<string>.FailureResult("Bu talebe erişim yetkiniz yok.");
                 }
 
-                // Yeni konuşma oluştur
+                // 🔥 ÖNCELİKLE: Mevcut ConversationId'yi kontrol et
+                if (!string.IsNullOrEmpty(request.ConversationId))
+                {
+                    Console.WriteLine($"   Mevcut ConversationId: {request.ConversationId}");
+                    
+                    // Konuşmanın hala aktif olduğunu doğrula
+                    try
+                    {
+                        var existingConversation = await _firebaseClient
+                            .Child(Constants.ConversationsCollection)
+                            .Child(request.ConversationId)
+                            .OnceSingleAsync<Conversation>();
+
+                        if (existingConversation != null && existingConversation.IsActive)
+                        {
+                            Console.WriteLine($"✅ Mevcut konuşma bulundu ve aktif: {request.ConversationId}");
+                            return ServiceResult<string>.SuccessResult(request.ConversationId, "Mevcut konuşma bulundu.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Mevcut konuşma bulunamadı veya pasif");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Mevcut konuşma kontrol hatası: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"   ConversationId yok, yeni oluşturulacak");
+                }
+
+                // 🔥 YENİ: Eğer ConversationId yoksa veya konuşma geçersizse, yeni oluştur
                 var otherUserId = request.RequesterId == currentUserId ? request.ProviderId : request.RequesterId;
+                Console.WriteLine($"   OtherUserId: {otherUserId}");
+                
+                // Önce bu iki kullanıcı arasında aktif konuşma var mı kontrol et
+                var existingConversations = await _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .OrderBy("User1Id")
+                    .EqualTo(currentUserId)
+                    .OnceAsync<Conversation>();
+
+                Console.WriteLine($"   Mevcut konuşma sorgusu: {existingConversations.Count()} sonuç");
+
+                var existingWithOtherUser = existingConversations
+                    .FirstOrDefault(c => c.Object != null && 
+                                        c.Object.IsActive &&
+                                        (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId));
+
+                if (existingWithOtherUser != null)
+                {
+                    // Mevcut konuşma bulundu - request'e kaydet
+                    request.ConversationId = existingWithOtherUser.Key;
+                    request.HasActiveConversation = true;
+                    await requestNode.PutAsync(request);
+                    
+                    Console.WriteLine($"✅ Mevcut kullanıcı konuşması bulundu: {existingWithOtherUser.Key}");
+                    return ServiceResult<string>.SuccessResult(existingWithOtherUser.Key, "Mevcut konuşma bulundu.");
+                }
+
+                Console.WriteLine($"   Yeni konuşma oluşturuluyor...");
+
+                // Yeni konuşma oluştur
                 var conversationResult = await _messagingService.GetOrCreateConversationAsync(currentUserId, otherUserId);
 
                 if (!conversationResult.Success || conversationResult.Data == null)
+                {
+                    Console.WriteLine($"❌ Konuşma oluşturulamadı: {conversationResult.Message}");
                     return ServiceResult<string>.FailureResult("Konuşma oluşturulamadı.", conversationResult.Message);
+                }
 
                 // Konuşma ID'sini talebe kaydet
                 request.ConversationId = conversationResult.Data.ConversationId;
                 request.HasActiveConversation = true;
                 await requestNode.PutAsync(request);
 
-                // Sistem mesajı gönder
-                var systemMessageContent = $"'{request.ServiceTitle}' hizmeti için konuşma başlatıldı. Fiyat: {request.Price} ₺";
-                await _messagingService.SendMessageAsync(new SendMessageRequest
+                Console.WriteLine($"✅ Yeni konuşma oluşturuldu: {conversationResult.Data.ConversationId}");
+
+                // 🔥 Sistem mesajı gönder
+                var systemMessageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n📝 Konuşma başlatıldı\nFiyat: {request.Price:N2} ₺";
+                Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {systemMessageContent}");
+
+                var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
                 {
                     ReceiverId = otherUserId,
                     Content = systemMessageContent,
                     Type = MessageType.System
                 }, await GetUserAsync(currentUserId));
 
+                if (messageResult.Success)
+                {
+                    Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                }
+
                 return ServiceResult<string>.SuccessResult(conversationResult.Data.ConversationId, "Konuşma başlatıldı.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ StartConversationForRequestAsync hatası: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 return ServiceResult<string>.FailureResult("Konuşma başlatılırken hata oluştu.", ex.Message);
             }
         }
@@ -547,24 +634,43 @@ namespace KamPay.Services
         {
             try
             {
+                Console.WriteLine($"💰 ProposePrice başladı:");
+                Console.WriteLine($"   RequestId: {requestId}");
+                Console.WriteLine($"   ProposedPrice: {proposedPrice:N2} ₺");
+                Console.WriteLine($"   CurrentUserId: {currentUserId}");
+
                 var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
                 var request = await requestNode.OnceSingleAsync<ServiceRequest>();
 
                 if (request == null)
+                {
+                    Console.WriteLine($"❌ Talep bulunamadı");
                     return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+                }
+
+                Console.WriteLine($"   ServiceTitle: {request.ServiceTitle}");
+                Console.WriteLine($"   ConversationId: {request.ConversationId}");
 
                 // Sadece talep eden kişi fiyat teklif edebilir
                 if (request.RequesterId != currentUserId)
+                {
+                    Console.WriteLine($"❌ Yetki yok - RequesterId: {request.RequesterId}");
                     return ServiceResult<bool>.FailureResult("Sadece talep eden kişi fiyat teklif edebilir.");
+                }
 
                 if (proposedPrice <= 0)
+                {
+                    Console.WriteLine($"❌ Geçersiz fiyat");
                     return ServiceResult<bool>.FailureResult("Geçerli bir fiyat giriniz.");
+                }
 
                 // Fiyat teklifini kaydet
                 request.ProposedPriceByRequester = proposedPrice;
                 request.IsNegotiating = true;
                 request.LastNegotiationDate = DateTime.UtcNow;
                 await requestNode.PutAsync(request);
+
+                Console.WriteLine($"✅ Fiyat teklifi kaydedildi");
 
                 // Sağlayıcıya bildirim gönder
                 await _notificationService.CreateNotificationAsync(new Notification
@@ -574,22 +680,41 @@ namespace KamPay.Services
                     Message = $"{request.RequesterName}, '{request.ServiceTitle}' hizmeti için {proposedPrice} ₺ teklif etti. (Orijinal fiyat: {request.Price} ₺)"
                 });
 
-                // Eğer konuşma varsa, mesaj olarak da gönder
+                Console.WriteLine($"✅ Bildirim gönderildi");
+
+                // 🔥 Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
-                    var messageContent = $"💰 Fiyat Teklifi: {proposedPrice} ₺ (Orijinal: {request.Price} ₺)";
-                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n💰 Fiyat Teklifi: {proposedPrice:N2} ₺\n(Orijinal fiyat: {request.Price:N2} ₺)";
+                    Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
+
+                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
                     {
                         ReceiverId = request.ProviderId,
                         Content = messageContent,
-                        Type = MessageType.Text
+                        Type = MessageType.System
                     }, await GetUserAsync(currentUserId));
+
+                    if (messageResult.Success)
+                    {
+                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ ConversationId yok, sistem mesajı gönderilemedi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, "Fiyat teklifiniz gönderildi.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ ProposePrice hatası: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 return ServiceResult<bool>.FailureResult("Fiyat teklifi gönderilemedi.", ex.Message);
             }
         }
@@ -601,24 +726,43 @@ namespace KamPay.Services
         {
             try
             {
+                Console.WriteLine($"💰 SendCounterOffer başladı:");
+                Console.WriteLine($"   RequestId: {requestId}");
+                Console.WriteLine($"   CounterOffer: {counterOffer:N2} ₺");
+                Console.WriteLine($"   CurrentUserId: {currentUserId}");
+
                 var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
                 var request = await requestNode.OnceSingleAsync<ServiceRequest>();
 
                 if (request == null)
+                {
+                    Console.WriteLine($"❌ Talep bulunamadı");
                     return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+                }
+
+                Console.WriteLine($"   ServiceTitle: {request.ServiceTitle}");
+                Console.WriteLine($"   ConversationId: {request.ConversationId}");
 
                 // Sadece hizmet sağlayıcı karşı teklif verebilir
                 if (request.ProviderId != currentUserId)
+                {
+                    Console.WriteLine($"❌ Yetki yok - ProviderId: {request.ProviderId}");
                     return ServiceResult<bool>.FailureResult("Sadece hizmet sağlayıcı karşı teklif verebilir.");
+                }
 
                 if (counterOffer <= 0)
+                {
+                    Console.WriteLine($"❌ Geçersiz fiyat");
                     return ServiceResult<bool>.FailureResult("Geçerli bir fiyat giriniz.");
+                }
 
                 // Karşı teklifi kaydet
                 request.CounterOfferByProvider = counterOffer;
                 request.IsNegotiating = true;
                 request.LastNegotiationDate = DateTime.UtcNow;
                 await requestNode.PutAsync(request);
+
+                Console.WriteLine($"✅ Karşı teklif kaydedildi");
 
                 // Talep eden kişiye bildirim gönder
                 await _notificationService.CreateNotificationAsync(new Notification
@@ -628,22 +772,45 @@ namespace KamPay.Services
                     Message = $"'{request.ServiceTitle}' hizmeti için karşı teklif: {counterOffer} ₺"
                 });
 
-                // Eğer konuşma varsa, mesaj olarak da gönder
+                Console.WriteLine($"✅ Bildirim gönderildi");
+
+                // 🔥 Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
-                    var messageContent = $"💰 Karşı Teklif: {counterOffer} ₺";
-                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var requesterOffer = request.ProposedPriceByRequester.HasValue
+                        ? $"\n(Talep edenin teklifi: {request.ProposedPriceByRequester:N2} ₺)"
+                        : "";
+                    
+                    var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n💰 Karşı Teklif: {counterOffer:N2} ₺{requesterOffer}";
+                    Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
+
+                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
                     {
                         ReceiverId = request.RequesterId,
                         Content = messageContent,
-                        Type = MessageType.Text
+                        Type = MessageType.System
                     }, await GetUserAsync(currentUserId));
+
+                    if (messageResult.Success)
+                    {
+                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ ConversationId yok, sistem mesajı gönderilemedi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, "Karşı teklifiniz gönderildi.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ SendCounterOffer hatası: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 return ServiceResult<bool>.FailureResult("Karşı teklif gönderilemedi.", ex.Message);
             }
         }
@@ -655,24 +822,43 @@ namespace KamPay.Services
         {
             try
             {
+                Console.WriteLine($"✅ AcceptNegotiatedPrice başladı:");
+                Console.WriteLine($"   RequestId: {requestId}");
+                Console.WriteLine($"   CurrentUserId: {currentUserId}");
+
                 var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
                 var request = await requestNode.OnceSingleAsync<ServiceRequest>();
 
                 if (request == null)
+                {
+                    Console.WriteLine($"❌ Talep bulunamadı");
                     return ServiceResult<bool>.FailureResult("Talep bulunamadı.");
+                }
+
+                Console.WriteLine($"   ServiceTitle: {request.ServiceTitle}");
+                Console.WriteLine($"   ConversationId: {request.ConversationId}");
+                Console.WriteLine($"   IsNegotiating: {request.IsNegotiating}");
 
                 // Kullanıcının talep eden veya sağlayıcı olduğunu doğrula
                 if (request.RequesterId != currentUserId && request.ProviderId != currentUserId)
+                {
+                    Console.WriteLine($"❌ Erişim yetkiniz yok");
                     return ServiceResult<bool>.FailureResult("Bu talebe erişim yetkiniz yok.");
+                }
 
                 if (!request.IsNegotiating)
+                {
+                    Console.WriteLine($"❌ Aktif pazarlık yok");
                     return ServiceResult<bool>.FailureResult("Aktif bir pazarlık bulunmuyor.");
+                }
 
                 // Anlaşılan fiyatı belirle (karşı teklif > teklif > 0)
                 decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? 0;
+                Console.WriteLine($"   AgreedPrice: {agreedPrice:N2} ₺");
                 
                 if (agreedPrice <= 0)
                 {
+                    Console.WriteLine($"❌ Geçersiz anlaşma fiyatı");
                     return ServiceResult<bool>.FailureResult("Kabul edilecek bir teklif bulunamadı.");
                 }
 
@@ -683,8 +869,12 @@ namespace KamPay.Services
                 request.NegotiationNotes = $"Fiyat {agreedPrice} ₺ olarak anlaşıldı. Kabul eden: {currentUserId}";
                 await requestNode.PutAsync(request);
 
+                Console.WriteLine($"✅ Anlaşma kaydedildi");
+
                 // Diğer tarafa bildirim gönder
                 var otherUserId = request.RequesterId == currentUserId ? request.ProviderId : request.RequesterId;
+                Console.WriteLine($"   OtherUserId: {otherUserId}");
+
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = otherUserId,
@@ -692,16 +882,33 @@ namespace KamPay.Services
                     Message = $"'{request.ServiceTitle}' hizmeti için {agreedPrice} ₺ fiyat üzerinde anlaşıldı."
                 });
 
-                // Konuşmaya sistem mesajı ekle
+                Console.WriteLine($"✅ Bildirim gönderildi");
+
+                // 🔥 Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
-                    var messageContent = $"✅ Fiyat anlaşıldı: {agreedPrice} ₺";
-                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n✅ Anlaşma Sağlandı: {agreedPrice:N2} ₺";
+                    Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
+
+                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
                     {
                         ReceiverId = otherUserId,
                         Content = messageContent,
                         Type = MessageType.System
                     }, await GetUserAsync(currentUserId));
+
+                    if (messageResult.Success)
+                    {
+                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ ConversationId yok, sistem mesajı gönderilemedi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, $"Fiyat {agreedPrice} ₺ olarak kabul edildi.");

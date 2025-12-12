@@ -3,13 +3,77 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ChatPage"
-             Title="{Binding OtherUserName}">
+             Title="">
+ 
+    <!-- gerçek zamanlı presence (WebSocket/RTDB presence) bunu bi araştır— şu anda basit LastLoginAt kontrollü bir tahmin kullanılıyor. -->
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- 🔥 Özel Header (Profil Fotoğrafı + İsim) -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="{StaticResource Primary}"
+              Padding="15,10"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              ColumnSpacing="10">
+            
+            <!-- Geri Butonu -->
+            <ImageButton Grid.Column="0"
+                         Source="back_icon.svg"
+                         Command="{Binding GoBackCommand}"
+                         WidthRequest="30"
+                         HeightRequest="30"
+                         VerticalOptions="Center"
+                         BackgroundColor="Transparent"
+                         Aspect="AspectFit"/>
+            
+            <!-- Profil Fotoğrafı -->
+            <Border Grid.Column="1" 
+                    StrokeThickness="2"
+                    Stroke="White"
+                    WidthRequest="45"
+                    HeightRequest="45"
+                    VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22.5"/>
+                </Border.StrokeShape>
+                <ffimageloading:CachedImage 
+                    Source="{Binding OtherUserPhoto}"
+                    Aspect="AspectFill"
+                    LoadingPlaceholder="person_icon.svg"
+                    ErrorPlaceholder="person_icon.svg"
+                    DownsampleToViewSize="True"/>
+            </Border>
+            
+            <!-- İsim ve Online Durumu -->
+            <VerticalStackLayout Grid.Column="2" 
+                                 VerticalOptions="Center"
+                                 Spacing="2">
+                <Label Text="{Binding OtherUserName}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       LineBreakMode="TailTruncation"
+                       MaxLines="1"/>
+                <Label Text="Çevrimiçi"
+                       FontSize="12"
+                       TextColor="#E8F5E9"
+                       Opacity="0.8"/>
+            </VerticalStackLayout>
+            
+            <!-- Menü Butonu (Opsiyonel) -->
+            <ImageButton Grid.Column="3"
+                         Source="more_vert.svg"
+                         WidthRequest="30"
+                         HeightRequest="30"
+                         VerticalOptions="Center"
+                         BackgroundColor="Transparent"
+                         Aspect="AspectFit"/>
+        </Grid>
 
         <!-- 🔥 Mesaj Listesi (Pull-to-Refresh ile) -->
-        <RefreshView Grid.Row="0"
+        <RefreshView Grid.Row="1"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
                      IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
@@ -23,11 +87,31 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Message">
                         <Grid Padding="10,5">
+                            
+                            <!-- 🔥 System Mesajı Template -->
+                            <Frame Padding="15,10"
+                                   CornerRadius="10"
+                                   BorderColor="Transparent"
+                                   BackgroundColor="#FFF9C4"
+                                   HasShadow="False"
+                                   HorizontalOptions="Center"
+                                   MaximumWidthRequest="320"
+                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=System}">
+                                <Label Text="{Binding Content}"
+                                       LineBreakMode="WordWrap"
+                                       TextColor="#F57C00"
+                                       FontSize="13"
+                                       HorizontalTextAlignment="Center"
+                                       FontAttributes="Bold"/>
+                            </Frame>
+                            
+                            <!-- 🔥 Normal Mesajlar (Text ve Image) -->
                             <Frame Padding="12"
                                    CornerRadius="15"
                                    BorderColor="Transparent"
                                    HasShadow="False"
-                                   MaximumWidthRequest="280">
+                                   MaximumWidthRequest="280"
+                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='System,Invert=True'}">
                                 <Frame.Style>
                                     <Style TargetType="Frame">
                                         <Setter Property="HorizontalOptions" Value="Start" />
@@ -153,7 +237,7 @@
         </RefreshView>
 
         <!-- Mesaj Gönderme Alanı -->
-        <Frame Grid.Row="1"
+        <Frame Grid.Row="2"
                Padding="10"
                CornerRadius="0"
                BorderColor="#E0E0E0"
@@ -209,12 +293,12 @@
         </Frame>
 
         <!-- 🔥 Skeleton Loader (İlk Yükleme) -->
-        <Grid Grid.RowSpan="2"
+        <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsLoading}"
               BackgroundColor="White"
               InputTransparent="False">
 
-            <VerticalStackLayout Padding="15" Spacing="10">
+            <VerticalStackLayout Padding="15" Spacing="10" Margin="0,60,0,0">
                 <!-- Skeleton Message 1 (Alıcı) -->
                 <HorizontalStackLayout Spacing="10" HorizontalOptions="Start">
                     <Frame Padding="12" 
@@ -262,8 +346,7 @@
             <!-- Loading Overlay -->
             <VerticalStackLayout VerticalOptions="Center"
                                  HorizontalOptions="Center"
-                                 Spacing="10"
-                                 Margin="0,-150,0,0">
+                                 Spacing="10">
                 <ActivityIndicator IsRunning="True"
                                    Color="{StaticResource Primary}"
                                    WidthRequest="40"

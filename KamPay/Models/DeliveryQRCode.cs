@@ -15,7 +15,7 @@ namespace KamPay.Models
         public string SellerId { get; set; }
         public string BuyerId { get; set; }
 
-        // YENİ EKLENEN ÖZELLİK: QR kodu işleme başlamak için.
+        // QR kodu işleme başlamak için.
         public string TransactionId { get; set; }
 
         public string QRCodeData { get; set; }
@@ -28,10 +28,10 @@ namespace KamPay.Models
         // Yeni kod DeliveryStatus'u kullanmalı, her iki alanı da güncellemeli
         public DeliveryStatus Status { get; set; }
 
-        // ⏱️ Süre Sınırı Özellikleri
+        //  Süre Sınırı Özellikleri
         public int ValidityMinutes { get; set; } = 60;
 
-        // 📍 Konum Doğrulama Özellikleri
+        //  Konum Doğrulama Özellikleri
         public double? MeetingPointLatitude { get; set; }
         public double? MeetingPointLongitude { get; set; }
         public string? MeetingPointName { get; set; }
@@ -40,24 +40,24 @@ namespace KamPay.Models
         public double? ActualDeliveryLongitude { get; set; }
         public bool LocationVerified { get; set; }
 
-        // 🔒 PIN Güvenliği
+        //  PIN Güvenliği
         public string? VerificationPin { get; set; }
         public int ScanAttempts { get; set; } = 0;
         public int MaxScanAttempts { get; set; } = 5;
 
-        // 🚨 Durum Yönetimi - Yeni status alanı (yeni enum değerlerini destekler)
+        //  Durum Yönetimi - Yeni status alanı (yeni enum değerlerini destekler)
         public DeliveryStatus DeliveryStatus { get; set; } = DeliveryStatus.Pending;
         public string? CancellationReason { get; set; }
         public DateTime? CancelledAt { get; set; }
         public string? CancelledByUserId { get; set; }
 
-        // ⏰ Zaman Takibi - DeliveryDuration hesaplanan özellik
+        //  Zaman Takibi - DeliveryDuration hesaplanan özellik
         public TimeSpan? DeliveryDuration => UsedAt.HasValue ? UsedAt.Value - CreatedAt : null;
 
         // Süre uzatma kontrolü
         public bool HasBeenExtended { get; set; } = false;
 
-        // 📸 Fotoğraf Özellikleri (FAZ 2)
+        //  Fotoğraf Özellikleri 
         public string? DeliveryPhotoUrl { get; set; }
         public string? DeliveryPhotoThumbnailUrl { get; set; }
         public DateTime? PhotoUploadedAt { get; set; }
@@ -90,6 +90,6 @@ namespace KamPay.Models
         Scheduled = 4,    // Planlandı (yeni)
         Disputed = 5,     // Anlaşmazlık (yeni)
         Expired = 6,      // Süresi doldu (yeni)
-        WaitingForPhoto = 7  // Fotoğraf bekleniyor (FAZ 2)
+        WaitingForPhoto = 7  // Fotoğraf bekleniyor 
     }
 }

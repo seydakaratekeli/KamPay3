@@ -584,6 +584,8 @@ namespace KamPay.ViewModels
 
             try
             {
+                IsLoading = true;
+
                 var result = await _transactionService.StartConversationForTransactionAsync(
                     transaction.TransactionId,
                     _currentUserId
@@ -591,6 +593,8 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
+                    // 🔥 DÜZELTİLDİ: ChatPage kullanılıyor
+                    Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={result.Data}");
                 }
                 else
@@ -600,7 +604,12 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ MessagePartner hatası: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

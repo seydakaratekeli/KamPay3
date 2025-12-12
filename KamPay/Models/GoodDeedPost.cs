@@ -7,7 +7,6 @@ using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Models;
 using Newtonsoft.Json;
-// Aşağıdaki namespace'i ekleyin
 using Microsoft.Maui.Controls.Internals;
 
 namespace KamPay.Models;
@@ -27,7 +26,7 @@ public partial class GoodDeedPost : ObservableObject
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
 
-    // Observable yaptık ki sayı değişince ekranda hemen güncellensin
+    // Observable yaptık ki sayı değişince ekranda hemen güncellensin !!
     [ObservableProperty]
     private int likeCount;
 
@@ -38,7 +37,7 @@ public partial class GoodDeedPost : ObservableObject
 
     public Dictionary<string, Comment> Comments { get; set; } = new Dictionary<string, Comment>();
 
-    // 🔥 YENİ: Beğenen kullanıcıların listesi
+    //  Beğenen kullanıcıların listesi
     public Dictionary<string, bool> Likes { get; set; } = new Dictionary<string, bool>();
 
     [JsonIgnore] // <-- Bu attribute, özelliğin Firebase'e kaydedilmesini engeller.
@@ -55,7 +54,7 @@ public partial class GoodDeedPost : ObservableObject
     private bool isCommentsExpanded;
 
     // Eğer genişletildiyse hepsini, değilse son 2 tanesini göster
-    // 🔥 GÜNCELLENMİŞ VE GÜVENLİ KOD
+    
     public IEnumerable<Comment> VisibleComments
     {
         get
@@ -95,7 +94,7 @@ public partial class GoodDeedPost : ObservableObject
         OnPropertyChanged(nameof(ShowMoreButtonText));
     }
 
-    // 🔥 YENİ: Kullanıcının beğenip beğenmediğini kontrol et
+    //  Kullanıcının beğenip beğenmediğini kontrol et
     public void UpdateLikeStatus(string userId)
     {
         if (Likes != null && Likes.ContainsKey(userId))

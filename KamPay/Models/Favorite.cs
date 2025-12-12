@@ -1,6 +1,6 @@
 ﻿namespace KamPay.Models;
 
-// Favori modeli
+
 public class Favorite
 {
     public string FavoriteId { get; set; }

@@ -30,7 +30,7 @@
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter" />
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
-            <!-- 🔥 YENİ CONVERTER -->
+         
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -113,7 +113,7 @@
                                    Margin="0,-4,0,0"/>
                         </VerticalStackLayout>
 
-                        <!-- 🔥 YENİ: PAZARLIk PANELİ -->
+                        <!-- PAZARLIk PANELİ -->
                         <Border StrokeShape="RoundRectangle 16"
                                 StrokeThickness="2"
                                 Stroke="#FF9800"

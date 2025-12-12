@@ -29,7 +29,7 @@ namespace KamPay.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // --- ViewModel'ler için yardýmcý özellikler ---
+        //  ViewModel'ler için yardýmcý özellikler 
         public string OtherUserName { get; set; }
         public string OtherUserPhotoUrl { get; set; }
         public int UnreadCount { get; set; }

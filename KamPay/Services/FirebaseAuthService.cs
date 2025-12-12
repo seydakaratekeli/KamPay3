@@ -184,7 +184,7 @@ namespace KamPay.Services
         {
             try
             {
-                // 1️⃣ Kullanıcıyı e-posta ile bul
+                // 1️ Kullanıcıyı e-posta ile bul
                 var users = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .OrderBy("Email")
@@ -202,7 +202,7 @@ namespace KamPay.Services
 
                 var user = userEntry.Object;
 
-                // 2️⃣ Yeni doğrulama kodu oluştur ve güncelle
+                // 2️ Yeni doğrulama kodu oluştur ve güncelle
                 user.VerificationCode = GenerateVerificationCode();
                 user.VerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
 
@@ -211,17 +211,17 @@ namespace KamPay.Services
                     .Child(user.UserId)
                     .PutAsync(user);
 
-                // 3️⃣ Doğrulama kodunu gönder
+                // 3️ Doğrulama kodunu gönder
                 var emailSent = await _emailService.SendVerificationEmailAsync(user.Email, user.VerificationCode);
 
-                // 4️⃣ Debug Log — her zaman yaz
+                // 4️ Debug Log — her zaman yaz
                 System.Diagnostics.Debug.WriteLine("---------- KamPay Doğrulama Kodu ----------");
                 System.Diagnostics.Debug.WriteLine($"Kullanıcı: {user.Email}");
                 System.Diagnostics.Debug.WriteLine($"Kod: {user.VerificationCode}");
                 System.Diagnostics.Debug.WriteLine($"Geçerlilik Süresi: {user.VerificationCodeExpiry}");
                 System.Diagnostics.Debug.WriteLine("--------------------------------------------");
 
-                // 5️⃣ Gönderim sonucu kontrolü
+                // 5️ Gönderim sonucu kontrolü
                 if (emailSent)
                 {
                     return ServiceResult<bool>.SuccessResult(

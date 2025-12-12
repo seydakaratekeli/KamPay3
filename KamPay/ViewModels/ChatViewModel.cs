@@ -17,6 +17,8 @@ using System.Reactive.Linq;
 namespace KamPay.ViewModels
 {
     [QueryProperty(nameof(ConversationId), "conversationId")]
+    [QueryProperty(nameof(OtherUserPhoto), "otherUserPhoto")]
+    [QueryProperty(nameof(OtherUserName), "otherUserName")]
     public partial class ChatViewModel : ObservableObject, IDisposable
     {
         private readonly IMessagingService _messagingService;
@@ -49,6 +51,21 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private string otherUserPhoto;
+
+        // Removed source-generator attributes for online status and added explicit properties
+        private bool _isOtherUserOnline; // backing field
+        public bool IsOtherUserOnline
+        {
+            get => _isOtherUserOnline;
+            set => SetProperty(ref _isOtherUserOnline, value);
+        }
+
+        private string _onlineStatusText;
+        public string OnlineStatusText
+        {
+            get => _onlineStatusText;
+            set => SetProperty(ref _onlineStatusText, value);
+        }
 
         [ObservableProperty]
         private string messageText;
@@ -205,6 +222,63 @@ namespace KamPay.ViewModels
                     {
                         OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId);
                         OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId);
+
+                        // 🔥 YENİ: Profil fotoğrafı kontrolü (varsayılan)
+                        if (string.IsNullOrEmpty(OtherUserPhoto))
+                        {
+                            OtherUserPhoto = "person_icon.svg";
+                        }
+
+                        Console.WriteLine($"👤 OtherUserName: {OtherUserName}");
+                        Console.WriteLine($"📷 OtherUserPhoto: {OtherUserPhoto}");
+
+                        // 🔥 YENİ: Online durumunu sorgula - Users koleksiyonundan LastLoginAt kontrolü
+                        try
+                        {
+                            var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
+                            if (!string.IsNullOrEmpty(otherUserId))
+                            {
+                                var otherUser = await _firebaseClient
+                                    .Child(Constants.UsersCollection)
+                                    .Child(otherUserId)
+                                    .OnceSingleAsync<User>();
+
+                                if (otherUser != null && otherUser.LastLoginAt.HasValue)
+                                {
+                                    var last = otherUser.LastLoginAt.Value.ToUniversalTime();
+                                    var diff = DateTime.UtcNow - last;
+                                    // Eğer son giriş 2 dakikadan kısa süre önceyse çevrimiçi say
+                                    IsOtherUserOnline = diff.TotalMinutes <= 2;
+                                    OnlineStatusText = IsOtherUserOnline ? "Çevrimiçi" : $"Son görülme: {last.ToLocalTime():g}";
+
+                                    // Eğer profil fotoğrafı boşsa kullanıcı kaydındaki profile image kullan
+                                    if (string.IsNullOrEmpty(OtherUserPhoto) && !string.IsNullOrEmpty(otherUser.ProfileImageUrl))
+                                    {
+                                        OtherUserPhoto = otherUser.ProfileImageUrl;
+                                    }
+                                }
+                                else
+                                {
+                                    IsOtherUserOnline = false;
+                                    OnlineStatusText = "Çevrimdışı";
+                                }
+                            }
+                            else
+                            {
+                                IsOtherUserOnline = false;
+                                OnlineStatusText = "Çevrimdışı";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ Online durumu alınamadı: {ex.Message}");
+                            IsOtherUserOnline = false;
+                            OnlineStatusText = "Çevrimdışı";
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Conversation bulunamadı: {ConversationId}");
                     }
                 }
 
@@ -238,13 +312,21 @@ namespace KamPay.ViewModels
 
                 if (messagesSnapshot.Any())
                 {
+                    // 🔥 DÜZELTİLDİ: Sistem mesajlarını da dahil et
                     var loadedMessages = messagesSnapshot
-                        .Where(m => m.Object != null && !m.Object.IsDeleted)
+                        .Where(m => m.Object != null && !m.Object.IsDeleted) // Sadece silinen mesajları filtrele
                         .Select(m =>
                         {
                             var message = m.Object;
                             message.MessageId = m.Key;
                             message.IsSentByMe = message.SenderId == _currentUser.UserId;
+                            
+                            // 🔥 DEBUG: Sistem mesajı kontrolü
+                            if (message.Type == MessageType.System || message.IsSystemMessage)
+                            {
+                                Console.WriteLine($"📋 Sistem mesajı yüklendi: {message.Content}");
+                            }
+                            
                             return message;
                         })
                         .OrderBy(m => m.SentAt)
@@ -257,7 +339,7 @@ namespace KamPay.ViewModels
                         Messages.Add(message);
                     }
 
-                    Console.WriteLine($"✅ Snapshot ile {loadedMessages.Count} mesaj yüklendi");
+                    Console.WriteLine($"✅ Snapshot ile {loadedMessages.Count} mesaj yüklendi (Sistem mesajları dahil)");
                 }
 
                 // 2️⃣ Loading'i kapat - veri gösterildi
@@ -394,11 +476,12 @@ namespace KamPay.ViewModels
 
             Console.WriteLine($"🔥 Real-time listener başlatıldı: {ConversationId}");
 
+            // 🔥 DÜZELTİLDİ: Sistem mesajlarını da dahil et
             _messagesSubscription = _firebaseClient
                 .Child(Constants.MessagesCollection)
                 .Child(ConversationId)
                 .AsObservable<Message>()
-                .Where(e => e.Object != null && !e.Object.IsDeleted)
+                .Where(e => e.Object != null && !e.Object.IsDeleted) // Sadece silinen mesajları filtrele
                 .Buffer(TimeSpan.FromMilliseconds(200))
                 .Where(batch => batch.Any())
                 .Subscribe(
@@ -408,6 +491,15 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
+                                // 🔥 DEBUG: Sistem mesajı kontrolü
+                                foreach (var e in events)
+                                {
+                                    if (e.Object != null && (e.Object.Type == MessageType.System || e.Object.IsSystemMessage))
+                                    {
+                                        Console.WriteLine($"📋 Realtime sistem mesajı: {e.Object.Content}");
+                                    }
+                                }
+                                
                                 ProcessMessageBatch(events);
                             }
                             catch (Exception ex)

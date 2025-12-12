@@ -572,9 +572,38 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ConversationTappedAsync(Conversation conversation)
         {
-            if (conversation == null) return;
-            SelectedConversation = null;
-            await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={conversation.ConversationId}");
+            if (conversation == null)
+            {
+                Console.WriteLine("⚠️ ConversationTappedAsync: conversation null!");
+                return;
+            }
+            
+            Console.WriteLine($"🔥 ConversationTappedAsync çağrıldı: {conversation.ConversationId}");
+            Console.WriteLine($"   OtherUser: {conversation.OtherUserName}");
+            Console.WriteLine($"   LastMessage: {conversation.LastMessage}");
+            
+            try
+            {
+                SelectedConversation = null;
+
+                // Encode query parameters (photo and name) to pass to ChatPage
+                var photo = Uri.EscapeDataString(conversation.OtherUserPhotoUrl ?? string.Empty);
+                var name = Uri.EscapeDataString(conversation.OtherUserName ?? string.Empty);
+
+                var navigationParameter = $"{nameof(ChatPage)}?conversationId={conversation.ConversationId}&otherUserPhoto={photo}&otherUserName={name}";
+                Console.WriteLine($"🚀 Navigation: {navigationParameter}");
+
+                await Shell.Current.GoToAsync(navigationParameter);
+
+                Console.WriteLine("✅ Navigation başarılı!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Navigation hatası: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
+                await Application.Current.MainPage.DisplayAlert("Hata", 
+                    $"Sohbete giderken hata oluştu: {ex.Message}", "Tamam");
+            }
         }
 
         [RelayCommand]

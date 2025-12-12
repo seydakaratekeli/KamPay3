@@ -8,10 +8,10 @@ namespace KamPay.Models
     {
         public string CategoryId { get; set; }
         public string Name { get; set; }
-        public string IconName { get; set; } // Sizin modelinizdeki ismi kullanıyoruz
+        public string IconName { get; set; } 
         public string Description { get; set; }
 
-        // Constructor'ı boşaltın veya tamamen silin.
+        // Constructor boşaltıldı !!
         public Category() { }
 
         // Varsayılan kategoriler
