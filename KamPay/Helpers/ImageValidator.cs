@@ -5,9 +5,8 @@ using System.Linq;
 
 namespace KamPay.Helpers
 {
-    /// <summary>
-    /// Helper class for validating image files before upload
-    /// </summary>
+    // Yüklemeden önce resim dosyalarını doğrulamak için yardımcı sınıf
+
     public static class ImageValidator
     {
         // Maximum file size: 5MB
@@ -28,12 +27,16 @@ namespace KamPay.Helpers
             "image/webp" 
         };
 
-        /// <summary>
-        /// Validates if the file is a valid image with acceptable size and format
-        /// </summary>
-        /// <param name="filePath">Path to the image file to validate</param>
-        /// <param name="isProfileImage">Set to true for profile images (allows larger file size up to 10MB)</param>
-        /// <returns>ValidationResult indicating if the image is valid</returns>
+       
+        // Dosyanın kabul edilebilir boyut ve formatta geçerli bir resim olup olmadığını doğrular
+       
+
+        /// <param name="filePath">Doğrulanacak resim dosyasının yolu</param>
+
+        /// <param name="isProfileImage">Profil resimleri için true olarak ayarlayın (10 MB'a kadar daha büyük dosya boyutuna izin verir)</param>
+
+        /// <returns>Resmin geçerli olup olmadığını gösteren Doğrulama Sonucu</returns>
+
         public static ValidationResult ValidateImage(string filePath, bool isProfileImage = false)
         {
             var result = new ValidationResult();
@@ -82,9 +85,8 @@ namespace KamPay.Helpers
             return result;
         }
 
-        /// <summary>
-        /// Validates multiple images
-        /// </summary>
+        // Birden fazla görüntüyü doğrular
+
         public static ValidationResult ValidateImages(string[] filePaths, int maxImages = 5)
         {
             var result = new ValidationResult();
@@ -115,9 +117,9 @@ namespace KamPay.Helpers
             return result;
         }
 
-        /// <summary>
-        /// Checks if the file extension is allowed
-        /// </summary>
+        
+        // Dosya uzantısının izin verilip verilmediğini kontrol eder
+
         public static bool IsAllowedExtension(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -127,9 +129,8 @@ namespace KamPay.Helpers
             return !string.IsNullOrEmpty(extension) && AllowedExtensions.Contains(extension);
         }
 
-        /// <summary>
-        /// Checks if the MIME type is allowed
-        /// </summary>
+        // MIME türünün izin verilip verilmediğini kontrol eder
+
         public static bool IsAllowedMimeType(string mimeType)
         {
             if (string.IsNullOrWhiteSpace(mimeType))
@@ -138,9 +139,9 @@ namespace KamPay.Helpers
             return AllowedMimeTypes.Contains(mimeType.ToLowerInvariant());
         }
 
-        /// <summary>
-        /// Gets a safe file name by removing potentially dangerous characters
-        /// </summary>
+
+        // Potansiyel olarak tehlikeli karakterleri kaldırarak güvenli bir dosya adı elde eder
+
         public static string GetSafeFileName(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -173,9 +174,8 @@ namespace KamPay.Helpers
             return nameWithoutExtension + extension;
         }
 
-        /// <summary>
-        /// Formats file size in human-readable format
-        /// </summary>
+        // Dosya boyutunu insan tarafından okunabilir biçimde biçimlendirir
+
         public static string FormatFileSize(long bytes)
         {
             string[] sizes = { "B", "KB", "MB", "GB" };

@@ -6,14 +6,14 @@ public static class Constants
     
     public const string FirebaseRealtimeDbUrl = "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app/";
 
-    // �niversite e-posta domain kontrol� i�in
+    // üniversite e-posta domain kontrolü için
     public const string UniversityEmailDomain = "@bartin.edu.tr";
 
-    // �ifre gereksinimleri
+    // şifre gereksinimleri
     public const int MinPasswordLength = 8;
     public const int MaxPasswordLength = 50;
 
-    // Firebase koleksiyon yollar�
+    // Firebase koleksiyon yollar
     public const string UsersCollection = "users";
     public const string PendingVerificationsCollection = "pending_verifications";
     public const string ProductsCollection = "products";
@@ -34,19 +34,19 @@ public static class Constants
     public const string TransactionsCollection = "transactions";
     public const string TempOtpsCollection = "TempOtps";
 
-    // Firebase Storage yollar�
+    // Firebase Storage yollar
     public const string ProductImagesFolder = "product_images";
     public const string ProfileImagesFolder = "profile_images";
     public const string MessageImagesFolder = "message_images";
-    public const string DeliveryPhotosFolder = "deliveries"; // FAZ 2
+    public const string DeliveryPhotosFolder = "deliveries"; 
 
-    // �r�n kurallar�
+    // ürün kurallar
     public const int MaxProductImages = 5;
     public const int MaxProductTitleLength = 100;
     public const int MaxProductDescriptionLength = 1000;
     public const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB
 
-    // Mesajla�ma kurallar�
+    // Mesajla�ma kurallar
     public const int MaxMessageLength = 500;
     public const int MessagesPageSize = 50;
 

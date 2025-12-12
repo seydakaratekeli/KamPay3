@@ -4,9 +4,9 @@ using Microsoft.Maui.Controls;
 
 namespace KamPay.Converters
 {
-    // Yaln�zca puana bakarak bool de�eri d�nd�r�r.
-    // True = Puan 100'den az (Uyar�y� g�ster).
-    // False = Puan 100 veya 100'den fazla (Uyar�y� gizle).
+    // Yalnzca puana bakarak bool deeri dndrür.
+    // True = Puan 100'den az (Uyaryı göster).
+    // False = Puan 100 veya 100'den fazla (Uyariyi gizle).
     public class LessThan100Converter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -16,7 +16,7 @@ namespace KamPay.Converters
                 const int requiredPoints = 100;
                 return points < requiredPoints;
             }
-            // Hata durumunda veya null ise uyar�y� gizle (varsay�m)
+            // Hata durumunda veya null ise uyariyi gizle (varsay�m)
             return false;
         }
 

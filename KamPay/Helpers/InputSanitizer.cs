@@ -3,14 +3,12 @@ using System.Text.RegularExpressions;
 
 namespace KamPay.Helpers
 {
-    /// <summary>
-    /// Helper class for input validation and sanitization to prevent XSS and injection attacks
-    /// </summary>
+    //// XSS ve enjeksiyon saldýrýlarýný önlemek için girdi doðrulama ve temizleme iþlemleri için yardýmcý sýnýf
+    ///
     public static class InputSanitizer
     {
-        /// <summary>
-        /// Sanitizes text input by removing potentially harmful HTML/script tags and special characters
-        /// </summary>
+        // Potansiyel olarak zararlý HTML/komut dosyasý etiketlerini ve özel karakterleri kaldýrarak metin giriþini temizler
+
         public static string SanitizeText(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -34,9 +32,7 @@ namespace KamPay.Helpers
             return sanitized;
         }
 
-        /// <summary>
-        /// Validates if the text contains potentially dangerous content
-        /// </summary>
+        // Metnin potansiyel olarak tehlikeli içerik içerip içermediðini doðrular
         public static bool ContainsDangerousContent(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -65,9 +61,8 @@ namespace KamPay.Helpers
             return false;
         }
 
-        /// <summary>
-        /// Validates email format
-        /// </summary>
+        // E-posta biçimini doðrular
+
         public static bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -85,9 +80,8 @@ namespace KamPay.Helpers
             }
         }
 
-        /// <summary>
-        /// Validates URL format
-        /// </summary>
+        // URL biçimini doðrular
+
         public static bool IsValidUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -97,9 +91,7 @@ namespace KamPay.Helpers
                    (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
-        /// <summary>
-        /// Sanitizes and validates username (alphanumeric, underscores, hyphens only)
-        /// </summary>
+        // Kullanýcý adýný temizler ve doðrular (yalnýzca alfanümerik karakterler, alt çizgiler ve tireler)
         public static string SanitizeUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -111,9 +103,7 @@ namespace KamPay.Helpers
             return sanitized.Trim();
         }
 
-        /// <summary>
-        /// Validates if text length is within acceptable range
-        /// </summary>
+        // Metin uzunluðunun kabul edilebilir aralýkta olup olmadýðýný doðrular
         public static bool IsValidLength(string text, int minLength, int maxLength)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -123,9 +113,7 @@ namespace KamPay.Helpers
             return length >= minLength && length <= maxLength;
         }
 
-        /// <summary>
-        /// Removes excessive whitespace and normalizes line breaks
-        /// </summary>
+        // Aþýrý boþluklarý kaldýrýr ve satýr sonlarýný normalleþtirir
         public static string NormalizeWhitespace(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -140,9 +128,7 @@ namespace KamPay.Helpers
             return normalized.Trim();
         }
 
-        /// <summary>
-        /// Validates phone number format (basic validation)
-        /// </summary>
+        // Telefon numarasý formatýný doðrular (temel doðrulama)
         public static bool IsValidPhoneNumber(string phoneNumber)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
@@ -155,9 +141,7 @@ namespace KamPay.Helpers
             return Regex.IsMatch(digits, @"^\d{7,15}$");
         }
 
-        /// <summary>
-        /// Sanitizes numeric input and returns parsed value
-        /// </summary>
+        // Sayýsal giriþi temizler ve ayrýþtýrýlmýþ deðeri döndürür
         public static bool TrySanitizeNumeric(string input, out decimal result)
         {
             result = 0;
@@ -171,10 +155,8 @@ namespace KamPay.Helpers
             return decimal.TryParse(sanitized, out result);
         }
 
-        /// <summary>
-        /// Prevents SQL injection by escaping single quotes
-        /// Note: Use parameterized queries when possible instead
-        /// </summary>
+        // Tek týrnaklarý kaçýrarak SQL enjeksiyonunu önler
+        //  Not: Mümkün olduðunda parametreli sorgular kullanýn
         public static string EscapeSqlInput(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -183,9 +165,7 @@ namespace KamPay.Helpers
             return input.Replace("'", "''");
         }
 
-        /// <summary>
-        /// Validates that input doesn't contain SQL injection patterns
-        /// </summary>
+        // Giriþin SQL enjeksiyon kalýplarý içermediðini doðrular
         public static bool ContainsSqlInjectionPatterns(string input)
         {
             if (string.IsNullOrWhiteSpace(input))

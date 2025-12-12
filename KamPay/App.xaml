@@ -33,7 +33,9 @@
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:LessThan100Converter x:Key="LessThan100Converter"/>
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
-           
+            <converters:PostTypeToTextConverter x:Key="PostTypeToTextConverter"/>
+            <converters:PostTypeToIconConverter x:Key="PostTypeToIconConverter"/>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

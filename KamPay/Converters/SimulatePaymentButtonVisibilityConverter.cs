@@ -1,9 +1,10 @@
-﻿// KamPay/Converters/SimulatePaymentButtonVisibilityConverter.cs (Yeni dosya)
+﻿
 using KamPay.Models;
 using System.Globalization;
 
 namespace KamPay.Converters
 {
+    //Bunu da yaptıkda kullanıcaz mı?? bak tekrar
     public class SimulatePaymentButtonVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

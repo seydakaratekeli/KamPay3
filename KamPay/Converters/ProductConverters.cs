@@ -371,10 +371,10 @@ namespace KamPay.Converters
         }
     }
 
-    /// <summary>
-    /// Converts product category names to localized text.
-    /// Maps Turkish category names stored in Firebase to localized resource keys.
-    /// </summary>
+    // Ürün kategori adlarını yerelleştirilmiş metne dönüştürür.
+
+    // Firebase'de saklanan Türkçe kategori adlarını yerelleştirilmiş kaynak anahtarlarına eşler.
+    
     public class ProductCategoryToTextConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -6,24 +6,16 @@ using System.Threading.Tasks;
 
 namespace KamPay.Helpers
 {
-    /// <summary>
-    /// Helper class for handling network operations with retry logic and error handling
-    /// </summary>
+    // Yeniden deneme mantığı ve hata işleme ile ağ işlemlerini yönetmek için yardımcı sınıf
     public static class NetworkHelper
     {
-        /// <summary>
-        /// Maximum number of retry attempts for failed requests
-        /// </summary>
+        // Başarısız istekler için maksimum yeniden deneme sayısı
         public const int MaxRetryAttempts = 3;
 
-        /// <summary>
-        /// Base delay in milliseconds between retry attempts (will be multiplied by attempt number)
-        /// </summary>
+        // Yeniden deneme girişimleri arasındaki milisaniye cinsinden temel gecikme (deneme sayısı ile çarpılacaktır)
         public const int RetryDelayMs = 1000;
 
-        /// <summary>
-        /// Executes an async operation with retry logic
-        /// </summary>
+        // Yeniden deneme mantığıyla eşzamansız bir işlemi yürütür
         public static async Task<T> ExecuteWithRetryAsync<T>(
             Func<Task<T>> operation,
             int maxRetries = MaxRetryAttempts,
@@ -61,9 +53,7 @@ namespace KamPay.Helpers
             throw lastException ?? new Exception("Operation failed after maximum retries");
         }
 
-        /// <summary>
-        /// Determines if an exception is retriable based on its type and properties
-        /// </summary>
+        // Bir istisnanın türüne ve özelliklerine bağlı olarak yeniden denenebilir olup olmadığını belirler
         public static bool IsRetriableException(Exception ex)
         {
             // Network-related exceptions that should be retried
@@ -93,9 +83,7 @@ namespace KamPay.Helpers
             return false;
         }
 
-        /// <summary>
-        /// Gets a user-friendly error message for network-related exceptions
-        /// </summary>
+        // Ağ ile ilgili istisnalar için kullanıcı dostu bir hata mesajı alır
         public static string GetUserFriendlyErrorMessage(Exception ex)
         {
             return ex switch
@@ -113,9 +101,7 @@ namespace KamPay.Helpers
             };
         }
 
-        /// <summary>
-        /// Checks if device has internet connectivity
-        /// </summary>
+        // Cihazın internet bağlantısı olup olmadığını kontrol eder
         public static bool HasInternetConnection()
         {
             try
@@ -129,9 +115,7 @@ namespace KamPay.Helpers
             }
         }
 
-        /// <summary>
-        /// Gets the current network connection type
-        /// </summary>
+        // Geçerli ağ bağlantı türünü alır
         public static string GetConnectionType()
         {
             try
@@ -155,9 +139,7 @@ namespace KamPay.Helpers
             }
         }
 
-        /// <summary>
-        /// Executes an operation only if internet is available
-        /// </summary>
+        // Yalnızca internet bağlantısı mevcutsa bir işlemi yürütür
         public static async Task<T> ExecuteIfOnlineAsync<T>(
             Func<Task<T>> operation,
             T offlineValue = default,
@@ -171,9 +153,7 @@ namespace KamPay.Helpers
             return await operation();
         }
 
-        /// <summary>
-        /// Wraps an operation with network error handling
-        /// </summary>
+        // Ağ hatası işleme içeren bir işlemi sarmalar
         public static async Task<ServiceResult<T>> ExecuteNetworkOperationAsync<T>(
             Func<Task<T>> operation,
             string errorMessage = "İşlem başarısız oldu")
@@ -198,11 +178,11 @@ namespace KamPay.Helpers
             }
         }
 
-        /// <summary>
-        /// Throttles operation execution to prevent rate limiting
-        /// NOTE: Uses static fields for simplicity. In a multi-user scenario,
-        /// consider using a per-operation or per-user throttling mechanism.
-        /// </summary>
+        // Hız sınırlamasını önlemek için işlem yürütmesini kısıtlar
+
+        // NOT: Basitlik için statik alanlar kullanılmıştır. Çok kullanıcılı bir senaryoda,
+
+        // işlem başına veya kullanıcı başına kısıtlama mekanizması kullanmayı düşünün.
         private static DateTime _lastRequestTime = DateTime.MinValue;
         private static readonly object _throttleLock = new object();
         
@@ -224,9 +204,7 @@ namespace KamPay.Helpers
         }
     }
 
-    /// <summary>
-    /// Exception thrown when an operation requires network connectivity but device is offline
-    /// </summary>
+    // Bir işlem ağ bağlantısı gerektirdiğinde ancak cihaz çevrimdışı olduğunda fırlatılan istisna
     public class NoInternetException : Exception
     {
         public NoInternetException() 
@@ -245,9 +223,7 @@ namespace KamPay.Helpers
         }
     }
 
-    /// <summary>
-    /// Exception thrown when rate limit is exceeded
-    /// </summary>
+    // Oran sınırı aşıldığında fırlatılan istisna
     public class RateLimitExceededException : Exception
     {
         public DateTime RetryAfter { get; set; }
