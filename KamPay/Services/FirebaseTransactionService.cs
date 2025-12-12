@@ -1013,14 +1013,17 @@ namespace KamPay.Services
                     ConversationId = conversationId,
                     SenderId = "system",
                     SenderName = "Sistem",
-                    Text = messageText,
-                    Timestamp = DateTime.UtcNow,
+                    Content = messageText, // ✅ Text yerine Content
+                    SentAt = DateTime.UtcNow,
                     IsRead = false,
-                    IsSystemMessage = true
+                    IsSystemMessage = true,
+                    Type = MessageType.System // ✅ Type System olarak işaretlendi
                 };
 
+                // 🔥 ÖNEMLİ: Mesajları ConversationId altında saklıyoruz
                 await _firebaseClient
                     .Child(Constants.MessagesCollection)
+                    .Child(conversationId) // ✅ Conversation ID'ye göre mesajları grupla
                     .Child(systemMessage.MessageId)
                     .PutAsync(systemMessage);
 
@@ -1034,6 +1037,7 @@ namespace KamPay.Services
                 {
                     conversation.LastMessage = messageText;
                     conversation.LastMessageTime = DateTime.UtcNow;
+                    conversation.UpdatedAt = DateTime.UtcNow;
                     await conversationRef.PutAsync(conversation);
                 }
             }

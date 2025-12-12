@@ -383,7 +383,11 @@ namespace KamPay.ViewModels
 
                 if (proposeResult.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Success"], "Fiyat teklifiniz gönderildi", Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(
+                        Res["Success"], 
+                        "Fiyat teklifiniz gönderildi. Satıcıyla sohbet edin!", 
+                        Res["Ok"]
+                    );
                     await LoadActiveTransactionAsync(currentUser.UserId);
                 }
                 else
@@ -444,7 +448,11 @@ namespace KamPay.ViewModels
 
                 if (proposeResult.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Success"], "Nakit teklifiniz gönderildi", Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(
+                        Res["Success"], 
+                        "Nakit teklifiniz gönderildi. Satıcıyla sohbet edin!", 
+                        Res["Ok"]
+                    );
                     await LoadActiveTransactionAsync(currentUser.UserId);
                 }
                 else
@@ -495,7 +503,7 @@ namespace KamPay.ViewModels
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         Res["Success"], 
-                        $"Anlaşma sağlandı: {agreedAmount:N2}₺", 
+                        $"Harika! {agreedAmount:N2}₺ üzerinde anlaştınız. Şimdi sohbette buluşma detaylarını konuşabilirsiniz.", 
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);

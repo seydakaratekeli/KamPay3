@@ -30,6 +30,8 @@
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter" />
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <!-- 🔥 YENİ CONVERTER -->
+            <converters:IsPendingConverter x:Key="IsPendingConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -428,3 +430,5 @@
         </Grid>
     </Grid>
 </ContentPage>
+    
+    
