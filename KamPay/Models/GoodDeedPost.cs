@@ -26,7 +26,6 @@ public partial class GoodDeedPost : ObservableObject
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
 
-    // Observable yaptık ki sayı değişince ekranda hemen güncellensin !!
     [ObservableProperty]
     private int likeCount;
 
@@ -37,29 +36,35 @@ public partial class GoodDeedPost : ObservableObject
 
     public Dictionary<string, Comment> Comments { get; set; } = new Dictionary<string, Comment>();
 
-    //  Beğenen kullanıcıların listesi
     public Dictionary<string, bool> Likes { get; set; } = new Dictionary<string, bool>();
 
-    [JsonIgnore] // <-- Bu attribute, özelliğin Firebase'e kaydedilmesini engeller.
+    [JsonIgnore]
     public bool IsOwner { get; set; }
 
-        [ObservableProperty]
+    [ObservableProperty]
     [property: JsonIgnore]
     private bool isLiked;
 
+    // 🔥 YENİ EKLENDİ 1: Yorum yazılan metin (Her ilanınki kendine özel olsun diye)
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(VisibleComments))] // Bu değişince listeyi de güncelle
+    [property: JsonIgnore] // Firebase'e kaydedilmesin, sadece ekranda tutulsun
+    private string draftComment;
+
+    // 🔥 YENİ EKLENDİ 2: Yorum kutusunun görünürlüğü
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isCommentBoxVisible;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VisibleComments))]
     [NotifyPropertyChangedFor(nameof(ShowMoreButtonText))]
     [property: JsonIgnore]
     private bool isCommentsExpanded;
 
-    // Eğer genişletildiyse hepsini, değilse son 2 tanesini göster
-    
     public IEnumerable<Comment> VisibleComments
     {
         get
         {
-            // Eğer Comments null ise boş bir liste döndür, çökmesini engelle.
             if (Comments == null) return Enumerable.Empty<Comment>();
 
             return IsCommentsExpanded
@@ -67,6 +72,7 @@ public partial class GoodDeedPost : ObservableObject
                 : Comments.Values.OrderBy(c => c.CreatedAt).Take(2);
         }
     }
+
     public string ShowMoreButtonText => IsCommentsExpanded
         ? "Yorumları Gizle"
         : $"Tüm Yorumları Gör ({CommentCount})";
@@ -83,10 +89,9 @@ public partial class GoodDeedPost : ObservableObject
         UserProfileImageUrl = "default_avatar.png";
         Likes = new Dictionary<string, bool>();
     }
-    // Yorum listesi güncellendiğinde UI'ı tetiklemek için yardımcı metod
+
     public void RefreshCommentsUI()
     {
-        // Comments null ise işlem yapma
         if (Comments == null) Comments = new Dictionary<string, Comment>();
 
         OnPropertyChanged(nameof(VisibleComments));
@@ -94,7 +99,6 @@ public partial class GoodDeedPost : ObservableObject
         OnPropertyChanged(nameof(ShowMoreButtonText));
     }
 
-    //  Kullanıcının beğenip beğenmediğini kontrol et
     public void UpdateLikeStatus(string userId)
     {
         if (Likes != null && Likes.ContainsKey(userId))

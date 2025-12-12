@@ -40,62 +40,24 @@
                        TextColor="{StaticResource Primary}"
                        Margin="10,15"/>
             </CollectionView.Header>
-
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Margin="0,5"
-                           Padding="15"
-                           CornerRadius="15"
-                           HasShadow="True"
-                           BackgroundColor="White">
+                    <Frame Margin="0,5" Padding="15" CornerRadius="15" HasShadow="True" BackgroundColor="White">
                         <VerticalStackLayout Spacing="10">
-
                             <Grid ColumnDefinitions="*,Auto">
-                                <BoxView HeightRequest="18"
-                                         CornerRadius="4"
-                                         Color="{StaticResource Gray200}"
-                                         Margin="0,0,40,0"/>
-
-                                <BoxView Grid.Column="1"
-                                         HeightRequest="18"
-                                         WidthRequest="70"
-                                         CornerRadius="9"
-                                         Color="{StaticResource Gray200}"/>
+                                <BoxView HeightRequest="18" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,40,0"/>
+                                <BoxView Grid.Column="1" HeightRequest="18" WidthRequest="70" CornerRadius="9" Color="{StaticResource Gray200}"/>
                             </Grid>
-
-                            <BoxView HeightRequest="40"
-                                     CornerRadius="4"
-                                     Color="{StaticResource Gray200}"/>
-
-                            <Grid ColumnDefinitions="Auto,*"
-                                  ColumnSpacing="10"
-                                  Margin="0,10,0,0">
-                                <BoxView HeightRequest="40"
-                                         WidthRequest="40"
-                                         CornerRadius="20"
-                                         Color="{StaticResource Gray200}"/>
-
-                                <VerticalStackLayout Spacing="4"
-                                                     VerticalOptions="Center">
-                                    <BoxView HeightRequest="12"
-                                             CornerRadius="4"
-                                             Color="{StaticResource Gray200}"
-                                             Margin="0,0,60,0"/>
-                                    <BoxView HeightRequest="10"
-                                             CornerRadius="4"
-                                             Color="{StaticResource Gray200}"
-                                             Margin="0,0,90,0"/>
+                            <BoxView HeightRequest="40" CornerRadius="4" Color="{StaticResource Gray200}"/>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,10,0,0">
+                                <BoxView HeightRequest="40" WidthRequest="40" CornerRadius="20" Color="{StaticResource Gray200}"/>
+                                <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                    <BoxView HeightRequest="12" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,60,0"/>
+                                    <BoxView HeightRequest="10" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,90,0"/>
                                 </VerticalStackLayout>
                             </Grid>
-
-                            <BoxView HeightRequest="1"
-                                     Color="{StaticResource Gray200}"
-                                     Margin="0,5"/>
-
-                            <BoxView HeightRequest="20"
-                                     CornerRadius="4"
-                                     Color="{StaticResource Gray200}"
-                                     Margin="0,5,60,0"/>
+                            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
+                            <BoxView HeightRequest="20" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,5,60,0"/>
                         </VerticalStackLayout>
                     </Frame>
                 </DataTemplate>
@@ -132,6 +94,7 @@
                                 <Label Text="{Binding Description}" LineBreakMode="WordWrap" TextColor="{StaticResource Gray600}" />
 
                                 <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,10,0,0">
+
                                     <HorizontalStackLayout Grid.Column="0" Spacing="10">
                                         <ffimageloading:CachedImage Source="{Binding UserProfileImageUrl}" 
                                                                     Aspect="AspectFill" 
@@ -152,8 +115,8 @@
                                     </HorizontalStackLayout>
 
                                     <HorizontalStackLayout Grid.Column="1" Spacing="15" VerticalOptions="Center">
-                                        <HorizontalStackLayout Spacing="5">
 
+                                        <HorizontalStackLayout Spacing="5">
                                             <ImageButton Source="heart_icon.svg" 
                                                          Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=LikePostCommand}" 
                                                          CommandParameter="{Binding .}" 
@@ -162,8 +125,19 @@
                                                     <toolkit:IconTintColorBehavior TintColor="{Binding IsLiked, Converter={StaticResource LikeColorConverter}}"/>
                                                 </ImageButton.Behaviors>
                                             </ImageButton>
-
                                             <Label Text="{Binding LikeCount}" FontSize="12" VerticalOptions="Center" TextColor="{StaticResource Gray600}"/>
+                                        </HorizontalStackLayout>
+
+                                        <HorizontalStackLayout Spacing="5">
+                                            <ImageButton Source="message_icon.svg" 
+                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=ToggleCommentBoxCommand}" 
+                                                         CommandParameter="{Binding .}" 
+                                                         HeightRequest="22" WidthRequest="22">
+                                                <ImageButton.Behaviors>
+                                                    <toolkit:IconTintColorBehavior TintColor="{StaticResource Gray500}"/>
+                                                </ImageButton.Behaviors>
+                                            </ImageButton>
+                                            <Label Text="{Binding CommentCount}" FontSize="12" VerticalOptions="Center" TextColor="{StaticResource Gray600}"/>
                                         </HorizontalStackLayout>
 
                                         <ImageButton Source="bin_icon.png" 
@@ -216,10 +190,29 @@
                                         HeightRequest="30" 
                                         Padding="0"/>
 
-                                <Border StrokeShape="RoundRectangle 20" Stroke="{StaticResource Gray300}" Padding="10,0" Margin="0,5,0,0" HeightRequest="45">
+                                <Border IsVisible="{Binding IsCommentBoxVisible}" 
+                                        StrokeShape="RoundRectangle 20" 
+                                        Stroke="{StaticResource Gray300}" 
+                                        Padding="10,0" 
+                                        Margin="0,5,0,0" 
+                                        HeightRequest="45">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <Entry Grid.Column="0" Placeholder="{extensions:Translate WriteComment}" FontSize="13" Text="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NewCommentText}" ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" ReturnCommandParameter="{Binding .}" BackgroundColor="Transparent"/>
-                                        <Button Grid.Column="1" Text="✈️" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" CommandParameter="{Binding .}" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" Padding="0" WidthRequest="40"/>
+                                        <Entry Grid.Column="0" 
+                                               Placeholder="{extensions:Translate WriteComment}" 
+                                               FontSize="13" 
+                                               Text="{Binding DraftComment}" 
+                                               ReturnCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" 
+                                               ReturnCommandParameter="{Binding .}" 
+                                               BackgroundColor="Transparent"/>
+
+                                        <Button Grid.Column="1" 
+                                                Text="✈️" 
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=AddCommentCommand}" 
+                                                CommandParameter="{Binding .}" 
+                                                BackgroundColor="Transparent" 
+                                                TextColor="{StaticResource Primary}" 
+                                                Padding="0" 
+                                                WidthRequest="40"/>
                                     </Grid>
                                 </Border>
 
@@ -230,7 +223,18 @@
             </CollectionView>
         </RefreshView>
 
-        <Button Text="+" Command="{Binding OpenPostFormCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="32" CornerRadius="30" WidthRequest="60" HeightRequest="60" Padding="0" VerticalOptions="End" HorizontalOptions="End" Margin="20">
+        <Button Text="+" 
+                Command="{Binding OpenPostFormCommand}" 
+                BackgroundColor="{StaticResource Primary}" 
+                TextColor="White" 
+                FontSize="32" 
+                CornerRadius="30" 
+                WidthRequest="60" 
+                HeightRequest="60" 
+                Padding="0" 
+                VerticalOptions="End" 
+                HorizontalOptions="End" 
+                Margin="20">
             <Button.Shadow>
                 <Shadow Brush="Black" Offset="0,5" Opacity="0.4" Radius="8"/>
             </Button.Shadow>

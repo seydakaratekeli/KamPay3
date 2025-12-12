@@ -12,7 +12,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MauiPreserve = Microsoft.Maui.Controls.Internals.PreserveAttribute; // Alias tanımla
+using MauiPreserve = Microsoft.Maui.Controls.Internals.PreserveAttribute;
 
 namespace KamPay.ViewModels
 {
@@ -32,32 +32,25 @@ namespace KamPay.ViewModels
 
         private bool _initialLoadComplete = false;
         private CancellationTokenSource _loadingTimeoutCts;
-
-        // Loading timeout süresi (ms)
         private const int LoadingTimeoutMs = 6000;
 
         [ObservableProperty]
         private bool isPostFormVisible;
 
-        [ObservableProperty]
-        private string newCommentText;
+        // ❌ SİLİNDİ: private string newCommentText; 
+        // Artık her post kendi 'DraftComment' özelliğini kullanıyor.
 
-        // Liste yükleniyor mu?
         [ObservableProperty]
         private bool isLoading;
 
-        // Skeleton placeholder gösterilsin mi?
         [ObservableProperty]
         private bool isSkeletonVisible;
 
-        // Paylaşım yapılıyor mu? (Butonu kontrol eder)
         [ObservableProperty]
         private bool isPosting;
 
         [ObservableProperty]
         private bool isRefreshing;
-
-      
 
         [ObservableProperty]
         private string title;
@@ -83,8 +76,6 @@ namespace KamPay.ViewModels
             _userStateService = userStateService;
 
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-
-            // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
         }
 
@@ -94,14 +85,12 @@ namespace KamPay.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Kullanıcıya ait postların bilgilerini güncelle
                 foreach (var post in Posts.Where(p => p.UserId == updatedUser.UserId))
                 {
                     post.UserName = updatedUser.FullName;
                     post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
                 }
 
-                // Cache'deki postları da güncelle
                 foreach (var kvp in _postsCache.Where(p => p.Value.UserId == updatedUser.UserId))
                 {
                     kvp.Value.UserName = updatedUser.FullName;
@@ -116,6 +105,15 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private void ClosePostForm() => IsPostFormVisible = false;
 
+        // 🔥 YENİ: Yorum yapma kutusunu açıp kapatır
+        [RelayCommand]
+        private void ToggleCommentBox(GoodDeedPost post)
+        {
+            if (post == null) return;
+            post.IsCommentBoxVisible = !post.IsCommentBoxVisible;
+        }
+
+        // Mevcut yorumları genişletip daraltır
         [RelayCommand]
         private void ToggleComments(GoodDeedPost post)
         {
@@ -208,12 +206,10 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null) return;
 
-                // Optimistik UI güncellemesi yapma, servisten sonucu bekle
                 var result = await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
 
                 if (result.Success)
                 {
-                    // Firebase'den güncel veriyi al
                     var updatedPost = await _firebaseClient
                         .Child("good_deed_posts")
                         .Child(post.PostId)
@@ -221,7 +217,6 @@ namespace KamPay.ViewModels
 
                     if (updatedPost != null)
                     {
-                        // UI'ı güncelle
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             post.LikeCount = updatedPost.LikeCount;
@@ -265,10 +260,12 @@ namespace KamPay.ViewModels
             }
         }
 
+        // 🔥 GÜNCELLENDİ: Artık post.DraftComment kullanıyor
         [RelayCommand]
         private async Task AddCommentAsync(GoodDeedPost post)
         {
-            if (post == null || string.IsNullOrWhiteSpace(NewCommentText)) return;
+            // Kontrol: Parametre ve DraftComment dolu mu?
+            if (post == null || string.IsNullOrWhiteSpace(post.DraftComment)) return;
 
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null) return;
@@ -281,13 +278,16 @@ namespace KamPay.ViewModels
                 UserId = currentUser.UserId,
                 UserName = userProfile?.Data?.Username ?? currentUser.FullName,
                 UserProfileImageUrl = userProfile?.Data?.ProfileImageUrl ?? "default_avatar.png",
-                Text = NewCommentText.Trim(),
+                Text = post.DraftComment.Trim(), // 🔥 Değişiklik burada
                 CommentId = Guid.NewGuid().ToString(),
                 CreatedAt = DateTime.UtcNow
             };
 
-            NewCommentText = string.Empty;
+            // Metin kutusunu temizle ve kutuyu kapat (isteğe bağlı)
+            post.DraftComment = string.Empty;
+            // post.IsCommentBoxVisible = false; // İstersen gönderince kutuyu kapatabilirsin
 
+            // Optimistik UI Güncellemesi
             post.Comments ??= new Dictionary<string, Comment>();
             post.Comments[comment.CommentId] = comment;
             post.CommentCount++;
@@ -297,6 +297,7 @@ namespace KamPay.ViewModels
 
             if (!result.Success)
             {
+                // Hata olursa geri al
                 post.Comments.Remove(comment.CommentId);
                 post.CommentCount--;
                 post.RefreshCommentsUI();
@@ -304,7 +305,6 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🚀 GERÇEK POST GELDİ Mİ? Yalnızca gerçek veri için true döner
         private bool ContainsRealPost(IList<FirebaseEvent<GoodDeedPost>> events)
         {
             return events.Any(e =>
@@ -323,19 +323,16 @@ namespace KamPay.ViewModels
                 if (!IsRefreshing && !Posts.Any())
                 {
                     IsLoading = true;
-                    IsSkeletonVisible = true; // XAML'de skeleton için kullan
+                    IsSkeletonVisible = true;
                 }
-               
-                // Eski timeout CTS'i iptal et
+
                 _loadingTimeoutCts?.Cancel();
                 _loadingTimeoutCts?.Dispose();
                 _loadingTimeoutCts = new CancellationTokenSource();
                 var timeoutToken = _loadingTimeoutCts.Token;
 
-                // 🔥 Snapshot ile hızlı ilk yükleme (listeyi hemen doldur)
                 _ = LoadInitialSnapshotAsync(timeoutToken);
 
-                // 🔥 Loading timeout mekanizması - belirlenen süre içinde veri gelmezse loading'i kapat
                 Task.Delay(LoadingTimeoutMs, timeoutToken).ContinueWith(t =>
                 {
                     if (t.IsCanceled) return;
@@ -351,7 +348,6 @@ namespace KamPay.ViewModels
                     });
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
-                // 🔥 Realtime listener
                 _postsSubscription = _firebaseClient
                     .Child("good_deed_posts")
                     .AsObservable<GoodDeedPost>()
@@ -363,7 +359,6 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
-                                // Veri geldi → timeout'u iptal et
                                 _loadingTimeoutCts?.Cancel();
 
                                 var currentUser = await _authService.GetCurrentUserAsync();
@@ -383,7 +378,6 @@ namespace KamPay.ViewModels
                                         Debug.WriteLine($"❌ Post batch hatası: {ex.Message}");
                                     }
 
-                                    // SADECE GERÇEK VERİ GELİNCE loading kapat
                                     if (!_initialLoadComplete && ContainsRealPost(events))
                                     {
                                         _initialLoadComplete = true;
@@ -425,12 +419,10 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Snapshot ile hızlı ilk yükleme
         private async Task LoadInitialSnapshotAsync(CancellationToken token)
         {
             try
             {
-                // Zaten doldurulmuşsa snapshot’a gerek olmayabilir
                 if (token.IsCancellationRequested) return;
 
                 var snapshot = await _firebaseClient
@@ -512,7 +504,6 @@ namespace KamPay.ViewModels
                     if (currentUser != null)
                     {
                         post.IsOwner = post.UserId == currentUser.UserId;
-                        // Beğeni durumunu güncelle
                         post.UpdateLikeStatus(currentUser.UserId);
                     }
 
@@ -526,6 +517,10 @@ namespace KamPay.ViewModels
 
                             // UI state koru
                             post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
+                            // 🔥 YENİ: Yorum kutusu görünürlüğünü ve yazılan taslak metni koru
+                            post.IsCommentBoxVisible = existingPost.IsCommentBoxVisible;
+                            post.DraftComment = existingPost.DraftComment;
+
                             if (existingPost.Comments != null && post.Comments == null)
                             {
                                 post.Comments = existingPost.Comments;
@@ -672,7 +667,10 @@ namespace KamPay.ViewModels
                 var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
                 if (existingPost != null)
                 {
-                    Posts[Posts.IndexOf(existingPost)] = post;
+                    // CollectionView'in UI güncellemesini tetikle
+                    // Not: ObservableObject olduğu için 'set' işlemi property change event'i fırlatır
+                    // Ancak CollectionView bazen derin değişiklikleri algılamaz, bu yüzden replace yapılabilir
+                    // Ama yukarıda 'RefreshCommentsUI' çağrıldı, bu yeterli olmalı.
                 }
             }
         }
