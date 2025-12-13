@@ -6,6 +6,8 @@ namespace KamPay.Services
 {
     public class CacheManager<T>
     {
+        // bu sayffa generic bir cache yöneticisi sağlar
+
         private readonly ConcurrentDictionary<string, CacheEntry<T>> _cache = new();
         private readonly TimeSpan _defaultExpiration = TimeSpan.FromMinutes(5);
 

@@ -12,6 +12,7 @@ using KamPay.ViewModels;
 
 namespace KamPay.Services
 {
+    // bu sayfanın amacı Firebase Realtime Database üzerinden mesajlaşma işlevlerini yönetmektir. Mesaj gönderme, alma, konuşma oluşturma, okunmamış mesaj sayısını takip etme ve kullanıcı bilgilerini güncelleme gibi işlevleri kapsar. kullanıcılar arasındaki iletişimi sağlar ve mesajlaşma deneyimini yönetir.
     public class FirebaseMessagingService : IMessagingService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -94,7 +95,7 @@ namespace KamPay.Services
                     }
                 }
 
-                // 🔥 OPTIMIZE: Paralel yazma işlemleri
+                //  OPTIMIZE: Paralel yazma işlemleri
                 var messageTask = _firebaseClient
                     .Child(Constants.MessagesCollection)
                     .Child(conversation.ConversationId)
@@ -117,7 +118,7 @@ namespace KamPay.Services
                     .Child(conversation.ConversationId)
                     .PutAsync(conversation);
 
-                // 🔥 İki işlemi paralel bekle
+                //  İki işlemi paralel bekle
                 await Task.WhenAll(messageTask, conversationTask);
 
                 return ServiceResult<Message>.SuccessResult(message, "Mesaj başarıyla gönderildi.");
@@ -129,7 +130,7 @@ namespace KamPay.Services
             }
         }
 
-        // 🔥 OPTIMIZE: Limit ve sıralama ekle
+        // OPTIMIZE: Limit ve sıralama ekle
         public async Task<ServiceResult<List<Message>>> GetConversationMessagesAsync(string conversationId, int limit = 50)
         {
             try
@@ -138,7 +139,7 @@ namespace KamPay.Services
                     .Child(Constants.MessagesCollection)
                     .Child(conversationId)
                     .OrderByKey()
-                    .LimitToLast(limit) // 🔥 Firebase'den sadece son N mesajı çek
+                    .LimitToLast(limit) //  Firebase'den sadece son N mesajı çek
                     .OnceAsync<Message>();
 
                 var messages = messagesRef
@@ -160,11 +161,12 @@ namespace KamPay.Services
             }
         }
 
-        // 🔥 OPTIMIZE: Client-side filtering (Firebase.Database.net limitasyonu nedeniyle)
+        //  OPTIMIZE: Client-side filtering (Firebase.Database.net limitasyonu nedeniyle)
         public async Task<ServiceResult<List<Conversation>>> GetUserConversationsAsync(string userId)
         {
             try
             {
+                //araştır
                 // Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor
                 // Tüm konuşmaları çek, sonra client-side filtrele
                 var allConversationsTask = _firebaseClient
@@ -197,7 +199,7 @@ namespace KamPay.Services
         {
             try
             {
-                // 🔥 OPTIMIZE: Önce cache'den kontrol et (isteğe bağlı)
+                //  OPTIMIZE: Önce cache'den kontrol et (isteğe bağlı)
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -214,7 +216,7 @@ namespace KamPay.Services
                     return ServiceResult<Conversation>.SuccessResult(existing);
                 }
 
-                // 🔥 Paralel kullanıcı sorguları
+                //  Paralel kullanıcı sorguları
                 var user1Task = _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user1Id)
@@ -300,7 +302,7 @@ namespace KamPay.Services
                     needsUpdate = true;
                 }
 
-                // 🔥 Sadece değişiklik varsa Firebase'e yaz
+                //  Sadece değişiklik varsa Firebase'e yaz
                 if (needsUpdate)
                 {
                     await _firebaseClient
@@ -370,7 +372,7 @@ namespace KamPay.Services
             }
         }
 
-        // 🔥 UYARI: Bu metod artık kullanılmıyor (direkt Firebase Observable kullanılıyor)
+        //  Bu metod artık kullanılmıyor (direkt Firebase Observable kullanılıyor)
         [Obsolete("Direkt ViewModel'de Firebase Observable kullanın")]
         public IDisposable SubscribeToConversations(string userId, Action<List<Conversation>> onConversationsChanged)
         {
@@ -401,7 +403,7 @@ namespace KamPay.Services
             });
         }
 
-        // 🔥 UYARI: Bu metod artık kullanılmıyor (direkt ViewModel'de Firebase Observable kullanılıyor)
+        //  Bu metod artık kullanılmıyor (direkt ViewModel'de Firebase Observable kullanılıyor)
         [Obsolete("Direkt ViewModel'de Firebase Observable kullanın")]
         public IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged)
         {
@@ -433,9 +435,9 @@ namespace KamPay.Services
             });
         }
 
-        /// <summary>
+        
         /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string newName, string newPhotoUrl)
         {
             try
@@ -505,13 +507,14 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+        
         /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
-        /// </summary>
+        
         public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string newName, string newPhotoUrl)
         {
             try
             {
+                //bunu araştır
                 // Not: Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor.
                 // Mevcut veri yapısı ve diğer metotlarla tutarlılık için client-side filtreleme kullanılıyor.
                 var allConversations = await _firebaseClient

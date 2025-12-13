@@ -1,6 +1,4 @@
-﻿// KamPay/ViewModels/FavoritesViewModel.cs
-
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,9 +22,8 @@ namespace KamPay.ViewModels
         private IDisposable _favoritesSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
-        // 🔥 Cache kontrolü - Listener sürekli açık kalacak
         private bool _isInitialized = false;
-        private readonly HashSet<string> _favoriteIds = new(); // Duplicate kontrolü
+        private readonly HashSet<string> _favoriteIds = new();
 
         [ObservableProperty]
         private bool isLoading = true;
@@ -35,7 +32,7 @@ namespace KamPay.ViewModels
         private string emptyMessage = "Henüz favori ürününüz yok";
 
         [ObservableProperty]
-        private bool isRefreshing; // Bunu ekleyin (mevcut değilse)
+        private bool isRefreshing;
 
         public ObservableCollection<Favorite> FavoriteItems { get; } = new();
 
@@ -45,13 +42,11 @@ namespace KamPay.ViewModels
             _authService = authService;
         }
 
-        // 🔥 DÜZELTİLDİ: public yapıldı
         public async Task InitializeAsync()
         {
-            // 🔥 Eğer zaten başlatılmışsa, sadece boş kontrol yap
             if (_isInitialized)
             {
-                Console.WriteLine("✅ Favoriler cache'den gösteriliyor (Listener aktif)");
+                Console.WriteLine("✅ Favoriler cache'den gösteriliyor");
                 return;
             }
 
@@ -60,16 +55,12 @@ namespace KamPay.ViewModels
 
         private async Task StartListeningForFavoritesAsync()
         {
-            if (_favoritesSubscription != null)
-            {
-                Console.WriteLine("⚠️ Listener zaten aktif");
-                return;
-            }
-
-            IsLoading = true;
+            if (_favoritesSubscription != null) return;
 
             try
             {
+                IsLoading = true;
+
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
@@ -78,49 +69,66 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // 🔥 Real-time listener başlat (Buffer ile optimize)
+                // 1. ADIM: Önce mevcut veriyi "Bir Kez" (Snapshot) çek
+                // Bu sayede liste boşsa bile loading'i kapatabiliriz.
+                var initialSnapshot = await _firebaseClient
+                    .Child(Constants.FavoritesCollection)
+                    .OrderBy("UserId")
+                    .EqualTo(currentUser.UserId)
+                    .OnceAsync<Favorite>();
+
+                // Listeyi temizle ve doldur
+                FavoriteItems.Clear();
+                _favoriteIds.Clear();
+
+                foreach (var item in initialSnapshot)
+                {
+                    var fav = item.Object;
+                    fav.FavoriteId = item.Key;
+
+                    if (!_favoriteIds.Contains(fav.FavoriteId))
+                    {
+                        FavoriteItems.Add(fav);
+                        _favoriteIds.Add(fav.FavoriteId);
+                    }
+                }
+
+                //  KRİTİK: Veri olsun ya da olmasın yüklemeyi bitir.
+                IsLoading = false;
+                _isInitialized = true;
+
+                // Boş mesajını güncelle (Gerçi XAML'da EmptyView var ama yine de duralım)
+                EmptyMessage = FavoriteItems.Any() ? string.Empty : "Henüz favori ürününüz yok.";
+
+                // 2. ADIM: Canlı Dinlemeyi (Stream) Başlat
+                // Buffer kullanımını kaldırdık veya basitleştirdik ki olayları kaçırmayalım
                 _favoritesSubscription = _firebaseClient
                     .Child(Constants.FavoritesCollection)
                     .OrderBy("UserId")
                     .EqualTo(currentUser.UserId)
                     .AsObservable<Favorite>()
-                    .Buffer(TimeSpan.FromMilliseconds(200)) // 🔥 200ms batch
-                    .Where(batch => batch.Any())
+                    .Where(e => e.Object != null) // Buffer olmadan doğrudan akış
                     .Subscribe(
-                        events =>
+                        e =>
                         {
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
                                 try
                                 {
-                                    ProcessFavoriteBatch(events);
+                                    HandleSingleFirebaseEvent(e);
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"❌ Favorite batch hatası: {ex.Message}");
-                                }
-                                finally
-                                {
-                                    if (!_isInitialized)
-                                    {
-                                        _isInitialized = true;
-                                        IsLoading = false;
-                                        Console.WriteLine("✅ Favoriler listener başlatıldı");
-                                    }
+                                    Console.WriteLine($"❌ Favorite event hatası: {ex.Message}");
                                 }
                             });
                         },
                         error =>
                         {
                             Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
-                            MainThread.BeginInvokeOnMainThread(() =>
-                            {
-                                IsLoading = false;
-                                EmptyMessage = "Favoriler yüklenemedi.";
-                            });
                         });
 
-                Console.WriteLine("🔥 Favoriler real-time listener başlatıldı");
+                Console.WriteLine(" Favoriler real-time listener başlatıldı");
             }
             catch (Exception ex)
             {
@@ -130,62 +138,47 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ProcessFavoriteBatch metodunu bulun (satır 131 civarı) ve güncelleyin:
-
-        private void ProcessFavoriteBatch(IList<FirebaseEvent<Favorite>> events)
+        // Tekil olay işleyici (Buffer yerine bunu kullanıyoruz, daha güvenli)
+        private void HandleSingleFirebaseEvent(FirebaseEvent<Favorite> e)
         {
-            bool hasChanges = false;
+            var favorite = e.Object;
+            favorite.FavoriteId = e.Key;
 
-            foreach (var e in events)
+            var existing = FavoriteItems.FirstOrDefault(f => f.FavoriteId == favorite.FavoriteId);
+
+            switch (e.EventType)
             {
-                if (e.Object == null) continue;
-
-                var favorite = e.Object;
-                favorite.FavoriteId = e.Key;
-
-                var existing = FavoriteItems.FirstOrDefault(f => f.FavoriteId == favorite.FavoriteId);
-
-                switch (e.EventType)
-                {
-                    case FirebaseEventType.InsertOrUpdate:
-                        if (existing != null)
+                case FirebaseEventType.InsertOrUpdate:
+                    if (existing != null)
+                    {
+                        // Güncelleme
+                        var index = FavoriteItems.IndexOf(existing);
+                        FavoriteItems[index] = favorite;
+                    }
+                    else
+                    {
+                        // Ekleme (Duplicate check - Snapshot ile çakışmayı önle)
+                        if (!_favoriteIds.Contains(favorite.FavoriteId))
                         {
-                            // Güncelleme
-                            var index = FavoriteItems.IndexOf(existing);
-                            FavoriteItems[index] = favorite;
+                            FavoriteItems.Insert(0, favorite);
+                            _favoriteIds.Add(favorite.FavoriteId);
                         }
-                        else
-                        {
-                            // 🔥 Duplicate check
-                            if (!_favoriteIds.Contains(favorite.FavoriteId))
-                            {
-                                FavoriteItems.Insert(0, favorite);
-                                _favoriteIds.Add(favorite.FavoriteId);
-                            }
-                        }
-                        hasChanges = true;
-                        break;
+                    }
+                    break;
 
-                    case FirebaseEventType.Delete:
-                        if (existing != null)
-                        {
-                            FavoriteItems.Remove(existing);
-                            _favoriteIds.Remove(favorite.FavoriteId);
-                            hasChanges = true;
-                        }
-                        break;
-                }
+                case FirebaseEventType.Delete:
+                    if (existing != null)
+                    {
+                        FavoriteItems.Remove(existing);
+                        _favoriteIds.Remove(favorite.FavoriteId);
+                    }
+                    break;
             }
 
-            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
-            if (hasChanges && IsLoading)
-            {
-                IsLoading = false;
-                _isInitialized = true;
-            }
-
-            EmptyMessage = FavoriteItems.Any() ? string.Empty : "Henüz favori ürününüz yok. ";
+            // Liste her değiştiğinde boş mesajını kontrol et
+            EmptyMessage = FavoriteItems.Any() ? string.Empty : "Henüz favori ürününüz yok.";
         }
+
         [RelayCommand]
         private async Task ProductTappedAsync(Favorite favorite)
         {
@@ -196,13 +189,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task GoToProductDetailAsync(Favorite favorite)
         {
-            if (favorite == null || string.IsNullOrEmpty(favorite.ProductId))
-            {
-                await Shell.Current.DisplayAlert("Hata", "Ürün bilgisi eksik.", "Tamam");
-                return;
-            }
-
-            // Shell URI tabanlı navigasyon
+            if (favorite == null || string.IsNullOrEmpty(favorite.ProductId)) return;
             await Shell.Current.GoToAsync($"{nameof(ProductDetailPage)}?ProductId={favorite.ProductId}");
         }
 
@@ -216,19 +203,24 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser != null)
                 {
-                    var result = await _favoriteService.RemoveFromFavoritesAsync(currentUser.UserId, favorite.ProductId);
+                    // Optimistik silme (Hemen arayüzden sil)
+                    if (FavoriteItems.Contains(favorite))
+                    {
+                        FavoriteItems.Remove(favorite);
+                        _favoriteIds.Remove(favorite.FavoriteId);
+                    }
 
+                    var result = await _favoriteService.RemoveFromFavoritesAsync(currentUser.UserId, favorite.ProductId);
                     if (!result.Success)
                     {
+                        // Hata olursa geri yükle (İsteğe bağlı)
                         await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
-                    // ✅ Real-time listener otomatik güncelleyecek
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Favori çıkarma hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", "Favorilerden çıkarılamadı", "Tamam");
             }
         }
 
@@ -236,12 +228,11 @@ namespace KamPay.ViewModels
         private async Task RefreshFavoritesAsync()
         {
             if (isRefreshing) return;
-
             try
             {
                 isRefreshing = true;
-                // Listener zaten çalışıyor, sadece UI'ı güncellemek için kısa bir delay
-                await Task.Delay(500);
+                _isInitialized = false; // Cache'i geçersiz kıl
+                await StartListeningForFavoritesAsync(); // Yeniden yükle
             }
             finally
             {
@@ -251,7 +242,6 @@ namespace KamPay.ViewModels
 
         public void Dispose()
         {
-            // 🔥 SADECE uygulama kapanırken çağrılmalı
             Console.WriteLine("🧹 FavoritesViewModel dispose ediliyor...");
             _favoritesSubscription?.Dispose();
             _favoritesSubscription = null;

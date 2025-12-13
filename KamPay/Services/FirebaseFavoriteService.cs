@@ -9,6 +9,7 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
+    //bu sayfanýn amacý Firebase Realtime Database'de favori ürünleri yönetmektir. Favorilere ekleme, çýkarma, listeleme ve kontrol etme gibi iþlevleri kapsar.
     public class FirebaseFavoriteService : IFavoriteService
     {
         private readonly FirebaseClient _firebaseClient;

@@ -97,7 +97,7 @@ namespace KamPay.ViewModels
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
-            // 🔥 DİL DEĞİŞİMİ DİNLEYİCİSİ
+            //  DİL DEĞİŞİMİ DİNLEYİCİSİ
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
                 // Dil değiştiğinde listeyi ve arayüzü yenile

@@ -32,15 +32,15 @@ public partial class FavoritesPage : ContentPage
         }
     }
 
-    // 🔥 DÜZELTİLDİ: base.OnDisappearing() çağrısı
+    //  : base.OnDisappearing() çağrısı
     protected override void OnDisappearing()
     {
-        base.OnDisappearing(); // 🔥 DOĞRU METHOD!
-        // 🔥 Dispose ETME - Listener çalışmaya devam etsin
+        base.OnDisappearing(); //  DOĞRU METHOD!
+        //  Dispose ETME - Listener çalışmaya devam etsin
         System.Diagnostics.Debug.WriteLine("⏸️ FavoritesPage: Arka plana alındı (Listener aktif)");
     }
 
-    // 🔥 Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
+    //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
     ~FavoritesPage()
     {
         _viewModel?.Dispose();

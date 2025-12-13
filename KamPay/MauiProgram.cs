@@ -48,7 +48,7 @@ namespace KamPay
                 });
 
 
-            // 📧 E-posta Ayarları
+            //  E-posta Ayarları
             // Gerçek değerler IT'den alınmalı (örnek olarak gösteriliyor)
             var emailSettings = new EmailSettings
             {

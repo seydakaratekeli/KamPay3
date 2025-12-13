@@ -3,9 +3,13 @@ using System.Threading.Tasks;
 using KamPay.Models;
 
 namespace KamPay.Services
-{
+{ 
+    
     public interface ITransactionService
     {
+
+        // bu sayffa, ürünlerin takas, bağış veya satış işlemlerini yönetmek için gerekli metodları tanımlar.
+
         // Bir takas teklifi oluşturur
         Task<ServiceResult<Transaction>> CreateTradeOfferAsync(Product product, string offeredProductId, string message, User buyer);
 
@@ -27,18 +31,18 @@ namespace KamPay.Services
 
         //  SATIŞ Pazarlık Metodları
 
-        /// <summary>
+       
         /// Satış için fiyat teklifi (Alıcı)
-        /// </summary>
+       
         Task<ServiceResult<bool>> ProposePriceForSaleAsync(
             string transactionId,
             decimal proposedPrice,
             string currentUserId
         );
 
-        /// <summary>
+       
         /// Satış için karşı teklif (Satıcı)
-        /// </summary>
+       
         Task<ServiceResult<bool>> SendCounterOfferForSaleAsync(
             string transactionId,
             decimal counterOffer,
@@ -47,18 +51,18 @@ namespace KamPay.Services
 
         //  TAKAS Pazarlık Metodları
 
-        /// <summary>
+       
         /// Takas için ek nakit teklifi (Talep Eden)
-        /// </summary>
+       
         Task<ServiceResult<bool>> ProposeAdditionalCashAsync(
             string transactionId,
             decimal additionalCash,
             string currentUserId
         );
 
-        /// <summary>
+       
         /// Takas için karşı nakit teklifi (Sahip)
-        /// </summary>
+       
         Task<ServiceResult<bool>> SendCounterCashOfferAsync(
             string transactionId,
             decimal counterCash,
@@ -67,17 +71,17 @@ namespace KamPay.Services
 
         //  Ortak Pazarlık Metodu
 
-        /// <summary>
+       
         /// Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas)
-        /// </summary>
+       
         Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(
             string transactionId,
             string currentUserId
         );
 
-        /// <summary>
+       
         /// Transaction için konuşma başlat
-        /// </summary>
+       
         Task<ServiceResult<string>> StartConversationForTransactionAsync(
             string transactionId,
             string currentUserId

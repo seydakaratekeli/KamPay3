@@ -10,6 +10,8 @@ namespace KamPay.Models
         Failed = 3
     }
 
+    // ödemeyi ekranını eklemedin. sonra tekrar bak!!
+
 
     public enum PaymentMethodType
     {

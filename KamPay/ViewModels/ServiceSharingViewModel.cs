@@ -118,9 +118,9 @@ namespace KamPay.ViewModels
             await UltraFastLoadAsync();
         }
 
-        // ----------------------------------------------------
-        // 🔥 ULTRA FAST LOADING (Snapshot + Realtime)
-        // ----------------------------------------------------
+       
+        //  ULTRA FAST LOADING (Snapshot + Realtime)
+       
         public async Task UltraFastLoadAsync()
         {
             try
@@ -156,7 +156,7 @@ namespace KamPay.ViewModels
 
                 ApplyFilter();
 
-                // 🔥 REALTIME LISTENER
+                //  REALTIME LISTENER
                 _listener = _loader.Listen(Constants.ServiceOffersCollection, evt =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
@@ -179,9 +179,9 @@ namespace KamPay.ViewModels
             ApplyFilter();
         }
 
-        // ----------------------------------------------------
-        // 🔥 REALTIME UPDATE HANDLER
-        // ----------------------------------------------------
+       
+        //  REALTIME UPDATE HANDLER
+       
         private void ApplyRealtimeEvent(FirebaseEvent<ServiceOffer> e)
         {
             var s = e.Object;
@@ -258,9 +258,9 @@ namespace KamPay.ViewModels
             Services.Add(s);
         }
 
-        // ----------------------------------------------------
-        // 🔍 FILTERING
-        // ----------------------------------------------------
+       
+        //  FILTERING
+       
         private void FilterServices()
         {
             var q = Services.AsEnumerable();
@@ -313,9 +313,9 @@ namespace KamPay.ViewModels
             ApplyFilter();
         }
 
-        // ----------------------------------------------------
-        // 🔄 REFRESH
-        // ----------------------------------------------------
+       
+        //  REFRESH
+       
         [RelayCommand]
         private async Task RefreshServicesAsync()
         {
@@ -341,15 +341,15 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ----------------------------------------------------
+       
         // FORM OPEN/CLOSE
-        // ----------------------------------------------------
+       
         [RelayCommand] private void OpenPostForm() => IsPostFormVisible = true;
         [RelayCommand] private void ClosePostForm() => IsPostFormVisible = false;
 
-        // ----------------------------------------------------
-        // 🔥 CREATE SERVICE
-        // ----------------------------------------------------
+       
+        //  CREATE SERVICE
+       
         [RelayCommand]
         private async Task CreateServiceAsync()
         {
@@ -429,9 +429,9 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ----------------------------------------------------
+       
         // REQUEST SERVICE
-        // ----------------------------------------------------
+       
         [RelayCommand]
         private async Task RequestServiceAsync(ServiceOffer offer)
         {
@@ -481,9 +481,9 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ----------------------------------------------------
-        // 🔥 MESSAGE PROVIDER
-        // ----------------------------------------------------
+       
+        //  MESSAGE PROVIDER
+       
         [RelayCommand]
         private async Task MessageProviderAsync(ServiceOffer offer)
         {
@@ -530,9 +530,9 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ----------------------------------------------------
+       
         // TIME CREDITS (+ / -)
-        // ----------------------------------------------------
+       
         [RelayCommand]
         private void IncrementTimeCredits()
         {
@@ -552,9 +552,9 @@ namespace KamPay.ViewModels
             return Application.Current.MainPage.DisplayAlert(t, m, "Tamam");
         }
 
-        // ----------------------------------------------------
+       
         // DISPOSE
-        // ----------------------------------------------------
+       
         public void Dispose()
         {
             _listener?.Dispose();
@@ -566,9 +566,9 @@ namespace KamPay.ViewModels
         }
     }
 
-    // ----------------------------------------------------
-    // 🌟 SMALL EXTENSION FOR SORTING
-    // ----------------------------------------------------
+   
+    //  SMALL EXTENSION FOR SORTING
+   
     public static class ListSortExtensions
     {
         public static void SortDescending<T, K>(this ObservableCollection<T> list, Func<T, K> key)

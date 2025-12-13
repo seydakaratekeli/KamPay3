@@ -15,7 +15,7 @@ public partial class SurpriseBoxPage : ContentPage
         _viewModel.RedemptionCompleted += OnRedemptionCompleted;
     }
 
-    // 🔥 Sayfa her göründüğünde puanları yenile
+    //  Sayfa her göründüğünde puanları yenile
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -26,7 +26,7 @@ public partial class SurpriseBoxPage : ContentPage
     {
         if (success)
         {
-            // 🔥 Kutu animasyonu
+            //  Kutu animasyonu
             await BoxImage.ScaleTo(1.2, 100);
             await BoxImage.RotateTo(-15, 50);
             await BoxImage.RotateTo(15, 100);
@@ -35,7 +35,7 @@ public partial class SurpriseBoxPage : ContentPage
             await BoxImage.RotateTo(0, 100);
             await BoxImage.ScaleTo(1, 100);
 
-            // 🔥 Sonuçları göster (fade in)
+            //  Sonuçları göster (fade in)
             ResultFrame.IsVisible = true;
             await ResultFrame.FadeTo(1, 500, Easing.CubicOut);
         }
@@ -43,11 +43,11 @@ public partial class SurpriseBoxPage : ContentPage
 
     private async void CloseResult_Clicked(object sender, EventArgs e)
     {
-        // 🔥 Sonuç frame'ini kapat (fade out)
+        //  Sonuç frame'ini kapat (fade out)
         await ResultFrame.FadeTo(0, 300);
         ResultFrame.IsVisible = false;
 
-        // 🔥 Kazanılan ürünün detay sayfasına git
+        //  Kazanılan ürünün detay sayfasına git
         if (_viewModel.RedemptionResult != null)
         {
             await Shell.Current.GoToAsync($"ProductDetailPage?productId={_viewModel.RedemptionResult.ProductId}");

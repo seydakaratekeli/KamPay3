@@ -8,6 +8,7 @@ namespace KamPay.Services
 {
     public class EmailService : IEmailService
     {
+        //bu sayfanın amacı e-posta gönderim işlevselliğini sağlamaktır. nasıl gönderileceği, hangi sunucu kullanılacağı gibi detayları kapsar.
         private readonly EmailSettings _settings;
 
         public EmailService(EmailSettings settings)

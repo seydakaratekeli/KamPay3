@@ -7,8 +7,8 @@ namespace KamPay.Services;
 
 public class FirebaseStorageService : IStorageService
 {
+    // bu sayfanın amacı Firebase Storage ile etkileşim kurarak görsellerin yüklenmesi, silinmesi ve işlenmesini sağlamaktır. nasıl yükleneceği, boyut kontrolleri, silme işlemleri ve fotoğraf sıkıştırma gibi işlevleri kapsar. kullanıcı profili, ürün görselleri ve mesaj görselleri için ayrı metodlar içerir.
     private readonly FirebaseStorage _storage;
-
     public FirebaseStorageService()
     {
         // Firebase Storage bucket URL
@@ -186,11 +186,11 @@ public class FirebaseStorageService : IStorageService
         });
     }
 
-    // FAZ 2: Teslimat fotoğrafı yükleme metodları
+    // Teslimat fotoğrafı yükleme metodları
 
-    /// <summary>
+   
     /// Teslimat fotoğrafını sıkıştırır, thumbnail oluşturur ve Firebase Storage'a yükler
-    /// </summary>
+
     public async Task<ServiceResult<DeliveryPhotoUploadResult>> UploadDeliveryPhotoAsync(
         byte[] photoData, string transactionId, string qrCodeId, string userId)
     {
@@ -255,10 +255,10 @@ public class FirebaseStorageService : IStorageService
         }
     }
 
-    /// <summary>
+   
     /// Fotoğrafı belirtilen maksimum boyuta sıkıştırır
     /// JPEG kalitesi: 90 → 20 arasında azaltılarak hedef boyuta ulaşılır
-    /// </summary>
+
     public async Task<byte[]> CompressPhotoAsync(byte[] photoData, int maxSizeBytes = 1048576)
     {
         return await Task.Run(() =>
@@ -292,9 +292,9 @@ public class FirebaseStorageService : IStorageService
         });
     }
 
-    /// <summary>
+   
     /// Thumbnail oluşturur (aspect ratio korunur)
-    /// </summary>
+
     public async Task<byte[]> CreateThumbnailAsync(byte[] photoData, int size = 200)
     {
         return await Task.Run(() =>
@@ -328,9 +328,9 @@ public class FirebaseStorageService : IStorageService
         });
     }
 
-    /// <summary>
+   
     /// Firebase Storage'a fotoğraf yükler
-    /// </summary>
+
     private async Task<ServiceResult<string>> UploadPhotoToStorageAsync(
         byte[] photoData, string transactionId, string fileName)
     {

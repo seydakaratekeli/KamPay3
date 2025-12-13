@@ -14,14 +14,14 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        // ❌ YANLIŞ: OnDisappearing'de Dispose ÇAĞIRMAYIN!
+        //  YANLIŞ: OnDisappearing'de Dispose ÇAĞIRMA
         // Sebep: Geri dönünce listener yok oluyor ve yeniden başlıyor.
 
-        // ✅ DOĞRU: Sadece sayfa tamamen bellekten kaldırılınca dispose et
+        //  DOĞRU: Sadece sayfa tamamen bellekten kaldırılınca dispose et
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // 🔥 BURADA DİSPOSE ETME! Sadece log at
+            //  BURADA DİSPOSE ETME! Sadece log at
             System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
         }
 
@@ -31,7 +31,7 @@ namespace KamPay.Views
             System.Diagnostics.Debug.WriteLine("✅ OffersPage: Aktif (Listener zaten çalışıyor)");
         }
 
-        // 🔥 Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
+        //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
         ~OffersPage()
         {
             _viewModel?.Dispose();

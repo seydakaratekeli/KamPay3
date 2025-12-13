@@ -13,6 +13,8 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
+    // bu sayfanın amacı Firebase Realtime Database kullanarak kullanıcı kimlik doğrulama işlemlerini gerçekleştirmektir.nasıl kayıt olunacağı, giriş yapılacağı, e-posta doğrulama kodlarının gönderileceği ve doğrulanacağı gibi işlevleri kapsar.
+
     public class FirebaseAuthService : IAuthenticationService
     {
         private readonly FirebaseClient _firebaseClient;

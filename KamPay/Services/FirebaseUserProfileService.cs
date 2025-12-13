@@ -20,9 +20,9 @@ namespace KamPay.Services
 
   
 
-        /// <summary>
+       
         /// Yeni kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> CreateUserProfileAsync(string userId, string username, string email)
         {
             try
@@ -63,9 +63,9 @@ namespace KamPay.Services
 
 
 
-        /// <summary>
+       
         /// Belirtilen kullanıcının genel profil bilgilerini getirir.
-        /// </summary>
+       
         public async Task<ServiceResult<UserProfile>> GetUserProfileAsync(string userId)
         {
             try
@@ -178,7 +178,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("Puan eklenemedi: İstatistikler alınamadı.");
                 }
                 var stats = statsResult.Data;
-                stats.Points += points; // DÜZELTİLDİ
+                stats.Points += points; // 
 
                 await UpdateUserStatsAsync(stats);
 
@@ -384,7 +384,7 @@ namespace KamPay.Services
                             shouldAward = stats.DonatedProducts >= badge.RequiredCount;
                             break;
                         case BadgeCategory.Points:
-                            shouldAward = stats.Points >= badge.RequiredPoints; // DÜZELTİLDİ
+                            shouldAward = stats.Points >= badge.RequiredPoints; // 
                             break;
                     }
 

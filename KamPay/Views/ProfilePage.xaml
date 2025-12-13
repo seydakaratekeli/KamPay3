@@ -21,11 +21,11 @@
         <ScrollView>
             <VerticalStackLayout Spacing="0" Padding="0,0,0,15">
 
-                <!-- 🔹 Header Section with Edit Button -->
+                <!--  Header Section with Edit Button -->
                 <Frame Padding="20" CornerRadius="0" BackgroundColor="#4CAF50" BorderColor="Transparent">
                     <VerticalStackLayout Spacing="15">
 
-                        <!-- 🔹 Profile Image with Edit Icon - DÜZELTİLDİ -->
+                        <!--  Profile Image with Edit Icon -  -->
                         <Grid HorizontalOptions="Center">
                             <Frame Padding="0" WidthRequest="100" HeightRequest="100" 
                                    CornerRadius="50" IsClippedToBounds="True" 
@@ -66,7 +66,7 @@
                                FontSize="14" TextColor="White" Opacity="0.9" 
                                HorizontalTextAlignment="Center" />
 
-                        <!-- 🔹 Edit Profile Button -->
+                        <!--  Edit Profile Button -->
                         <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProfile]}"
                                 Command="{Binding EditProfileCommand}"
                                 BackgroundColor="White"

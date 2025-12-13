@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace KamPay.Services
 {
+    // bu sayfanın amacı Firebase Realtime Database ile etkileşimde bulunarak bildirimleri yönetmektir. Bildirim oluşturma, okundu olarak işaretleme, silme ve kullanıcı bildirimlerini alma. 
     public class FirebaseNotificationService : INotificationService
     {
         private readonly FirebaseClient _firebaseClient;

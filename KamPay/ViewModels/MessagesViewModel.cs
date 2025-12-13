@@ -23,11 +23,11 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly IAuthenticationService _authService;
 
-        // 🔥 EKLENEN: Profil servisi
+        //  : Profil servisi
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
 
-        // 🔥 UltraFastLoad: Snapshot + Realtime loader
+        //  UltraFastLoad: Snapshot + Realtime loader
         private readonly RealtimeSnapshotService<Conversation> _loader;
         private IDisposable _realtimeListener;
 
@@ -56,7 +56,7 @@ namespace KamPay.ViewModels
 
         public ObservableCollection<Conversation> Conversations { get; } = new();
 
-        // 🔥 Constructor Güncellendi
+        
         public MessagesViewModel(
             IMessagingService messagingService,
             IAuthenticationService authService,
@@ -68,7 +68,7 @@ namespace KamPay.ViewModels
             _userProfileService = userProfileService;
             _userStateService = userStateService;
 
-            // 🔥 UltraFastLoad: RealtimeSnapshotService başlat
+            //  UltraFastLoad: RealtimeSnapshotService başlat
             _loader = new RealtimeSnapshotService<Conversation>(Constants.FirebaseRealtimeDbUrl);
 
             // Kullanıcı profil değişikliklerini dinle
@@ -79,7 +79,7 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            // 🔥 Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            //  Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 // Konuşmalardaki kullanıcı bilgilerini güncelle
@@ -127,7 +127,7 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // 🔥 UltraFastLoad pattern ile hızlı yükleme
+                //  UltraFastLoad pattern ile hızlı yükleme
                 await UltraFastLoadAsync();
                 _isInitialized = true;
             }
@@ -139,7 +139,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 UltraFastLoad Pattern - Snapshot + Realtime
+        //  UltraFastLoad Pattern - Snapshot + Realtime
         public async Task UltraFastLoadAsync()
         {
             try
@@ -179,7 +179,7 @@ namespace KamPay.ViewModels
                             _conversationIds.Add(conversation.ConversationId);
                         }
 
-                        // 🔥 Loading'i hemen kapat - veri gösterildi
+                        //  Loading'i hemen kapat - veri gösterildi
                         IsLoading = false;
                         UpdateUnreadCount();
                         EmptyMessage = Conversations.Any() ? string.Empty : "Henüz mesajınız yok.";
@@ -214,7 +214,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Profil resimlerini arka planda yükle (UI bloke etmez)
+        //  Profil resimlerini arka planda yükle (UI bloke etmez)
         private async Task LoadProfileImagesInBackgroundAsync(List<Conversation> conversations)
         {
             // Use SemaphoreSlim to limit concurrent API calls
@@ -257,7 +257,7 @@ namespace KamPay.ViewModels
             await Task.WhenAll(tasks);
         }
 
-        // 🔥 Realtime Event Handler
+        //  Realtime Event Handler
         private void ApplyRealtimeEvent(FirebaseEvent<Conversation> evt)
         {
             if (evt.Object == null) return;
@@ -334,7 +334,7 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            Console.WriteLine("🔥 Conversations listener başlatılıyor...");
+            Console.WriteLine(" Conversations listener başlatılıyor...");
 
             _conversationsSubscription = _firebaseClient
                 .Child(Constants.ConversationsCollection)
@@ -345,7 +345,7 @@ namespace KamPay.ViewModels
                 .Buffer(TimeSpan.FromMilliseconds(250))
                 .Where(batch => batch.Any())
                 .Subscribe(
-                    async events => // 🔥 Async yapıldı
+                    async events => //  Async yapıldı
                     {
                         // UI thread'e geçmeden önce ağır işleri yapalım mı? 
                         // Burada MainThread içinde async çağıracağız.
@@ -378,7 +378,7 @@ namespace KamPay.ViewModels
                     });
         }
 
-        // ProcessConversationBatchAsync metodunu bulun (satır 143 civarı) ve güncelleyin:
+        
 
         private async Task ProcessConversationBatchAsync(IList<Firebase.Database.Streaming.FirebaseEvent<Conversation>> events)
         {
@@ -393,7 +393,7 @@ namespace KamPay.ViewModels
                 conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
                 conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
 
-                // 🔥 KRİTİK DÜZELTME: Profil Fotoğrafını Servisten Çek
+                //  : Profil Fotoğrafını Servisten Çek
                 try
                 {
                     var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
@@ -446,7 +446,7 @@ namespace KamPay.ViewModels
                 }
             }
 
-            // 🔥 İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
+            //  İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
             if (hasChanges && IsLoading)
             {
                 IsLoading = false;
@@ -493,7 +493,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success && result.Data != null)
                 {
-                    await UpdateConversationsFromRefreshAsync(result.Data); // Async çağrı
+                    await UpdateConversationsFromRefreshAsync(result.Data); 
 
                     UpdateUnreadCount();
                     EmptyMessage = Conversations.Any() ? string.Empty : "Henüz mesajınız yok.";
@@ -516,7 +516,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Refresh metodu da Async yapıldı ve resim çekme eklendi
+        //  Refresh metodu da Async yapıldı ve resim çekme eklendi
         private async Task UpdateConversationsFromRefreshAsync(List<Conversation> freshData)
         {
             for (int i = Conversations.Count - 1; i >= 0; i--)
@@ -533,7 +533,7 @@ namespace KamPay.ViewModels
                 freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId);
                 freshConvo.UnreadCount = freshConvo.GetUnreadCount(_currentUser.UserId);
 
-                // 🔥 Profil Resmini Çek
+                //  Profil Resmini Çek
                 try
                 {
                     var otherUserId = freshConvo.GetOtherUserId(_currentUser.UserId);
@@ -578,7 +578,7 @@ namespace KamPay.ViewModels
                 return;
             }
             
-            Console.WriteLine($"🔥 ConversationTappedAsync çağrıldı: {conversation.ConversationId}");
+            Console.WriteLine($" ConversationTappedAsync çağrıldı: {conversation.ConversationId}");
             Console.WriteLine($"   OtherUser: {conversation.OtherUserName}");
             Console.WriteLine($"   LastMessage: {conversation.LastMessage}");
             

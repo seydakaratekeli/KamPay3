@@ -18,16 +18,13 @@
 
     <Grid BackgroundColor="#FAFAFA">
 
-        <!-- REFRESH VIEW -->
         <RefreshView Command="{Binding RefreshFavoritesCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
-                     RefreshColor="{StaticResource Primary}"
-                     IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                     RefreshColor="{StaticResource Primary}">
 
             <CollectionView ItemsSource="{Binding FavoriteItems}"
                             SelectionMode="None">
 
-                <!-- EMPTY VIEW -->
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="40"
                                          VerticalOptions="Center"
@@ -50,7 +47,6 @@
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
 
-                <!-- FAVORİ ÜRÜN ŞABLONU -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Favorite">
 
@@ -78,7 +74,6 @@
 
                                 <Grid ColumnDefinitions="120,*">
 
-                                    <!-- ÜRÜN FOTO -->
                                     <Image Grid.Column="0"
                                            Source="{Binding ProductThumbnail}"
                                            Aspect="AspectFill"
@@ -90,7 +85,6 @@
                                         </Image.Clip>
                                     </Image>
 
-                                    <!-- DETAYLAR -->
                                     <VerticalStackLayout Grid.Column="1"
                                                          Padding="15,10"
                                                          Spacing="6">
@@ -123,7 +117,6 @@
 
         </RefreshView>
 
-        <!-- LOADING -->
         <Grid IsVisible="{Binding IsLoading}"
               BackgroundColor="#FAFAFA">
             <VerticalStackLayout VerticalOptions="Center"

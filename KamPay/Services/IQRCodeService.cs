@@ -17,9 +17,9 @@ namespace KamPay.Services
         string GenerateQRCodeData(DeliveryQRCode delivery);
         Task<ServiceResult<List<DeliveryQRCode>>> GetQRCodesForTransactionAsync(string transactionId);
 
-        /// <summary>
+       
         /// Süre sınırlı ve konum doğrulamalı QR kod oluşturur
-        /// </summary>
+       
         Task<ServiceResult<DeliveryQRCode>> GenerateSecureDeliveryQRCodeAsync(
             string transactionId,
             string productId,
@@ -31,39 +31,39 @@ namespace KamPay.Services
             double? meetingPointLongitude = null,
             string? meetingPointName = null);
 
-        /// <summary>
+       
         /// QR kodu konum ve PIN doğrulaması ile tarar
-        /// </summary>
+       
         Task<ServiceResult<bool>> ScanQRCodeWithLocationAsync(
             string qrCodeId,
             double currentLatitude,
             double currentLongitude,
             string? verificationPin = null);
 
-        /// <summary>
+       
         /// QR kod süresini uzatır (1 kez, max 30 dakika)
-        /// </summary>
+       
         Task<ServiceResult<DateTime>> ExtendQRCodeValidityAsync(
             string qrCodeId,
             int additionalMinutes);
 
-        /// <summary>
+       
         /// QR kodu iptal eder
-        /// </summary>
+       
         Task<ServiceResult<bool>> CancelDeliveryQRCodeAsync(
             string qrCodeId,
             string userId,
             string reason);
 
-        /// <summary>
-        /// Teslimat fotoğrafı yükler (FAZ 2)
-        /// </summary>
+       
+        /// Teslimat fotoğrafı yükler ()
+       
         Task<ServiceResult<string>> UploadDeliveryPhotoAsync(
             string qrCodeId, byte[] photoData, string userId);
 
-        /// <summary>
-        /// Fotoğraf gerekli mi kontrol eder (FAZ 2)
-        /// </summary>
+       
+        /// Fotoğraf gerekli mi kontrol eder ()
+       
         Task<ServiceResult<bool>> IsPhotoRequiredAsync(string qrCodeId);
     }
 
@@ -142,9 +142,9 @@ namespace KamPay.Services
 
         #region Güvenli QR Kod Metodları
 
-        /// <summary>
+       
         /// Süre sınırlı ve konum doğrulamalı QR kod oluşturur
-        /// </summary>
+       
         public async Task<ServiceResult<DeliveryQRCode>> GenerateSecureDeliveryQRCodeAsync(
             string transactionId,
             string productId,
@@ -184,9 +184,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// QR kodu konum ve PIN doğrulaması ile tarar
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> ScanQRCodeWithLocationAsync(
             string qrCodeId,
             double currentLatitude,
@@ -268,7 +268,7 @@ namespace KamPay.Services
                     delivery.LocationVerified = true;
                 }
 
-                // 7. Fotoğraf kontrolü (FAZ 2)
+                // 7. Fotoğraf kontrolü ()
                 // Not: Location ve status güncellemesi kasıtlı - kullanıcı tüm kontrolleri geçti,
                 // fotoğraf yükleme bekleniyor. Bu bir hata değil, workflow'un bir parçası.
                 if (delivery.PhotoRequired && string.IsNullOrEmpty(delivery.DeliveryPhotoUrl))
@@ -327,9 +327,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// QR kod süresini uzatır (1 kez, max 30 dakika)
-        /// </summary>
+       
         public async Task<ServiceResult<DateTime>> ExtendQRCodeValidityAsync(string qrCodeId, int additionalMinutes)
         {
             try
@@ -375,9 +375,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// QR kodu iptal eder
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> CancelDeliveryQRCodeAsync(string qrCodeId, string userId, string reason)
         {
             try
@@ -420,17 +420,17 @@ namespace KamPay.Services
 
         #region Yardımcı Metodlar
 
-        /// <summary>
+       
         /// Güvenli QR kod verisi oluşturur
-        /// </summary>
+       
         private string GenerateSecureQRData()
         {
             return $"KP_{Guid.NewGuid():N}_{DateTime.UtcNow.Ticks}";
         }
 
-        /// <summary>
+       
         /// 6 haneli rastgele PIN oluşturur
-        /// </summary>
+       
         private string GeneratePin()
         {
             using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
@@ -440,9 +440,9 @@ namespace KamPay.Services
             return randomNumber.ToString();
         }
 
-        /// <summary>
+       
         /// Haversine formülü ile iki koordinat arasındaki mesafeyi metre cinsinden hesaplar
-        /// </summary>
+       
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             const double R = 6371000; // Dünya'nın yarıçapı (metre)
@@ -455,9 +455,9 @@ namespace KamPay.Services
             return R * c;
         }
 
-        /// <summary>
+       
         /// Dereceyi radyana çevirir
-        /// </summary>
+       
         private double ToRadians(double degrees) => degrees * Math.PI / 180;
 
         private async Task MarkProductAsSold(string productId)
@@ -521,11 +521,11 @@ namespace KamPay.Services
 
         #endregion
 
-        #region FAZ 2: Fotoğraf Yönetimi
+        #region : Fotoğraf Yönetimi
 
-        /// <summary>
+       
         /// Teslimat fotoğrafı yükler
-        /// </summary>
+       
         public async Task<ServiceResult<string>> UploadDeliveryPhotoAsync(
             string qrCodeId, byte[] photoData, string userId)
         {
@@ -623,9 +623,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// Fotoğraf gerekli mi kontrol eder
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> IsPhotoRequiredAsync(string qrCodeId)
         {
             try

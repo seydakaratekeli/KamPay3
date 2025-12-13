@@ -1,5 +1,6 @@
 namespace KamPay.Services
 {
+    // bu sayfa, e-posta gönderimi için gerekli ayarlarý tutar
     public class EmailSettings
     {
         public string SmtpHost { get; set; }          // örn: "smtp.bartin.edu.tr"

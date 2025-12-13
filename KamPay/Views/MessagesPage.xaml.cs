@@ -13,7 +13,7 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        // 🔥 Sayfa her göründüğünde çağrılır
+        //  Sayfa her göründüğünde çağrılır
         protected override async void OnAppearing()
         {
             base.OnAppearing();
@@ -22,7 +22,7 @@ namespace KamPay.Views
             await _viewModel.InitializeAsync();
         }
 
-        // 🔥 Sayfa kaybolduğunda listener'ları temizle
+        //  Sayfa kaybolduğunda listener'ları temizle
         protected override void OnDisappearing()
         {
             base.OnDisappearing();

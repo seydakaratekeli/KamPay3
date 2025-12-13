@@ -35,7 +35,7 @@ namespace KamPay.ViewModels
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
 
-        // 🔥 Sayfa göründüğünde otomatik yükleme için
+        //  Sayfa göründüğünde otomatik yükleme için
         public async Task InitializeAsync()
         {
             await LoadNotificationsAsync();
@@ -260,7 +260,7 @@ namespace KamPay.ViewModels
             {
                 if (disposing)
                 {
-                    // Messenger temizliği (eğer gelecekte kullanırsanız)
+                    // Messenger temizliği 
                     // WeakReferenceMessenger.Default.UnregisterAll(this);
                 }
                 _disposed = true;

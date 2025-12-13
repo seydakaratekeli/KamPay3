@@ -27,7 +27,7 @@
                              IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InverseBoolConverter}}">
 
             <Border StrokeThickness="0"
-                    BackgroundColor="White"
+                    BackgroundColor="Gray"
                     Padding="10"
                     StrokeShape="RoundRectangle 12">
                 <Entry Placeholder="{extensions:Translate SearchService}"
@@ -41,7 +41,7 @@
 
                 <Border Grid.Column="0"
                         StrokeThickness="0"
-                        BackgroundColor="White"
+                        BackgroundColor="Gray"
                         Padding="8,0"
                         StrokeShape="RoundRectangle 12">
                     <Picker Title="{extensions:Translate SelectCategoryFilter}"
@@ -55,14 +55,14 @@
                 </Border>
 
                 <Border Grid.Column="1"
-        StrokeThickness="0"
-        BackgroundColor="White"
-        Padding="8,0"
-        StrokeShape="RoundRectangle 12">
+                        StrokeThickness="0"
+                        BackgroundColor="Gray"
+                        Padding="8,0"
+                        StrokeShape="RoundRectangle 12">
                     <Picker Title="{extensions:Translate PriceSorting}"
-            ItemsSource="{Binding PriceSortOptions}"  
-            SelectedItem="{Binding PriceSort}"
-            FontSize="13">
+                            ItemsSource="{Binding PriceSortOptions}"  
+                            SelectedItem="{Binding PriceSort}"
+                            FontSize="13">
                     </Picker>
                 </Border>
 
@@ -72,22 +72,8 @@
 
         <Grid Grid.Row="1">
 
-            <ScrollView IsVisible="{Binding IsLoading}"
-                        BackgroundColor="{StaticResource Gray100}"
-                        Padding="12">
-                <VerticalStackLayout Spacing="12">
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                </VerticalStackLayout>
-            </ScrollView>
-
             <RefreshView Command="{Binding RefreshServicesCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
-                         IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
                          RefreshColor="{StaticResource Primary}">
 
                 <CollectionView ItemsSource="{Binding FilteredServices}"
@@ -255,6 +241,19 @@
 
                 </CollectionView>
             </RefreshView>
+
+            <ScrollView IsVisible="{Binding IsLoading}"
+                        BackgroundColor="{StaticResource Gray100}"
+                        Padding="12">
+                <VerticalStackLayout Spacing="12">
+                    <Frame CornerRadius="15" HeightRequest="140"
+                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
+                    <Frame CornerRadius="15" HeightRequest="140"
+                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
+                    <Frame CornerRadius="15" HeightRequest="140"
+                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
+                </VerticalStackLayout>
+            </ScrollView>
 
             <Grid IsVisible="{Binding IsPostFormVisible}"
                   BackgroundColor="#80000000"

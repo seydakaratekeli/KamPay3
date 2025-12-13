@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace KamPay.Services
 {
+    // bu sayfa Firebase Realtime Database'deki ürün değişikliklerini gözlemlemek için bir servis sağlar. kullanıcı arayüzünü gerçek zamanlı olarak güncellemek için kullanılır.
     public interface IFirebaseObserverService
     {
         IObservable<Product> ObserveProductChanges();

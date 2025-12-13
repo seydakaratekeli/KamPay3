@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace KamPay.Services
 {
+    // Sürpriz kutusu hizmeti - Firebase Realtime Database kullanarak sürpriz kutu işlemlerini yönetir. amacı, kullanıcıların sürpriz kutu açmalarını sağlamak ve ilgili işlemleri gerçekleştirmektir.
     public class FirebaseSurpriseBoxService : ISurpriseBoxService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -47,7 +48,7 @@ namespace KamPay.Services
                 // 2. Kullanıcının puanını kontrol et - DEBUG EKLENDI
                 var userStatsResult = await _userProfileService.GetUserStatsAsync(userId);
 
-                // 🔥 DEBUG: Result kontrolü
+                //  DEBUG: Result kontrolü
                 Console.WriteLine($"🔍 GetUserStatsAsync - Success: {userStatsResult.Success}");
                 Console.WriteLine($"🔍 GetUserStatsAsync - Message: {userStatsResult.Message}");
 
@@ -57,7 +58,7 @@ namespace KamPay.Services
                     return ServiceResult<Product>.FailureResult("Kullanıcı istatistikleri alınamadı.", userStatsResult.Message);
                 }
 
-                // 🔥 DEBUG: Data null kontrolü
+                //  DEBUG: Data null kontrolü
                 if (userStatsResult.Data == null)
                 {
                     Console.WriteLine("❌ UserStats Data NULL!");
@@ -66,7 +67,7 @@ namespace KamPay.Services
 
                 var userStats = userStatsResult.Data;
 
-                // 🔥 DEBUG: Puan bilgisi
+                //  DEBUG: Puan bilgisi
                 Console.WriteLine($"💰 Kullanıcı Puanı: {userStats.Points}");
                 Console.WriteLine($"💰 Gerekli Puan: {BoxCost}");
                 Console.WriteLine($"💰 Yeterli mi?: {userStats.Points >= BoxCost}");

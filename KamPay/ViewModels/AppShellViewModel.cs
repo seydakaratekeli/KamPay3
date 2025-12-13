@@ -21,7 +21,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool hasUnreadMessages;
 
-        // Tab titles for localization - will be updated when language changes
+        
         [ObservableProperty]
         private string homeTitle = string.Empty;
 
@@ -78,7 +78,7 @@ namespace KamPay.ViewModels
                 });
             });
 
-            // GÜNCELLENDİ: Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
+            // : Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, async (r, m) =>
             {
                 if (m.Value) // Giriş yapıldı
@@ -105,7 +105,7 @@ namespace KamPay.ViewModels
             FavoritesTitle = res["Favorites"];
         }
 
-        // GÜNCELLENDİ: Metodun imzası async Task olarak değiştirildi
+        // : Metodun imzası async Task olarak değiştirildi
         private async Task StartListeningForMessagesAsync()
         {
             StopListeningForMessages(); // Önceki dinleyiciyi durdur
@@ -156,8 +156,8 @@ namespace KamPay.ViewModels
     }
 
     // --- Mesaj Sınıfları ---
-    // Bu sınıfların ayrı bir dosyada olması daha temiz bir yapı sağlar,
-    // ancak şimdilik burada kalabilirler.
+    // Bu sınıfların ayrı bir dosyada olması daha temiz bir yapı sağlar, daha sonra taşı
+    
 
     public class UnreadGeneralNotificationStatusMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<bool>
     {

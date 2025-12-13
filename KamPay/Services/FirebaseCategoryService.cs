@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace KamPay.Services
 {
+    //bu sayfanın amacı Firebase Realtime Database'den kategori verilerini almak ve yönetmektir. nasıl alınacağı, önbelleğe alma ve başlangıç verilerinin eklenmesi gibi işlevleri kapsar.
     public class FirebaseCategoryService : ICategoryService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -40,7 +41,7 @@ namespace KamPay.Services
             {
                 CategoryId = item.Key, // Firebase'in anahtarını ID olarak kullanıyoruz
                 Name = item.Object.Name,
-                IconName = item.Object.IconName, // Sizin modelinizdeki property adı
+                IconName = item.Object.IconName, 
                 Description = item.Object.Description
             }).ToList();
 

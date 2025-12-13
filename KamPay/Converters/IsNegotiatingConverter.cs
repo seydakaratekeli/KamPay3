@@ -4,10 +4,10 @@ using Microsoft.Maui.Controls;
 
 namespace KamPay.Converters
 {
-    /// <summary>
+   
     /// Boolean değeri kontrol eder - true ise görünür
     /// Pazarlık durumunda butonları göstermek için kullanılır
-    /// </summary>
+   
     public class IsNegotiatingConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 
 namespace KamPay.Services
 {
+    // bu sayfa Firebase Realtime Database'den gerçek zamanlı veri anlık görüntüleri almak ve dinlemek için kullanılır.
     public class RealtimeSnapshotService<T>
     {
         private readonly FirebaseClient _client;

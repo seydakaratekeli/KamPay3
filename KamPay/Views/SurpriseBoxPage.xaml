@@ -14,7 +14,7 @@
                   Padding="20" 
                   RowSpacing="20">
 
-                <!-- 🔥 ÜST BÖLÜM: Puan Göstergesi -->
+                <!--  ÜST BÖLÜM: Puan Göstergesi -->
                 <Frame Grid.Row="0"
                        BackgroundColor="#4CAF50" 
                        CornerRadius="20" 
@@ -38,7 +38,7 @@
                     </HorizontalStackLayout>
                 </Frame>
 
-                <!-- 🔥 ORTA BÖLÜM: Ana İçerik -->
+                <!--  ORTA BÖLÜM: Ana İçerik -->
                 <VerticalStackLayout Grid.Row="1"
                                      VerticalOptions="Center"
                                      HorizontalOptions="Center"
@@ -80,7 +80,7 @@
                                LineHeight="1.5"/>
                     </Frame>
 
-                    <!-- 🔥 Sonuç Frame'i (Dinamik) -->
+                    <!--  Sonuç Frame'i (Dinamik) -->
                     <Frame x:Name="ResultFrame"
                            IsVisible="False"
                            Opacity="0"
@@ -139,7 +139,7 @@
 
                 </VerticalStackLayout>
 
-                <!-- 🔥 ALT BÖLÜM: Hata ve Buton -->
+                <!--  ALT BÖLÜM: Hata ve Buton -->
                 <VerticalStackLayout Grid.Row="2" 
                                      Spacing="15">
 
@@ -183,7 +183,7 @@
                         </HorizontalStackLayout>
                     </Frame>
 
-                    <!-- 🔥 Ana Buton (HasShadow kaldırıldı) -->
+                    <!--  Ana Buton (HasShadow kaldırıldı) -->
                     <Frame HasShadow="True"
                            CornerRadius="30"
                            Padding="0"
@@ -205,7 +205,7 @@
             </Grid>
         </ScrollView>
 
-        <!-- 🔥 Loading Overlay -->
+        <!--  Loading Overlay -->
         <Grid IsVisible="{Binding IsLoading}"
               BackgroundColor="#80000000"
               InputTransparent="False">

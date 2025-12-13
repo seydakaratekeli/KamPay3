@@ -84,12 +84,12 @@ namespace KamPay.Models
     public enum DeliveryStatus
     {
         Pending = 0,      // Bekliyor
-        InProgress = 1,   // Teslimatta (eski değer korundu)
-        Completed = 2,    // Tamamlandı (eski değer korundu)
-        Cancelled = 3,    // İptal edildi (eski değer korundu)
-        Scheduled = 4,    // Planlandı (yeni)
-        Disputed = 5,     // Anlaşmazlık (yeni)
-        Expired = 6,      // Süresi doldu (yeni)
+        InProgress = 1,   // Teslimatta 
+        Completed = 2,    // Tamamlandı 
+        Cancelled = 3,    // İptal edildi 
+        Scheduled = 4,    // Planlandı 
+        Disputed = 5,     // Anlaşmazlık 
+        Expired = 6,      // Süresi doldu 
         WaitingForPhoto = 7  // Fotoğraf bekleniyor 
     }
 }

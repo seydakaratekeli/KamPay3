@@ -10,6 +10,7 @@ using System.Threading;
 
 namespace KamPay.Services
 {
+    // bu sayfanın amacı Firebase Realtime Database üzerinden hizmet paylaşımı ile ilgili işlemleri gerçekleştirmektir. kullanıcıların hizmet sunmalarını, taleplerini, ödemelerini ve ilgili bildirimleri yönetir. ama ödeme kısmı simülasyon şeklindedir. simulason şu anda tamamlanmamıştır.
     public class FirebaseServiceSharingService : IServiceSharingService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -450,9 +451,9 @@ namespace KamPay.Services
         }
     
 
-        /// <summary>
+     
         /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
-        /// </summary>
+        
         public async Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl)
         {
             try
@@ -493,7 +494,7 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine($"🔥 StartConversationForRequestAsync başladı:");
+                Console.WriteLine($" StartConversationForRequestAsync başladı:");
                 Console.WriteLine($"   RequestId: {requestId}");
                 Console.WriteLine($"   CurrentUserId: {currentUserId}");
 
@@ -517,7 +518,7 @@ namespace KamPay.Services
                     return ServiceResult<string>.FailureResult("Bu talebe erişim yetkiniz yok.");
                 }
 
-                // 🔥 ÖNCELİKLE: Mevcut ConversationId'yi kontrol et
+                // Mevcut ConversationId'yi kontrol et
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
                     Console.WriteLine($"   Mevcut ConversationId: {request.ConversationId}");
@@ -597,7 +598,7 @@ namespace KamPay.Services
 
                 Console.WriteLine($"✅ Yeni konuşma oluşturuldu: {conversationResult.Data.ConversationId}");
 
-                // 🔥 Sistem mesajı gönder
+                //  Sistem mesajı gönder
                 var systemMessageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n📝 Konuşma başlatıldı\nFiyat: {request.Price:N2} ₺";
                 Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {systemMessageContent}");
 
@@ -627,9 +628,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+     
         /// Talep eden kişinin fiyat teklifi göndermesi
-        /// </summary>
+        
         public async Task<ServiceResult<bool>> ProposePrice(string requestId, decimal proposedPrice, string currentUserId)
         {
             try
@@ -682,7 +683,7 @@ namespace KamPay.Services
 
                 Console.WriteLine($"✅ Bildirim gönderildi");
 
-                // 🔥 Sistem mesajı gönder
+                //  Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
                     var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n💰 Fiyat Teklifi: {proposedPrice:N2} ₺\n(Orijinal fiyat: {request.Price:N2} ₺)";
@@ -719,9 +720,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+     
         /// Hizmet sağlayıcısının karşı teklif göndermesi
-        /// </summary>
+        
         public async Task<ServiceResult<bool>> SendCounterOfferAsync(string requestId, decimal counterOffer, string currentUserId)
         {
             try
@@ -774,7 +775,7 @@ namespace KamPay.Services
 
                 Console.WriteLine($"✅ Bildirim gönderildi");
 
-                // 🔥 Sistem mesajı gönder
+                //  Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
                     var requesterOffer = request.ProposedPriceByRequester.HasValue
@@ -815,9 +816,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+     
         /// Pazarlık sonucu anlaşılan fiyatı kabul etme
-        /// </summary>
+        
         public async Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(string requestId, string currentUserId)
         {
             try
@@ -884,7 +885,7 @@ namespace KamPay.Services
 
                 Console.WriteLine($"✅ Bildirim gönderildi");
 
-                // 🔥 Sistem mesajı gönder
+                //  Sistem mesajı gönder
                 if (!string.IsNullOrEmpty(request.ConversationId))
                 {
                     var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n✅ Anlaşma Sağlandı: {agreedPrice:N2} ₺";

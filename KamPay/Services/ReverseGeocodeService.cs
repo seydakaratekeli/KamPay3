@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 // KamPay/Services/ReverseGeocodeService.cs
 namespace KamPay.Services
 {
+    // bu sayfanın amacı coğrafi koordinatları (enlem ve boylam) kullanarak adres bilgisi almaktır.
+
     public class ReverseGeocodeService : IReverseGeocodeService
     {
         public async Task<string> GetAddressForLocation(Location location)
@@ -26,7 +28,7 @@ namespace KamPay.Services
                     return $"Enlem: {location.Latitude:F4}, Boylam: {location.Longitude:F4}";
                 }
 
-                // --- BİNA NO EKLENMİŞ ADRES FORMATLAMA ---
+                // - ADRES FORMATLAMA ---
                 var streetAndNumber = !string.IsNullOrWhiteSpace(placemark.SubThoroughfare)
                     ? $"{placemark.Thoroughfare} No: {placemark.SubThoroughfare}"
                     : placemark.Thoroughfare;
@@ -41,7 +43,7 @@ namespace KamPay.Services
                 }
                 .Where(part => !string.IsNullOrWhiteSpace(part))
                 .ToArray();
-                // --- GÜNCELLEME SONU ---
+               
 
                 if (addressParts.Any())
                 {

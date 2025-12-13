@@ -46,7 +46,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string instructionText = "Teslimatı başlatmak için QR kodunuzu diğer kullanıcıya okutun veya onun kodunu tarayın.";
 
-        // 🔒 Yeni Güvenlik Özellikleri
+        //  Yeni Güvenlik Özellikleri
         [ObservableProperty]
         private string? verificationPin;
 
@@ -65,7 +65,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private DeliveryQRCode? currentQRCode;
 
-        // FAZ 2: Fotoğraf özellikleri
+        //  Fotoğraf özellikleri
         [ObservableProperty]
         private bool photoRequired;
 
@@ -107,9 +107,9 @@ namespace KamPay.ViewModels
             }
         }
 
-        /// <summary>
+       
         /// Güvenli tarama ile QR kodu işler (konum ve PIN doğrulaması dahil)
-        /// </summary>
+       
         public async Task ProcessScannedQRCodeAsync(string qrCodeData)
         {
             IsLoading = true;
@@ -226,9 +226,9 @@ namespace KamPay.ViewModels
             }
         }
 
-        /// <summary>
+       
         /// Eski ProcessScannedQRCode metodu için backward compatibility
-        /// </summary>
+       
         public async Task ProcessScannedQRCode(string qrCodeData)
         {
             await ProcessScannedQRCodeAsync(qrCodeData);
@@ -297,9 +297,9 @@ namespace KamPay.ViewModels
             IsLoading = false;
         }
 
-        /// <summary>
+       
         /// QR kodun süre dolum sayacını başlatır (IDispatcherTimer ile)
-        /// </summary>
+       
         private void StartExpirationTimer()
         {
             // Önceki timer'ı durdur
@@ -314,18 +314,18 @@ namespace KamPay.ViewModels
             _expirationTimer.Start();
         }
 
-        /// <summary>
+       
         /// Timer'ı durdurur
-        /// </summary>
+       
         private void StopExpirationTimer()
         {
             _expirationTimer?.Stop();
             _expirationTimer = null;
         }
 
-        /// <summary>
+       
         /// Kalan süreyi günceller
-        /// </summary>
+       
         private void UpdateTimeRemaining()
         {
             if (CurrentQRCode == null)
@@ -471,7 +471,7 @@ namespace KamPay.ViewModels
                 InstructionText = "Takası başlatmak için QR kodunuzu diğer kullanıcıya okutun veya onun kodunu tarayın.";
             }
 
-            // FAZ 2: Fotoğraf durumunu güncelle
+            // : Fotoğraf durumunu güncelle
             PhotoRequired = MyDelivery?.PhotoRequired ?? false;
             // Photo is considered uploaded if main URL exists (thumbnail is for display only)
             IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoUrl);
@@ -481,7 +481,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // FAZ 2: Fotoğraf komutları
+        // : Fotoğraf komutları
 
         [RelayCommand]
         private async Task TakeDeliveryPhotoAsync()

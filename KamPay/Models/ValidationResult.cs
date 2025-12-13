@@ -3,8 +3,11 @@ using System.Linq;
 
 namespace KamPay.Models
 {
+    
     public class ValidationResult
     {
+        // bu sayfa genel hata yönetimi için kullanýlacak
+
         public bool IsValid { get; set; }
         public List<string> Errors { get; set; }
 

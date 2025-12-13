@@ -14,7 +14,7 @@ namespace KamPay.Views
             _viewModel = viewModel;
             BindingContext = _viewModel;
 
-            // 🔥 Yeni mesaj geldiğinde scroll mesajını dinle
+            //  Yeni mesaj geldiğinde scroll mesajını dinle
             WeakReferenceMessenger.Default.Register<ScrollToChatMessage>(this, (r, message) =>
             {
                 ScrollToLastMessage();
@@ -42,7 +42,7 @@ namespace KamPay.Views
             (_viewModel as IDisposable)?.Dispose();
         }
 
-        // 🔥 Son mesaja otomatik kaydırma
+        //  Son mesaja otomatik kaydırma
         private void ScrollToLastMessage()
         {
             MainThread.BeginInvokeOnMainThread(async () =>

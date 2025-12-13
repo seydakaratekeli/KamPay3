@@ -14,7 +14,7 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        // ✅ Picker event handler - güvenli null check
+        //  Picker event handler - güvenli null check
         private void OnPaymentMethodSelected(object sender, EventArgs e)
         {
             if (sender is Picker picker &&
@@ -32,7 +32,7 @@ namespace KamPay.Views
         {
             base.OnAppearing();
 
-            // 🔥 Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
+            //  Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
             if (_isFirstLoad)
             {
                 _isFirstLoad = false;
@@ -47,11 +47,11 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // 🔥 Dispose ETME - Listener çalışmaya devam etsin
+            //  Dispose ETME - Listener çalışmaya devam etsin
             System.Diagnostics.Debug.WriteLine("⏸️ ServiceRequestsPage: Arka plana alındı (Listener aktif)");
         }
 
-        // 🔥 Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
+        //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
         ~ServiceRequestsPage()
         {
             _viewModel?.Dispose();

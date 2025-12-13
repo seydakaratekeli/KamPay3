@@ -1,4 +1,4 @@
-// KamPay/Models/Conversation.cs
+
 
 using System;
 using System.Collections.Generic;

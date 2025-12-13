@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using KamPay.ViewModels;
 
 namespace KamPay.Models
-{// 🔥 Yeni mesaj geldiğinde scroll yapmak için kullanılan messenger
+{// Yeni mesaj geldiğinde scroll yapmak için kullanılan messenger
     public class ScrollToChatMessage
     {
         public Message Message { get; }

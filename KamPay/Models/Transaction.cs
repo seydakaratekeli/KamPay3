@@ -7,18 +7,18 @@ using System.Linq;
 
 namespace KamPay.Models
 {
-    // 🔹 Bir ürün satışı, takası veya bağışı sürecini takip eden ana model
+    //  Bir ürün satışı, takası veya bağışı sürecini takip eden ana model
     public class Transaction
     {
         public string TransactionId { get; set; } = Guid.NewGuid().ToString();
 
-        // 🔹 İlgili Ana Ürün Bilgileri
+        //  İlgili Ana Ürün Bilgileri
         public string ProductId { get; set; }
         public string ProductTitle { get; set; }
         public string ProductThumbnailUrl { get; set; }
         public ProductType Type { get; set; } // Satış, Takas, Bağış
 
-        // 🔹 Taraflar
+        //  Taraflar
         public string SellerId { get; set; } // Ürünü sunan kişi
         public string SellerName { get; set; }
         public string SellerPhotoUrl { get; set; }
@@ -26,10 +26,10 @@ namespace KamPay.Models
         public string BuyerName { get; set; }
         public string BuyerPhotoUrl { get; set; }
 
-        // 🔹 Ödeme Durumu
+        // Ödeme Durumu
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
 
-        // 🆕 Yeni eklenen ödeme bilgileri (simülasyon desteği için)
+        //  Yeni eklenen ödeme bilgileri (simülasyon desteği için)
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
         public string? PaymentSimulationId { get; set; }
 
@@ -40,16 +40,16 @@ namespace KamPay.Models
 
         public string? Message { get; set; }
 
-        // 🔹 Durum ve Zaman Bilgileri
+        //  Durum ve Zaman Bilgileri
         public TransactionStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // 🔹 QR Kod Teslimat Takibi
+        //  QR Kod Teslimat Takibi
         [JsonIgnore]
         public List<DeliveryQRCode> DeliveryQRCodes { get; set; } = new();
 
-        // 🔹 Takas'a özel alanlar
+        //  Takas'a özel alanlar
         public string? OfferedProductId { get; set; }
         public string? OfferedProductTitle { get; set; }
         public string? OfferMessage { get; set; }

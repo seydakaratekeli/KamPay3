@@ -6,6 +6,11 @@
              BackgroundColor="Black"
              Shell.NavBarIsVisible="False">
 
+    <!-- bu sayfa tam ekran fotoğraf görüntüleme içindir  -->
+    <!-- bu sayfa, PhotoUrl, CloseCommand ve DownloadPhotoCommand özelliklerine sahip bir ViewModel'e bağlanmalıdır -->
+    <!-- bu sayfanın kullanımı için NavigationService kullanılarak açılması önerilir -->
+    <!-- bu sayfa kullanıcıya fotoğrafı tam ekran görüntüleme, kapatma ve indirme seçenekleri sunar -->
+   
     <Grid>
         <!-- Tam Ekran Görsel -->
         <Image Source="{Binding PhotoUrl}"

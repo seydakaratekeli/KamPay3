@@ -123,7 +123,7 @@ namespace KamPay.ViewModels
         {
             if (_allOffersSubscription != null) return;
 
-            Debug.WriteLine($"🔥 Offers listener başlatılıyor: {userId}");
+            Debug.WriteLine($" Offers listener başlatılıyor: {userId}");
 
             //  Timeout mekanizması
             _loadingTimeoutCts?.Cancel();
@@ -151,7 +151,7 @@ namespace KamPay.ViewModels
                 });
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
-            // 🔥 Realtime listener
+            //  Realtime listener
             _allOffersSubscription = _firebaseClient
                 .Child(Constants.TransactionsCollection)
                 .AsObservable<Transaction>()
@@ -170,7 +170,7 @@ namespace KamPay.ViewModels
 
                                 ProcessOfferBatch(events, userId);
 
-                                // 🔥 SADECE GERÇEK VERİ GELİNCE loading kapat
+                                //  SADECE GERÇEK VERİ GELİNCE loading kapat
                                 if (!_initialLoadComplete && ContainsRealOffer(events, userId))
                                 {
                                     _initialLoadComplete = true;
@@ -593,7 +593,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    // 🔥 DÜZELTİLDİ: ChatPage kullanılıyor
+                    //  : ChatPage kullanılıyor
                     Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={result.Data}");
                 }

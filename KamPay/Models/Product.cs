@@ -60,15 +60,15 @@ namespace KamPay.Models
         public DateTime? UpdatedAt { get; set; }
         public DateTime? SoldAt { get; set; }
 
-        // 🟢 Yeni alanlar (ödeme simülasyonu için)
+        //  (ödeme simülasyonu için) ödeme simulasyonu şu an yok
         public ServicePaymentStatus PaymentStatus { get; set; } = ServicePaymentStatus.None;
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
         public string BuyerId { get; set; }
       //  public bool IsSold { get; set; } = false;
 
-        /// <summary>
+      
         /// Ürünün durumunu belirler (Satış mı, Takas mı?)
-        /// </summary>
+       
         public string StatusText
         {
             get
@@ -91,14 +91,14 @@ namespace KamPay.Models
                     return "SATIŞ SÜRECİNDE";
 
                 if (IsReserved && Type == ProductType.Bagis) 
-                    return "BAĞIŞ SÜRECİNDE"; // Veya "BAĞIŞ İÇİN AYRILDI"
+                    return "BAĞIŞ SÜRECİNDE"; 
 
                 return string.Empty;
             }
         }
-        /// <summary>
-        /// Etiket rengi
-        /// </summary>
+       
+        // Etiket rengi
+    
         public Color StatusColor
         {
             get

@@ -92,7 +92,7 @@
         <!-- ANA İÇERİK -->
         <Grid Grid.Row="1">
 
-            <!-- 🔥 1. SKELETON LOADER (İlk yükleme - En üstte) -->
+            <!--  1. SKELETON LOADER (İlk yükleme - En üstte) -->
             <ScrollView IsVisible="{Binding IsSkeletonVisible}">
                 <VerticalStackLayout Padding="15" Spacing="12">
                     <!-- Skeleton Item 1 -->
@@ -157,7 +157,7 @@
                 </VerticalStackLayout>
             </ScrollView>
 
-            <!-- 🔥 2. NORMAL İÇERİK (Skeleton kapandıktan sonra) -->
+            <!--  2. NORMAL İÇERİK (Skeleton kapandıktan sonra) -->
             <RefreshView Command="{Binding RefreshOffersCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}"
@@ -273,7 +273,7 @@
 
                                             <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="5">
 
-                                                <!-- 💬 Mesaj Butonu -->
+                                                <!--  Mesaj Butonu -->
                                                 <Button Text="💬"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
                                                         CommandParameter="{Binding .}"
@@ -285,7 +285,7 @@
                                                         FontSize="14"
                                                         Padding="0"/>
 
-                                                <!-- 💰 Karşı Teklif (SATIŞ + Satıcı + Pending) -->
+                                                <!--  Karşı Teklif (SATIŞ + Satıcı + Pending) -->
                                                 <Button Text="💰"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
                                                         CommandParameter="{Binding .}"
@@ -305,7 +305,7 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- 💰 Karşı Nakit (TAKAS + Sahip + Pending) -->
+                                                <!--  Karşı Nakit (TAKAS + Sahip + Pending) -->
                                                 <Button Text="💰"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
                                                         CommandParameter="{Binding .}"
@@ -325,7 +325,7 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- ✓ Kabul (Pazarlık devam ederken) -->
+                                                <!--  Kabul (Pazarlık devam ederken) -->
                                                 <Button Text="✓"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -486,7 +486,7 @@
 
                                             <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="5">
 
-                                                <!-- 💬 Mesaj Butonu -->
+                                                <!--  Mesaj Butonu -->
                                                 <Button Text="💬"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
                                                         CommandParameter="{Binding .}"
@@ -498,7 +498,7 @@
                                                         FontSize="14"
                                                         Padding="0"/>
 
-                                                <!-- 💰 Fiyat Teklifi (SATIŞ + Alıcı + Pending) -->
+                                                <!--  Fiyat Teklifi (SATIŞ + Alıcı + Pending) -->
                                                 <Button Text="💰"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -518,7 +518,7 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- 💰 Ek Nakit (TAKAS + Talep Eden + Pending) -->
+                                                <!--  Ek Nakit (TAKAS + Talep Eden + Pending) -->
                                                 <Button Text="💰"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -538,7 +538,7 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- ✓ Kabul (Pazarlık devam ederken) -->
+                                                <!--  Kabul (Pazarlık devam ederken) -->
                                                 <Button Text="✓"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
                                                         CommandParameter="{Binding .}"
@@ -595,7 +595,7 @@
                 </Grid>
             </RefreshView>
 
-            <!-- 🔥 3. LOADING INDICATOR (Tüm ekranın ortasında - En üstte) -->
+            <!--  3. LOADING INDICATOR (Tüm ekranın ortasında - En üstte) -->
             <Grid IsVisible="{Binding IsLoading}" BackgroundColor="Transparent">
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
                     <ActivityIndicator IsRunning="True"

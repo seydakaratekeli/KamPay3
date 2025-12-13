@@ -5,6 +5,7 @@ using KamPay.Models;
 using System.Linq;
 
 namespace KamPay.Services;
+// bu sayfanın amacı Firebase Realtime Database'den ürün verilerini almak, eklemek, güncellemek ve yönetmektir. kullanıcı ürünleri, kategoriler ve ürün durumları gibi işlevleri kapsar.
 public class FirebaseProductService : IProductService
 {
     private readonly FirebaseClient _firebaseClient;
@@ -41,7 +42,7 @@ public class FirebaseProductService : IProductService
                     productsQuery = productsQuery.Where(p => p.IsActive);
                 }
 
-                // 🔹 YENİ: Satılmış ürünleri göstermeyi AÇIK bırakıyoruz
+                //  : Satılmış ürünleri göstermeyi AÇIK bırakıyoruz
                 // Anasayfada "TAKAS YAPILDI" etiketiyle görünsünler
                 // ❌ KALDIRILDI: ExcludeSold filtresi
 
@@ -546,7 +547,7 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<List<Category>>.SuccessResult(categories);
             }
 
-            // --- Tohumlama (Seeding) Mantığını da İyileştirelim ---
+            // --- Tohumlama (Seeding) Mantığını  İyileştirelim ---
             var defaultCategories = Category.GetDefaultCategories();
             foreach (var category in defaultCategories)
             {
@@ -710,9 +711,9 @@ public class FirebaseProductService : IProductService
         }
     }
 
-    /// <summary>
+   
     /// Sayfalama desteği ile ürünleri getirir (Performans Optimizasyonu)
-    /// </summary>
+   
     public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(
         int pageSize = 20,
         string lastKey = null,
@@ -826,9 +827,9 @@ public class FirebaseProductService : IProductService
         }
     }
 
-    /// <summary>
+   
     /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
-    /// </summary>
+   
     public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string newName, string newPhotoUrl)
     {
         try

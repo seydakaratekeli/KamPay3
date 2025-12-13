@@ -116,18 +116,18 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  OPTİMİZE: Real-time listener + batch processing
+        //  : Real-time listener + batch processing
         private void StartListeningForRequests()
         {
             if (_requestsSubscription != null || string.IsNullOrEmpty(_currentUserId)) return;
 
-            Console.WriteLine("🔥 Service requests listener başlatılıyor...");
+            Console.WriteLine(" Service requests listener başlatılıyor...");
 
             _requestsSubscription = _firebaseClient
                 .Child(Constants.ServiceRequestsCollection)
                 .AsObservable<ServiceRequest>()
                 .Where(e => e.Object != null)
-                .Buffer(TimeSpan.FromMilliseconds(300)) // 🔥 300ms batch
+                .Buffer(TimeSpan.FromMilliseconds(300)) //  300ms batch
                 .Where(batch => batch.Any())
                 .Subscribe(
                     events =>
@@ -265,7 +265,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  OPTİMİZE: Refresh command
+        //  : Refresh command
         [RelayCommand]
         private async Task RefreshRequestsAsync()
         {
@@ -448,7 +448,7 @@ namespace KamPay.ViewModels
                 
                 if (result.Success)
                 {
-                    //  DÜZELTİLDİ: ChatPage kullanılıyor, MessagingPage değil
+                    //  : ChatPage kullanılıyor, MessagingPage değil
                     Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(Views.ChatPage)}?conversationId={result.Data}");
                 }

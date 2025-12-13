@@ -32,9 +32,9 @@ namespace KamPay.Services
             ProductFilter filter = null);
         Task<ServiceResult<Product>> SaveProductDirectlyAsync(Product product);
 
-        /// <summary>
+       
         /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
-        /// </summary>
+       
         Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string newName, string newPhotoUrl);
 
     }

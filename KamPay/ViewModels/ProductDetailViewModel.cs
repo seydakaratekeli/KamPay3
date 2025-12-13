@@ -22,7 +22,7 @@ namespace KamPay.ViewModels
     [QueryProperty(nameof(ProductId), "ProductId")]
     public partial class ProductDetailViewModel : ObservableObject, IDisposable
     {
-        // Gerekli tüm servisleri tanımlıyoruz
+        // Gerekli tüm servisler
         private readonly IProductService _productService;
         private readonly IAuthenticationService _authService;
         private readonly IFavoriteService _favoriteService;
@@ -548,7 +548,8 @@ namespace KamPay.ViewModels
                     Product.FavoriteCount++;
                 }
 
-                // 🔥 ÖNEMLİ: UI'ın anlık değişmesi için Product nesnesinin değiştiğini bildiriyoruz
+                
+                //  : UI'ın anlık değişmesi için Product nesnesinin değiştiğini bildiriyoruz
                 OnPropertyChanged(nameof(Product));
 
                 // 2. SERVİS İŞLEMİ (Arka Planda):

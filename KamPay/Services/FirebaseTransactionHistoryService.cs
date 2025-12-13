@@ -9,9 +9,8 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
-    /// <summary>
-    /// Firebase implementation for transaction history tracking
-    /// </summary>
+
+    // İşlem geçmişi takibi için Firebase uygulaması
     public class FirebaseTransactionHistoryService : ITransactionHistoryService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -22,9 +21,7 @@ namespace KamPay.Services
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
         }
 
-        /// <summary>
-        /// Logs a transaction to the history
-        /// </summary>
+        // Bir işlemi geçmişe kaydeder
         public async Task<ServiceResult<TransactionHistory>> LogTransactionAsync(TransactionHistory transaction)
         {
             try
@@ -34,13 +31,13 @@ namespace KamPay.Services
                     return ServiceResult<TransactionHistory>.FailureResult("İşlem bilgisi boş olamaz");
                 }
 
-                // Ensure ID is set
+                // Kimliğin ayarlandığından emin olun
                 if (string.IsNullOrEmpty(transaction.TransactionHistoryId))
                 {
                     transaction.TransactionHistoryId = Guid.NewGuid().ToString();
                 }
 
-                // Set timestamp if not set
+                // Zaman damgası ayarlanmamışsa ayarlayın
                 if (transaction.CreatedAt == default)
                 {
                     transaction.CreatedAt = DateTime.UtcNow;
@@ -62,12 +59,17 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
-        /// Gets transaction history for a specific user (both sent and received)
-        /// NOTE: For production use with large datasets, consider implementing 
-        /// server-side filtering using Firebase queries with proper indexing.
-        /// Current implementation fetches all transactions and filters in memory.
-        /// </summary>
+        
+
+        // Belirli bir kullanıcı için işlem geçmişini (hem gönderilen hem de alınan) alır.
+
+        // NOT: Büyük veri kümeleriyle üretimde kullanım için,
+
+        // uygun indeksleme ile Firebase sorguları kullanarak sunucu tarafı filtrelemeyi uygulamayı düşünün.
+
+        // Mevcut uygulama tüm işlemleri getirir ve bellekte filtreler.
+
+        
         public async Task<ServiceResult<List<TransactionHistory>>> GetUserTransactionHistoryAsync(string userId, int limit = 50)
         {
             try
@@ -77,12 +79,12 @@ namespace KamPay.Services
                     return ServiceResult<List<TransactionHistory>>.FailureResult("Kullanıcı ID gerekli");
                 }
 
-                // Get all transactions
+                // Tüm işlemleri al
                 var allTransactions = await _firebaseClient
                     .Child(TRANSACTION_HISTORY_COLLECTION)
                     .OnceAsync<TransactionHistory>();
 
-                // Filter transactions where user is either sender or receiver
+                // Kullanıcının gönderici veya alıcı olduğu işlemleri filtrele
                 var userTransactions = allTransactions
                     .Select(t => t.Object)
                     .Where(t => t.FromUserId == userId || t.ToUserId == userId)
@@ -104,9 +106,7 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
-        /// Gets a specific transaction by ID
-        /// </summary>
+        // Kimliğe göre belirli bir işlemi alır
         public async Task<ServiceResult<TransactionHistory>> GetTransactionByIdAsync(string transactionHistoryId)
         {
             try
@@ -137,12 +137,12 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
-        /// Gets transaction history for a specific reference (e.g., product, service)
-        /// NOTE: For production use with large datasets, consider implementing 
-        /// server-side filtering using Firebase queries with proper indexing.
-        /// Current implementation fetches all transactions and filters in memory.
-        /// </summary>
+        
+        // Belirli bir referans (örneğin, ürün, hizmet) için işlem geçmişini alır.
+        // NOT: Büyük veri kümeleriyle üretim ortamında kullanım için,
+        // uygun indeksleme ile Firebase sorguları kullanarak sunucu tarafı filtrelemeyi uygulamayı düşünün.
+        // Mevcut uygulama tüm işlemleri getirir ve bellekte filtreler.
+
         public async Task<ServiceResult<List<TransactionHistory>>> GetTransactionsByReferenceAsync(string referenceId, string referenceType)
         {
             try

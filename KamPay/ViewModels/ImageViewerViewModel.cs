@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace KamPay.ViewModels
 {
+    // bu sayfa teslimat fotoğrafını görüntülemek ve indirmek için kullanılır
     [QueryProperty(nameof(PhotoUrl), "photoUrl")]
     public partial class ImageViewerViewModel : ObservableObject
     {

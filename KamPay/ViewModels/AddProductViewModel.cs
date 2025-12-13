@@ -98,7 +98,7 @@ namespace KamPay.ViewModels
 
             LoadCachedCategories();
 
-            // 🔥 DİL DEĞİŞİMİNİ DİNLE
+            //  DİL DEĞİŞİMİNİ DİNLE
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
                 // String Listelerini Yenile
@@ -126,7 +126,7 @@ namespace KamPay.ViewModels
             };
         }
 
-        // 🔥 İndeks Değişince Enum'ı Güncelle
+        //  İndeks Değişince Enum'ı Güncelle
         partial void OnSelectedTypeIndexChanged(int value)
         {
             if (value >= 0 && value < _typeEnums.Count)
@@ -143,7 +143,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 Enum Değişince Görünürlük Ayarlarını Yap
+        //  Enum Değişince Görünürlük Ayarlarını Yap
         partial void OnSelectedTypeChanged(ProductType value)
         {
             ShowPriceField = value == ProductType.Satis;
@@ -164,7 +164,7 @@ namespace KamPay.ViewModels
             if (SelectedConditionIndex != index) SelectedConditionIndex = index;
         }
 
-        // 🔥 Çeviri Yardımcı Metotları
+        //  Çeviri Yardımcı Metotları
         private string GetConditionText(ProductCondition condition)
         {
             return condition switch

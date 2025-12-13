@@ -54,7 +54,7 @@
                          RefreshColor="{StaticResource Primary}"
                          IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
-                <!-- 🔥 DÜZELTİLDİ: SelectionMode None ve TapGestureRecognizer kullanıldı -->
+                <!--  : SelectionMode None ve TapGestureRecognizer kullanıldı -->
                 <CollectionView ItemsSource="{Binding Conversations}"
                                 SelectionMode="None">
 
@@ -89,7 +89,7 @@
                                   ColumnSpacing="15" 
                                   BackgroundColor="White">
 
-                                <!-- 🔥 DÜZELTİLDİ: TapGestureRecognizer doğrudan Conversation nesnesini gönderir -->
+                                <!--  : TapGestureRecognizer doğrudan Conversation nesnesini gönderir -->
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer 
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"

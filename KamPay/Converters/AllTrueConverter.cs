@@ -2,10 +2,10 @@ using System.Globalization;
 
 namespace KamPay.Converters
 {
-    /// <summary>
+   
     /// Birden fazla bool deðerini AND iþlemine tabi tutar
     /// Tüm deðerler true ise true döner
-    /// </summary>
+   
     public class AllTrueConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

@@ -6,6 +6,7 @@ using KamPay.Helpers;
 namespace KamPay.Services;
 public class FirebaseGoodDeedService : IGoodDeedService
 {
+    // bu sayfa, Firebase Realtime Database ile etkileşim kurarak iyi niyetli ilanların oluşturulması, alınması, beğenilmesi, silinmesi ve yorum eklenmesi gibi işlevleri sağlar. kullanıcıların iyi niyetli ilanlarla etkileşimde bulunmasını mümkün kılar.
     private readonly FirebaseClient _firebaseClient;
     private const string GoodDeedPostsCollection = "good_deed_posts";
 
@@ -138,7 +139,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
                 .Child(postId)
                 .Child("Comments");
 
-            // 🔥 DÜZELTME BURADA: PostAsync YERİNE PutAsync KULLANIYORUZ
+            //  DÜZELTME  PostAsync YERİNE PutAsync KULLANIYORUZ
             // PostAsync: Firebase rastgele bir ID üretir -> Ekranda Çift Kayıt Yapar!
             // PutAsync: Bizim verdiğimiz (comment.CommentId) ID'yi kullanır -> Sorunu Çözer.
             await commentsNode
@@ -183,9 +184,9 @@ public class FirebaseGoodDeedService : IGoodDeedService
         }
     }
 
-    /// <summary>
+    
     /// Kullanıcının tüm panolarındaki isim ve profil fotoğrafı bilgilerini günceller
-    /// </summary>
+  
     public async Task<ServiceResult<bool>> UpdateUserInfoInPostsAsync(string userId, string newName, string newPhotoUrl)
     {
         try

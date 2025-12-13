@@ -12,7 +12,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
-        // 🔥 HATA YAKALAYICI: Kablosuz modda hataları görmek için
+        //  HATA YAKALAYICI: Kablosuz modda hataları görmek için
         AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
         {
             // Hatayı logla veya basitçe bir dosyaya yaz (Burada console logu göremeyeceğimiz için)

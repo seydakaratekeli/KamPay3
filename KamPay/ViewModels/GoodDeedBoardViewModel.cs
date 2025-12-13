@@ -37,7 +37,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isPostFormVisible;
 
-        // ❌ SİLİNDİ: private string newCommentText; 
+        //  : private string newCommentText; SİLİNDİ
         // Artık her post kendi 'DraftComment' özelliğini kullanıyor.
 
         [ObservableProperty]
@@ -105,7 +105,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private void ClosePostForm() => IsPostFormVisible = false;
 
-        // 🔥 YENİ: Yorum yapma kutusunu açıp kapatır
+        //  : Yorum yapma kutusunu açıp kapatır
         [RelayCommand]
         private void ToggleCommentBox(GoodDeedPost post)
         {
@@ -294,7 +294,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // 🔥 GÜNCELLENDİ: Artık post.DraftComment kullanıyor
+        //  : Artık post.DraftComment kullanıyor
         [RelayCommand]
         private async Task AddCommentAsync(GoodDeedPost post)
         {
@@ -312,7 +312,7 @@ namespace KamPay.ViewModels
                 UserId = currentUser.UserId,
                 UserName = userProfile?.Data?.Username ?? currentUser.FullName,
                 UserProfileImageUrl = userProfile?.Data?.ProfileImageUrl ?? "default_avatar.png",
-                Text = post.DraftComment.Trim(), // 🔥 Değişiklik burada
+                Text = post.DraftComment.Trim(), //  Değişiklik burada
                 CommentId = Guid.NewGuid().ToString(),
                 CreatedAt = DateTime.UtcNow
             };
@@ -551,7 +551,7 @@ namespace KamPay.ViewModels
 
                             // UI state koru
                             post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
-                            // 🔥 YENİ: Yorum kutusu görünürlüğünü ve yazılan taslak metni koru
+                            //  : Yorum kutusu görünürlüğünü ve yazılan taslak metni koru
                             post.IsCommentBoxVisible = existingPost.IsCommentBoxVisible;
                             post.DraftComment = existingPost.DraftComment;
 

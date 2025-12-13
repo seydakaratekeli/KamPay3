@@ -30,44 +30,9 @@
 
     <Grid>
 
-        <CollectionView ItemsSource="{StaticResource SkeletonItems}"
-                        IsVisible="{Binding IsSkeletonVisible}"
-                        Margin="10,0">
-            <CollectionView.Header>
-                <Label Text="{extensions:Translate CommunityPosts}"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="{StaticResource Primary}"
-                       Margin="10,15"/>
-            </CollectionView.Header>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="0,5" Padding="15" CornerRadius="15" HasShadow="True" BackgroundColor="White">
-                        <VerticalStackLayout Spacing="10">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <BoxView HeightRequest="18" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,40,0"/>
-                                <BoxView Grid.Column="1" HeightRequest="18" WidthRequest="70" CornerRadius="9" Color="{StaticResource Gray200}"/>
-                            </Grid>
-                            <BoxView HeightRequest="40" CornerRadius="4" Color="{StaticResource Gray200}"/>
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,10,0,0">
-                                <BoxView HeightRequest="40" WidthRequest="40" CornerRadius="20" Color="{StaticResource Gray200}"/>
-                                <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                                    <BoxView HeightRequest="12" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,60,0"/>
-                                    <BoxView HeightRequest="10" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,90,0"/>
-                                </VerticalStackLayout>
-                            </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
-                            <BoxView HeightRequest="20" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,5,60,0"/>
-                        </VerticalStackLayout>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
         <RefreshView Grid.Row="0" 
                      Command="{Binding RefreshPostsCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
-                     IsVisible="{Binding IsSkeletonVisible, Converter={StaticResource InverseBoolConverter}}"
                      RefreshColor="{StaticResource Primary}">
 
             <CollectionView ItemsSource="{Binding Posts}" Margin="10,0">
@@ -94,7 +59,6 @@
                                 <Label Text="{Binding Description}" LineBreakMode="WordWrap" TextColor="{StaticResource Gray600}" />
 
                                 <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,10,0,0">
-
                                     <HorizontalStackLayout Grid.Column="0" Spacing="10">
                                         <ffimageloading:CachedImage Source="{Binding UserProfileImageUrl}" 
                                                                     Aspect="AspectFill" 
@@ -222,6 +186,41 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
+
+        <CollectionView ItemsSource="{StaticResource SkeletonItems}"
+                        IsVisible="{Binding IsSkeletonVisible}"
+                        BackgroundColor="{StaticResource Gray100}" 
+                        Margin="10,0">
+            <CollectionView.Header>
+                <Label Text="{extensions:Translate CommunityPosts}"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}"
+                       Margin="10,15"/>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5" Padding="15" CornerRadius="15" HasShadow="True" BackgroundColor="White">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <BoxView HeightRequest="18" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,40,0"/>
+                                <BoxView Grid.Column="1" HeightRequest="18" WidthRequest="70" CornerRadius="9" Color="{StaticResource Gray200}"/>
+                            </Grid>
+                            <BoxView HeightRequest="40" CornerRadius="4" Color="{StaticResource Gray200}"/>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,10,0,0">
+                                <BoxView HeightRequest="40" WidthRequest="40" CornerRadius="20" Color="{StaticResource Gray200}"/>
+                                <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                    <BoxView HeightRequest="12" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,60,0"/>
+                                    <BoxView HeightRequest="10" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,0,90,0"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,5"/>
+                            <BoxView HeightRequest="20" CornerRadius="4" Color="{StaticResource Gray200}" Margin="0,5,60,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <Button Text="+" 
                 Command="{Binding OpenPostFormCommand}" 

@@ -5,14 +5,13 @@ using KamPay.Resources.Languages;
 
 namespace KamPay.Services;
 
-/// <summary>
-/// Singleton service for managing localization and culture switching.
-/// Implements INotifyPropertyChanged to support UI updates when language changes.
-/// </summary>
+// Yerelleştirme ve dil değiştirme işlemlerini yönetmek için tekil (singleton) servis.
+// Dil değiştiğinde kullanıcı arayüzü güncellemelerini desteklemek için INotifyPropertyChanged arayüzünü uygular.
 public class LocalizationResourceManager : INotifyPropertyChanged
 {
+    // bu sayfa, uygulamanın çok dilli desteğini yönetir ve dil değişikliklerini bildirir.
     private const string LanguagePreferenceKey = "AppLanguage";
-    private const string DefaultLanguage = "tr"; // ✅ Bu satır mevcut
+    private const string DefaultLanguage = "tr"; 
     
     private static readonly Lazy<LocalizationResourceManager> _instance = 
         new(() => new LocalizationResourceManager());
@@ -23,15 +22,13 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 
     private LocalizationResourceManager()
     {
-        // Load saved language preference on initialization
+        // Başlatma sırasında kaydedilmiş dil tercihini yükle
         var savedLanguage = Preferences.Get(LanguagePreferenceKey, DefaultLanguage);
         SetCulture(savedLanguage, savePreference: false);
     }
 
-    /// <summary>
-    /// Indexer to access resource strings by key.
-    /// Usage: LocalizationResourceManager.Instance["Profile"]
-    /// </summary>
+    // Kaynak dizelerine anahtar ile erişmek için dizinleyici.
+    // Kullanım: LocalizationResourceManager.Instance["Profile"]
     public string this[string key]
     {
         get
@@ -41,11 +38,9 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Sets the application culture and updates UI.
-    /// </summary>
-    /// <param name="cultureCode">Culture code (e.g., "tr" for Turkish, "en" for English)</param>
-    /// <param name="savePreference">Whether to save the preference (default: true)</param>
+    // Uygulama kültürünü ayarlar ve kullanıcı arayüzünü günceller.
+    // <param name="cultureCode">Kültür kodu (örneğin, Türkçe için "tr", İngilizce için "en")</param>
+    // <param name="savePreference">Tercihi kaydedip kaydetmeme (varsayılan: true)</param>
     public void SetCulture(string cultureCode, bool savePreference = true)
     {
         CultureInfo culture;
@@ -67,36 +62,32 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         {
             Preferences.Set(LanguagePreferenceKey, cultureCode);
         }
-        
-        // Notify all bindings that resources have changed
+
+        // Kaynakların değiştiğini tüm bağlantılara bildir
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-        
-        // Send global message for ViewModels to refresh
+
+        // ViewModel'lerin yenilenmesi için global mesaj gönder
         WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
     }
 
-    /// <summary>
-    /// Gets the current culture code.
-    /// </summary>
+    // Geçerli kültür kodunu alır.
     public string GetCurrentCulture()
     {
         return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
     }
 
-    /// <summary>
-    /// Gets a localized string by key.
-    /// </summary>
-    /// <param name="key">The resource key</param>
-    /// <returns>The localized string or the key if not found</returns>
+
+    // Anahtara göre yerelleştirilmiş bir dize alır.
+
+    // <param name="key">Kaynak anahtarı</param>
+    // <returns>Yerelleştirilmiş dize veya bulunamazsa anahtar</returns>
     public string GetString(string key)
     {
         return AppResources.ResourceManager.GetString(key, AppResources.Culture) ?? key;
     }
 }
 
-/// <summary>
-/// Message sent when the application language changes.
-/// </summary>
+// Uygulama dili değiştiğinde gönderilen mesaj.
 public class LanguageChangedMessage
 {
     public string LanguageCode { get; }

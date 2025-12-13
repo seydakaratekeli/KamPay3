@@ -4,6 +4,7 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
+    // bu sayfa ürün verileri için önbellek hizmeti sağlar. Ürün verilerini geçici olarak saklar ve gerektiğinde hızlı erişim sağlar.
     public interface IProductCacheService
     {
         Task<List<Product>> GetCachedProductsAsync(bool forceRefresh = false);

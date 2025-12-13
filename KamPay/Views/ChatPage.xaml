@@ -11,7 +11,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
         
-        <!-- 🔥 ÖZEL HEADER (Profil Fotoğrafı + İsim + Son Görülme) -->
+        <!--  ÖZEL HEADER (Profil Fotoğrafı + İsim + Son Görülme) -->
         <Grid Grid.Row="0" 
               BackgroundColor="{StaticResource Primary}"
               Padding="15,10"
@@ -84,7 +84,7 @@
                          Aspect="AspectFit"/>
         </Grid>
 
-        <!-- 🔥 Mesaj Listesi (Pull-to-Refresh ile) -->
+        <!--  Mesaj Listesi (Pull-to-Refresh ile) -->
         <RefreshView Grid.Row="1"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
@@ -100,7 +100,7 @@
                     <DataTemplate x:DataType="models:Message">
                         <Grid Padding="10,5">
                             
-                            <!-- 🔥 System Mesajı Template -->
+                            <!--  System Mesajı Template -->
                             <Frame Padding="15,10"
                                    CornerRadius="10"
                                    BorderColor="Transparent"
@@ -117,7 +117,7 @@
                                        FontAttributes="Bold"/>
                             </Frame>
                             
-                            <!-- 🔥 Normal Mesajlar (Text ve Image) -->
+                            <!--  Normal Mesajlar (Text ve Image) -->
                             <Frame Padding="12"
                                    CornerRadius="15"
                                    BorderColor="Transparent"
@@ -141,7 +141,7 @@
                                 </Frame.Style>
 
                                 <VerticalStackLayout Spacing="5">
-                                    <!-- 📷 Fotoğraf Mesajı -->
+                                    <!--  Fotoğraf Mesajı -->
                                     <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}">
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 10"
@@ -165,7 +165,7 @@
                                                            HorizontalOptions="Center" />
                                     </Grid>
 
-                                    <!-- 💬 Text Mesajı -->
+                                    <!--  Text Mesajı -->
                                     <Label Text="{Binding Content}"
                                            LineBreakMode="WordWrap"
                                            IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
@@ -225,7 +225,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 
-                <!-- 🔥 Boş görünüm -->
+                <!--  Boş görünüm -->
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="40"
                                          VerticalOptions="Center"
@@ -259,7 +259,7 @@
                   ColumnSpacing="10"
                   RowDefinitions="Auto">
                 
-                <!-- 📷 Fotoğraf Butonu -->
+                <!--  Fotoğraf Butonu -->
                 <Button Grid.Column="0"
                         Text="📷"
                         Command="{Binding PickImageCommand}"
@@ -304,7 +304,7 @@
             </Grid>
         </Frame>
 
-        <!-- 🔥 Skeleton Loader (İlk Yükleme) -->
+        <!--  Skeleton Loader (İlk Yükleme) -->
         <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsLoading}"
               BackgroundColor="White"

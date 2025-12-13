@@ -45,12 +45,12 @@ public partial class GoodDeedPost : ObservableObject
     [property: JsonIgnore]
     private bool isLiked;
 
-    // 🔥 YENİ EKLENDİ 1: Yorum yazılan metin (Her ilanınki kendine özel olsun diye)
+    // Yorum yazılan metin (Her ilanınki kendine özel olsun diye)
     [ObservableProperty]
     [property: JsonIgnore] // Firebase'e kaydedilmesin, sadece ekranda tutulsun
     private string draftComment;
 
-    // 🔥 YENİ EKLENDİ 2: Yorum kutusunun görünürlüğü
+    // : Yorum kutusunun görünürlüğü
     [ObservableProperty]
     [property: JsonIgnore]
     private bool isCommentBoxVisible;

@@ -63,7 +63,7 @@ namespace KamPay.Services
                 {
                     var profile = profileResult.Data;
 
-                    // 🔥 KRİTİK DÜZELTME: Doğrudan atama YAPMA.
+                    //   Doğrudan atama YAPMA.
                     // Sadece gelen veri doluysa (null veya boş değilse) üzerine yaz.
 
                     if (!string.IsNullOrWhiteSpace(profile.FirstName))
@@ -130,7 +130,7 @@ namespace KamPay.Services
                 string newFullName = CurrentUser.FullName;
                 string newPhotoUrl = CurrentUser.ProfileImageUrl;
 
-                // 🔥 Firebase'deki tüm ilgili verileri paralel olarak güncelle
+                //  Firebase'deki tüm ilgili verileri paralel olarak güncelle
                 var tasks = new List<Task<ServiceResult<bool>>>
                 {
                     _productService.UpdateUserInfoInProductsAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
@@ -161,9 +161,11 @@ namespace KamPay.Services
                     Console.WriteLine($"⚠️ Bulk update hatası: {taskEx.Message}");
                 }
 
-                // Explicitly trigger event after property updates to notify all listeners.
-                // Note: This is NOT redundant - modifying properties on CurrentUser (e.g., CurrentUser.FirstName = x)
-                // does not trigger the CurrentUser setter, only full reassignment (CurrentUser = newUser) does.
+                // Özellik güncellemelerinden sonra tüm dinleyicileri bilgilendirmek için olayı açıkça tetikleyin.
+
+                // Not: Bu gereksiz DEĞİLDİR - CurrentUser'daki özellikleri değiştirmek (örneğin, CurrentUser.FirstName = x)
+                // CurrentUser ayarlayıcısını tetiklemez, yalnızca tam yeniden atama (CurrentUser = newUser) tetikler.
+
                 UserProfileChanged?.Invoke(this, CurrentUser);
 
                 return ServiceResult<bool>.SuccessResult(true, "Profil güncellendi");

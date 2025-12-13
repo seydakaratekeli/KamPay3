@@ -79,7 +79,7 @@ namespace KamPay.Services
                     {
                         await _productService.MarkAsReservedAsync(transaction.OfferedProductId, true);
 
-                        // 🔥 KRİTİK: TAKAS İÇİN GÜVENLİ QR KODLARI OLUŞTUR
+                        //  KRİTİK: TAKAS İÇİN GÜVENLİ QR KODLARI OLUŞTUR
                         Console.WriteLine($"✅ Takas kabul edildi. Güvenli QR kodlar oluşturuluyor: {transactionId}");
 
                         // Satıcının ürünü için güvenli QR kod (60 dakika geçerli)
@@ -90,7 +90,7 @@ namespace KamPay.Services
                             transaction.SellerId,
                             transaction.BuyerId,
                             validityMinutes: 60, // 1 saat
-                            meetingPointLatitude: null, // Şimdilik null, Faz 3'te eklenecek
+                            meetingPointLatitude: null, // Şimdilik null, 3'te eklenecek
                             meetingPointLongitude: null,
                             meetingPointName: null
                         );
@@ -560,9 +560,9 @@ namespace KamPay.Services
 
         #region 💰 SATIŞ PAZARLIK METODLARI
 
-        /// <summary>
+       
         /// Satış için fiyat teklifi (Alıcı)
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> ProposePriceForSaleAsync(
             string transactionId,
             decimal proposedPrice,
@@ -613,7 +613,7 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
+                //  : Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     await AddSystemMessageAsync(
@@ -631,9 +631,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// Satış için karşı teklif (Satıcı)
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> SendCounterOfferForSaleAsync(
             string transactionId,
             decimal counterOffer,
@@ -681,7 +681,7 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
+                //  : Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     var buyerOffer = transaction.ProposedPriceByBuyer.HasValue 
@@ -707,9 +707,9 @@ namespace KamPay.Services
 
         #region 🔄 TAKAS PAZARLIK METODLARI
 
-        /// <summary>
+       
         /// Takas için ek nakit teklifi (Talep Eden)
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> ProposeAdditionalCashAsync(
             string transactionId,
             decimal additionalCash,
@@ -757,7 +757,7 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
+                //  : Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     var exchangeInfo = !string.IsNullOrEmpty(transaction.OfferedProductTitle)
@@ -779,9 +779,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// Takas için karşı nakit teklifi (Sahip)
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> SendCounterCashOfferAsync(
             string transactionId,
             decimal counterCash,
@@ -829,7 +829,7 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
+                //  : Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     var requesterOffer = transaction.AdditionalCashByRequester.HasValue
@@ -859,9 +859,9 @@ namespace KamPay.Services
 
         #region 🤝 ORTAK PAZARLIK METODLARI
 
-        /// <summary>
+       
         /// Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas)
-        /// </summary>
+       
         public async Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(
             string transactionId,
             string currentUserId)
@@ -924,7 +924,7 @@ namespace KamPay.Services
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                // 🔥 DÜZELTİLDİ: Ürün bilgisi eklendi
+                //  : Ürün bilgisi eklendi
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     var typeIcon = transaction.Type == ProductType.Satis ? "📦" : "🔄";
@@ -949,9 +949,9 @@ namespace KamPay.Services
             }
         }
 
-        /// <summary>
+       
         /// Transaction için konuşma başlat
-        /// </summary>
+       
         public async Task<ServiceResult<string>> StartConversationForTransactionAsync(
             string transactionId,
             string currentUserId)
@@ -970,7 +970,7 @@ namespace KamPay.Services
                 if (transaction.BuyerId != currentUserId && transaction.SellerId != currentUserId)
                     return ServiceResult<string>.FailureResult("Bu işleme erişim yetkiniz yok");
 
-                // 🔥 ÖNCELİKLE: Mevcut ConversationId'yi kontrol et
+                //  ÖNCELİKLE: Mevcut ConversationId'yi kontrol et
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     // Konuşmanın hala aktif olduğunu doğrula
@@ -1077,7 +1077,7 @@ namespace KamPay.Services
                     .Child(transactionId)
                     .PutAsync(transaction);
 
-                // 🔥 DÜZELTİLDİ: Sistem mesajına ürün bilgisi eklendi
+                //  : Sistem mesajına ürün bilgisi eklendi
                 var typeIcon = transaction.Type == ProductType.Satis ? "📦" : 
                               transaction.Type == ProductType.Takas ? "🔄" : "🎁";
                 var typeText = transaction.Type == ProductType.Satis ? "Satış" : 
@@ -1135,7 +1135,7 @@ namespace KamPay.Services
                 Console.WriteLine($"   Type: {systemMessage.Type}");
                 Console.WriteLine($"   IsSystemMessage: {systemMessage.IsSystemMessage}");
 
-                // 🔥 ÖNEMLİ: Mesajları ConversationId altında saklıyoruz
+                //  ÖNEMLİ: Mesajları ConversationId altında saklıyoruz
                 var messagePath = $"{Constants.MessagesCollection}/{conversationId}/{systemMessage.MessageId}";
                 Console.WriteLine($"   Firebase Path: {messagePath}");
 
