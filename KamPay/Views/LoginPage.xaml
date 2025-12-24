@@ -6,12 +6,11 @@
              x:DataType="vm:LoginViewModel"
              x:Class="KamPay.Views.LoginPage"
              BackgroundColor="#6200EA"
-             Shell.NavBarIsVisible="False" InputTransparent="True" Title="extensions:Translate">
+             Shell.NavBarIsVisible="False">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">
-            
-            <!-- Logo veya Başlık -->
+
             <Label Text="KamPay" 
                    FontSize="48"
                    FontAttributes="Bold"
@@ -26,22 +25,19 @@
 
             <Frame BackgroundColor="White" CornerRadius="20" Padding="20" HasShadow="True">
                 <VerticalStackLayout Spacing="15">
-                    
-                    <!-- Email -->
+
                     <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Email]}"
                            Text="{Binding Email}"
                            Keyboard="Email"
                            TextColor="#212121"
                            PlaceholderColor="#757575"/>
 
-                    <!-- Şifre -->
                     <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Password]}"
                            Text="{Binding Password}"
                            IsPassword="True"
                            TextColor="#212121"
                            PlaceholderColor="#757575"/>
 
-                    <!-- Beni Hatırla -->
                     <HorizontalStackLayout Spacing="10">
                         <CheckBox IsChecked="{Binding RememberMe}" Color="#6200EA"/>
                         <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[RememberMe]}"
@@ -49,13 +45,11 @@
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
 
-                    <!-- Hata Mesajı -->
                     <Label Text="{Binding ErrorMessage}"
                            TextColor="Red"
                            FontSize="12"
                            IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
 
-                    <!-- Giriş Yap Butonu -->
                     <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Login]}"
                             Command="{Binding LoginCommand}"
                             BackgroundColor="#6200EA"
@@ -64,7 +58,6 @@
                             CornerRadius="10"
                             HeightRequest="50"/>
 
-                    <!-- Kayıt Ol Linki -->
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" Margin="0,10,0,0">
                         <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[DontHaveAccount]}"
                                TextColor="#757575"

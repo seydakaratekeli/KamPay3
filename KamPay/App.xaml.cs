@@ -1,9 +1,6 @@
-﻿using KamPay.Views;
+﻿using Microsoft.Maui.Controls; // Application sınıfı için gerekli using
 using KamPay.ViewModels;
 using KamPay.Services;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
-using Microsoft.Maui.Dispatching;
 
 namespace KamPay
 {
@@ -13,28 +10,25 @@ namespace KamPay
         {
             InitializeComponent();
 
-            // Varsayılan dili Türkçe olarak ayarla
             LocalizationResourceManager.Instance.SetCulture("tr");
 
             this.MainPage = appShell;
 
-            // Navigation işlemini UI thread hazır olduktan sonra yap
             Dispatcher.Dispatch(async () =>
             {
                 try
                 {
-                    // Küçük bir gecikme ile Shell'in tamamen yüklenmesini bekle
                     await Task.Delay(200);
-                    
-                    // Kullanıcı giriş yapmış mı kontrol et
-                    var token = Preferences.Get("auth_token", string.Empty);
-                    
-                   // if (!string.IsNullOrEmpty(token))
+
+                    // DÜZELTME: "auth_token" yerine "current_user_id" kontrol ediliyor
+                    var userId = Preferences.Get("current_user_id", string.Empty);
+
+                    // userId boş değilse giriş yapmış demektir
+                    if (!string.IsNullOrEmpty(userId))
                     {
-                        // Giriş yapmış, ana uygulamaya yönlendir
                         await Shell.Current.GoToAsync("//MainApp");
                     }
-                    // Giriş yapmamışsa zaten LoginPage default olarak açık
+                    // Boşsa hiçbir şey yapmaya gerek yok, LoginPage zaten varsayılan olarak açılacaktır.
                 }
                 catch (Exception ex)
                 {
@@ -42,7 +36,7 @@ namespace KamPay
                 }
             });
         }
-        
+
         protected override void OnStart()
         {
             base.OnStart();
