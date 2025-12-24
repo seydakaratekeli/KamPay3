@@ -1,12 +1,11 @@
-﻿
-using KamPay.Models;
+﻿using KamPay.Models;
 using System.Globalization;
 
 namespace KamPay.Converters
 {
     public class ConfirmDonationButtonVisibilityConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is Transaction transaction)
             {
@@ -22,11 +21,11 @@ namespace KamPay.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // ConvertBack is not needed for this one-way binding converter
             // Return null as this converter is for visibility only
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

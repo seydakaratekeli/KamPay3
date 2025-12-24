@@ -22,10 +22,9 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
 
         private readonly RealtimeSnapshotService<ServiceOffer> _loader;
-        private IDisposable _listener;
+        private IDisposable? _listener;
 
         private readonly HashSet<string> _serviceIds = new();
-        private bool _initialLoadComplete = false;
 
         // ------------ UI STATE ----------
         [ObservableProperty] private bool isPostFormVisible;
@@ -34,38 +33,50 @@ namespace KamPay.ViewModels
         [ObservableProperty] private bool isRefreshing;
 
         // ------------ FORM FIELDS ----------
-        [ObservableProperty] private string serviceTitle;
-        [ObservableProperty] private string serviceDescription;
+        [ObservableProperty] private string serviceTitle = "";
+        [ObservableProperty] private string serviceDescription = "";
         [ObservableProperty] private ServiceCategory selectedCategory;
         [ObservableProperty] private decimal servicePrice;
         [ObservableProperty] private int timeCredits = 1;
 
         // ------------ FILTERS ------------
-        [ObservableProperty] private string searchText;
+        [ObservableProperty] private string searchText = "";
 
         // null -> Hepsi
         [ObservableProperty] private ServiceCategory? filterCategory = null;
 
         // Seçilen sıralama metni (Örn: "Artan", "Ascending" vb.)
-        [ObservableProperty] private string priceSort = null;
-
-        // / Dinamik Sıralama Seçenekleri
-        // Dil değiştiğinde bu liste otomatik olarak yeni dildeki karşılıklarını döndürür.
-        public List<string> PriceSortOptions => new List<string>
-        {
-            LocalizationResourceManager.Instance["PriceAll"],       // Hepsi / All
-            LocalizationResourceManager.Instance["PriceAscending"], // Artan / Ascending
-            LocalizationResourceManager.Instance["PriceDescending"] // Azalan / Descending
-        };
+        [ObservableProperty] private string? priceSort = null;
 
         // ------------ DATA COLLECTIONS --------
         public ObservableCollection<ServiceOffer> Services { get; } = new();
         public ObservableCollection<ServiceOffer> FilteredServices { get; } = new();
 
+        /// <summary>
+        /// Kategori listesi (null = "Hepsi" seçeneği dahil)
+        /// </summary>
         public List<ServiceCategory?> Categories { get; } =
             new List<ServiceCategory?> { null }
             .Concat(Enum.GetValues(typeof(ServiceCategory)).Cast<ServiceCategory?>())
             .ToList();
+
+        /// <summary>
+        /// Dinamik Sıralama Seçenekleri
+        /// Dil değiştiğinde bu liste otomatik olarak yeni dildeki karşılıklarını döndürür.
+        /// </summary>
+        public List<string> PriceSortOptions
+        {
+            get
+            {
+                var loc = LocalizationResourceManager.Instance;
+                return new List<string>
+                {
+                    loc["PriceAll"],       // Hepsi / All
+                    loc["PriceAscending"], // Artan / Ascending
+                    loc["PriceDescending"] // Azalan / Descending
+                };
+            }
+        }
 
         // ------------ CONSTRUCTOR ------------
         public ServiceSharingViewModel(
@@ -85,7 +96,7 @@ namespace KamPay.ViewModels
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
-            // / Dil değiştiğinde sıralama listesini (Picker) güncelle
+            // Dil değiştiğinde sıralama listesini (Picker) güncelle
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
                 OnPropertyChanged(nameof(PriceSortOptions));
@@ -96,7 +107,7 @@ namespace KamPay.ViewModels
             _ = InitializeAsync();
         }
 
-        private void OnUserProfileChanged(object sender, User u)
+        private void OnUserProfileChanged(object? sender, User u)
         {
             if (u == null) return;
 
@@ -118,9 +129,9 @@ namespace KamPay.ViewModels
             await UltraFastLoadAsync();
         }
 
-       
-        //  ULTRA FAST LOADING (Snapshot + Realtime)
-       
+        /// <summary>
+        /// ULTRA FAST LOADING (Snapshot + Realtime)
+        /// </summary>
         public async Task UltraFastLoadAsync()
         {
             try
@@ -151,7 +162,6 @@ namespace KamPay.ViewModels
 
                 Services.SortDescending(x => x.CreatedAt);
 
-                _initialLoadComplete = true;
                 IsLoading = false;
 
                 ApplyFilter();
@@ -175,13 +185,13 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private void ClearCategoryFilter()
         {
-            FilterCategory = null;   // kategori filtresi sıfırlanır
+            FilterCategory = null;
             ApplyFilter();
         }
 
-       
-        //  REALTIME UPDATE HANDLER
-       
+        /// <summary>
+        /// REALTIME UPDATE HANDLER
+        /// </summary>
         private void ApplyRealtimeEvent(FirebaseEvent<ServiceOffer> e)
         {
             var s = e.Object;
@@ -258,8 +268,7 @@ namespace KamPay.ViewModels
             Services.Add(s);
         }
 
-       
-        //  FILTERING
+        ///  FILTERING
        
         private void FilterServices()
         {
@@ -270,9 +279,9 @@ namespace KamPay.ViewModels
             {
                 var t = SearchText.ToLower();
                 q = q.Where(s =>
-                    (s.Title ?? "").ToLower().Contains(t) ||
-                    (s.Description ?? "").ToLower().Contains(t) ||
-                    (s.ProviderName ?? "").ToLower().Contains(t)
+                    (s.Title ?? "").Contains(t, StringComparison.OrdinalIgnoreCase) ||
+                    (s.Description ?? "").Contains(t, StringComparison.OrdinalIgnoreCase) ||
+                    (s.ProviderName ?? "").Contains(t, StringComparison.OrdinalIgnoreCase)
                 );
             }
 
@@ -282,7 +291,7 @@ namespace KamPay.ViewModels
                 q = q.Where(s => s.Category == FilterCategory.Value);
             }
 
-            // / Price sort (Dil bağımsız kontrol)
+            // Price sort (Dil bağımsız kontrol)
             var loc = LocalizationResourceManager.Instance;
 
             if (PriceSort == loc["PriceAscending"]) // "Artan" veya "Ascending" kontrolü
@@ -307,14 +316,14 @@ namespace KamPay.ViewModels
         partial void OnSearchTextChanged(string value) => ApplyFilter();
         partial void OnFilterCategoryChanged(ServiceCategory? value) => ApplyFilter();
 
-        partial void OnPriceSortChanged(string value)
+        partial void OnPriceSortChanged(string? value)
         {
             // Seçim değiştiğinde filtreyi uygula
             ApplyFilter();
         }
 
        
-        //  REFRESH
+        ///  REFRESH
        
         [RelayCommand]
         private async Task RefreshServicesAsync()
@@ -331,7 +340,6 @@ namespace KamPay.ViewModels
                 Services.Clear();
                 FilteredServices.Clear();
                 _serviceIds.Clear();
-                _initialLoadComplete = false;
 
                 await UltraFastLoadAsync();
             }
@@ -341,14 +349,16 @@ namespace KamPay.ViewModels
             }
         }
 
-       
-        // FORM OPEN/CLOSE
-       
-        [RelayCommand] private void OpenPostForm() => IsPostFormVisible = true;
+/// <summary>
+/// FORM OPEN/CLOSE
+/// </summary>
+[RelayCommand]
+private void OpenPostForm() => IsPostFormVisible = true;
+
         [RelayCommand] private void ClosePostForm() => IsPostFormVisible = false;
 
        
-        //  CREATE SERVICE
+        ///  CREATE SERVICE
        
         [RelayCommand]
         private async Task CreateServiceAsync()
@@ -357,26 +367,26 @@ namespace KamPay.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(ServiceTitle))
                 {
-                    await Display("Uyarı", "Başlık gerekli.");
+                    await DisplayAsync("Uyarı", "Başlık gerekli.");
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(ServiceDescription))
                 {
-                    await Display("Uyarı", "Açıklama gerekli.");
+                    await DisplayAsync("Uyarı", "Açıklama gerekli.");
                     return;
                 }
 
                 if (ServicePrice <= 0)
                 {
-                    await Display("Uyarı", "Geçerli bir fiyat giriniz.");
+                    await DisplayAsync("Uyarı", "Geçerli bir fiyat giriniz.");
                     return;
                 }
 
                 var user = await _authService.GetCurrentUserAsync();
                 if (user == null)
                 {
-                    await Display("Hata", "Giriş yapılmamış.");
+                    await DisplayAsync("Hata", "Giriş yapılmamış.");
                     return;
                 }
 
@@ -412,16 +422,16 @@ namespace KamPay.ViewModels
 
                     IsPostFormVisible = false;
 
-                    await Display("Başarılı", "Hizmet paylaşıldı!");
+                    await DisplayAsync("Başarılı", "Hizmet paylaşıldı!");
                 }
                 else
                 {
-                    await Display("Hata", result.Message ?? "Hata oluştu.");
+                    await DisplayAsync("Hata", result.Message ?? "Hata oluştu.");
                 }
             }
             catch (Exception ex)
             {
-                await Display("Hata", ex.Message);
+                await DisplayAsync("Hata", ex.Message);
             }
             finally
             {
@@ -440,19 +450,19 @@ namespace KamPay.ViewModels
             var user = await _authService.GetCurrentUserAsync();
             if (user == null)
             {
-                await Display("Hata", "Giriş yapılmalı.");
+                await DisplayAsync("Hata", "Giriş yapılmalı.");
                 return;
             }
 
             if (offer.ProviderId == user.UserId)
             {
-                await Display("Bilgi", "Kendi hizmetinize talep gönderemezsiniz.");
+                await DisplayAsync("Bilgi", "Kendi hizmetinize talep gönderemezsiniz.");
                 return;
             }
 
             try
             {
-                var msg = await Application.Current.MainPage.DisplayPromptAsync(
+                var msg = await Application.Current!.MainPage!.DisplayPromptAsync(
                     "Hizmet Talebi",
                     $"'{offer.Title}' için mesajınız:",
                     "Gönder",
@@ -467,13 +477,13 @@ namespace KamPay.ViewModels
                 var res = await _serviceService.RequestServiceAsync(offer, user, msg);
 
                 if (res.Success)
-                    await Display("Başarılı", res.Message);
+                    await DisplayAsync("Başarılı", res.Message);
                 else
-                    await Display("Hata", res.Message ?? "Talep gönderilemedi.");
+                    await DisplayAsync("Hata", res.Message ?? "Talep gönderilemedi.");
             }
             catch (Exception ex)
             {
-                await Display("Hata", ex.Message);
+                await DisplayAsync("Hata", ex.Message);
             }
             finally
             {
@@ -482,7 +492,7 @@ namespace KamPay.ViewModels
         }
 
        
-        //  MESSAGE PROVIDER
+        ///  MESSAGE PROVIDER
        
         [RelayCommand]
         private async Task MessageProviderAsync(ServiceOffer offer)
@@ -496,13 +506,13 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Display("Hata", "Giriş yapılmalı.");
+                    await DisplayAsync("Hata", "Giriş yapılmalı.");
                     return;
                 }
 
                 if (currentUser.UserId == offer.ProviderId)
                 {
-                    await Display("Bilgi", "Kendinize mesaj gönderemezsiniz.");
+                    await DisplayAsync("Bilgi", "Kendinize mesaj gönderemezsiniz.");
                     return;
                 }
 
@@ -511,18 +521,18 @@ namespace KamPay.ViewModels
                     offer.ProviderId,
                     offer.ServiceId);
 
-                if (conversationResult.Success)
+                if (conversationResult.Success && conversationResult.Data != null)
                 {
                     await Shell.Current.GoToAsync($"ChatPage?conversationId={conversationResult.Data.ConversationId}");
                 }
                 else
                 {
-                    await Display("Hata", conversationResult.Message ?? "Mesaj gönderilemedi.");
+                    await DisplayAsync("Hata", conversationResult.Message ?? "Mesaj gönderilemedi.");
                 }
             }
             catch (Exception ex)
             {
-                await Display("Hata", ex.Message);
+                await DisplayAsync("Hata", ex.Message);
             }
             finally
             {
@@ -547,9 +557,9 @@ namespace KamPay.ViewModels
                 TimeCredits--;
         }
 
-        private Task Display(string t, string m)
+        private static Task DisplayAsync(string title, string message)
         {
-            return Application.Current.MainPage.DisplayAlert(t, m, "Tamam");
+            return Application.Current!.MainPage!.DisplayAlert(title, message, "Tamam");
         }
 
        
@@ -563,11 +573,13 @@ namespace KamPay.ViewModels
             Services.Clear();
             FilteredServices.Clear();
             _serviceIds.Clear();
+
+            GC.SuppressFinalize(this);
         }
     }
 
    
-    //  SMALL EXTENSION FOR SORTING
+    ///  SMALL EXTENSION FOR SORTING
    
     public static class ListSortExtensions
     {

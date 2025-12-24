@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +9,18 @@ namespace KamPay.Models
     public class Conversation
     {
         public string ConversationId { get; set; } = Guid.NewGuid().ToString();
-        public string User1Id { get; set; }
-        public string User1Name { get; set; }
-        public string User1PhotoUrl { get; set; }
-        public string User2Id { get; set; }
-        public string User2Name { get; set; }
-        public string User2PhotoUrl { get; set; }
-        public string ProductId { get; set; }
-        public string ProductTitle { get; set; }
-        public string ProductThumbnail { get; set; }
-        public string LastMessage { get; set; }
+        public string User1Id { get; set; } = "";
+        public string User1Name { get; set; } = "";
+        public string User1PhotoUrl { get; set; } = "";
+        public string User2Id { get; set; } = "";
+        public string User2Name { get; set; } = "";
+        public string User2PhotoUrl { get; set; } = "";
+        public string ProductId { get; set; } = "";
+        public string ProductTitle { get; set; } = "";
+        public string ProductThumbnail { get; set; } = "";
+        public string LastMessage { get; set; } = "";
         public DateTime LastMessageTime { get; set; }
-        public string LastMessageSenderId { get; set; }
+        public string LastMessageSenderId { get; set; } = "";
         public int UnreadCountUser1 { get; set; }
         public int UnreadCountUser2 { get; set; }
         public bool IsActive { get; set; } = true;
@@ -30,8 +28,8 @@ namespace KamPay.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         //  ViewModel'ler için yardýmcý özellikler 
-        public string OtherUserName { get; set; }
-        public string OtherUserPhotoUrl { get; set; }
+        public string OtherUserName { get; set; } = "";
+        public string OtherUserPhotoUrl { get; set; } = "";
         public int UnreadCount { get; set; }
 
        

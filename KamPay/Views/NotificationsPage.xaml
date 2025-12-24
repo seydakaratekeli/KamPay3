@@ -79,13 +79,9 @@
 
                             <Border StrokeShape="RoundRectangle 12"
                                     StrokeThickness="0"
-                                    BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToColorConverter}, ConverterParameter={x:Reference TrueColor}, FallbackValue=White}"
+                                    BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToColorConverter}, FallbackValue=White}"
                                     Margin="0,0,0,10"
                                     Padding="15">
-                                <Border.Resources>
-                                    <Color x:Key="TrueColor">White</Color>
-                                    <Color x:Key="FalseColor">#E8F5E9</Color>
-                                </Border.Resources>
 
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="15">
                                     <Frame Grid.Column="0"

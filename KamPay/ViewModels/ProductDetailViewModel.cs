@@ -29,17 +29,17 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly ITransactionService _transactionService;
         private readonly IUserStateService _userStateService;
-        private string _lastLoadedProductId;
+        private string? _lastLoadedProductId;
         private bool _disposed = false;
 
         // Localization helper
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
         [ObservableProperty]
-        private string productId;
+        private string productId = string.Empty;
 
         [ObservableProperty]
-        private Product product;
+        private Product? product;
 
         [ObservableProperty]
         private bool isLoading;
@@ -58,7 +58,7 @@ namespace KamPay.ViewModels
 
         //  Aktif transaction bilgisi
         [ObservableProperty]
-        private Transaction activeTransaction;
+        private Transaction? activeTransaction;
 
         [ObservableProperty]
         private bool hasActiveTransaction;
@@ -90,7 +90,7 @@ namespace KamPay.ViewModels
             _userStateService.UserProfileChanged += OnUserProfileChanged;
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             // Eğer gösterilen ürün bu kullanıcıya aitse güncelle
             if (Product != null && updatedUser != null && Product.UserId == updatedUser.UserId)
@@ -122,7 +122,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        partial void OnProductIdChanged(string value)
+        partial void OnProductIdChanged(string? value)
         {
             if (!string.IsNullOrEmpty(value) && value != _lastLoadedProductId)
             {
@@ -131,7 +131,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        partial void OnProductChanged(Product value)
+        partial void OnProductChanged(Product? value)
         {
             OnPropertyChanged(nameof(HasLocation));
         }
@@ -174,13 +174,15 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["ProductNotFound"], Res["Ok"]);
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["ProductNotFound"], Res["Ok"]);
                     await Shell.Current.GoToAsync("..");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["ProductLoadError"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["ProductLoadError"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -235,12 +237,14 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], conversationResult.Message, Res["Ok"]);
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert(Res["Error"], conversationResult.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["ContactFailed"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["ContactFailed"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -256,7 +260,8 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["LoginRequired"], Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["LoginRequired"], Res["Ok"]);
                 return;
             }
 
@@ -279,22 +284,25 @@ namespace KamPay.ViewModels
                             ActiveTransaction = result.Data;
                             HasActiveTransaction = true;
                             
-                            await Application.Current.MainPage.DisplayAlert(
-                                Res["Success"], 
-                                "Talebiniz gönderildi. Artık satıcıyla mesajlaşabilir ve fiyat pazarlığı yapabilirsiniz.", 
-                                Res["Ok"]
-                            );
+                            if (Application.Current?.MainPage != null)
+                                await Application.Current.MainPage.DisplayAlert(
+                                    Res["Success"], 
+                                    "Talebiniz gönderildi. Artık satıcıyla mesajlaşabilir ve fiyat pazarlığı yapabilirsiniz.", 
+                                    Res["Ok"]
+                                );
                         }
                         else
                         {
-                            await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                            if (Application.Current?.MainPage != null)
+                                await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                         }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -323,12 +331,14 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"Mesaj gönderilemedi: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"Mesaj gönderilemedi: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -340,28 +350,30 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ProposePriceAsync()
         {
-            if (ActiveTransaction == null || Product.Type != ProductType.Satis) return;
+            if (ActiveTransaction == null || Product == null || Product.Type != ProductType.Satis) return;
 
             try
             {
                 var currentPriceText = Product.Price > 0 
-                    ? $"Mevcut Fiyat: {Product.Price:N2} ₺\n\n" 
+                    ? string.Format(Res["CurrentPrice"], Product.Price) + "\n\n"
                     : "";
 
                 var proposedText = ActiveTransaction.ProposedPriceByBuyer.HasValue
-                    ? $"Sizin Teklifiniz: {ActiveTransaction.ProposedPriceByBuyer:N2} ₺\n"
+                    ? string.Format(Res["YourOffer"], ActiveTransaction.ProposedPriceByBuyer) + "\n"
                     : "";
 
                 var counterText = ActiveTransaction.CounterOfferBySeller.HasValue
-                    ? $"Satıcının Karşı Teklifi: {ActiveTransaction.CounterOfferBySeller:N2} ₺\n\n"
+                    ? string.Format(Res["SellerCounterOffer"], ActiveTransaction.CounterOfferBySeller) + "\n\n"
                     : "";
 
+                if (Application.Current?.MainPage == null) return;
+
                 var result = await Application.Current.MainPage.DisplayPromptAsync(
-                    "💰 Fiyat Teklifi",
-                    $"{currentPriceText}{proposedText}{counterText}Teklif etmek istediğiniz fiyatı girin:",
-                    "Gönder",
-                    "İptal",
-                    "Fiyat (TL)",
+                    Res["PriceProposal"],
+                    $"{currentPriceText}{proposedText}{counterText}{Res["EnterProposedPrice"]}",
+                    Res["SendButton"],
+                    Res["Cancel"],
+                    Res["PriceTLPlaceholder"],
                     keyboard: Keyboard.Numeric
                 );
 
@@ -369,12 +381,14 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Geçerli bir fiyat girin", Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["EnterValidPrice"], Res["Ok"]);
                     return;
                 }
 
                 IsLoading = true;
                 var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
                 var proposeResult = await _transactionService.ProposePriceForSaleAsync(
                     ActiveTransaction.TransactionId,
                     proposedPrice,
@@ -385,7 +399,7 @@ namespace KamPay.ViewModels
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         Res["Success"], 
-                        "Fiyat teklifiniz gönderildi. Satıcıyla sohbet edin!", 
+                        Res["PriceProposalSent"], 
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);
@@ -397,7 +411,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -409,24 +424,26 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ProposeAdditionalCashAsync()
         {
-            if (ActiveTransaction == null || Product.Type != ProductType.Takas) return;
+            if (ActiveTransaction == null || Product == null || Product.Type != ProductType.Takas) return;
 
             try
             {
                 var currentText = ActiveTransaction.AdditionalCashByRequester.HasValue
-                    ? $"Sizin Teklifiniz: {ActiveTransaction.AdditionalCashByRequester:N2} ₺\n"
+                    ? string.Format(Res["YourOffer"], ActiveTransaction.AdditionalCashByRequester) + "\n"
                     : "";
 
                 var counterText = ActiveTransaction.CounterCashByOwner.HasValue
-                    ? $"Satıcının İsteği: {ActiveTransaction.CounterCashByOwner:N2} ₺\n\n"
+                    ? string.Format(Res["SellerCounterOffer"], ActiveTransaction.CounterCashByOwner) + "\n\n"
                     : "";
 
+                if (Application.Current?.MainPage == null) return;
+
                 var result = await Application.Current.MainPage.DisplayPromptAsync(
-                    "💰 Ek Nakit Teklifi",
-                    $"{currentText}{counterText}Takas için eklemek istediğiniz nakit tutarını girin (0 girebilirsiniz):",
-                    "Gönder",
-                    "İptal",
-                    "Tutar (TL)",
+                    Res["AdditionalCashProposal"],
+                    $"{currentText}{counterText}{Res["EnterAdditionalCash"]}",
+                    Res["SendButton"],
+                    Res["Cancel"],
+                    Res["AmountTL"],
                     keyboard: Keyboard.Numeric
                 );
 
@@ -434,12 +451,20 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(result, out var cashAmount) || cashAmount < 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Geçerli bir tutar girin", Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["EnterValidAmount"], Res["Ok"]);
                     return;
                 }
 
+                // if (string.IsNullOrEmpty(_currentUserId)) return;
+                
+
+                // DOĞRU:
+                // Bu satırı komple silin çünkü _currentUserId değişkeni yok
+                // Zaten hemen altında currentUser kontrolü yapılıyor
                 IsLoading = true;
                 var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
                 var proposeResult = await _transactionService.ProposeAdditionalCashAsync(
                     ActiveTransaction.TransactionId,
                     cashAmount,
@@ -450,7 +475,7 @@ namespace KamPay.ViewModels
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         Res["Success"], 
-                        "Nakit teklifiniz gönderildi. Satıcıyla sohbet edin!", 
+                        Res["CashOfferSent"], 
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);
@@ -462,7 +487,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -474,26 +500,30 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task AcceptNegotiatedPriceAsync()
         {
-            if (ActiveTransaction == null || !ActiveTransaction.IsNegotiating) return;
+            if (ActiveTransaction == null || Product == null || !ActiveTransaction.IsNegotiating) return;
 
             try
             {
                 var agreedAmount = ActiveTransaction.AgreedAmount;
                 var message = Product.Type == ProductType.Satis
-                    ? $"'{Product.Title}' ürünü için {agreedAmount:N2}₺ fiyatını kabul ediyor musunuz?"
-                    : $"'{Product.Title}' takası için {agreedAmount:N2}₺ ek ödemeyi kabul ediyor musunuz?";
+                    ? string.Format(Res["AcceptPriceForProduct"], Product.Title, agreedAmount)
+                    : string.Format(Res["AcceptAdditionalCashForTrade"], Product.Title, agreedAmount);
+
+                if (Application.Current?.MainPage == null) return;
 
                 var confirm = await Application.Current.MainPage.DisplayAlert(
-                    "✅ Fiyat Onayı",
+                    Res["PriceConfirmation"],
                     message,
-                    "Evet, Kabul Ediyorum",
-                    "İptal"
+                    Res["YesIAccept"],
+                    Res["Cancel"]
                 );
 
                 if (!confirm) return;
 
                 IsLoading = true;
                 var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
                 var acceptResult = await _transactionService.AcceptNegotiatedPriceAsync(
                     ActiveTransaction.TransactionId,
                     currentUser.UserId
@@ -503,7 +533,7 @@ namespace KamPay.ViewModels
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         Res["Success"], 
-                        $"Harika! {agreedAmount:N2}₺ üzerinde anlaştınız. Şimdi sohbette buluşma detaylarını konuşabilirsiniz.", 
+                        string.Format(Res["AgreedOnPrice"], agreedAmount), 
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);
@@ -515,7 +545,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -578,7 +609,8 @@ namespace KamPay.ViewModels
 
                 OnPropertyChanged(nameof(Product)); // UI'ı tekrar düzelt
 
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["OperationFailed"] + ": " + ex.Message, Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["OperationFailed"] + ": " + ex.Message, Res["Ok"]);
             }
             finally
             {
@@ -600,7 +632,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["CouldNotShare"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["CouldNotShare"]}: {ex.Message}", Res["Ok"]);
             }
         }
 
@@ -608,6 +641,8 @@ namespace KamPay.ViewModels
         private async Task MarkAsSoldAsync()
         {
             if (Product == null) return;
+
+            if (Application.Current?.MainPage == null) return;
 
             var confirm = await Application.Current.MainPage.DisplayAlert(
                 Res["Confirmation"],
@@ -636,12 +671,17 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
+                    // YANLIŞ:
+                    //await Application.Current.Main.Page.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+
+                    // DOĞRU:
                     await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -660,6 +700,8 @@ namespace KamPay.ViewModels
         private async Task DeleteProductAsync()
         {
             if (Product == null) return;
+
+            if (Application.Current?.MainPage == null) return;
 
             var confirm = await Application.Current.MainPage.DisplayAlert(
                 Res["Confirmation"],
@@ -688,7 +730,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["DeleteFailed"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["DeleteFailed"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -700,6 +743,8 @@ namespace KamPay.ViewModels
         private async Task ReportProductAsync()
         {
             if (Product == null) return;
+
+            if (Application.Current?.MainPage == null) return;
 
             var reason = await Application.Current.MainPage.DisplayActionSheet(
                 Res["ReportReason"],
@@ -755,7 +800,8 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["MapOpenFailed"]}: {ex.Message}", Res["Ok"]);
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["MapOpenFailed"]}: {ex.Message}", Res["Ok"]);
             }
         }
 

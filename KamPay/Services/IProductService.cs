@@ -15,12 +15,12 @@ namespace KamPay.Services
         Task<ServiceResult<Product>> UpdateProductAsync(string productId, ProductRequest request);
         Task<ServiceResult<bool>> DeleteProductAsync(string productId);
         Task<ServiceResult<Product>> GetProductByIdAsync(string productId);
-        Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter filter = null);
+        Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null);
         Task<ServiceResult<List<Product>>> GetUserProductsAsync(string userId);
-      Task<ServiceResult<bool>> IncrementViewCountAsync(string productId);
+        Task<ServiceResult<bool>> IncrementViewCountAsync(string productId);
         Task<ServiceResult<List<Category>>> GetCategoriesAsync();
         ValidationResult ValidateProduct(ProductRequest request);
-        Task<ServiceResult<List<Product>>> GetProductsAsync(string categoryId = null, string searchText = null);
+        Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null);
         Task<ServiceResult<bool>> UpdateProductOwnerAsync(string productId, string newOwnerId, bool markAsSold = true);
         Task<ServiceResult<bool>> MarkAsSoldAsync(string productId); // SATIŞ için
         Task<ServiceResult<bool>> MarkAsExchangedAsync(string productId); // TAKAS için
@@ -28,14 +28,14 @@ namespace KamPay.Services
         // ✅ MEVCUT İNTERFACE'E EKLE
         Task<ServiceResult<List<Product>>> GetProductsPagedAsync(
             int pageSize = 20,
-            string lastKey = null,
-            ProductFilter filter = null);
+            string? lastKey = null,
+            ProductFilter? filter = null);
         Task<ServiceResult<Product>> SaveProductDirectlyAsync(Product product);
 
        
         /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
        
-        Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string newName, string newPhotoUrl);
+        Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string? newName, string? newPhotoUrl);
 
     }
 

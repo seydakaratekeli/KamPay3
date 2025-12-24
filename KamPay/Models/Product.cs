@@ -25,11 +25,11 @@ namespace KamPay.Models
     // Ürün modeli
     public partial class Product : ObservableObject
     {
-        public string ProductId { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string CategoryId { get; set; }
-        public string CategoryName { get; set; }
+        public string ProductId { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string CategoryId { get; set; } = "";
+        public string CategoryName { get; set; } = "";
         public bool HasPendingOffer { get; set; }
 
         // Ürün bilgileri
@@ -38,19 +38,19 @@ namespace KamPay.Models
         public decimal Price { get; set; }
 
         // Kullanıcı bilgileri
-        public string UserId { get; set; }
-        public string UserName { get; set; }
-        public string UserEmail { get; set; }
-        public string UserPhotoUrl { get; set; }
+        public string UserId { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string UserEmail { get; set; } = "";
+        public string UserPhotoUrl { get; set; } = "";
 
         // Konum bilgileri
-        public string Location { get; set; }
+        public string Location { get; set; } = "";
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
 
         // Fotoğraflar
-        public List<string> ImageUrls { get; set; }
-        public string ThumbnailUrl { get; set; }
+        public List<string> ImageUrls { get; set; } = new();
+        public string ThumbnailUrl { get; set; } = "";
 
         // Durum bilgileri
         public bool IsActive { get; set; }
@@ -63,7 +63,7 @@ namespace KamPay.Models
         //  (ödeme simülasyonu için) ödeme simulasyonu şu an yok
         public ServicePaymentStatus PaymentStatus { get; set; } = ServicePaymentStatus.None;
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
-        public string BuyerId { get; set; }
+        public string? BuyerId { get; set; }
       //  public bool IsSold { get; set; } = false;
 
       
@@ -123,7 +123,7 @@ namespace KamPay.Models
         private int favoriteCount;
 
         // Takas için
-        public string ExchangePreference { get; set; }
+        public string ExchangePreference { get; set; } = "";
 
         public bool IsForSurpriseBox { get; set; } = false;
 
@@ -137,7 +137,6 @@ namespace KamPay.Models
             IsSold = false;
             ViewCount = 0;
             FavoriteCount = 0;
-            ImageUrls = new List<string>();
         }
 
         // Yardımcı özellikler
@@ -192,36 +191,31 @@ namespace KamPay.Models
     // Ürün ekleme/güncelleme için DTO
     public class ProductRequest
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string CategoryId { get; set; }
-        public string CategoryName { get; set; } 
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string CategoryId { get; set; } = "";
+        public string CategoryName { get; set; } = "";
         public ProductCondition Condition { get; set; }
         public ProductType Type { get; set; }
         public decimal Price { get; set; }
-        public string Location { get; set; }
+        public string Location { get; set; } = "";
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
-        public List<string> ImagePaths { get; set; } 
-        public string ExchangePreference { get; set; }
+        public List<string> ImagePaths { get; set; } = new();
+        public string ExchangePreference { get; set; } = "";
         public bool IsForSurpriseBox { get; set; }
-
-        public ProductRequest()
-        {
-            ImagePaths = new List<string>();
-        }
     }
 
     // Filtreleme için model
     public class ProductFilter
     {
-        public string SearchText { get; set; }
-        public string CategoryId { get; set; }
+        public string SearchText { get; set; } = "";
+        public string CategoryId { get; set; } = "";
         public ProductType? Type { get; set; }
         public ProductCondition? Condition { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
-        public string Location { get; set; }
+        public string Location { get; set; } = "";
         public bool OnlyActive { get; set; } = true;
         public bool ExcludeSold { get; set; } = true;
 

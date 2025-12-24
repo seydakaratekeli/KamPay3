@@ -6,7 +6,7 @@ namespace KamPay.Converters
 {
     public class IsNotZeroConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null)
                 return false;
@@ -26,7 +26,7 @@ namespace KamPay.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // ConvertBack is not needed for this one-way binding converter
             // Return 0 as default value if somehow called

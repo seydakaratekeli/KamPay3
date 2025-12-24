@@ -23,10 +23,10 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
 
     [ObservableProperty]
-    private User currentUser;
+    private User currentUser = new User();
 
     [ObservableProperty]
-    private UserStats userStats;
+    private UserStats userStats = new UserStats();
 
     [ObservableProperty]
     private bool isLoading;
@@ -366,14 +366,14 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            await Application.Current!.MainPage!.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
     }
 
     [RelayCommand]
     private async Task LogoutAsync()
     {
-        var confirm = await Application.Current.MainPage.DisplayAlert(
+        var confirm = await Application.Current!.MainPage!.DisplayAlert(
             Res["LogoutTitle"],
             Res["ConfirmLogout"],
             Res["Yes"],
@@ -401,7 +401,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
+            await Application.Current!.MainPage!.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally
         {
@@ -425,7 +425,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ChangeLanguageAsync()
     {
-        var action = await Application.Current.MainPage.DisplayActionSheet(
+        var action = await Application.Current!.MainPage!.DisplayActionSheet(
             Res["SelectLanguage"],
             Res["Cancel"],
             null,
@@ -446,7 +446,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         LocalizationResourceManager.Instance.SetCulture(cultureCode);
         
         // Kullanıcıya bilgi ver
-        await Application.Current.MainPage.DisplayAlert(
+        await Application.Current!.MainPage!.DisplayAlert(
             Res["Success"],
             Res["LanguageChanged"],
             Res["Ok"]);

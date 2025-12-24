@@ -95,14 +95,14 @@
                 <VerticalStackLayout Spacing="15">
                     
                     <!-- Bilgilendirme -->
-                    <Label Text="E-posta adresinize gönderilen doğrulama kodunu girin"
+                    <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[EnterVerificationCode]}"
                            FontSize="16"
                            TextColor="#212121"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"/>
 
                     <!-- Doğrulama Kodu Entry -->
-                    <Entry Placeholder="Doğrulama Kodu"
+                    <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[VerificationCode]}"
                            Text="{Binding VerificationCode}"
                            Keyboard="Numeric"
                            MaxLength="6"
@@ -119,7 +119,7 @@
                            IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
 
                     <!-- Doğrula Butonu -->
-                    <Button Text="Doğrula"
+                    <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Verify]}"
                             Command="{Binding VerifyEmailCommand}"
                             BackgroundColor="#6200EA"
                             TextColor="White"
@@ -129,7 +129,7 @@
                             IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
 
                     <!-- Kodu Yeniden Gönder -->
-                    <Button Text="Kodu Yeniden Gönder"
+                    <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ResendCode]}"
                             Command="{Binding ResendVerificationCommand}"
                             BackgroundColor="Transparent"
                             TextColor="#6200EA"
@@ -141,7 +141,7 @@
                             IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
 
                     <!-- İptal -->
-                    <Button Text="İptal"
+                    <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Cancel]}"
                             Command="{Binding CancelVerificationCommand}"
                             BackgroundColor="Transparent"
                             TextColor="#757575"

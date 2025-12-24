@@ -14,14 +14,14 @@ namespace KamPay.Models;
 [Preserve(AllMembers = true)]
 public partial class GoodDeedPost : ObservableObject
 {
-    public string PostId { get; set; }
-    public string UserId { get; set; }
-    public string UserName { get; set; }
-    public string UserProfileImageUrl { get; set; }
+    public string PostId { get; set; } = "";
+    public string UserId { get; set; } = "";
+    public string UserName { get; set; } = "";
+    public string UserProfileImageUrl { get; set; } = "";
 
     public PostType Type { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
@@ -48,7 +48,7 @@ public partial class GoodDeedPost : ObservableObject
     // Yorum yazılan metin (Her ilanınki kendine özel olsun diye)
     [ObservableProperty]
     [property: JsonIgnore] // Firebase'e kaydedilmesin, sadece ekranda tutulsun
-    private string draftComment;
+    private string draftComment = "";
 
     // : Yorum kutusunun görünürlüğü
     [ObservableProperty]

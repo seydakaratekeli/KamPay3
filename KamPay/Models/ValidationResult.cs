@@ -3,13 +3,38 @@ using System.Linq;
 
 namespace KamPay.Models
 {
-    
+    // Non-generic validation result for simple validation scenarios
     public class ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
+
+        public ValidationResult()
+        {
+            Errors = new List<string>();
+            IsValid = true;
+        }
+
+        public void AddError(string error)
+        {
+            Errors.Add(error);
+            IsValid = false;
+        }
+
+        public string GetErrorMessage()
+        {
+            return string.Join("\n", Errors);
+        }
+    }
+    
+    // Generic validation result with data
+    public class ValidationResult<T> where T : class
     {
         // bu sayfa genel hata yönetimi için kullanýlacak
 
         public bool IsValid { get; set; }
-        public List<string> Errors { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
+        public T? Data { get; set; }
 
         public ValidationResult()
         {
@@ -32,8 +57,8 @@ namespace KamPay.Models
     public class ServiceResult<T>
     {
         public bool Success { get; set; }
-        public T Data { get; set; }
-        public string Message { get; set; }
+        public T? Data { get; set; }
+        public string Message { get; set; } = "";
         public List<string> Errors { get; set; }
 
         public ServiceResult()

@@ -73,7 +73,7 @@ namespace KamPay.Services
                     SenderId = sender.UserId,
                     SenderName = sender.FullName,
                     ReceiverId = request.ReceiverId,
-                    Content = request.Content,
+                    Content = request.Content ?? string.Empty,
                     Type = request.Type,
                     ProductId = request.ProductId,
                     ImageUrl = request.ImageUrl,
@@ -195,7 +195,7 @@ namespace KamPay.Services
             }
         }
 
-        public async Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string productId = null)
+        public async Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null)
         {
             try
             {
@@ -240,11 +240,11 @@ namespace KamPay.Services
                 var conversation = new Conversation
                 {
                     User1Id = user1Id,
-                    User1Name = user1.FullName,
-                    User1PhotoUrl = user1.ProfileImageUrl,
+                    User1Name = user1.FullName ?? string.Empty,
+                    User1PhotoUrl = user1.ProfileImageUrl ?? string.Empty,
                     User2Id = user2Id,
-                    User2Name = user2.FullName,
-                    User2PhotoUrl = user2.ProfileImageUrl,
+                    User2Name = user2.FullName ?? string.Empty,
+                    User2PhotoUrl = user2.ProfileImageUrl ?? string.Empty,
                     LastMessage = "Konuşma başladı",
                     LastMessageTime = DateTime.UtcNow
                 };
@@ -327,7 +327,7 @@ namespace KamPay.Services
             try
             {
                 var conversationsResult = await GetUserConversationsAsync(userId);
-                if (!conversationsResult.Success)
+                if (!conversationsResult.Success || conversationsResult.Data == null)
                     return ServiceResult<int>.FailureResult("Okunmamış mesajlar sayılamadı.");
 
                 int totalUnread = conversationsResult.Data
@@ -387,7 +387,7 @@ namespace KamPay.Services
                     Task.Run(async () =>
                     {
                         var result = await GetUserConversationsAsync(userId);
-                        if (result.Success)
+                        if (result.Success && result.Data != null)
                         {
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
@@ -403,7 +403,7 @@ namespace KamPay.Services
             });
         }
 
-        //  Bu metod artık kullanılmıyor (direkt ViewModel'de Firebase Observable kullanılıyor)
+        //  Bu metod artık kullanılmıyor (direkt Firebase Observable kullanılıyor)
         [Obsolete("Direkt ViewModel'de Firebase Observable kullanın")]
         public IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged)
         {
@@ -419,7 +419,7 @@ namespace KamPay.Services
                     Task.Run(async () =>
                     {
                         var result = await GetConversationMessagesAsync(conversationId);
-                        if (result.Success)
+                        if (result.Success && result.Data != null)
                         {
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
@@ -438,7 +438,7 @@ namespace KamPay.Services
         
         /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
        
-        public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string newName, string newPhotoUrl)
+        public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
@@ -475,15 +475,15 @@ namespace KamPay.Services
                         // Gönderen kişi güncelleniyorsa
                         if (message.SenderId == userId)
                         {
-                            message.SenderName = newName;
+                            message.SenderName = newName ?? string.Empty;
                             needsUpdate = true;
                         }
 
                         // Alıcı kişi güncelleniyorsa
                         if (message.ReceiverId == userId)
                         {
-                            message.ReceiverName = newName;
-                            message.ReceiverPhotoUrl = newPhotoUrl;
+                            message.ReceiverName = newName ?? string.Empty;
+                            message.ReceiverPhotoUrl = newPhotoUrl ?? string.Empty;
                             needsUpdate = true;
                         }
 
@@ -510,7 +510,7 @@ namespace KamPay.Services
         
         /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
         
-        public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string newName, string newPhotoUrl)
+        public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
@@ -532,16 +532,16 @@ namespace KamPay.Services
                     // User1 güncelleniyorsa
                     if (conversation.User1Id == userId)
                     {
-                        conversation.User1Name = newName;
-                        conversation.User1PhotoUrl = newPhotoUrl;
+                        conversation.User1Name = newName ?? string.Empty;
+                        conversation.User1PhotoUrl = newPhotoUrl ?? string.Empty;
                         needsUpdate = true;
                     }
 
                     // User2 güncelleniyorsa
                     if (conversation.User2Id == userId)
                     {
-                        conversation.User2Name = newName;
-                        conversation.User2PhotoUrl = newPhotoUrl;
+                        conversation.User2Name = newName ?? string.Empty;
+                        conversation.User2PhotoUrl = newPhotoUrl ?? string.Empty;
                         needsUpdate = true;
                     }
 

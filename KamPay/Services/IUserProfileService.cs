@@ -75,10 +75,10 @@ namespace KamPay.Services
        
         Task<ServiceResult<bool>> UpdateUserProfileAsync(
             string userId,
-            string firstName = null,
-            string lastName = null,
-            string username = null,
-            string profileImageUrl = null);
+            string? firstName = null,
+            string? lastName = null,
+            string? username = null,
+            string? profileImageUrl = null);
 
 
     }

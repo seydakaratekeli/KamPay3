@@ -9,16 +9,16 @@ namespace KamPay.Models
     // QR Kod Teslimat Modeli
     public class DeliveryQRCode
     {
-        public string QRCodeId { get; set; }
-        public string ProductId { get; set; }
-        public string ProductTitle { get; set; }
-        public string SellerId { get; set; }
-        public string BuyerId { get; set; }
+        public string QRCodeId { get; set; } = "";
+        public string ProductId { get; set; } = "";
+        public string ProductTitle { get; set; } = "";
+        public string SellerId { get; set; } = "";
+        public string BuyerId { get; set; } = "";
 
         // QR kodu işleme başlamak için.
-        public string TransactionId { get; set; }
+        public string TransactionId { get; set; } = "";
 
-        public string QRCodeData { get; set; }
+        public string QRCodeData { get; set; } = "";
         public DateTime CreatedAt { get; set; }
         public DateTime ExpiresAt { get; set; }
         public bool IsUsed { get; set; }

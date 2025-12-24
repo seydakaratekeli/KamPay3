@@ -9,6 +9,7 @@ using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using System.Globalization;
+using System.Text; // Encoding desteği için eklendi
 
 namespace KamPay
 {
@@ -16,6 +17,9 @@ namespace KamPay
     {
         public static MauiApp CreateMauiApp()
         {
+            //  Türkçe karakter desteği için encoding provider'ı kaydet
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             // Load saved language preference and set culture
             var savedLanguage = Preferences.Get("AppLanguage", "tr");
             CultureInfo culture;
@@ -27,8 +31,16 @@ namespace KamPay
             {
                 culture = new CultureInfo("tr");
             }
+            
+            //  Türkçe karakter desteği için kültür ayarları
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
             CultureInfo.CurrentCulture = culture;
             CultureInfo.CurrentUICulture = culture;
+            
+            //  Thread'lere de uygula
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
 
             var builder = MauiApp.CreateBuilder();
 
@@ -37,14 +49,12 @@ namespace KamPay
                 .UseSkiaSharp()
                 .UseBarcodeReader()
                 .UseMauiCommunityToolkit()
-                            .UseFFImageLoading() 
-
+                .UseFFImageLoading() 
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                     fonts.AddFont("MaterialIcons-Regular.ttf", "MaterialIcons");
-
                 });
 
 

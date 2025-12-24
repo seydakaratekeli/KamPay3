@@ -4,11 +4,11 @@
 public class Notification
 {
     public string NotificationId { get; set; } = Guid.NewGuid().ToString();
-    public string UserId { get; set; }
+    public string UserId { get; set; } = "";
     public NotificationType Type { get; set; }
-    public string Title { get; set; }
-    public string Message { get; set; }
-    public string IconUrl { get; set; }
+    public string Title { get; set; } = "";
+    public string Message { get; set; } = "";
+    public string IconUrl { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
@@ -16,11 +16,11 @@ public class Notification
  
 
     // İlgili veri (ürün, mesaj vb.)
-    public string RelatedEntityId { get; set; }
-    public string RelatedEntityType { get; set; } // "Product", "Message", "Badge" vb.
+    public string RelatedEntityId { get; set; } = "";
+    public string RelatedEntityType { get; set; } = ""; // "Product", "Message", "Badge" vb.
 
     // Aksiyon URL'i
-    public string ActionUrl { get; set; }
+    public string ActionUrl { get; set; } = "";
 
     public Notification()
     {

@@ -7,7 +7,7 @@ namespace KamPay.Converters
 {
     public class ProductTypeShowPriceConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // Sadece Satýlýk ürünlerde fiyat gösterilsin
             if (value is ProductType type)
@@ -17,6 +17,6 @@ namespace KamPay.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

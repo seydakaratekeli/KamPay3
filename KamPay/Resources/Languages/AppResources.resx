@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -275,10 +275,10 @@
 	<data name="SurpriseBoxDescription" xml:space="preserve"><value>100 puan karşılığında bir sürpriz kutu açarak bağışlanmış ürünlerden birini kazanma şansı yakala!</value></data>
 	<data name="Congratulations" xml:space="preserve"><value>🎉 Tebrikler! 🎉</value></data>
 	<data name="ProductWonMessage" xml:space="preserve"><value>"{0}" ürününü kazandınız! Ürün sahibine bildirim gönderildi.</value></data>
-	<data name="ViewMyProduct" xml:space="preserve"><value>🎁 Ürünümü Görmek İstiyorum</value></data>
+	<data name="ViewMyProduct" xml:space="preserve"><value>🎉 Ürünümü Görmek İstiyorum</value></data>
 	<data name="InsufficientPoints" xml:space="preserve"><value>Yetersiz puan!</value></data>
 	<data name="InsufficientPointsMessage" xml:space="preserve"><value>Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz.</value></data>
-	<data name="OpenBoxFor100Points" xml:space="preserve"><value>🎁 100 Puana Kutu Aç!</value></data>
+	<data name="OpenBoxFor100Points" xml:space="preserve"><value>🎉 100 Puana Kutu Aç!</value></data>
 	<data name="OpeningBox" xml:space="preserve"><value>Sürpriz kutunuz açılıyor...</value></data>
 	<data name="NoDonationAvailable" xml:space="preserve"><value>Şu an müsait bağış ürünü yok.</value></data>
 	<data name="BoxEmptyMessage" xml:space="preserve"><value>Maalesef şu an kutuda ürün kalmadı. Daha sonra tekrar deneyin.</value></data>
@@ -290,7 +290,7 @@
   <data name="AllNotificationsDeleted" xml:space="preserve"><value>Tüm bildirimler silindi</value></data>
   <data name="NoNotificationsMessage" xml:space="preserve"><value>Şu an yeni bir bildiriminiz yok.</value></data>
   <data name="SystemNotification" xml:space="preserve"><value>Sistem</value></data>
-  <data name="OrderNotification" xml:space="preserve"><value>Sipariş</value></data>
+  <data name="OrderNotification" xml:space="preserve"><value>Sipariiş</value></data>
   <data name="MessageNotification" xml:space="preserve"><value>Mesaj</value></data>
   <data name="AlertNotification" xml:space="preserve"><value>Uyarı</value></data>
 	 
@@ -384,54 +384,6 @@
 	<data name="ProductDetailTitle" xml:space="preserve">
     <value>Ürün Detayı</value>
   </data>
-	<data name="ConditionLabel" xml:space="preserve">
-    <value>Durum:</value>
-  </data>
-	<data name="CategoryLabel" xml:space="preserve">
-    <value>Kategori:</value>
-  </data>
-	<data name="PublishDateLabel" xml:space="preserve">
-    <value>Yayın Tarihi:</value>
-  </data>
-	<data name="DescriptionLabel" xml:space="preserve">
-    <value>Açıklama</value>
-  </data>
-	<data name="ExchangePreferenceLabel" xml:space="preserve">
-    <value>Takas Tercihi</value>
-  </data>
-	<data name="SellerLabel" xml:space="preserve">
-    <value>Satıcı</value>
-  </data>
-	<data name="ViewsLabel" xml:space="preserve">
-    <value>Görüntülenme</value>
-  </data>
-	<data name="Edit" xml:space="preserve">
-    <value>Düzenle</value>
-  </data>
-	<data name="MarkAsSold" xml:space="preserve">
-    <value>Satıldı İşaretle</value>
-  </data>
-	<data name="Delete" xml:space="preserve">
-    <value>Sil</value>
-  </data>
-	<data name="SendMessage" xml:space="preserve">
-    <value>Mesaj Gönder</value>
-  </data>
-	<data name="RequestToBuy" xml:space="preserve">
-    <value>Satın Almak İste</value>
-  </data>
-	<data name="IWantToTake" xml:space="preserve">
-    <value>Almak İstiyorum</value>
-  </data>
-	<data name="OfferTrade" xml:space="preserve">
-    <value>Takas Teklif Et</value>
-  </data>
-	<data name="Report" xml:space="preserve">
-    <value>Şikayet Et</value>
-  </data>
-  <data name="ProductDetail" xml:space="preserve">
-    <value>Ürün Detayı</value>
-  </data>
 	<data name="ProductInfoTitle" xml:space="preserve"><value>Ürün Bilgileri</value></data>
 	<data name="ProductTitlePlaceholder" xml:space="preserve"><value>Ürün Başlığı *</value></data>
 	<data name="ProductDescriptionPlaceholder" xml:space="preserve"><value>Ürün Açıklaması *</value></data>
@@ -452,7 +404,7 @@
 	<data name="GettingLocation" xml:space="preserve"><value>Konum alınıyor...</value></data>
 	<data name="LocationNotSupported" xml:space="preserve"><value>Konum servisi desteklenmiyor.</value></data>
 	<data name="LocationPermissionDenied" xml:space="preserve"><value>Konum izni verilmedi.</value></data>
-	<data name="LocationError" xml:space="preserve"><value>Konum alınırken hata oluştu.</value></data>
+	<data name="LocationError" xml:space="preserve"><value>Konum alınınca hata oluştu.</value></data>
 	<data name="MaxImagesWarning" xml:space="preserve"><value>En fazla 5 görsel ekleyebilirsiniz</value></data>
 	<data name="ImageSelectionError" xml:space="preserve"><value>Görsel seçilirken hata oluştu</value></data>
 	<data name="MissingFieldsError" xml:space="preserve"><value>Lütfen başlık, kategori ve en az bir resim eklediğinizden emin olun.</value></data>
@@ -546,7 +498,7 @@
     <value>Ürün ara...</value>
   </data>
   <data name="FilterAndSort" xml:space="preserve">
-    <value>Filtrele ve Sırala</value>
+    <value>Filtrele ve Sıralama</value>
   </data>
   <data name="Sorting" xml:space="preserve">
     <value>Sıralama</value>
@@ -570,7 +522,7 @@
     <value>Satıldı İşaretle</value>
   </data>
   <data name="Report" xml:space="preserve">
-    <value>🚩 Şikayet Et</value>
+    <value>🛑 Şikayet Et</value>
   </data>
   <data name="ProductNotFound" xml:space="preserve">
     <value>Ürün bulunamadı</value>
@@ -669,8 +621,7 @@
     <value>Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz.</value>
   </data>
   <data name="MessagesLoading" xml:space="preserve">
-    <value>Mesajlar yükleniyor...</value>
-  </data>
+    <value>Mesajlar yükleniyor...</value></data>
   <data name="NoMessageYet" xml:space="preserve">
     <value>Henüz mesaj yok</value>
   </data>
@@ -693,8 +644,7 @@
     <value>Henüz favori ürününüz yok</value>
   </data>
   <data name="AddFavoritesHint" xml:space="preserve">
-    <value>Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz.</value>
-  </data>
+    <value>Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz.</value></data>
   <data name="FavoritesLoading" xml:space="preserve">
     <value>Favoriler yükleniyor...</value>
   </data>
@@ -816,8 +766,7 @@
     <value>Saat</value>
   </data>
   <data name="Processing" xml:space="preserve">
-    <value>İşlem yapılıyor...</value>
-  </data>
+    <value>İşlem yapılıyor...</value></data>
   <data name="CategoryTransport" xml:space="preserve">
     <value>Taşıma</value>
   </data>
@@ -918,34 +867,12 @@
     <value>Karşı Tarafın Kodunu Tara</value>
   </data>
   <data name="SurpriseBoxTitle" xml:space="preserve">
-    <value>Sürpriz Kutu</value>
-  </data>
-  <data name="CurrentPoints" xml:space="preserve">
-    <value>Mevcut Puanınız</value>
-  </data>
-  <data name="SurpriseBoxDescription" xml:space="preserve">
-    <value>100 puan karşılığında bir sürpriz kutu açarak bağışlanmış ürünlerden birini kazanma şansı yakala!</value>
-  </data>
-  <data name="Congratulations" xml:space="preserve">
-    <value>🎉 Tebrikler! 🎉</value>
-  </data>
-  <data name="ViewMyProduct" xml:space="preserve">
-    <value>🎁 Ürünümü Görmek İstiyorum</value>
-  </data>
-  <data name="InsufficientPoints" xml:space="preserve">
-    <value>Yetersiz puan! Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz.</value>
-  </data>
-  <data name="OpenBoxFor100Points" xml:space="preserve">
-    <value>🎁 100 Puana Kutu Aç!</value>
-  </data>
-  <data name="OpeningBox" xml:space="preserve">
-    <value>Sürpriz kutunuz açılıyor...</value>
   </data>
   <data name="Error" xml:space="preserve">
     <value>Hata</value>
   </data>
   <data name="Success" xml:space="preserve">
-    <value>Başarılı</value>
+    <value>Başarıyla</value>
   </data>
   <data name="Warning" xml:space="preserve">
     <value>Uyarı</value>
@@ -954,7 +881,7 @@
     <value>Onay</value>
   </data>
   <data name="OperationSuccess" xml:space="preserve">
-    <value>İşlem başarılı</value>
+    <value>İşlem başarıyla</value>
   </data>
   <data name="FillAllFields" xml:space="preserve">
     <value>Lütfen tüm alanları doldurun</value>
@@ -1212,6 +1139,151 @@
     <value>Tekrar Hoşgeldiniz</value>
   </data>
   <data name="DontHaveAccount" xml:space="preserve">
-    <value>Hesabın yok mu?</value>
+    <value>Hesabınız yok mu?</value>
+  </data>
+  <data name="LanguageChanged" xml:space="preserve">
+    <value>Dil değiştirildi</value>
+  </data>
+  
+  <!-- QR Code Related -->
+  <data name="PINVerification" xml:space="preserve">
+    <value>PIN Doğrulama</value>
+  </data>
+  <data name="Enter6DigitPIN" xml:space="preserve">
+    <value>6 haneli PIN kodunu girin:</value>
+  </data>
+  <data name="PINRequired" xml:space="preserve">
+    <value>PIN kodu gereklidir.</value>
+  </data>
+  <data name="Great" xml:space="preserve">
+    <value>Harika!</value>
+  </data>
+  <data name="ProductDeliveryConfirmed" xml:space="preserve">
+    <value>ürününü teslim aldığınız onaylandı.</value>
+  </data>
+  
+  <!-- Negotiation Related -->
+  <data name="SendButton" xml:space="preserve">
+    <value>Gönder</value>
+  </data>
+  <data name="AmountTL" xml:space="preserve">
+    <value>Tutar (TL)</value>
+  </data>
+  <data name="EnterValidAmount" xml:space="preserve">
+    <value>Geçerli bir tutar girin</value>
+  </data>
+  <data name="CashOfferSent" xml:space="preserve">
+    <value>Nakit teklifiniz gönderildi. Satıcıyla sohbet edin!</value>
+  </data>
+  <data name="PriceConfirmation" xml:space="preserve">
+    <value>✅ Fiyat Onayı</value>
+  </data>
+  <data name="YesIAccept" xml:space="preserve">
+    <value>Evet, Kabul Ediyorum</value>
+  </data>
+  <data name="AgreedOnPrice" xml:space="preserve">
+    <value>Harika! {0}₺ üzerinde anlaştınız. Şimdi sohbette buluşma detaylarını konuşabilirsiniz.</value>
+  </data>
+  <data name="NegotiationApproval" xml:space="preserve">
+    <value>Pazarlık Onayı</value>
+  </data>
+  <data name="AcceptPriceForProduct" xml:space="preserve">
+    <value>'{0}' ürünü için {1}₺ fiyatını kabul ediyor musunuz?</value>
+  </data>
+  <data name="AcceptAdditionalCashForTrade" xml:space="preserve">
+    <value>'{0}' takası için {1}₺ ek ödemeyi kabul ediyor musunuz?</value>
+  </data>
+  
+  <!-- QR Service Messages -->
+  <data name="QRCodeNotFound" xml:space="preserve">
+    <value>QR kod bulunamadı.</value>
+  </data>
+  <data name="QRCodeExpired" xml:space="preserve">
+    <value>QR kodun süresi dolmuş.</value>
+  </data>
+  <data name="QRCodeAlreadyUsed" xml:space="preserve">
+    <value>Bu QR kod daha önce kullanılmış.</value>
+  </data>
+  <data name="DeliveryCancelled" xml:space="preserve">
+    <value>Bu teslimat iptal edilmiş.</value>
+  </data>
+  <data name="TooManyPINAttempts" xml:space="preserve">
+    <value>Çok fazla yanlış PIN denemesi. QR kod iptal edildi.</value>
+  </data>
+  <data name="WrongPINRemainingAttempts" xml:space="preserve">
+    <value>Yanlış PIN. Kalan deneme: {0}</value>
+  </data>
+  <data name="TooFarFromMeetingPoint" xml:space="preserve">
+    <value>Belirlenen buluşma noktasına çok uzaksınız. Mesafe: {0:N0} metre (Max: {1} metre)</value>
+  </data>
+  
+  <!-- Email Service -->
+  <data name="EmailVerificationSubject" xml:space="preserve">
+    <value>KamPay - E-posta Doğrulama Kodu</value>
+  </data>
+  <data name="EmailVerificationBody" xml:space="preserve">
+    <value>Merhaba,
+
+KamPay hesabınızı doğrulamak için aşağıdaki kodu kullanın:
+
+Doğrulama Kodu: {0}
+
+Bu kod 15 dakika boyunca geçerlidir.
+
+KamPay Ekibi</value>
+  </data>
+  
+  <!-- Additional Common Messages -->
+  <data name="EnterValidPrice" xml:space="preserve">
+    <value>Geçerli bir fiyat girin</value>
+  </data>
+  <data name="PriceProposalSent" xml:space="preserve">
+    <value>Fiyat teklifiniz gönderildi. Satıcıyla sohbet edin!</value>
+  </data>
+  <data name="CurrentPrice" xml:space="preserve">
+    <value>Mevcut Fiyat: {0:N2} ₺</value>
+  </data>
+  <data name="YourOffer" xml:space="preserve">
+    <value>Sizin Teklifiniz: {0:N2} ₺</value>
+  </data>
+  <data name="SellerCounterOffer" xml:space="preserve">
+    <value>Satıcının Karşı Teklifi: {0:N2} ₺</value>
+  </data>
+  <data name="PriceProposal" xml:space="preserve">
+    <value>💰 Fiyat Teklifi</value>
+  </data>
+  <data name="EnterProposedPrice" xml:space="preserve">
+    <value>Teklif etmek istediğiniz fiyatı girin:</value>
+  </data>
+  <data name="PriceTLPlaceholder" xml:space="preserve">
+    <value>Fiyat (TL)</value>
+  </data>
+  <data name="AdditionalCashProposal" xml:space="preserve">
+    <value>💰 Ek Nakit Teklifi</value>
+  </data>
+  <data name="EnterAdditionalCash" xml:space="preserve">
+    <value>Takas için eklemek istediğiniz nakit tutarını girin (0 girebilirsiniz):</value>
+  </data>
+  
+  <!-- Good Deed Board Messages -->
+  <data name="PostCreatedSuccess" xml:space="preserve">
+    <value>İlan paylaşıldı!</value>
+  </data>
+  <data name="TitleAndDescriptionRequired" xml:space="preserve">
+    <value>Başlık ve açıklama gerekli</value>
+  </data>
+  <data name="SessionNotFound" xml:space="preserve">
+    <value>Oturum açılmamış.</value>
+  </data>
+  <data name="ConfirmDeletePost" xml:space="preserve">
+    <value>Emin misiniz?</value>
+  </data>
+  <data name="OperationFailedTryAgain" xml:space="preserve">
+    <value>İşlem başarısız oldu.</value>
+  </data>
+  <data name="SharePost" xml:space="preserve">
+    <value>Paylaş</value>
   </data>
 </root>
+
+

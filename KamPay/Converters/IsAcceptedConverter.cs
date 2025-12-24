@@ -5,7 +5,7 @@ namespace KamPay.Converters
 {
     public class IsAcceptedConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // 1. Durum: Ürün/Takas İşlemleri (Transaction)
             if (value is TransactionStatus tStatus)
@@ -22,7 +22,7 @@ namespace KamPay.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

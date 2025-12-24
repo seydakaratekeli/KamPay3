@@ -1,11 +1,11 @@
-ï»¿using System.Globalization;
+using System.Globalization;
 using KamPay.Models;
 
 namespace KamPay.Converters
 {
     public class ProductSortOptionToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is ProductSortOption option)
             {
@@ -13,10 +13,10 @@ namespace KamPay.Converters
                 {
                     ProductSortOption.Newest => "En Yeni",
                     ProductSortOption.Oldest => "En Eski",
-                    ProductSortOption.PriceAsc => "Fiyat (DÃ¼ÅŸÃ¼kten YÃ¼kseÄŸe)",
-                    ProductSortOption.PriceDesc => "Fiyat (YÃ¼ksekten DÃ¼ÅŸÃ¼ÄŸe)",
-                    ProductSortOption.MostViewed => "En Ã‡ok Ä°zlenen",
-                    ProductSortOption.MostFavorited => "En Ã‡ok Favori",
+                    ProductSortOption.PriceAsc => "Fiyat (Düþükten Yükseðe)",
+                    ProductSortOption.PriceDesc => "Fiyat (Yüksekten Düþüðe)",
+                    ProductSortOption.MostViewed => "En Çok Ýzlenen",
+                    ProductSortOption.MostFavorited => "En Çok Favori",
                     _ => "Bilinmiyor"
                 };
             }
@@ -24,7 +24,7 @@ namespace KamPay.Converters
             return value?.ToString() ?? string.Empty;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string text)
             {
@@ -32,10 +32,10 @@ namespace KamPay.Converters
                 {
                     "En Yeni" => ProductSortOption.Newest,
                     "En Eski" => ProductSortOption.Oldest,
-                    "Fiyat (DÃ¼ÅŸÃ¼kten YÃ¼kseÄŸe)" => ProductSortOption.PriceAsc,
-                    "Fiyat (YÃ¼ksekten DÃ¼ÅŸÃ¼ÄŸe)" => ProductSortOption.PriceDesc,
-                    "En Ã‡ok Ä°zlenen" => ProductSortOption.MostViewed,
-                    "En Ã‡ok Favori" => ProductSortOption.MostFavorited,
+                    "Fiyat (Düþükten Yükseðe)" => ProductSortOption.PriceAsc,
+                    "Fiyat (Yüksekten Düþüðe)" => ProductSortOption.PriceDesc,
+                    "En Çok Ýzlenen" => ProductSortOption.MostViewed,
+                    "En Çok Favori" => ProductSortOption.MostFavorited,
                     _ => ProductSortOption.Newest
                 };
             }

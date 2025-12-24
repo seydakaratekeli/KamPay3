@@ -9,14 +9,14 @@ namespace KamPay.Models
     public class Message
     {
         public string MessageId { get; set; } = Guid.NewGuid().ToString();
-        public string ConversationId { get; set; }
-        public string SenderId { get; set; }
-        public string SenderName { get; set; }
-        public string SenderPhotoUrl { get; set; }
-        public string ReceiverId { get; set; }
-        public string ReceiverName { get; set; }
-        public string ReceiverPhotoUrl { get; set; }
-        public string Content { get; set; }
+        public string ConversationId { get; set; } = "";
+        public string SenderId { get; set; } = "";
+        public string SenderName { get; set; } = "";
+        public string SenderPhotoUrl { get; set; } = "";
+        public string ReceiverId { get; set; } = "";
+        public string ReceiverName { get; set; } = "";
+        public string ReceiverPhotoUrl { get; set; } = "";
+        public string Content { get; set; } = "";
         
         // Alternatif property adı için backward compatibility
         [JsonIgnore]
@@ -48,13 +48,13 @@ namespace KamPay.Models
         public bool IsSystemMessage { get; set; } = false;
 
         // Ürün referansı 
-        public string ProductId { get; set; }
-        public string ProductTitle { get; set; }
-        public string ProductThumbnail { get; set; }
+        public string ProductId { get; set; } = "";
+        public string ProductTitle { get; set; } = "";
+        public string ProductThumbnail { get; set; } = "";
         public string TimeText => SentAt.ToString("HH:mm");
 
         // Fotoğraf mesajları için
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; set; } = "";
 
         // (Veritabanına kaydedilmeyecek, sadece UI için)
         [JsonIgnore] 
@@ -77,10 +77,10 @@ namespace KamPay.Models
     // Mesaj gönderme için DTO (Veri Transfer Nesnesi)
     public class SendMessageRequest
     {
-        public string ReceiverId { get; set; }
-        public string Content { get; set; }
+        public string ReceiverId { get; set; } = "";
+        public string Content { get; set; } = "";
         public MessageType Type { get; set; } = MessageType.Text;
-        public string ProductId { get; set; }
-        public string ImageUrl { get; set; }
+        public string ProductId { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
     }
 }

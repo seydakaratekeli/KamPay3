@@ -5,10 +5,10 @@ namespace KamPay.Converters
 {
     public class BoolToColorConverter : IValueConverter
     {
-        public Color TrueColor { get; set; }
-        public Color FalseColor { get; set; }
+        public required Color TrueColor { get; set; }
+        public required Color FalseColor { get; set; }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool isTrue && isTrue)
             {
@@ -17,7 +17,7 @@ namespace KamPay.Converters
             return FalseColor; // Beðenilmediyse bu renk
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

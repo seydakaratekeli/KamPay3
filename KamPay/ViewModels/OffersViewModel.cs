@@ -22,7 +22,7 @@ namespace KamPay.ViewModels
         private readonly ITransactionService _transactionService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
-        private IDisposable _allOffersSubscription;
+        private IDisposable? _allOffersSubscription;
         private readonly FirebaseClient _firebaseClient;
 
         // Cache ve Durum Kontrolü
@@ -32,10 +32,10 @@ namespace KamPay.ViewModels
 
         // Yükleme kontrolü
         private bool _isInitialized = false;
-        private string _currentUserId;
+        private string? _currentUserId;
         
         //  Timeout kontrolü için CancellationTokenSource
-        private CancellationTokenSource _loadingTimeoutCts;
+        private CancellationTokenSource? _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 5000; // 5 saniye timeout
 
         public ObservableCollection<Transaction> IncomingOffers { get; } = new();
@@ -77,7 +77,7 @@ namespace KamPay.ViewModels
             _ = InitializeAsync();
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             if (updatedUser == null) return;
 
@@ -446,6 +446,8 @@ namespace KamPay.ViewModels
         private async Task RespondToOfferInternalAsync(Transaction transaction, bool accept)
         {
             if (transaction == null) return;
+            if (Application.Current?.MainPage == null) return;
+
             try
             {
                 var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
@@ -464,6 +466,7 @@ namespace KamPay.ViewModels
         private async Task CompletePaymentAsync(Transaction transaction)
         {
             if (transaction == null) return;
+            if (Application.Current?.MainPage == null) return;
 
             if (transaction.Type != ProductType.Satis ||
                 transaction.Status != TransactionStatus.Accepted ||
@@ -509,6 +512,7 @@ namespace KamPay.ViewModels
         private async Task ConfirmDonationReceivedAsync(Transaction transaction)
         {
             if (transaction == null) return;
+            if (Application.Current?.MainPage == null) return;
 
             if (transaction.Type != ProductType.Bagis || transaction.Status != TransactionStatus.Accepted) return;
 
@@ -579,8 +583,9 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task MessagePartnerAsync(Transaction transaction)
         {
-            if (transaction == null)
-                return;
+            if (transaction == null) return;
+            if (Application.Current?.MainPage == null) return;
+            if (string.IsNullOrEmpty(_currentUserId)) return;
 
             try
             {
@@ -616,8 +621,8 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ProposePriceAsync(Transaction transaction)
         {
-            if (transaction == null || transaction.BuyerId != _currentUserId)
-                return;
+            if (transaction == null || transaction.BuyerId != _currentUserId) return;
+            if (Application.Current?.MainPage == null) return;
 
             try
             {
@@ -640,6 +645,8 @@ namespace KamPay.ViewModels
                     await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin", "Tamam");
                     return;
                 }
+
+                if (string.IsNullOrEmpty(_currentUserId)) return;
 
                 IsLoading = true;
                 ServiceResult<bool> result;
@@ -683,8 +690,8 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task SendCounterOfferAsync(Transaction transaction)
         {
-            if (transaction == null || transaction.SellerId != _currentUserId)
-                return;
+            if (transaction == null || transaction.SellerId != _currentUserId) return;
+            if (Application.Current?.MainPage == null) return;
 
             try
             {
@@ -713,6 +720,8 @@ namespace KamPay.ViewModels
                     await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin", "Tamam");
                     return;
                 }
+
+                if (string.IsNullOrEmpty(_currentUserId)) return;
 
                 IsLoading = true;
                 ServiceResult<bool> result;
@@ -756,21 +765,23 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task AcceptNegotiatedPriceAsync(Transaction transaction)
         {
-            if (transaction == null || !transaction.IsNegotiating)
-                return;
+            if (transaction == null || !transaction.IsNegotiating) return;
+            if (Application.Current?.MainPage == null) return;
+            if (string.IsNullOrEmpty(_currentUserId)) return;
 
             try
             {
+                var loc = LocalizationResourceManager.Instance;
                 decimal agreedAmount = transaction.AgreedAmount;
                 string agreementText = transaction.Type == ProductType.Satis
-                    ? $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatını kabul ediyor musunuz?"
-                    : $"'{transaction.ProductTitle}' takası için {agreedAmount:N2}₺ ek ödemeyi kabul ediyor musunuz?";
+                    ? string.Format(loc["AcceptPriceForProduct"], transaction.ProductTitle, agreedAmount)
+                    : string.Format(loc["AcceptAdditionalCashForTrade"], transaction.ProductTitle, agreedAmount);
 
                 var confirm = await Application.Current.MainPage.DisplayAlert(
-                    "Pazarlık Onayı",
+                    loc["NegotiationApproval"],
                     agreementText,
-                    "Evet, Kabul Ediyorum",
-                    "Hayır"
+                    loc["YesIAccept"],
+                    loc["No"]
                 );
 
                 if (!confirm)
@@ -784,17 +795,25 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Başarılı", 
-                        result.Message, "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        loc["Success"], 
+                        result.Message, 
+                        loc["Ok"]);
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        loc["Error"], 
+                        result.Message, 
+                        loc["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Application.Current.MainPage.DisplayAlert(
+                    LocalizationResourceManager.Instance["Error"], 
+                    ex.Message, 
+                    LocalizationResourceManager.Instance["Ok"]);
             }
             finally
             {

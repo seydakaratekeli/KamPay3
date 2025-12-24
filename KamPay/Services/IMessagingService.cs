@@ -8,7 +8,7 @@ namespace KamPay.Services
         Task<ServiceResult<Message>> SendMessageAsync(SendMessageRequest request, User sender);
         Task<ServiceResult<List<Message>>> GetConversationMessagesAsync(string conversationId, int limit = 50);
         Task<ServiceResult<List<Conversation>>> GetUserConversationsAsync(string userId);
-        Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string productId = null);
+        Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null);
        Task<ServiceResult<bool>> DeleteConversationAsync(string conversationId, string userId);
         Task<ServiceResult<bool>> MarkMessagesAsReadAsync(string conversationId, string readerUserId);
         Task<ServiceResult<int>> GetTotalUnreadMessageCountAsync(string userId);
@@ -18,12 +18,12 @@ namespace KamPay.Services
        
         /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
        
-        Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string newName, string newPhotoUrl);
+        Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl);
 
        
         /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
        
-        Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string newName, string newPhotoUrl);
+        Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string? newName, string? newPhotoUrl);
 
     }
 }

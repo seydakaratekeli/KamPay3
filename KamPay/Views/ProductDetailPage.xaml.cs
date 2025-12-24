@@ -87,13 +87,13 @@ public partial class ProductDetailPage : ContentPage
         // Event aboneliği yukarıda kaldırıldığı için burada da çıkarma işlemine gerek yok.
     }
 
-    private async Task InitializeMapAsync()
+    private Task InitializeMapAsync()
     {
         try
         {
-            if (_isMapInitialized || ProductMap?.Map == null) return;
-            if (_viewModel.Product == null) return;
-            if (!_viewModel.Product.Latitude.HasValue || !_viewModel.Product.Longitude.HasValue) return;
+            if (_isMapInitialized || ProductMap?.Map == null) return Task.CompletedTask;
+            if (_viewModel.Product == null) return Task.CompletedTask;
+            if (!_viewModel.Product.Latitude.HasValue || !_viewModel.Product.Longitude.HasValue) return Task.CompletedTask;
 
             var map = ProductMap.Map;
 
@@ -133,10 +133,13 @@ public partial class ProductDetailPage : ContentPage
             _isMapInitialized = true;
 
             Console.WriteLine($"✅ ProductDetailPage haritası başlatıldı: {lat}, {lon}");
+            
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ ProductDetailPage harita başlatma hatası: {ex.Message}");
+            return Task.CompletedTask;
         }
     }
 
@@ -166,9 +169,9 @@ public partial class ProductDetailPage : ContentPage
         ZoomOut();
     }
 
-    private void OnMyLocationClicked(object? sender, EventArgs e)
+    private async void OnMyLocationClicked(object? sender, EventArgs e)
     {
-        GoToMyLocation();
+        await GoToMyLocationAsync();
     }
 
     private void OnResetLocationClicked(object? sender, EventArgs e)
@@ -199,7 +202,7 @@ public partial class ProductDetailPage : ContentPage
     }
 
     // Go to current user location
-    private async void GoToMyLocation()
+    private async Task GoToMyLocationAsync()
     {
         try
         {

@@ -78,13 +78,13 @@ namespace KamPay.ViewModels
                 });
             });
 
-            // : Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
-            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, async (r, m) =>
+            // Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
+            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
             {
                 if (m.Value) // Giriş yapıldı
                 {
-                    // Artık metodu güvenle 'await' edebiliriz
-                    await StartListeningForMessagesAsync();
+                    // Async işlemi başlat ama constructor'ı bloklamadan
+                    _ = Task.Run(async () => await StartListeningForMessagesAsync());
                 }
                 else // Çıkış yapıldı
                 {
@@ -105,40 +105,50 @@ namespace KamPay.ViewModels
             FavoritesTitle = res["Favorites"];
         }
 
-        // : Metodun imzası async Task olarak değiştirildi
         private async Task StartListeningForMessagesAsync()
         {
-            StopListeningForMessages(); // Önceki dinleyiciyi durdur
-
-            var currentUser = await _authService.GetCurrentUserAsync();
-            if (currentUser == null) return;
-
-            // Uygulama açıldığında ilk kontrol yapı yap
-            var initialCheckResult = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
-            if (initialCheckResult.Success)
+            try
             {
-                HasUnreadMessages = initialCheckResult.Data > 0;
-            }
+                StopListeningForMessages(); // Önceki dinleyiciyi durdur
 
-            // Gerçek zamanlı dinleyiciyi başlat
-            _messageSubscription = _firebaseClient
-                .Child(Constants.ConversationsCollection)
-                .AsObservable<Conversation>()
-                .Where(e => e.EventType == Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate &&
-                             e.Object != null &&
-                             (e.Object.User1Id == currentUser.UserId || e.Object.User2Id == currentUser.UserId))
-                .Subscribe(async entry =>
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser == null) return;
+
+                // Uygulama açıldığında ilk kontrol yap
+                var initialCheckResult = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
+                if (initialCheckResult.Success)
                 {
-                    // Kullanıcıya ait bir konuşma güncellendiğinde, toplam okunmamış sayısını yeniden kontrol et
-                    var result = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
-                    if (result.Success)
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        MainThread.BeginInvokeOnMainThread(() =>
+                        HasUnreadMessages = initialCheckResult.Data > 0;
+                    });
+                }
+
+                // Gerçek zamanlı dinleyiciyi başlat
+                _messageSubscription = _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .AsObservable<Conversation>()
+                    .Where(e => e.EventType == Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate &&
+                                 e.Object != null &&
+                                 (e.Object.User1Id == currentUser.UserId || e.Object.User2Id == currentUser.UserId))
+                    .Subscribe(async entry =>
+                    {
+                        // Kullanıcıya ait bir konuşma güncellendiğinde, toplam okunmamış sayısını yeniden kontrol et
+                        var result = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
+                        if (result.Success)
                         {
-                            HasUnreadMessages = result.Data > 0;
-                        });
-                    }
-                });
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                HasUnreadMessages = result.Data > 0;
+                            });
+                        }
+                    });
+            }
+            catch (Exception ex)
+            {
+                // Hata logla veya sessizce yut
+                System.Diagnostics.Debug.WriteLine($"Error in StartListeningForMessagesAsync: {ex.Message}");
+            }
         }
 
         private void StopListeningForMessages()
@@ -156,9 +166,7 @@ namespace KamPay.ViewModels
     }
 
     // --- Mesaj Sınıfları ---
-    // Bu sınıfların ayrı bir dosyada olması daha temiz bir yapı sağlar, daha sonra taşı
     
-
     public class UnreadGeneralNotificationStatusMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<bool>
     {
         public UnreadGeneralNotificationStatusMessage(bool value) : base(value) { }

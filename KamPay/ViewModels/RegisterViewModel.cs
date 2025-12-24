@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,31 +15,34 @@ namespace KamPay.ViewModels
         private readonly IUserProfileService _userProfileService;
 
         [ObservableProperty]
-        private string firstName;
+        private string firstName = string.Empty;
 
         [ObservableProperty]
-        private string lastName;
+        private string lastName = string.Empty;
 
         [ObservableProperty]
-        private string email;
+        private string email = string.Empty;
 
         [ObservableProperty]
-        private string password;
+        private string password = string.Empty;
 
         [ObservableProperty]
-        private string passwordConfirm;
+        private string passwordConfirm = string.Empty;
 
         [ObservableProperty]
         private bool isLoading;
 
         [ObservableProperty]
-        private string errorMessage;
+        private string errorMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool isVerificationStep;
+
+        [ObservableProperty]
+        private string verificationCode = string.Empty;
 
         [ObservableProperty]
         private bool showVerificationSection;
-
-        [ObservableProperty]
-        private string verificationCode;
 
         public RegisterViewModel(IAuthenticationService authService, IUserProfileService userProfileService)
         {
@@ -66,9 +71,9 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    ShowVerificationSection = true;
+                    IsVerificationStep = true;
                     VerificationCode = string.Empty;
-                    await Application.Current.MainPage.DisplayAlert("Baþarýlý", result.Message ?? "Kayýt baþarýlý. Lütfen e-postanýza gönderilen doðrulama kodunu girin.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Baþarýlý", result.Message ?? "Kayýt baþarýlý. Lütfen e-postanýza gönderilen doðrulama kodunu girin.", "Tamam");
                 }
                 else
                 {
@@ -119,7 +124,7 @@ namespace KamPay.ViewModels
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Doðrulandý", "E-postanýz doðrulandý. Lütfen giriþ yapýn.", "Tamam");
+                        await Application.Current!.MainPage!.DisplayAlert("Doðrulandý", "E-postanýz doðrulandý. Lütfen giriþ yapýn.", "Tamam");
                         await Shell.Current.GoToAsync("//LoginPage");
                     }
                 }
@@ -156,7 +161,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Baþarýlý", result.Message ?? "Doðrulama kodu yeniden gönderildi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Baþarýlý", result.Message ?? "Doðrulama kodu yeniden gönderildi.", "Tamam");
                 }
                 else
                 {
@@ -176,7 +181,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task CancelVerificationAsync()
         {
-            ShowVerificationSection = false;
+            IsVerificationStep = false;
             VerificationCode = string.Empty;
             await Task.CompletedTask;
         }

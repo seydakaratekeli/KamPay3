@@ -13,20 +13,10 @@ namespace KamPay.Services
         private readonly IServiceSharingService _serviceService;
         private readonly IGoodDeedService _goodDeedService;
         private readonly IMessagingService _messagingService;
-        private User _currentUser;
+        private User? _currentUser;
+        public User? CurrentUser => _currentUser;
 
-        public User CurrentUser 
-        { 
-            get => _currentUser;
-            private set
-            {
-                _currentUser = value;
-                // Fire event for all changes including null (for logout scenarios)
-                UserProfileChanged?.Invoke(this, _currentUser);
-            }
-        }
-
-        public event EventHandler<User> UserProfileChanged;
+        public event EventHandler<User>? UserProfileChanged;
 
         public UserStateService(
             IAuthenticationService authService, 
@@ -80,7 +70,7 @@ namespace KamPay.Services
                         user.Email = profile.Email;
                 }
 
-                CurrentUser = user;
+                _currentUser = user;
                 return ServiceResult<User>.SuccessResult(user);
             }
             catch (Exception ex)
@@ -89,10 +79,10 @@ namespace KamPay.Services
             }
         }
         public async Task<ServiceResult<bool>> UpdateUserProfileAsync(
-            string firstName = null,
-            string lastName = null,
-            string username = null,
-            string profileImageUrl = null)
+            string? firstName = null,
+            string? lastName = null,
+            string? username = null,
+            string? profileImageUrl = null)
         {
             if (CurrentUser == null)
             {
@@ -178,7 +168,7 @@ namespace KamPay.Services
 
         public void ClearUser()
         {
-            CurrentUser = null;
+            _currentUser = null;
         }
     }
 }

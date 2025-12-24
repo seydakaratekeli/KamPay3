@@ -17,11 +17,18 @@ namespace KamPay.ViewModels
         // Localization helper
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
-        [ObservableProperty] private string email;
-        [ObservableProperty] private string password;
+        [ObservableProperty]
+        private string email = string.Empty;
+
+        [ObservableProperty]
+        private string password = string.Empty;
+
         [ObservableProperty] private bool rememberMe;
-        [ObservableProperty] private bool isLoading;
-        [ObservableProperty] private string errorMessage;
+        [ObservableProperty]
+        private bool isLoading;
+
+        [ObservableProperty]
+        private string errorMessage = string.Empty;
 
         public LoginViewModel(IAuthenticationService authService)
         {

@@ -26,49 +26,26 @@ namespace KamPay.ViewModels
         private readonly IUserStateService _userStateService;
         private readonly IStorageService _storageService;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
+        private User? _currentUser;
 
         //  CACHE: Her konuşma için ayrı state
         private static readonly Dictionary<string, ConversationState> _conversationCache = new();
 
         //  CACHE: Otomatik temizleme için timer
-        private static System.Timers.Timer _cacheCleanupTimer;
+        private System.Timers.Timer? _cacheCleanupTimer;
         private const int MaxCacheAgeMinutes = 15; // 15 dakikadan eski cache'leri temizle
         private const int MaxCachedConversations = 10; // Maksimum 10 konuşma cache'le
 
-        private IDisposable _messagesSubscription;
+        private IDisposable? _messagesSubscription;
         private bool _isListenerActive = false;
-        private string _activeConversationId;
+        private string? _activeConversationId;
         private bool _initialLoadComplete = false;
 
         [ObservableProperty]
-        private string conversationId;
+        private string conversationId = string.Empty;
 
         [ObservableProperty]
-        private Conversation conversation;
-
-        [ObservableProperty]
-        private string otherUserName;
-
-        [ObservableProperty]
-        private string otherUserPhoto;
-
-        // Removed source-generator attributes for online status and added explicit properties
-        private bool _isOtherUserOnline; // backing field
-        public bool IsOtherUserOnline
-        {
-            get => _isOtherUserOnline;
-            set => SetProperty(ref _isOtherUserOnline, value);
-        }
-
-        private string _onlineStatusText;
-        public string OnlineStatusText
-        {
-            get => _onlineStatusText;
-            set => SetProperty(ref _onlineStatusText, value);
-        }
-
-        [ObservableProperty]
-        private string messageText;
+        private string messageText = string.Empty;
 
         [ObservableProperty]
         private bool isLoading;
@@ -84,11 +61,27 @@ namespace KamPay.ViewModels
         private bool isUploadingImage;
 
         [ObservableProperty]
-        private string selectedImagePath;
+        private string? selectedImagePath;
 
-        public ObservableCollection<Message> Messages { get; } = new();
+        public ObservableCollection<Message> Messages { get; set; } = new();
+        public Conversation? Conversation { get; set; }
+        public string OtherUserName { get; set; } = string.Empty;
+        public string OtherUserPhoto { get; set; } = string.Empty;
 
-        private User _currentUser;
+        // Removed source-generator attributes for online status and added explicit properties
+        private bool _isOtherUserOnline; // backing field
+        public bool IsOtherUserOnline
+        {
+            get => _isOtherUserOnline;
+            set => SetProperty(ref _isOtherUserOnline, value);
+        }
+
+        private string _onlineStatusText = string.Empty;
+        public string OnlineStatusText
+        {
+            get => _onlineStatusText;
+            set => SetProperty(ref _onlineStatusText, value);
+        }
 
         public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService, IUserStateService userStateService, IStorageService storageService)
         {
@@ -101,15 +94,12 @@ namespace KamPay.ViewModels
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             //  Static timer başlat (sadece bir kez)
-            if (_cacheCleanupTimer == null)
-            {
-                _cacheCleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
-                _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
-                _cacheCleanupTimer.Start();
-            }
+            _cacheCleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
+            _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
+            _cacheCleanupTimer.Start();
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             if (updatedUser == null) return;
 
@@ -122,8 +112,8 @@ namespace KamPay.ViewModels
                     var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
                     if (otherUserId == updatedUser.UserId)
                     {
-                        OtherUserName = updatedUser.FullName;
-                        OtherUserPhoto = updatedUser.ProfileImageUrl;
+                        OtherUserName = updatedUser.FullName ?? string.Empty;
+                        OtherUserPhoto = updatedUser.ProfileImageUrl ?? string.Empty;
                     }
                 }
 
@@ -190,7 +180,7 @@ namespace KamPay.ViewModels
                     _currentUser = await _authService.GetCurrentUserAsync();
                     if (_currentUser == null)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", "Giriş yapmış kullanıcı bulunamadı.", "Tamam");
+                        await Application.Current!.MainPage!.DisplayAlert("Hata", "Giriş yapmış kullanıcı bulunamadı.", "Tamam");
                         await Shell.Current.GoToAsync("..");
                         return;
                     }
@@ -220,8 +210,8 @@ namespace KamPay.ViewModels
 
                     if (Conversation != null)
                     {
-                        OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId);
-                        OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId);
+                        OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
+                        OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? string.Empty;
 
                         // / Profil fotoğrafı kontrolü (varsayılan)
                         if (string.IsNullOrEmpty(OtherUserPhoto))
@@ -294,7 +284,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
                 Console.WriteLine($"❌ LoadChatAsync hatası: {ex.Message}");
                 IsLoading = false;
             }
@@ -322,7 +312,7 @@ namespace KamPay.ViewModels
                         {
                             var message = m.Object;
                             message.MessageId = m.Key;
-                            message.IsSentByMe = message.SenderId == _currentUser.UserId;
+                            message.IsSentByMe = message.SenderId == _currentUser!.UserId;
                             
                             //  DEBUG: Sistem mesajı kontrolü
                             if (message.Type == MessageType.System || message.IsSystemMessage)
@@ -534,13 +524,15 @@ namespace KamPay.ViewModels
         private void ProcessMessageBatch(IList<Firebase.Database.Streaming.FirebaseEvent<Message>> events)
         {
             bool shouldScroll = false;
-            Message lastNewMessage = null;
+            Message? lastNewMessage = null;
 
             foreach (var e in events)
             {
                 var message = e.Object;
+                if (message == null) continue;
+
                 message.MessageId = e.Key;
-                message.IsSentByMe = message.SenderId == _currentUser.UserId;
+                message.IsSentByMe = message.SenderId == _currentUser!.UserId;
 
                 var existingMessage = Messages.FirstOrDefault(m => m.MessageId == message.MessageId);
 
@@ -557,7 +549,7 @@ namespace KamPay.ViewModels
 
                         if (!message.IsSentByMe)
                         {
-                            _ = _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
+                            _ = _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser!.UserId);
                         }
 
                         shouldScroll = true;
@@ -583,7 +575,7 @@ namespace KamPay.ViewModels
         private void InsertMessageSorted(Message newMessage)
         {
             // Temp mesajı bul ve kaldır
-            var tempMessage = Messages.FirstOrDefault(m => m.MessageId.StartsWith("temp_") &&
+            var tempMessage = Messages.FirstOrDefault(m => m.MessageId != null && m.MessageId.StartsWith("temp_") &&
                                                             m.Content == newMessage.Content &&
                                                             Math.Abs((m.SentAt - newMessage.SentAt).TotalSeconds) < 10);
             if (tempMessage != null)
@@ -653,7 +645,7 @@ namespace KamPay.ViewModels
                 SenderId = _currentUser.UserId,
                 SenderName = _currentUser.FullName,
                 SenderPhotoUrl = _currentUser.ProfileImageUrl,
-                ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId) ?? string.Empty,
                 ReceiverName = Conversation.GetOtherUserName(_currentUser.UserId),
                 ReceiverPhotoUrl = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId),
                 Content = messageContent,
@@ -674,35 +666,36 @@ namespace KamPay.ViewModels
             {
                 IsSending = true;
 
+                var receiverId = Conversation.GetOtherUserId(_currentUser.UserId);
+                if (string.IsNullOrEmpty(receiverId))
+                {
+                    Messages.Remove(tempMessage);
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "Alıcı bilgisi bulunamadı.", "Tamam");
+                    MessageText = messageContent;
+                    return;
+                }
+
                 var request = new SendMessageRequest
                 {
-                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                    ReceiverId = receiverId,
                     Content = messageContent,
                     Type = MessageType.Text,
                     ProductId = Conversation.ProductId
                 };
-
-                if (string.IsNullOrEmpty(request.ReceiverId))
-                {
-                    Messages.Remove(tempMessage);
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Alıcı bilgisi bulunamadı.", "Tamam");
-                    MessageText = messageContent;
-                    return;
-                }
 
                 var result = await _messagingService.SendMessageAsync(request, _currentUser);
 
                 if (!result.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message ?? "Mesaj gönderilemedi", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message ?? "Mesaj gönderilemedi", "Tamam");
                     MessageText = messageContent;
                 }
             }
             catch (Exception ex)
             {
                 Messages.Remove(tempMessage);
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
                 MessageText = messageContent;
                 Console.WriteLine($"❌ SendMessage hatası: {ex.Message}");
             }
@@ -756,6 +749,10 @@ namespace KamPay.ViewModels
             _messagesSubscription = null;
             _isListenerActive = false;
             _initialLoadComplete = false;
+
+            _cacheCleanupTimer?.Stop();
+            _cacheCleanupTimer?.Dispose();
+            _cacheCleanupTimer = null;
         }
 
         // Public helper metodlar
@@ -806,16 +803,16 @@ namespace KamPay.ViewModels
             }
             catch (FeatureNotSupportedException)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda fotoğraf seçme desteklenmiyor.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Bu cihazda fotoğraf seçme desteklenmiyor.", "Tamam");
             }
             catch (PermissionException)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Galeri erişim izni gerekli.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Galeri erişim izni gerekli.", "Tamam");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ PickImage hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf seçilemedi.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Fotoğraf seçilemedi.", "Tamam");
             }
         }
 
@@ -828,7 +825,7 @@ namespace KamPay.ViewModels
             {
                 if (!MediaPicker.IsCaptureSupported)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
                     return;
                 }
 
@@ -845,16 +842,16 @@ namespace KamPay.ViewModels
             }
             catch (FeatureNotSupportedException)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Bu cihazda kamera desteklenmiyor.", "Tamam");
             }
             catch (PermissionException)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", "Kamera erişim izni gerekli.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Kamera erişim izni gerekli.", "Tamam");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ TakePhoto hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf çekilemedi.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Fotoğraf çekilemedi.", "Tamam");
             }
         }
 
@@ -877,7 +874,7 @@ namespace KamPay.ViewModels
                     SenderId = _currentUser.UserId,
                     SenderName = _currentUser.FullName,
                     SenderPhotoUrl = _currentUser.ProfileImageUrl,
-                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId) ?? string.Empty,
                     ReceiverName = Conversation.GetOtherUserName(_currentUser.UserId),
                     ReceiverPhotoUrl = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId),
                     Content = "📷 Fotoğraf",
@@ -902,14 +899,22 @@ namespace KamPay.ViewModels
                 if (!uploadResult.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current.MainPage.DisplayAlert("Hata", uploadResult.Message ?? "Görsel yüklenemedi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", uploadResult.Message ?? "Görsel yüklenemedi.", "Tamam");
                     return;
                 }
 
                 // 3️⃣ Mesaj olarak gönder
+                var receiverId = Conversation.GetOtherUserId(_currentUser.UserId);
+                if (string.IsNullOrEmpty(receiverId))
+                {
+                    Messages.Remove(tempMessage);
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "Alıcı bilgisi bulunamadı.", "Tamam");
+                    return;
+                }
+
                 var request = new SendMessageRequest
                 {
-                    ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId),
+                    ReceiverId = receiverId,
                     Content = "📷 Fotoğraf",
                     Type = MessageType.Image,
                     ProductId = Conversation.ProductId,
@@ -921,14 +926,14 @@ namespace KamPay.ViewModels
                 if (!sendResult.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current.MainPage.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gönderilemedi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gönderilemedi.", "Tamam");
                 }
                 // 4️⃣ Real-time listener mesajı güncelleyecek
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ SendImageMessage hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", "Fotoğraf gönderilemedi.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Fotoğraf gönderilemedi.", "Tamam");
             }
             finally
             {
@@ -981,10 +986,10 @@ namespace KamPay.ViewModels
     //  : Cache state modeli
     public class ConversationState
     {
-        public List<Message> Messages { get; set; }
-        public Conversation Conversation { get; set; }
-        public string OtherUserName { get; set; }
-        public string OtherUserPhoto { get; set; }
+        public required List<Message> Messages { get; set; }
+        public Conversation? Conversation { get; set; }
+        public required string OtherUserName { get; set; }
+        public required string OtherUserPhoto { get; set; }
         public DateTime CachedAt { get; set; }
         public DateTime LastAccessedAt { get; set; } //  LRU için
     }

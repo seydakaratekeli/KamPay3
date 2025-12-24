@@ -8,10 +8,12 @@
     xmlns:services="clr-namespace:KamPay.Services"
     x:DataType="vm:AppShellViewModel"
     Shell.FlyoutBehavior="Disabled"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    CurrentItem="{x:Reference LoginShellContent}">
 
     <!-- Login Page - Giriş ekranı için ayrı route -->
     <ShellContent
+        x:Name="LoginShellContent"
         Route="LoginPage"
         ContentTemplate="{DataTemplate local:LoginPage}"
         Shell.FlyoutBehavior="Disabled" />

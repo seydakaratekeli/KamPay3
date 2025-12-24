@@ -1,24 +1,24 @@
-ï»¿using System.Globalization;
+using System.Globalization;
 using Microsoft.Maui.Controls; 
 
 namespace KamPay.Converters
 {
     public class UnreadToIconConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // Gelen deÄŸer 'true' ise (yani okunmamÄ±ÅŸ mesaj varsa)
+            // Gelen deðer 'true' ise (yani okunmamýþ mesaj varsa)
             if (value is bool hasUnread && hasUnread)
             {
-                // KÄ±rmÄ±zÄ± noktalÄ± (rozetli) ikonu kullan
+                // Kýrmýzý noktalý (rozetli) ikonu kullan
                 return "message_icon_badge.svg";
             }
 
-            // DiÄŸer tÃ¼m durumlarda normal ikonu kullan
+            // Diðer tüm durumlarda normal ikonu kullan
             return "message_icon.svg";
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // ConvertBack is not needed for this one-way binding converter
             // Return false as default value if somehow called

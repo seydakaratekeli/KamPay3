@@ -6,14 +6,14 @@ namespace KamPay.Models;
 // Rozet (Badge) modeli - Oyunlaştırma için
 public class Badge
 {
-    public string BadgeId { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public string IconName { get; set; }
+    public string BadgeId { get; set; } = "";
+    public required string Name { get; set; }
+    public required string Description { get; set; }
+    public required string IconName { get; set; }
     public BadgeCategory Category { get; set; }
     public int RequiredPoints { get; set; }
     public int RequiredCount { get; set; } // Örn: 10 ürün sat
-    public string Color { get; set; }
+    public required string Color { get; set; }
 
    
     public DateTime CreatedAt { get; set; }
@@ -105,15 +105,15 @@ public enum BadgeCategory
 // Kullanıcı rozeti (User'ın kazandığı rozetler)
 public class UserBadge
 {
-    public string UserBadgeId { get; set; }
-    public string UserId { get; set; }
-    public string BadgeId { get; set; }
+    public string UserBadgeId { get; set; } = "";
+    public required string UserId { get; set; }
+    public required string BadgeId { get; set; }
     public DateTime EarnedAt { get; set; }
 
     // Badge bilgileri (cache için)
-    public string BadgeName { get; set; }
-    public string BadgeIcon { get; set; }
-    public string BadgeColor { get; set; }
+    public required string BadgeName { get; set; }
+    public required string BadgeIcon { get; set; }
+    public required string BadgeColor { get; set; }
 
     public UserBadge()
     {

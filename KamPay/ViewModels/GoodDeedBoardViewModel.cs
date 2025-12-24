@@ -25,13 +25,13 @@ namespace KamPay.ViewModels
         private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient;
 
-        private IDisposable _postsSubscription;
+        private IDisposable? _postsSubscription;
         private readonly Dictionary<string, IDisposable> _commentSubscriptions = new();
         private readonly SemaphoreSlim _commentLock = new(1, 1);
         private readonly Dictionary<string, GoodDeedPost> _postsCache = new();
 
         private bool _initialLoadComplete = false;
-        private CancellationTokenSource _loadingTimeoutCts;
+        private CancellationTokenSource? _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 6000;
 
         [ObservableProperty]
@@ -53,10 +53,10 @@ namespace KamPay.ViewModels
         private bool isRefreshing;
 
         [ObservableProperty]
-        private string title;
+        private string title = string.Empty;
 
         [ObservableProperty]
-        private string description;
+        private string description = string.Empty;
 
         [ObservableProperty]
         private PostType selectedType;
@@ -147,9 +147,14 @@ namespace KamPay.ViewModels
         {
             try
             {
+                var loc = LocalizationResourceManager.Instance;
+                
                 if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(Description))
                 {
-                    await Application.Current.MainPage.DisplayAlert("Uyarı", "Başlık ve açıklama gerekli", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        loc["Warning"], 
+                        loc["TitleAndDescriptionRequired"], 
+                        loc["Ok"]);
                     return;
                 }
 
@@ -158,7 +163,10 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Oturum açılmamış.", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        loc["Error"], 
+                        loc["SessionNotFound"], 
+                        loc["Ok"]);
                     return;
                 }
 
@@ -183,12 +191,18 @@ namespace KamPay.ViewModels
                     Title = string.Empty;
                     Description = string.Empty;
                     IsPostFormVisible = false;
-                    await Application.Current.MainPage.DisplayAlert("Başarılı", "İlan paylaşıldı!", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        loc["Success"], 
+                        loc["PostCreatedSuccess"], 
+                        loc["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Application.Current.MainPage.DisplayAlert(
+                    LocalizationResourceManager.Instance["Error"], 
+                    ex.Message, 
+                    LocalizationResourceManager.Instance["Ok"]);
             }
             finally
             {
@@ -200,9 +214,6 @@ namespace KamPay.ViewModels
         private async Task LikePostAsync(GoodDeedPost post)
         {
             if (post == null) return;
-
-            // Çift tıklamayı önlemek için basit bir kontrol (isteğe bağlı)
-            // if (IsBusy) return; 
 
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null) return;
@@ -216,14 +227,12 @@ namespace KamPay.ViewModels
             if (isLikedNewState)
             {
                 post.LikeCount++;
-                // Sözlüğe de ekle ki tutarlı olsun
                 if (!post.Likes.ContainsKey(currentUser.UserId))
                     post.Likes[currentUser.UserId] = true;
             }
             else
             {
                 post.LikeCount = Math.Max(0, post.LikeCount - 1);
-                // Sözlükten çıkar
                 if (post.Likes.ContainsKey(currentUser.UserId))
                     post.Likes.Remove(currentUser.UserId);
             }
@@ -238,26 +247,26 @@ namespace KamPay.ViewModels
                     // 3. HATA OLURSA: Yapılan değişikliği geri al (Rollback)
                     post.IsLiked = !isLikedNewState;
 
-                    if (isLikedNewState) // Beğenmiştik, geri alıyoruz (azalt)
+                    if (isLikedNewState)
                     {
                         post.LikeCount = Math.Max(0, post.LikeCount - 1);
                         post.Likes.Remove(currentUser.UserId);
                     }
-                    else // Beğenmekten vazgeçmiştik, geri alıyoruz (arttır)
+                    else
                     {
                         post.LikeCount++;
                         post.Likes[currentUser.UserId] = true;
                     }
 
-                    await Application.Current.MainPage.DisplayAlert("Hata", "İşlem başarısız oldu.", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert(
+                        LocalizationResourceManager.Instance["Error"], 
+                        LocalizationResourceManager.Instance["OperationFailedTryAgain"], 
+                        LocalizationResourceManager.Instance["Ok"]);
                 }
-
-                // BAŞARILI OLURSA: Hiçbir şey yapmana gerek yok. 
-                // Zaten en başta güncelledik. Realtime Listener ileride veriyi doğrulayacaktır.
             }
             catch (Exception ex)
             {
-                // Hata durumunda rollback (yukarıdakiyle aynı mantık)
+                // Hata durumunda rollback
                 post.IsLiked = !isLikedNewState;
                 if (isLikedNewState)
                     post.LikeCount = Math.Max(0, post.LikeCount - 1);
@@ -267,6 +276,7 @@ namespace KamPay.ViewModels
                 System.Diagnostics.Debug.WriteLine($"❌ Beğeni hatası: {ex.Message}");
             }
         }
+        
         [RelayCommand]
         private async Task DeletePostAsync(GoodDeedPost post)
         {
@@ -274,7 +284,12 @@ namespace KamPay.ViewModels
 
             try
             {
-                var confirm = await Application.Current.MainPage.DisplayAlert("Sil", "Emin misiniz?", "Evet", "Hayır");
+                var loc = LocalizationResourceManager.Instance;
+                var confirm = await Application.Current.MainPage.DisplayAlert(
+                    loc["Delete"], 
+                    loc["ConfirmDeletePost"], 
+                    loc["Yes"], 
+                    loc["No"]);
                 if (!confirm) return;
 
                 var currentUser = await _authService.GetCurrentUserAsync();
@@ -290,15 +305,16 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Application.Current.MainPage.DisplayAlert(
+                    LocalizationResourceManager.Instance["Error"], 
+                    ex.Message, 
+                    LocalizationResourceManager.Instance["Ok"]);
             }
         }
 
-        //  : Artık post.DraftComment kullanıyor
         [RelayCommand]
         private async Task AddCommentAsync(GoodDeedPost post)
         {
-            // Kontrol: Parametre ve DraftComment dolu mu?
             if (post == null || string.IsNullOrWhiteSpace(post.DraftComment)) return;
 
             var currentUser = await _authService.GetCurrentUserAsync();
@@ -312,14 +328,12 @@ namespace KamPay.ViewModels
                 UserId = currentUser.UserId,
                 UserName = userProfile?.Data?.Username ?? currentUser.FullName,
                 UserProfileImageUrl = userProfile?.Data?.ProfileImageUrl ?? "default_avatar.png",
-                Text = post.DraftComment.Trim(), //  Değişiklik burada
+                Text = post.DraftComment.Trim(),
                 CommentId = Guid.NewGuid().ToString(),
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Metin kutusunu temizle ve kutuyu kapat (isteğe bağlı)
             post.DraftComment = string.Empty;
-            // post.IsCommentBoxVisible = false; // İstersen gönderince kutuyu kapatabilirsin
 
             // Optimistik UI Güncellemesi
             post.Comments ??= new Dictionary<string, Comment>();
@@ -335,7 +349,10 @@ namespace KamPay.ViewModels
                 post.Comments.Remove(comment.CommentId);
                 post.CommentCount--;
                 post.RefreshCommentsUI();
-                await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                await Shell.Current.DisplayAlert(
+                    LocalizationResourceManager.Instance["Error"], 
+                    result.Message, 
+                    LocalizationResourceManager.Instance["Ok"]);
             }
         }
 

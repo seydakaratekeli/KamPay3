@@ -20,19 +20,11 @@ namespace KamPay.Services
         {
             try
             {
+                var loc = LocalizationResourceManager.Instance;
+                
                 // 1) E-posta gövdesi (HTML veya plain)
-                var subject = "KamPay - E-posta Doğrulama Kodu";
-                var body = $@"
-Merhaba,
-
-KamPay hesabınızı doğrulamak için aşağıdaki kodu kullanın:
-
-Doğrulama Kodu: {verificationCode}
-
-Bu kod 15 dakika boyunca geçerlidir.
-
-KamPay Ekibi
-";
+                var subject = loc["EmailVerificationSubject"];
+                var body = string.Format(loc["EmailVerificationBody"], verificationCode);
 
                 // 2) Debug'a yaz GELİŞTİRME AŞAMASI İÇİN SİMÜLASYON
                 Debug.WriteLine("---------- KamPay Doğrulama Kodu (Debug) ----------");

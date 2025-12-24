@@ -9,7 +9,7 @@ namespace KamPay.Services
     public class RealtimeSnapshotService<T>
     {
         private readonly FirebaseClient _client;
-        private IDisposable _subscription;
+        private IDisposable? _subscription;
 
         public RealtimeSnapshotService(string baseUrl)
         {

@@ -20,13 +20,13 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient;
-        private IDisposable _requestsSubscription;
+        private IDisposable? _requestsSubscription;
+        private string? _currentUserId;
 
         //  CACHE: Request tracking
         private readonly HashSet<string> _incomingRequestIds = new();
         private readonly HashSet<string> _outgoingRequestIds = new();
         private bool _initialLoadComplete = false;
-        private string _currentUserId;
 
         [ObservableProperty]
         private bool isLoading;
@@ -65,7 +65,7 @@ namespace KamPay.ViewModels
             _ = InitializeAsync();
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             if (updatedUser == null) return;
 
@@ -83,7 +83,7 @@ namespace KamPay.ViewModels
         public class PaymentOption
         {
             public PaymentMethodType Method { get; set; }
-            public string DisplayName { get; set; }
+            public string DisplayName { get; set; } = string.Empty;
         }
 
         private PaymentMethodType _selectedPaymentMethod = PaymentMethodType.CardSim;
@@ -302,13 +302,15 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
-        private async Task LoadRequestsAsync()
+        private Task LoadRequestsAsync()
         {
             // Real-time listener zaten çalışıyor
             if (!_initialLoadComplete)
             {
                 IsLoading = true;
             }
+            
+            return Task.CompletedTask;
         }
 
         [RelayCommand]

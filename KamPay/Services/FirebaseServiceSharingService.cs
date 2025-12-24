@@ -20,7 +20,7 @@ namespace KamPay.Services
                                                                   // Basit OTP modeli (geçici koleksiyon için) bunu yaptık ta kullanıcaz mı bakalım ?? TEKRAR BAK
         internal class TempOtpModel
         {
-            public string Otp { get; set; }
+            public string Otp { get; set; } = string.Empty;
             public DateTime ExpiresAt { get; set; }
         }
 
@@ -193,7 +193,7 @@ namespace KamPay.Services
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return ServiceResult<(List<ServiceRequest>, List<ServiceRequest>)>.FailureResult("Kullanıcı ID'si bulunamadı.");
+                    return ServiceResult<(List<ServiceRequest> Incoming, List<ServiceRequest> Outgoing)>.FailureResult("Kullanıcı ID'si bulunamadı.");
                 }
 
                 var incomingRequestsTask = _firebaseClient
@@ -221,12 +221,12 @@ namespace KamPay.Services
                     .OrderByDescending(r => r.RequestedAt)
                     .ToList();
 
-                // HATA 1 DÜZELTMESİ: Geri döndürülen Tuple'a doğru isimler veriliyor.
-                return ServiceResult<(List<ServiceRequest>, List<ServiceRequest>)>.SuccessResult((Incoming: incoming, Outgoing: outgoing));
+                // HATA 1 DÜZELTMESİ: Tuple element names kullanılıyor
+                return ServiceResult<(List<ServiceRequest> Incoming, List<ServiceRequest> Outgoing)>.SuccessResult((incoming, outgoing));
             }
             catch (Exception ex)
             {
-                return ServiceResult<(List<ServiceRequest>, List<ServiceRequest>)>.FailureResult("Talepler getirilirken bir hata oluştu.", ex.Message);
+                return ServiceResult<(List<ServiceRequest> Incoming, List<ServiceRequest> Outgoing)>.FailureResult("Talepler getirilirken bir hata oluştu.", ex.Message);
             }
         }
 
@@ -454,7 +454,7 @@ namespace KamPay.Services
      
         /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
         
-        public async Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string newName, string newPhotoUrl)
+        public async Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
@@ -468,8 +468,8 @@ namespace KamPay.Services
                 {
                     var service = serviceEntry.Object;
                     service.ServiceId = serviceEntry.Key;
-                    service.ProviderName = newName;
-                    service.ProviderPhotoUrl = newPhotoUrl;
+                    service.ProviderName = newName ?? string.Empty;
+                    service.ProviderPhotoUrl = newPhotoUrl ?? string.Empty;
 
                     await _firebaseClient
                         .Child(Constants.ServiceOffersCollection)
@@ -602,20 +602,28 @@ namespace KamPay.Services
                 var systemMessageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n📝 Konuşma başlatıldı\nFiyat: {request.Price:N2} ₺";
                 Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {systemMessageContent}");
 
-                var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                var currentUserObj = await GetUserAsync(currentUserId);
+                if (currentUserObj != null)
                 {
-                    ReceiverId = otherUserId,
-                    Content = systemMessageContent,
-                    Type = MessageType.System
-                }, await GetUserAsync(currentUserId));
+                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                    {
+                        ReceiverId = otherUserId,
+                        Content = systemMessageContent,
+                        Type = MessageType.System
+                    }, currentUserObj);
 
-                if (messageResult.Success)
-                {
-                    Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                    if (messageResult.Success)
+                    {
+                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                    Console.WriteLine($"⚠️ Kullanıcı bilgisi alınamadı, sistem mesajı gönderilemedi");
                 }
 
                 return ServiceResult<string>.SuccessResult(conversationResult.Data.ConversationId, "Konuşma başlatıldı.");
@@ -689,20 +697,28 @@ namespace KamPay.Services
                     var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n💰 Fiyat Teklifi: {proposedPrice:N2} ₺\n(Orijinal fiyat: {request.Price:N2} ₺)";
                     Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
 
-                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var currentUserObj = await GetUserAsync(currentUserId);
+                    if (currentUserObj != null)
                     {
-                        ReceiverId = request.ProviderId,
-                        Content = messageContent,
-                        Type = MessageType.System
-                    }, await GetUserAsync(currentUserId));
+                        var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                        {
+                            ReceiverId = request.ProviderId,
+                            Content = messageContent,
+                            Type = MessageType.System
+                        }, currentUserObj);
 
-                    if (messageResult.Success)
-                    {
-                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        if (messageResult.Success)
+                        {
+                            Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        Console.WriteLine($"⚠️ Kullanıcı bilgisi alınamadı, sistem mesajı gönderilemedi");
                     }
                 }
                 else
@@ -785,20 +801,28 @@ namespace KamPay.Services
                     var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n💰 Karşı Teklif: {counterOffer:N2} ₺{requesterOffer}";
                     Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
 
-                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var currentUserObj = await GetUserAsync(currentUserId);
+                    if (currentUserObj != null)
                     {
-                        ReceiverId = request.RequesterId,
-                        Content = messageContent,
-                        Type = MessageType.System
-                    }, await GetUserAsync(currentUserId));
+                        var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                        {
+                            ReceiverId = request.RequesterId,
+                            Content = messageContent,
+                            Type = MessageType.System
+                        }, currentUserObj);
 
-                    if (messageResult.Success)
-                    {
-                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        if (messageResult.Success)
+                        {
+                            Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        Console.WriteLine($"⚠️ Kullanıcı bilgisi alınamadı, sistem mesajı gönderilemedi");
                     }
                 }
                 else
@@ -891,20 +915,28 @@ namespace KamPay.Services
                     var messageContent = $"🛠️ [{request.ServiceTitle} - Hizmet]\n✅ Anlaşma Sağlandı: {agreedPrice:N2} ₺";
                     Console.WriteLine($"📝 Sistem mesajı gönderiliyor: {messageContent}");
 
-                    var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                    var currentUserObj = await GetUserAsync(currentUserId);
+                    if (currentUserObj != null)
                     {
-                        ReceiverId = otherUserId,
-                        Content = messageContent,
-                        Type = MessageType.System
-                    }, await GetUserAsync(currentUserId));
+                        var messageResult = await _messagingService.SendMessageAsync(new SendMessageRequest
+                        {
+                            ReceiverId = otherUserId,
+                            Content = messageContent,
+                            Type = MessageType.System
+                        }, currentUserObj);
 
-                    if (messageResult.Success)
-                    {
-                        Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        if (messageResult.Success)
+                        {
+                            Console.WriteLine($"✅ Sistem mesajı gönderildi!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Sistem mesajı gönderilemedi: {messageResult.Message}");
+                        Console.WriteLine($"⚠️ Kullanıcı bilgisi alınamadı, sistem mesajı gönderilemedi");
                     }
                 }
                 else
@@ -921,7 +953,7 @@ namespace KamPay.Services
         }
 
         // Yardımcı metod: Kullanıcı bilgisini getir
-        private async Task<User> GetUserAsync(string userId)
+        private async Task<User?> GetUserAsync(string userId)
         {
             try
             {

@@ -20,7 +20,6 @@ namespace KamPay.Services
     public class FirebaseObserverService : IFirebaseObserverService
     {
         private readonly FirebaseClient _firebaseClient;
-        private IDisposable _subscription;
 
         public FirebaseObserverService()
         {
@@ -43,7 +42,6 @@ namespace KamPay.Services
 
         public void Dispose()
         {
-            _subscription?.Dispose();
         }
     }
 }

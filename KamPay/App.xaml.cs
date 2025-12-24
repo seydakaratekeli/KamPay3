@@ -1,6 +1,10 @@
 ﻿using KamPay.Views;
 using KamPay.ViewModels;
 using KamPay.Services;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.Dispatching;
+
 namespace KamPay
 {
     public partial class App : Application
@@ -12,23 +16,33 @@ namespace KamPay
             // Varsayılan dili Türkçe olarak ayarla
             LocalizationResourceManager.Instance.SetCulture("tr");
 
-            MainPage = appShell;
+            this.MainPage = appShell;
 
-            // Kullanıcı giriş yapmış mı kontrol et
-            var token = Preferences.Get("auth_token", string.Empty);
-            
-            if (string.IsNullOrEmpty(token))
+            // Navigation işlemini UI thread hazır olduktan sonra yap
+            Dispatcher.Dispatch(async () =>
             {
-                // Giriş yapmamış, LoginPage'e yönlendir
-                Shell.Current.GoToAsync("//LoginPage");
-            }
-            else
-            {
-                // Giriş yapmış, ana uygulamaya yönlendir
-                Shell.Current.GoToAsync("//MainApp");
-            }
-
+                try
+                {
+                    // Küçük bir gecikme ile Shell'in tamamen yüklenmesini bekle
+                    await Task.Delay(200);
+                    
+                    // Kullanıcı giriş yapmış mı kontrol et
+                    var token = Preferences.Get("auth_token", string.Empty);
+                    
+                   // if (!string.IsNullOrEmpty(token))
+                    {
+                        // Giriş yapmış, ana uygulamaya yönlendir
+                        await Shell.Current.GoToAsync("//MainApp");
+                    }
+                    // Giriş yapmamışsa zaten LoginPage default olarak açık
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Navigation Error: {ex.Message}");
+                }
+            });
         }
+        
         protected override void OnStart()
         {
             base.OnStart();
@@ -55,7 +69,5 @@ namespace KamPay
             // Cache'leri temizle
             ChatViewModel.ClearOldCache(maxAgeMinutes: 30);
         }
-
-
     }
 }

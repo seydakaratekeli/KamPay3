@@ -17,7 +17,7 @@ public class FirebaseProductService : IProductService
         _storageService = storageService;
     }
 
-    public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter filter = null)
+    public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null)
     {
         try
         {
@@ -147,19 +147,19 @@ public class FirebaseProductService : IProductService
                 ProductId = Guid.NewGuid().ToString(), // ID'yi burada oluşturmak daha güvenli
                 Title = request.Title.Trim(),
                 Description = request.Description.Trim(),
-                CategoryId = request.CategoryId,
+                CategoryId = request.CategoryId ?? string.Empty,
                 CategoryName = categoryName,
                 Condition = request.Condition,
                 Type = request.Type,
                 Price = request.Price,
-                Location = request.Location?.Trim(),
+                Location = request.Location?.Trim() ?? string.Empty,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 UserId = currentUser.UserId,
-                UserName = currentUser.FullName,
+                UserName = currentUser.FullName ?? string.Empty,
                 UserEmail = currentUser.Email,
-                UserPhotoUrl = currentUser.ProfileImageUrl,
-                ExchangePreference = request.ExchangePreference?.Trim(),
+                UserPhotoUrl = currentUser.ProfileImageUrl ?? string.Empty,
+                ExchangePreference = request.ExchangePreference?.Trim() ?? string.Empty,
               
                 IsForSurpriseBox = request.IsForSurpriseBox,
 
@@ -179,7 +179,7 @@ public class FirebaseProductService : IProductService
                 for (int i = 0; i < Math.Min(request.ImagePaths.Count, Constants.MaxProductImages); i++)
                 {
                     var uploadResult = await _storageService.UploadProductImageAsync(request.ImagePaths[i], product.ProductId, i);
-                    if (uploadResult.Success)
+                    if (uploadResult.Success && !string.IsNullOrEmpty(uploadResult.Data))
                     {
                         imageUrls.Add(uploadResult.Data);
                     }
@@ -239,14 +239,14 @@ public class FirebaseProductService : IProductService
 
             existingProduct.Title = request.Title.Trim();
             existingProduct.Description = request.Description.Trim();
-            existingProduct.CategoryId = request.CategoryId;
+            existingProduct.CategoryId = request.CategoryId ?? string.Empty;
             existingProduct.Condition = request.Condition;
             existingProduct.Type = request.Type;
             existingProduct.Price = request.Price;
-            existingProduct.Location = request.Location?.Trim();
+            existingProduct.Location = request.Location?.Trim() ?? string.Empty;
             existingProduct.Latitude = request.Latitude;
             existingProduct.Longitude = request.Longitude;
-            existingProduct.ExchangePreference = request.ExchangePreference?.Trim();
+            existingProduct.ExchangePreference = request.ExchangePreference?.Trim() ?? string.Empty;
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
             var categories = await GetCategoriesAsync();
@@ -262,7 +262,7 @@ public class FirebaseProductService : IProductService
                 for (int i = 0; i < Math.Min(request.ImagePaths.Count, Constants.MaxProductImages); i++)
                 {
                     var uploadResult = await _storageService.UploadProductImageAsync(request.ImagePaths[i], productId, i);
-                    if (uploadResult.Success)
+                    if (uploadResult.Success && !string.IsNullOrEmpty(uploadResult.Data))
                     {
                         newImageUrls.Add(uploadResult.Data);
                     }
@@ -561,7 +561,7 @@ public class FirebaseProductService : IProductService
             // Veritabanı boşsa ve yeni doldurulduysa, tekrar okuyarak doğru ID'lerle dönelim
             return await GetCategoriesAsync();
         }
-        catch (Exception ex)
+        catch
         {
             return ServiceResult<List<Category>>.SuccessResult(
                 Category.GetDefaultCategories(),
@@ -641,7 +641,7 @@ public class FirebaseProductService : IProductService
     
 
    
-    public async Task<ServiceResult<List<Product>>> GetProductsAsync(string categoryId = null, string searchText = null)
+    public async Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null)
     {
         try
         {
@@ -716,8 +716,8 @@ public class FirebaseProductService : IProductService
    
     public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(
         int pageSize = 20,
-        string lastKey = null,
-        ProductFilter filter = null)
+        string? lastKey = null,
+        ProductFilter? filter = null)
     {
         try
         {
@@ -830,7 +830,7 @@ public class FirebaseProductService : IProductService
    
     /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
    
-    public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string newName, string newPhotoUrl)
+    public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string? newName, string? newPhotoUrl)
     {
         try
         {
@@ -844,8 +844,8 @@ public class FirebaseProductService : IProductService
             {
                 var product = productEntry.Object;
                 product.ProductId = productEntry.Key;
-                product.UserName = newName;
-                product.UserPhotoUrl = newPhotoUrl;
+                product.UserName = newName ?? string.Empty;
+                product.UserPhotoUrl = newPhotoUrl ?? string.Empty;
 
                 await _firebaseClient
                     .Child(Constants.ProductsCollection)

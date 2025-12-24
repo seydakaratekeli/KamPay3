@@ -24,7 +24,7 @@ namespace KamPay.ViewModels
         private const int ExtendTimeThresholdMinutes = 15;
 
         [ObservableProperty]
-        private string transactionId;
+        private string transactionId = string.Empty;
 
         // Kendi ürünümüzün teslimat bilgisi
         [ObservableProperty]
@@ -99,7 +99,7 @@ namespace KamPay.ViewModels
             await ProcessScannedQRCodeAsync(message.Value);
         }
 
-        async partial void OnTransactionIdChanged(string value)
+        async partial void OnTransactionIdChanged(string? value)
         {
             if (!string.IsNullOrEmpty(value))
             {
@@ -118,14 +118,16 @@ namespace KamPay.ViewModels
             {
                 if (OtherUserDelivery == null || qrCodeData != OtherUserDelivery.QRCodeData)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçersiz veya bu takasa ait olmayan bir QR kod okuttunuz.", "Tamam");
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert("Hata", "Geçersiz veya bu takasa ait olmayan bir QR kod okuttunuz.", "Tamam");
                     IsLoading = false;
                     return;
                 }
 
                 if (OtherUserDelivery.IsUsed)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu ürünün teslimatı zaten onaylanmış.", "Tamam");
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu ürünün teslimatı zaten onaylanmış.", "Tamam");
                     IsLoading = false;
                     return;
                 }
@@ -161,17 +163,23 @@ namespace KamPay.ViewModels
                 // 2. PIN iste (eğer QR kodda PIN varsa)
                 if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin) && string.IsNullOrEmpty(VerificationPin))
                 {
-                    VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
-                        "PIN Doğrulama",
-                        "6 haneli PIN kodunu girin:",
-                        maxLength: 6,
-                        keyboard: Keyboard.Numeric);
-                    
-                    if (string.IsNullOrEmpty(VerificationPin))
+                    if (Application.Current?.MainPage != null)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", "PIN kodu gereklidir.", "Tamam");
-                        IsLoading = false;
-                        return;
+                        VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
+                            LocalizationResourceManager.Instance["PINVerification"],
+                            LocalizationResourceManager.Instance["Enter6DigitPIN"],
+                            maxLength: 6,
+                            keyboard: Keyboard.Numeric);
+                        
+                        if (string.IsNullOrEmpty(VerificationPin))
+                        {
+                            await Application.Current.MainPage.DisplayAlert(
+                                LocalizationResourceManager.Instance["Error"], 
+                                LocalizationResourceManager.Instance["PINRequired"], 
+                                LocalizationResourceManager.Instance["Ok"]);
+                            IsLoading = false;
+                            return;
+                        }
                     }
                 }
 
@@ -190,12 +198,20 @@ namespace KamPay.ViewModels
                         // Takas tamamlandıysa ürünleri işaretle
                         await CheckAndMarkExchangeComplete();
                         
-                        await Application.Current.MainPage.DisplayAlert("Başarılı", result.Message, "Tamam");
+                        if (Application.Current?.MainPage != null)
+                            await Application.Current.MainPage.DisplayAlert(
+                                LocalizationResourceManager.Instance["Success"], 
+                                result.Message, 
+                                LocalizationResourceManager.Instance["Ok"]);
                         await LoadTransactionAndQRCodesAsync();
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        if (Application.Current?.MainPage != null)
+                            await Application.Current.MainPage.DisplayAlert(
+                                LocalizationResourceManager.Instance["Error"], 
+                                result.Message, 
+                                LocalizationResourceManager.Instance["Ok"]);
                     }
                 }
                 else
@@ -206,14 +222,21 @@ namespace KamPay.ViewModels
                     {
                         await CheckAndMarkExchangeComplete();
 
-                        await Application.Current.MainPage.DisplayAlert("Başarılı",
-                            $"'{OtherUserDelivery.ProductTitle}' ürününü teslim aldığınız onaylandı.", "Harika!");
+                        if (Application.Current?.MainPage != null)
+                            await Application.Current.MainPage.DisplayAlert(
+                                LocalizationResourceManager.Instance["Success"],
+                                $"'{OtherUserDelivery.ProductTitle}' {LocalizationResourceManager.Instance["ProductDeliveryConfirmed"]}", 
+                                LocalizationResourceManager.Instance["Great"]);
 
                         await LoadTransactionAndQRCodesAsync();
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        if (Application.Current?.MainPage != null)
+                            await Application.Current.MainPage.DisplayAlert(
+                                LocalizationResourceManager.Instance["Error"], 
+                                result.Message, 
+                                LocalizationResourceManager.Instance["Ok"]);
                     }
                 }
 
@@ -239,8 +262,11 @@ namespace KamPay.ViewModels
             // Her iki teslimat da tamamlandıysa ürünleri "TAKAS YAPILDI" olarak işaretle
             if (MyDelivery?.IsUsed == true && OtherUserDelivery?.IsUsed == true && CurrentTransaction != null)
             {
-                await _productService.MarkAsExchangedAsync(CurrentTransaction.ProductId);
-                await _productService.MarkAsExchangedAsync(CurrentTransaction.OfferedProductId);
+                if (!string.IsNullOrEmpty(CurrentTransaction.ProductId))
+                    await _productService.MarkAsExchangedAsync(CurrentTransaction.ProductId);
+                
+                if (!string.IsNullOrEmpty(CurrentTransaction.OfferedProductId))
+                    await _productService.MarkAsExchangedAsync(CurrentTransaction.OfferedProductId);
             }
         }
 
@@ -251,7 +277,8 @@ namespace KamPay.ViewModels
             if (currentUser == null)
             {
                 IsLoading = false;
-                await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı bulunamadı.", "Tamam");
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı bulunamadı.", "Tamam");
                 return;
             }
 
@@ -263,7 +290,8 @@ namespace KamPay.ViewModels
             if (CurrentTransaction == null)
             {
                 IsLoading = false;
-                await Application.Current.MainPage.DisplayAlert("Hata", "İşlem detayı bulunamadı.", "Tamam");
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert("Hata", "İşlem detayı bulunamadı.", "Tamam");
                 return;
             }
 
@@ -271,7 +299,8 @@ namespace KamPay.ViewModels
             if (!qrCodesResult.Success || qrCodesResult.Data == null)
             {
                 IsLoading = false;
-                await Application.Current.MainPage.DisplayAlert("Hata", "Teslimat bilgileri alınamadı.", "Tamam");
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Teslimat bilgileri alınamadı.", "Tamam");
                 return;
             }
 
@@ -373,6 +402,7 @@ namespace KamPay.ViewModels
         private async Task ExtendTimeAsync()
         {
             if (CurrentQRCode == null) return;
+            if (Application.Current?.MainPage == null) return;
 
             var minutes = await Application.Current.MainPage.DisplayPromptAsync(
                 "Süre Uzat",
@@ -402,6 +432,7 @@ namespace KamPay.ViewModels
         private async Task CancelDeliveryAsync()
         {
             if (CurrentQRCode == null) return;
+            if (Application.Current?.MainPage == null) return;
 
             var reason = await Application.Current.MainPage.DisplayActionSheet(
                 "İptal Nedeni",
@@ -486,6 +517,8 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task TakeDeliveryPhotoAsync()
         {
+            if (Application.Current?.MainPage == null) return;
+
             try
             {
                 var status = await Permissions.RequestAsync<Permissions.Camera>();
@@ -512,6 +545,8 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task PickPhotoFromGalleryAsync()
         {
+            if (Application.Current?.MainPage == null) return;
+
             try
             {
                 var photo = await MediaPicker.Default.PickPhotoAsync();
@@ -529,6 +564,8 @@ namespace KamPay.ViewModels
 
         private async Task ProcessAndUploadPhotoAsync(FileResult photo)
         {
+            if (Application.Current?.MainPage == null) return;
+
             IsLoading = true;
             
             try
@@ -584,8 +621,9 @@ namespace KamPay.ViewModels
             
             if (string.IsNullOrEmpty(photoUrl))
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", 
-                    "Görüntülenecek fotoğraf bulunamadı.", "Tamam");
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert("Bilgi", 
+                        "Görüntülenecek fotoğraf bulunamadı.", "Tamam");
                 return;
             }
 

@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using KamPay.ViewModels;
 
 namespace KamPay.Models
-{// Yeni mesaj geldiÄŸinde scroll yapmak iÃ§in kullanÄ±lan messenger
+{// Yeni mesaj geldiðinde scroll yapmak için kullanýlan messenger
     public class ScrollToChatMessage
     {
         public Message Message { get; }

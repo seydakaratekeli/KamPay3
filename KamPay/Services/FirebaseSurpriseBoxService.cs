@@ -37,7 +37,7 @@ namespace KamPay.Services
 
                 // 1. Kullanıcı bilgilerini al
                 var currentUserResult = await _userProfileService.GetUserProfileAsync(userId);
-                if (!currentUserResult.Success)
+                if (!currentUserResult.Success || currentUserResult.Data == null)
                 {
                     Console.WriteLine($"❌ Kullanıcı profili alınamadı: {currentUserResult.Message}");
                     return ServiceResult<Product>.FailureResult("Kullanıcı bilgisi alınamadı.");
@@ -91,7 +91,8 @@ namespace KamPay.Services
                 Console.WriteLine($"🔍 Toplam ürün sayısı: {surpriseBoxProducts.Count}");
 
                 var availableDonations = surpriseBoxProducts
-                    .Where(p => p.Object.Type == ProductType.Bagis &&
+                    .Where(p => p.Object != null &&
+                               p.Object.Type == ProductType.Bagis &&
                                 p.Object.IsForSurpriseBox &&
                                 !p.Object.IsSold &&
                                 p.Object.IsActive &&
@@ -156,7 +157,7 @@ namespace KamPay.Services
 
                 // 8. Önceki sahibin istatistiklerini güncelle (bağışçı için)
                 var donorStatsResult = await _userProfileService.GetUserStatsAsync(previousOwnerId);
-                if (donorStatsResult.Success)
+                if (donorStatsResult.Success && donorStatsResult.Data != null)
                 {
                     var donorStats = donorStatsResult.Data;
                     donorStats.DonationsMade++;
@@ -217,7 +218,10 @@ namespace KamPay.Services
 
                 // 12. Rozet kontrolü yap
                 await CheckAndAwardBadges(userId, userStats);
-                await CheckAndAwardBadges(previousOwnerId, donorStatsResult.Data);
+                if (donorStatsResult.Success && donorStatsResult.Data != null)
+                {
+                    await CheckAndAwardBadges(previousOwnerId, donorStatsResult.Data);
+                }
 
                 Console.WriteLine($"✅ Sürpriz kutu başarıyla açıldı: {surpriseProduct.Title}");
 
@@ -243,7 +247,9 @@ namespace KamPay.Services
             {
                 var badges = await _userProfileService.GetUserBadgesAsync(userId);
                 // BadgeId ile kontrol et - FirebaseUserProfileService.CheckAndAwardBadgesAsync ile tutarlı
-                var existingBadgeIds = badges.Success ? badges.Data.Select(b => b.BadgeId).ToList() : new List<string>();
+                var existingBadgeIds = badges.Success && badges.Data != null 
+                    ? badges.Data.Select(b => b.BadgeId).ToList() 
+                    : new List<string>();
 
                 // Bağış rozetleri - BadgeId ile karşılaştır
                 if (stats.DonationsMade >= 1 && !existingBadgeIds.Contains("first_donation"))

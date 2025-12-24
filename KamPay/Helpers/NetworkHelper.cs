@@ -20,10 +20,10 @@ namespace KamPay.Helpers
             Func<Task<T>> operation,
             int maxRetries = MaxRetryAttempts,
             int delayMs = RetryDelayMs,
-            Func<Exception, bool> shouldRetry = null)
+            Func<Exception, bool>? shouldRetry = null)
         {
             int attempt = 0;
-            Exception lastException = null;
+            Exception? lastException = null;
 
             while (attempt < maxRetries)
             {
@@ -140,9 +140,9 @@ namespace KamPay.Helpers
         }
 
         // Yalnızca internet bağlantısı mevcutsa bir işlemi yürütür
-        public static async Task<T> ExecuteIfOnlineAsync<T>(
+        public static async Task<T?> ExecuteIfOnlineAsync<T>(
             Func<Task<T>> operation,
-            T offlineValue = default,
+            T? offlineValue = default,
             string offlineMessage = "İnternet bağlantısı gerekli")
         {
             if (!HasInternetConnection())
@@ -188,6 +188,8 @@ namespace KamPay.Helpers
         
         public static async Task ThrottleRequestAsync(int minDelayMs = 100)
         {
+            TimeSpan remainingDelay;
+            
             lock (_throttleLock)
             {
                 var timeSinceLastRequest = DateTime.UtcNow - _lastRequestTime;
@@ -195,10 +197,21 @@ namespace KamPay.Helpers
                 
                 if (timeSinceLastRequest < requiredDelay)
                 {
-                    var remainingDelay = requiredDelay - timeSinceLastRequest;
-                    Task.Delay(remainingDelay).Wait();
+                    remainingDelay = requiredDelay - timeSinceLastRequest;
                 }
-                
+                else
+                {
+                    remainingDelay = TimeSpan.Zero;
+                    _lastRequestTime = DateTime.UtcNow;
+                    return;
+                }
+            }
+            
+            // Await the delay outside the lock
+            await Task.Delay(remainingDelay);
+            
+            lock (_throttleLock)
+            {
                 _lastRequestTime = DateTime.UtcNow;
             }
         }

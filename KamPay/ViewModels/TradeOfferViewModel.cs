@@ -18,19 +18,19 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
 
         [ObservableProperty]
-        private string productId;
+        private string productId = string.Empty;
 
         [ObservableProperty]
-        private Product targetProduct;
+        private Product? targetProduct;
 
         [ObservableProperty]
         private ObservableCollection<Product> myProducts;
 
         [ObservableProperty]
-        private Product selectedProduct;
+        private Product? selectedProduct;
 
         [ObservableProperty]
-        private string offerMessage;
+        private string offerMessage = string.Empty;
 
         [ObservableProperty]
         private bool isLoading;

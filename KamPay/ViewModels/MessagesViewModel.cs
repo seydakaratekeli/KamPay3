@@ -29,11 +29,11 @@ namespace KamPay.ViewModels
 
         //  UltraFastLoad: Snapshot + Realtime loader
         private readonly RealtimeSnapshotService<Conversation> _loader;
-        private IDisposable _realtimeListener;
+        private IDisposable? _realtimeListener;
 
-        private IDisposable _conversationsSubscription;
+        private IDisposable? _conversationsSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
-        private User _currentUser;
+        private User? _currentUser;
         private bool _isInitialized = false;
 
         // Cache: Conversation ID tracker
@@ -52,7 +52,7 @@ namespace KamPay.ViewModels
         private string emptyMessage = "Henüz mesajınız yok";
 
         [ObservableProperty]
-        private Conversation selectedConversation;
+        private Conversation? selectedConversation;
 
         public ObservableCollection<Conversation> Conversations { get; } = new();
 
@@ -75,7 +75,7 @@ namespace KamPay.ViewModels
             _userStateService.UserProfileChanged += OnUserProfileChanged;
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             if (updatedUser == null) return;
 
@@ -103,8 +103,8 @@ namespace KamPay.ViewModels
                         var otherUserId = conversation.GetOtherUserId(_currentUser.UserId);
                         if (otherUserId == updatedUser.UserId)
                         {
-                            conversation.OtherUserName = updatedUser.FullName;
-                            conversation.OtherUserPhotoUrl = updatedUser.ProfileImageUrl;
+                            conversation.OtherUserName = updatedUser.FullName ?? string.Empty;
+                            conversation.OtherUserPhotoUrl = updatedUser.ProfileImageUrl ?? string.Empty;
                         }
                     }
                 }
@@ -142,6 +142,8 @@ namespace KamPay.ViewModels
         //  UltraFastLoad Pattern - Snapshot + Realtime
         public async Task UltraFastLoadAsync()
         {
+            if (_currentUser == null) return;
+
             try
             {
                 // 1️⃣ SNAPSHOT: Anında veri yükle
@@ -158,7 +160,7 @@ namespace KamPay.ViewModels
                         {
                             var conversation = kvp.Value;
                             conversation.ConversationId = kvp.Key;
-                            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
+                            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
                             conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
                             // İlk yüklemede placeholder resim koy
                             conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
@@ -217,6 +219,8 @@ namespace KamPay.ViewModels
         //  Profil resimlerini arka planda yükle (UI bloke etmez)
         private async Task LoadProfileImagesInBackgroundAsync(List<Conversation> conversations)
         {
+            if (_currentUser == null) return;
+
             // Use SemaphoreSlim to limit concurrent API calls
             using var semaphore = new SemaphoreSlim(3, 3); // Max 3 concurrent requests
             
@@ -285,7 +289,7 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
+            conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
             conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
             conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
 
@@ -382,6 +386,8 @@ namespace KamPay.ViewModels
 
         private async Task ProcessConversationBatchAsync(IList<Firebase.Database.Streaming.FirebaseEvent<Conversation>> events)
         {
+            if (_currentUser == null) return;
+
             bool hasChanges = false;
 
             foreach (var e in events)
@@ -390,7 +396,7 @@ namespace KamPay.ViewModels
                 conversation.ConversationId = e.Key;
 
                 // Temel bilgileri modelden al
-                conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId);
+                conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
                 conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
 
                 //  : Profil Fotoğrafını Servisten Çek
@@ -483,7 +489,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task RefreshConversationsAsync()
         {
-            if (IsRefreshing) return;
+            if (IsRefreshing || _currentUser == null) return;
 
             try
             {
@@ -500,14 +506,14 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata",
+                    await Application.Current!.MainPage!.DisplayAlert("Hata",
                         result.Message ?? "Konuşmalar yüklenemedi", "Tamam");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Refresh hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata",
+                await Application.Current!.MainPage!.DisplayAlert("Hata",
                     "Konuşmalar yenilenirken bir hata oluştu.", "Tamam");
             }
             finally
@@ -519,6 +525,8 @@ namespace KamPay.ViewModels
         //  Refresh metodu da Async yapıldı ve resim çekme eklendi
         private async Task UpdateConversationsFromRefreshAsync(List<Conversation> freshData)
         {
+            if (_currentUser == null) return;
+
             for (int i = Conversations.Count - 1; i >= 0; i--)
             {
                 if (!freshData.Any(c => c.ConversationId == Conversations[i].ConversationId))
@@ -530,7 +538,7 @@ namespace KamPay.ViewModels
 
             foreach (var freshConvo in freshData)
             {
-                freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId);
+                freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
                 freshConvo.UnreadCount = freshConvo.GetUnreadCount(_currentUser.UserId);
 
                 //  Profil Resmini Çek
@@ -601,7 +609,7 @@ namespace KamPay.ViewModels
             {
                 Console.WriteLine($"❌ Navigation hatası: {ex.Message}");
                 Console.WriteLine($"   StackTrace: {ex.StackTrace}");
-                await Application.Current.MainPage.DisplayAlert("Hata", 
+                await Application.Current!.MainPage!.DisplayAlert("Hata", 
                     $"Sohbete giderken hata oluştu: {ex.Message}", "Tamam");
             }
         }
@@ -609,17 +617,21 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task DeleteConversationAsync(Conversation conversation)
         {
-            if (conversation == null) return;
+            if (conversation == null || _currentUser == null) return;
 
-            var confirm = await Application.Current.MainPage.DisplayAlert("Onay", "Bu konuşmayı silmek istediğinize emin misiniz?", "Evet", "Hayır");
+            var confirm = await Application.Current!.MainPage!.DisplayAlert("Onay", "Bu konuşmayı silmek istediğinize emin misiniz?", "Evet", "Hayır");
             if (!confirm) return;
 
             try
             {
                 var result = await _messagingService.DeleteConversationAsync(conversation.ConversationId, _currentUser.UserId);
-                if (!result.Success) await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                if (!result.Success) 
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message, "Tamam");
             }
-            catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); }
+            catch (Exception ex) 
+            { 
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam"); 
+            }
         }
 
         public void Dispose()

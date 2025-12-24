@@ -10,6 +10,7 @@ namespace KamPay.Services
 
         private readonly ConcurrentDictionary<string, CacheEntry<T>> _cache = new();
         private readonly TimeSpan _defaultExpiration = TimeSpan.FromMinutes(5);
+        // private System.Threading.Timer? _cacheCleanupTimer; // Not used currently
 
         public void Set(string key, T value, TimeSpan? expiration = null)
         {
@@ -21,7 +22,7 @@ namespace KamPay.Services
             _cache[key] = entry;
         }
 
-        public bool TryGet(string key, out T value)
+        public bool TryGet(string key, out T? value)
         {
             if (_cache.TryGetValue(key, out var entry))
             {
@@ -44,7 +45,7 @@ namespace KamPay.Services
 
         private class CacheEntry<TValue>
         {
-            public TValue Value { get; set; }
+            public required TValue Value { get; set; }
             public DateTime ExpiresAt { get; set; }
         }
     }

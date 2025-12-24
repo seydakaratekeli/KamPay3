@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 
 namespace KamPay.Models
 {
@@ -10,7 +10,7 @@ namespace KamPay.Models
         Failed = 3
     }
 
-    // Ã¶demeyi ekranÄ±nÄ± eklemedin. sonra tekrar bak!!
+    // Ödemeyi ekranýný eklemedin. sonra tekrar bak!!
 
 
     public enum PaymentMethodType
@@ -21,7 +21,7 @@ namespace KamPay.Models
         WalletSim = 3
     }
 
-    // Ã–deme simÃ¼lasyonu iÃ§in sade DTO
+    // Ödeme simülasyonu için sade DTO
     public class PaymentDto
     {
         public string PaymentId { get; set; } = Guid.NewGuid().ToString();
@@ -29,9 +29,9 @@ namespace KamPay.Models
         public string Currency { get; set; } = "TRY";
         public ServicePaymentStatus Status { get; set; } = ServicePaymentStatus.Initiated;
         public PaymentMethodType Method { get; set; } = PaymentMethodType.CardSim;
-        public string? MaskedCardLast4 { get; set; }   // Kart iÃ§in yalnÄ±zca son4
-        public string? BankName { get; set; }          // EFT/Havale iÃ§in
-        public string? BankReference { get; set; }     // EFT referans simÃ¼lasyonu
+        public string? MaskedCardLast4 { get; set; }   // Kart için yalnýzca son4
+        public string? BankName { get; set; }          // EFT/Havale için
+        public string? BankReference { get; set; }     // EFT referans simülasyonu
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

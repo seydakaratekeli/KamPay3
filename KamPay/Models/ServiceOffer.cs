@@ -5,21 +5,21 @@ namespace KamPay.Models;
 
 public class ServiceOffer
 {
-    public string ServiceId { get; set; }
-    public string ProviderId { get; set; }
-    public string ProviderName { get; set; }
+    public string ServiceId { get; set; } = "";
+    public string ProviderId { get; set; } = "";
+    public string ProviderName { get; set; } = "";
 
     // : Hizmeti veren kişinin profil fotoğrafı
     public string ProviderPhotoUrl { get; set; } = "default_avatar.png";
 
     public ServiceCategory Category { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
     public int TimeCredits { get; set; } // Saat cinsinden
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsAvailable { get; set; }
-    public List<string> Tags { get; set; }
+    public List<string> Tags { get; set; } = new();
     [JsonProperty("price")]
     public decimal Price { get; set; } = 0;
 
@@ -28,7 +28,6 @@ public class ServiceOffer
         ServiceId = Guid.NewGuid().ToString();
         CreatedAt = DateTime.UtcNow;
         IsAvailable = true;
-        Tags = new List<string>();
     }
 }
 
@@ -49,11 +48,11 @@ public enum ServiceCategory
 public class ServiceRequest
 {
     public string RequestId { get; set; } = Guid.NewGuid().ToString();
-    public string ServiceId { get; set; }
-    public string ServiceTitle { get; set; } // Bildirimler ve UI için
-    public string ProviderId { get; set; }   // Hizmeti sunan kişi
-    public string RequesterId { get; set; }  // Hizmeti talep eden kişi
-    public string RequesterName { get; set; }
+    public string ServiceId { get; set; } = "";
+    public string ServiceTitle { get; set; } = ""; // Bildirimler ve UI için
+    public string ProviderId { get; set; } = "";   // Hizmeti sunan kişi
+    public string RequesterId { get; set; } = "";  // Hizmeti talep eden kişi
+    public string RequesterName { get; set; } = "";
 
     
     public decimal Price { get; set; } = 0; // Hizmet fiyatı (örneğin 150 TL)
@@ -68,13 +67,13 @@ public class ServiceRequest
     
     public int TimeCreditValue { get; set; } // İşlemin yapıldığı andaki kredi değeri
 
-    public string Message { get; set; }
+    public string Message { get; set; } = "";
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
     public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Pending;
     public DateTime? CompletedAt { get; set; } // Hizmetin tamamlandığı zamanı tutmak için
 
     // : Mesajlaşma ve Pazarlık Özellikleri
-    public string ConversationId { get; set; } // İlgili konuşma ID'si
+    public string ConversationId { get; set; } = ""; // İlgili konuşma ID'si
     public bool HasActiveConversation { get; set; } = false; // Konuşma başladı mı?
     
     // Pazarlık özellikleri
@@ -82,7 +81,7 @@ public class ServiceRequest
     public decimal? CounterOfferByProvider { get; set; } // Sağlayıcının karşı teklifi
     public bool IsNegotiating { get; set; } = false; // Pazarlık devam ediyor mu?
     public DateTime? LastNegotiationDate { get; set; } // Son pazarlık tarihi
-    public string NegotiationNotes { get; set; } // Pazarlık notları
+    public string NegotiationNotes { get; set; } = ""; // Pazarlık notları
 }
 
 public enum ServiceRequestStatus

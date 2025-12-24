@@ -6,7 +6,7 @@ namespace KamPay.Models
     {
         // bu sayfada kullanýcýlarýn oyunlaþtýrma ve istatistiksel verilerini tutacaðýz.
 
-        public string UserId { get; set; }
+        public string UserId { get; set; } = "";
 
        
         /// Kullanýcýnýn oyunlaþtýrma sistemiyle kazandýðý toplam puan.

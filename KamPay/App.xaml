@@ -15,7 +15,9 @@
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
-            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" 
+                                            TrueColor="White" 
+                                            FalseColor="#E8F5E9"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
             <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>

@@ -208,4 +208,21 @@ namespace KamPay.Helpers
                 : RateLimitResult.Denied(resetTime);
         }
     }
+
+    public class RateLimitException : Exception
+    {
+        public override string Message { get; }
+        public int RetryAfterSeconds { get; set; }
+
+        public RateLimitException(string message) : base(message)
+        {
+            Message = message;
+        }
+
+        public RateLimitException(string message, int retryAfterSeconds) : base(message)
+        {
+            Message = message;
+            RetryAfterSeconds = retryAfterSeconds;
+        }
+    }
 }

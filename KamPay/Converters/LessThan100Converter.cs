@@ -9,7 +9,7 @@ namespace KamPay.Converters
     // False = Puan 100 veya 100'den fazla (Uyariyi gizle).
     public class LessThan100Converter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is int points)
             {
@@ -20,7 +20,7 @@ namespace KamPay.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // ConvertBack is not needed for this one-way binding converter
             // Return 0 as default value if somehow called

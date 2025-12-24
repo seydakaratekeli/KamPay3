@@ -13,18 +13,18 @@ namespace KamPay.Models
         public string TransactionId { get; set; } = Guid.NewGuid().ToString();
 
         //  İlgili Ana Ürün Bilgileri
-        public string ProductId { get; set; }
-        public string ProductTitle { get; set; }
-        public string ProductThumbnailUrl { get; set; }
+        public string ProductId { get; set; } = "";
+        public string ProductTitle { get; set; } = "";
+        public string ProductThumbnailUrl { get; set; } = "";
         public ProductType Type { get; set; } // Satış, Takas, Bağış
 
         //  Taraflar
-        public string SellerId { get; set; } // Ürünü sunan kişi
-        public string SellerName { get; set; }
-        public string SellerPhotoUrl { get; set; }
-        public string BuyerId { get; set; }  // Teklifi yapan/isteği gönderen kişi
-        public string BuyerName { get; set; }
-        public string BuyerPhotoUrl { get; set; }
+        public string SellerId { get; set; } = ""; // Ürünü sunan kişi
+        public string SellerName { get; set; } = "";
+        public string SellerPhotoUrl { get; set; } = "";
+        public string BuyerId { get; set; } = "";  // Teklifi yapan/isteği gönderen kişi
+        public string BuyerName { get; set; } = "";
+        public string BuyerPhotoUrl { get; set; } = "";
 
         // Ödeme Durumu
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
@@ -89,12 +89,12 @@ namespace KamPay.Models
        
         // Pazarlık notları
         
-        public string NegotiationNotes { get; set; }
+        public string NegotiationNotes { get; set; } = "";
         
        
         // Mesajlaşma için conversation ID
       
-        public string ConversationId { get; set; }
+        public string ConversationId { get; set; } = "";
         
       
         // Aktif konuşma var mı?

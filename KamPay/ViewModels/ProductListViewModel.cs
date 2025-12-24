@@ -25,20 +25,19 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly ICategoryService _categoryService;
         private readonly IUserStateService _userStateService;
-        private IDisposable _notificationSubscription;
-        private IDisposable _productSubscription;
+        private IDisposable? _notificationSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
-        private CancellationTokenSource _searchCancellationTokenSource;
+        private CancellationTokenSource? _searchCancellationTokenSource;
         private readonly CacheManager<List<Product>> _cacheManager = new();
         private const string CACHE_KEY = "all_products";
-        private string _lastLoadedKey;
+        private string? _lastLoadedKey;
         private bool _isLoadingMore;
 
         // Tüm ürünlerin tutulduğu ana liste (filtreleme için)
         private List<Product> _allProducts = new();
 
+        private IDisposable? _listener;
         private RealtimeSnapshotService<Product> _loader;
-        private IDisposable _listener;
 
         [ObservableProperty]
         private bool isSkeletonVisible = true;
@@ -48,11 +47,11 @@ namespace KamPay.ViewModels
         public ObservableCollection<Category> Categories { get; } = new();
 
         #region Observable Properties (Arayüzle İletişim Kuran Özellikler)
-        [ObservableProperty] private string userId;
+        [ObservableProperty] private string userId = string.Empty;
         [ObservableProperty] private bool isLoading = true;
         [ObservableProperty] private bool hasUnreadNotifications;
-        [ObservableProperty] private string searchText;
-        [ObservableProperty] private Category selectedCategory;
+        [ObservableProperty] private string searchText = string.Empty;
+        [ObservableProperty] private Category? selectedCategory;
         [ObservableProperty] private ProductType? selectedType;
         [ObservableProperty] private ProductSortOption selectedSortOption;
         [ObservableProperty] private bool showFilterPanel;
@@ -209,9 +208,8 @@ namespace KamPay.ViewModels
 
         #region Veri Yükleme ve Filtreleme Mantığı
 
-        async partial void OnUserIdChanged(string value)
+        async partial void OnUserIdChanged(string? value)
         {
-            _productSubscription?.Dispose();
             _allProducts.Clear();
             Products.Clear();
 
@@ -337,7 +335,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        async partial void OnSearchTextChanged(string value)
+        async partial void OnSearchTextChanged(string? value)
         {
             _searchCancellationTokenSource?.Cancel();
             _searchCancellationTokenSource = new CancellationTokenSource();
@@ -353,7 +351,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        partial void OnSelectedCategoryChanged(Category value) => ExecuteFiltering();
+        partial void OnSelectedCategoryChanged(Category? value) => ExecuteFiltering();
 
         // Seçilen Enum değiştiğinde indeksi de güncelle (Kod tarafından değiştirilirse)
         partial void OnSelectedSortOptionChanged(ProductSortOption value)
@@ -419,7 +417,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                if (_cacheManager.TryGet(CACHE_KEY, out var cachedProducts))
+                if (_cacheManager.TryGet(CACHE_KEY, out var cachedProducts) && cachedProducts != null)
                 {
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
@@ -442,7 +440,7 @@ namespace KamPay.ViewModels
                     return await _productService.GetProductsPagedAsync(20, null, filter);
                 });
 
-                if (productsResult.Success)
+                if (productsResult.Success && productsResult.Data != null)
                 {
                     _cacheManager.Set(CACHE_KEY, productsResult.Data, TimeSpan.FromMinutes(3));
 
@@ -490,7 +488,7 @@ namespace KamPay.ViewModels
                     return await _productService.GetProductsPagedAsync(20, _lastLoadedKey, filter);
                 });
 
-                if (moreProducts.Success && moreProducts.Data.Any())
+                if (moreProducts.Success && moreProducts.Data != null && moreProducts.Data.Any())
                 {
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
@@ -585,7 +583,7 @@ namespace KamPay.ViewModels
             });
         }
 
-        private void OnUserProfileChanged(object sender, User updatedUser)
+        private void OnUserProfileChanged(object? sender, User updatedUser)
         {
             if (updatedUser == null) return;
 
@@ -624,7 +622,7 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             _notificationSubscription?.Dispose();
-            _productSubscription?.Dispose();
+            _listener?.Dispose();
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
             WeakReferenceMessenger.Default.UnregisterAll(this);
         }

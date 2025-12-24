@@ -3,14 +3,14 @@
 
 public class Favorite
 {
-    public string FavoriteId { get; set; }
-    public string UserId { get; set; }
-    public string ProductId { get; set; }
+    public string FavoriteId { get; set; } = "";
+    public string UserId { get; set; } = "";
+    public string ProductId { get; set; } = "";
     public DateTime CreatedAt { get; set; }
 
     // Product bilgileri (cache için)
-    public string ProductTitle { get; set; }
-    public string ProductThumbnail { get; set; }
+    public string ProductTitle { get; set; } = "";
+    public string ProductThumbnail { get; set; } = "";
     public decimal ProductPrice { get; set; }
     public ProductType ProductType { get; set; }
 

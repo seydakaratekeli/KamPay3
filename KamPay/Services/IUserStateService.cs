@@ -10,12 +10,12 @@ namespace KamPay.Services
        
         /// Mevcut kullanıcı bilgilerini döner
        
-        User CurrentUser { get; }
+        User? CurrentUser { get; }
 
        
         /// Kullanıcı profili değiştiğinde tetiklenir
        
-        event EventHandler<User> UserProfileChanged;
+        event EventHandler<User>? UserProfileChanged;
 
        
         /// Kullanıcı bilgilerini yükler ve günceller
@@ -26,10 +26,10 @@ namespace KamPay.Services
         /// Kullanıcı profil bilgilerini günceller ve tüm sayfalara bildirir
        
         Task<ServiceResult<bool>> UpdateUserProfileAsync(
-            string firstName = null,
-            string lastName = null,
-            string username = null,
-            string profileImageUrl = null);
+            string? firstName = null,
+            string? lastName = null,
+            string? username = null,
+            string? profileImageUrl = null);
 
        
         /// Kullanıcı oturumunu temizler

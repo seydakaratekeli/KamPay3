@@ -18,27 +18,27 @@ namespace KamPay.Models
         
         /// İnsan dostu ticket numarası (örn: ST2025000001)
         
-        public string TicketNumber { get; set; }
+        public string TicketNumber { get; set; } = "";
 
         
         /// İlgili işlem kimliği
         
-        public string TransactionId { get; set; }
+        public string TransactionId { get; set; } = "";
 
         
         /// İlgili ürün başlığı (hızlı referans için)
         
-        public string ProductTitle { get; set; }
+        public string ProductTitle { get; set; } = "";
 
         
         /// Ticket'ı oluşturan kullanıcı kimliği
         
-        public string CreatedByUserId { get; set; }
+        public string CreatedByUserId { get; set; } = "";
 
         
         /// Diğer taraf kullanıcı kimliği (sadece bu iki kullanıcı görebilir)
         
-        public string OtherPartyUserId { get; set; }
+        public string OtherPartyUserId { get; set; } = "";
 
         
         /// Ticket kategorisi
@@ -48,12 +48,12 @@ namespace KamPay.Models
         
         /// Ticket konusu
         
-        public string Subject { get; set; }
+        public string Subject { get; set; } = "";
 
         
         /// Detaylı açıklama
         
-        public string Description { get; set; }
+        public string Description { get; set; } = "";
 
         
         /// Ticket durumu
@@ -93,7 +93,7 @@ namespace KamPay.Models
         
         /// Admin notları (sadece admin için görünür)
         
-        public string AdminNotes { get; set; }
+        public string AdminNotes { get; set; } = "";
 
         
         /// Öncelik seviyesi
@@ -114,17 +114,17 @@ namespace KamPay.Models
         
         /// Mesajı gönderen kullanıcı kimliği
         
-        public string SenderId { get; set; }
+        public string SenderId { get; set; } = "";
 
         
         /// Gönderen kullanıcı adı (hızlı erişim için)
         
-        public string SenderName { get; set; }
+        public string SenderName { get; set; } = "";
 
         
         /// Mesaj içeriği
         
-        public string Content { get; set; }
+        public string Content { get; set; } = "";
 
         
         /// Mesaj gönderilme tarihi

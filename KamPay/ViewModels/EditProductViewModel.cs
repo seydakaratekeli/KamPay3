@@ -13,16 +13,16 @@ namespace KamPay.ViewModels
     {
         private readonly IProductService _productService;
         private readonly IReverseGeocodeService _reverseGeocodeService;
-        private string _productId;
+        private string _productId = string.Empty;
 
         [ObservableProperty]
-        private string title;
+        private string title = string.Empty;
 
         [ObservableProperty]
-        private string description;
+        private string description = string.Empty;
 
         [ObservableProperty]
-        private Category selectedCategory;
+        private Category? selectedCategory;
 
         [ObservableProperty]
         private ProductCondition selectedCondition;
@@ -34,16 +34,16 @@ namespace KamPay.ViewModels
         private decimal price;
 
         [ObservableProperty]
-        private string location;
+        private string location = string.Empty;
 
         [ObservableProperty]
-        private string exchangePreference;
+        private string exchangePreference = string.Empty;
 
         [ObservableProperty]
         private bool isLoading;
 
         [ObservableProperty]
-        private string errorMessage;
+        private string errorMessage = string.Empty;
 
         [ObservableProperty]
         private bool showPriceField;
@@ -102,7 +102,7 @@ namespace KamPay.ViewModels
                 SelectedType = product.Type;
                 Price = product.Price;
                 Location = product.Location;
-                ExchangePreference = product.ExchangePreference;
+                ExchangePreference = product.ExchangePreference ?? string.Empty;
                 Latitude = product.Latitude;
                 Longitude = product.Longitude;
 
@@ -267,12 +267,12 @@ namespace KamPay.ViewModels
 
             if (result.Success)
             {
-                await Application.Current.MainPage.DisplayAlert("Başarılı", "Ürün güncellendi.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Başarılı", "Ürün güncellendi.", "Tamam");
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                ErrorMessage = result.Message;
+                ErrorMessage = result.Message ?? "Ürün güncellenemedi.";
             }
             IsLoading = false;
         }
@@ -298,7 +298,7 @@ namespace KamPay.ViewModels
                     // Maksimum görsel sayısı kontrolü
                     if (ImagePaths.Count >= 5)
                     {
-                        await Application.Current.MainPage.DisplayAlert(
+                        await Application.Current!.MainPage!.DisplayAlert(
                             "Uyarı",
                             "En fazla 5 görsel ekleyebilirsiniz",
                             "Tamam"

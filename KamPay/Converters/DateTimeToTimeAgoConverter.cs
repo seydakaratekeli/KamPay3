@@ -10,7 +10,7 @@ namespace KamPay.Converters
 {
     public class DateTimeToTimeAgoConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is not DateTime dt) return string.Empty;
             
@@ -28,7 +28,7 @@ namespace KamPay.Converters
             
             return dt.ToString("dd MMM yyyy");
         }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
 }

@@ -19,18 +19,17 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HasError))]
-        private string errorMessage;
+        private string errorMessage = string.Empty;
 
         [ObservableProperty]
-        private Product redemptionResult;
+        private Product? redemptionResult;
 
         // Kullanıcının puanını tutar
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(CanRedeem))] // Puan değişince CanRedeem'i güncelle
         private int userPoints;
 
         [ObservableProperty]
-        private string successMessage;
+        private string successMessage = string.Empty;
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
@@ -38,7 +37,7 @@ namespace KamPay.ViewModels
         // Hem yükleme yapmıyor olmalı hem de puanı en az 100 olmalı
         public bool CanRedeem => !IsLoading && UserPoints >= 100;
 
-        public event EventHandler<bool> RedemptionCompleted;
+        public event EventHandler<bool>? RedemptionCompleted;
 
         public SurpriseBoxViewModel(
             ISurpriseBoxService surpriseBoxService,

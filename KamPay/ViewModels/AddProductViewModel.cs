@@ -21,27 +21,27 @@ namespace KamPay.ViewModels
         private readonly IStorageService _storageService;
 
         private bool _categoriesLoaded = false;
-        private static List<Category> _cachedCategories;
+        private static List<Category>? _cachedCategories;
 
         [ObservableProperty] private double? latitude;
         [ObservableProperty] private double? longitude;
-        [ObservableProperty] private string title;
-        [ObservableProperty] private string description;
-        [ObservableProperty] private Category selectedCategory;
+        [ObservableProperty] private string title = "";
+        [ObservableProperty] private string description = "";
+        [ObservableProperty] private Category? selectedCategory;
 
         // Enum değerlerini arka planda tutuyoruz
         [ObservableProperty] private ProductCondition selectedCondition;
         [ObservableProperty] private ProductType selectedType;
 
         [ObservableProperty] private decimal price;
-        [ObservableProperty] private string location;
-        [ObservableProperty] private string exchangePreference;
+        [ObservableProperty] private string location = "";
+        [ObservableProperty] private string exchangePreference = "";
         [ObservableProperty] private bool isLoading;
-        [ObservableProperty] private string errorMessage;
+        [ObservableProperty] private string errorMessage = "";
         [ObservableProperty] private bool showPriceField;
         [ObservableProperty] private bool showExchangeField;
         [ObservableProperty] private bool isForSurpriseBox;
-        [ObservableProperty] private string uploadProgress;
+        [ObservableProperty] private string uploadProgress = "";
         [ObservableProperty] private double uploadPercentage;
 
         // Localization Kısayolu
@@ -277,7 +277,7 @@ namespace KamPay.ViewModels
                 Location = address;
                 OnPropertyChanged(nameof(HasLocation));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Location = $"{latitude:F4}, {longitude:F4}";
                 OnPropertyChanged(nameof(HasLocation));
@@ -325,7 +325,7 @@ namespace KamPay.ViewModels
             {
                 if (ImagePaths.Count >= 5)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Warning"], Res["MaxImagesWarning"], Res["Ok"]);
+                    await Application.Current!.MainPage!.DisplayAlert(Res["Warning"], Res["MaxImagesWarning"], Res["Ok"]);
                     return;
                 }
 
@@ -392,14 +392,14 @@ namespace KamPay.ViewModels
                     Condition = this.SelectedCondition,
                     Type = this.SelectedType,
                     Price = this.Price,
-                    Location = this.Location?.Trim(),
+                    Location = this.Location?.Trim() ?? "",
                     Latitude = this.Latitude,
                     Longitude = this.Longitude,
                     UserId = currentUser.UserId,
                     UserName = currentUser.FullName,
                     UserEmail = currentUser.Email,
                     UserPhotoUrl = currentUser.ProfileImageUrl,
-                    ExchangePreference = this.ExchangePreference?.Trim(),
+                    ExchangePreference = this.ExchangePreference?.Trim() ?? "",
                     IsForSurpriseBox = this.IsForSurpriseBox,
                     IsActive = true,
                     IsSold = false,
@@ -425,7 +425,7 @@ namespace KamPay.ViewModels
                     var results = await Task.WhenAll(uploadTasks);
                     foreach (var result in results)
                     {
-                        if (result.Success) urls.Add(result.Data);
+                        if (result.Success && result.Data != null) urls.Add(result.Data);
                     }
                     return urls;
                 });
@@ -481,7 +481,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task CancelAsync()
         {
-            var confirm = await Application.Current.MainPage.DisplayAlert(
+            var confirm = await Application.Current!.MainPage!.DisplayAlert(
                 Res["Cancel"],
                 Res["ConfirmCancelMessage"],
                 Res["Yes"],

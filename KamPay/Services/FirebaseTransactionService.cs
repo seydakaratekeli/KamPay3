@@ -22,7 +22,7 @@ namespace KamPay.Services
        
         internal class TempOtpModel
         {
-            public string Otp { get; set; }
+            public string Otp { get; set; } = string.Empty;
             public DateTime ExpiresAt { get; set; }
         }
 

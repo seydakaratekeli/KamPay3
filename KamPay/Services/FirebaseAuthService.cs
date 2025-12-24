@@ -18,7 +18,7 @@ namespace KamPay.Services
     public class FirebaseAuthService : IAuthenticationService
     {
         private readonly FirebaseClient _firebaseClient;
-        private User _currentUser;
+        private User? _currentUser;
 
         private readonly IEmailService _emailService;
 

@@ -11,17 +11,17 @@ namespace KamPay.Converters
     // String boş mu kontrolü
     public class StringIsNotNullOrEmptyConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
             => !string.IsNullOrEmpty(value as string);
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
 
     // ProductType'ı renk'e çevir
     public class ProductTypeToBadgeColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is ProductType type)
             {
@@ -36,14 +36,14 @@ namespace KamPay.Converters
             return Color.FromArgb("#757575");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
 
     // ProductType'ı metne çevir
     public class ProductTypeConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is ProductType type)
             {
@@ -59,7 +59,7 @@ namespace KamPay.Converters
             return LocalizationResourceManager.Instance.GetString("NotSpecified");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var text = value as string;
             var loc = LocalizationResourceManager.Instance;
@@ -75,7 +75,7 @@ namespace KamPay.Converters
     // ProductCondition'ı metne çevir
     public class ProductConditionConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is ProductCondition condition)
             {
@@ -93,7 +93,7 @@ namespace KamPay.Converters
             return LocalizationResourceManager.Instance.GetString("NotSpecified");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var text = value as string;
             var loc = LocalizationResourceManager.Instance;
@@ -111,7 +111,7 @@ namespace KamPay.Converters
     // Mesaj zaman rengi
     public class MessageTimeColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var currentUserId = Preferences.Get("current_user_id", string.Empty);
             var senderId = value as string;
@@ -121,7 +121,7 @@ namespace KamPay.Converters
                 : Color.FromArgb("#757575");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -130,7 +130,7 @@ namespace KamPay.Converters
     // Mesaj text rengi
     public class MessageTextColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var currentUserId = Preferences.Get("current_user_id", string.Empty);
             var senderId = value as string;
@@ -140,7 +140,7 @@ namespace KamPay.Converters
                 : Colors.Black;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -149,7 +149,7 @@ namespace KamPay.Converters
     // Mesaj balonu hizalama
     public class MessageBubbleAlignmentConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var currentUserId = Preferences.Get("current_user_id", string.Empty);
             var senderId = value as string;
@@ -159,7 +159,7 @@ namespace KamPay.Converters
                 : LayoutOptions.Start;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -168,7 +168,7 @@ namespace KamPay.Converters
     // Mesaj balonu rengi (gönderen/alıcı)
     public class MessageBubbleColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var currentUserId = Preferences.Get("current_user_id", string.Empty);
             var senderId = value as string;
@@ -178,7 +178,7 @@ namespace KamPay.Converters
                 : Color.FromArgb("#E0E0E0");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -188,19 +188,19 @@ namespace KamPay.Converters
 
     public class InverseBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => !(bool)value;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => !(bool)value;
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is bool b && !b;
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is bool b && !b;
     }
 
     public class IntToBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (int)value > 0;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is int i && i > 0;
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class ColorToLightConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string colorHex)
             {
@@ -213,41 +213,41 @@ namespace KamPay.Converters
             }
             return Colors.Transparent;
         }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class PostTypeToIconConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (PostType)value switch { PostType.HelpRequest => "❓", PostType.Announcement => "📢", PostType.ThankYou => "💖", PostType.Volunteer => "🤝", _ => "📌" };
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is PostType pt ? pt switch { PostType.HelpRequest => "❓", PostType.Announcement => "📢", PostType.ThankYou => "💖", PostType.Volunteer => "🤝", _ => "📌" } : "📌";
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class PostTypeToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var loc = LocalizationResourceManager.Instance;
-            return (PostType)value switch 
+            return value is PostType pt ? pt switch 
             { 
                 PostType.HelpRequest => loc.GetString("PostTypeHelpRequest"), 
                 PostType.Announcement => loc.GetString("PostTypeAnnouncement"), 
                 PostType.ThankYou => loc.GetString("PostTypeThankYou"), 
                 PostType.Volunteer => loc.GetString("PostTypeVolunteer"), 
                 _ => loc.GetString("Other") 
-            };
+            } : loc.GetString("Other");
         }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class ServiceCategoryToIconConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (ServiceCategory)value switch { ServiceCategory.Education => "📚", ServiceCategory.Technical => "💻", ServiceCategory.Cooking => "🍳", ServiceCategory.Childcare => "👶", ServiceCategory.PetCare => "🐕", ServiceCategory.Translation => "🌐", ServiceCategory.Moving => "📦", _ => "📌" };
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is ServiceCategory sc ? sc switch { ServiceCategory.Education => "📚", ServiceCategory.Technical => "💻", ServiceCategory.Cooking => "🍳", ServiceCategory.Childcare => "👶", ServiceCategory.PetCare => "🐕", ServiceCategory.Translation => "🌐", ServiceCategory.Moving => "📦", _ => "📌" } : "📌";
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class ServiceCategoryToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var loc = LocalizationResourceManager.Instance;
             
@@ -276,7 +276,7 @@ namespace KamPay.Converters
             return loc.GetString("All");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // Used when going from Picker to ViewModel.
             // Generally returning null is sufficient.
@@ -286,25 +286,25 @@ namespace KamPay.Converters
 
     public class EqualityToBorderColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#4CAF50") : Colors.Transparent;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#4CAF50") : Colors.Transparent;
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
     public class EqualityToBackgroundConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#E8F5E9") : Colors.White;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#E8F5E9") : Colors.White;
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
     
     public class EqualityToBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             // Gelen değeri ve parametreyi string'e çevirip karşılaştır
             return value?.ToString() == parameter?.ToString();
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -312,18 +312,21 @@ namespace KamPay.Converters
 
     public class EqualityToTextColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#4CAF50") : Colors.Black;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value?.ToString() == parameter?.ToString() ? Color.FromArgb("#4CAF50") : Colors.Black;
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
     }
     public class EnumToBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null || parameter == null)
                 return false;
 
             // Parameter'ı parse et
             var paramString = parameter.ToString();
+            if (paramString == null)
+                return false;
+                
             bool invert = false;
             
             // Invert kontrolü (örn: "System,Invert=True")
@@ -339,7 +342,9 @@ namespace KamPay.Converters
             }
 
             // Enum değerini string'e çevir
-            string enumValue = value.ToString();
+            string? enumValue = value.ToString();
+            if (enumValue == null)
+                return false;
 
             // Karşılaştır
             bool result = enumValue.Equals(paramString, StringComparison.OrdinalIgnoreCase);
@@ -348,7 +353,7 @@ namespace KamPay.Converters
             return invert ? !result : result;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -356,52 +361,56 @@ namespace KamPay.Converters
 
     public class FirstCharConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string text && !string.IsNullOrEmpty(text))
             {
-                return text.ToUpper()[0];
+                // Türkçe karakterler için CultureInfo.CurrentCulture kullan
+                return text.ToUpper(new CultureInfo("tr-TR"))[0];
             }
             return string.Empty;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
     }
 
-    // Ürün kategori adlarını yerelleştirilmiş metne dönüştürür.
+    // Ürün kategori adlarını yerelleştirilmiş metne dönüştür.
 
     // Firebase'de saklanan Türkçe kategori adlarını yerelleştirilmiş kaynak anahtarlarına eşler.
     
     public class ProductCategoryToTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string categoryName && !string.IsNullOrEmpty(categoryName))
             {
                 var loc = LocalizationResourceManager.Instance;
                 
+                // Türkçe karakter karşılaştırması için ToLower(tr-TR) kullan
+                var categoryLower = categoryName.ToLower(new CultureInfo("tr-TR"));
+                
                 // Map Turkish category names to localized resource keys
-                return categoryName switch
+                return categoryLower switch
                 {
-                    "Elektronik" => loc.GetString("CategoryElectronics"),
-                    "Kitap ve Kırtasiye" => loc.GetString("CategoryBooks"),
-                    "Giyim" => loc.GetString("CategoryClothing"),
-                    "Ev Eşyası" => loc.GetString("CategoryHomeGoods"),
-                    "Spor Malzemeleri" => loc.GetString("CategorySports"),
-                    "Müzik Aletleri" => loc.GetString("CategoryMusic"),
-                    "Oyun ve Hobi" => loc.GetString("CategoryGames"),
-                    "Bebek Ürünleri" => loc.GetString("CategoryBaby"),
-                    "Diğer" => loc.GetString("CategoryOther"),
+                    "elektronik" => loc.GetString("CategoryElectronics"),
+                    "kitap ve kırtasiye" => loc.GetString("CategoryBooks"),
+                    "giyim" => loc.GetString("CategoryClothing"),
+                    "ev eşyası" => loc.GetString("CategoryHomeGoods"),
+                    "spor malzemeleri" => loc.GetString("CategorySports"),
+                    "müzik aletleri" => loc.GetString("CategoryMusic"),
+                    "oyun ve hobi" => loc.GetString("CategoryGames"),
+                    "bebek ürünleri" => loc.GetString("CategoryBaby"),
+                    "diğer" => loc.GetString("CategoryOther"),
                     _ => categoryName // Return original if not matched
                 };
             }
             return value?.ToString() ?? string.Empty;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

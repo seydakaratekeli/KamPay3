@@ -19,7 +19,7 @@ namespace KamPay.ViewModels
     {
         private readonly IFavoriteService _favoriteService;
         private readonly IAuthenticationService _authService;
-        private IDisposable _favoritesSubscription;
+        private IDisposable? _favoritesSubscription;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
         private bool _isInitialized = false;
@@ -214,7 +214,7 @@ namespace KamPay.ViewModels
                     if (!result.Success)
                     {
                         // Hata olursa geri yükle (İsteğe bağlı)
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }
             }
@@ -227,16 +227,16 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task RefreshFavoritesAsync()
         {
-            if (isRefreshing) return;
+            if (IsRefreshing) return; // Generated property kullan
             try
             {
-                isRefreshing = true;
+                IsRefreshing = true; // Generated property kullan
                 _isInitialized = false; // Cache'i geçersiz kıl
                 await StartListeningForFavoritesAsync(); // Yeniden yükle
             }
             finally
             {
-                isRefreshing = false;
+                IsRefreshing = false; // Generated property kullan
             }
         }
 

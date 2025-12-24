@@ -12,7 +12,7 @@ namespace KamPay.Services
     public class FirebaseCategoryService : ICategoryService
     {
         private readonly FirebaseClient _firebaseClient;
-        private static List<Category> _categoriesCache;
+        private List<Category>? _categoriesCache;
 
         public FirebaseCategoryService()
         {

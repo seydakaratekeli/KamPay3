@@ -14,12 +14,12 @@ namespace KamPay.Models
         
         /// User ID who initiated the transfer (sender)
         
-        public string FromUserId { get; set; }
+        public string FromUserId { get; set; } = "";
         
         
         /// User ID who received the transfer (receiver)
         
-        public string ToUserId { get; set; }
+        public string ToUserId { get; set; } = "";
         
         
         /// Amount of credits transferred
@@ -34,17 +34,17 @@ namespace KamPay.Models
         
         /// Optional description or reason for the transfer
         
-        public string Description { get; set; }
+        public string Description { get; set; } = "";
         
         
         /// Reference to related entity (e.g., ProductId, TransactionId)
         
-        public string ReferenceId { get; set; }
+        public string ReferenceId { get; set; } = "";
         
         
         /// Reference type (e.g., "Product", "Transaction", "Service")
         
-        public string ReferenceType { get; set; }
+        public string ReferenceType { get; set; } = "";
         
         
         /// Timestamp when the transaction was created
