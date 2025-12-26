@@ -19,6 +19,9 @@
                                             TrueColor="White" 
                                             FalseColor="#E8F5E9"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
+            <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter"/>
+            <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter"/>
+            <converters:ServiceCategoryToIconConverter x:Key="ServiceCategoryToIconConverter"/>
             <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
             <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
@@ -37,7 +40,8 @@
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
             <converters:PostTypeToTextConverter x:Key="PostTypeToTextConverter"/>
             <converters:PostTypeToIconConverter x:Key="PostTypeToIconConverter"/>
-
+            <converters:ProductTypeConverter x:Key="ProductTypeConverter"/>
+            <converters:ProductConditionConverter x:Key="ProductConditionConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

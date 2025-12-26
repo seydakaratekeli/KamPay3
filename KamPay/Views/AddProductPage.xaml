@@ -13,7 +13,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <conv:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <conv:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -22,7 +22,7 @@
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="15">
 
-                <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+                <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                        BackgroundColor="#FFEBEE"
                        BorderColor="#F44336"
                        Padding="10"
@@ -312,7 +312,7 @@
                        FontSize="16"
                        FontAttributes="Bold"
                        HorizontalTextAlignment="Center"
-                       IsVisible="{Binding UploadProgress, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+                       IsVisible="{Binding UploadProgress, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
             </VerticalStackLayout>
         </Grid>
     </Grid>

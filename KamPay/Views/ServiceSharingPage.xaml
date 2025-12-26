@@ -13,8 +13,9 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
+            <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -24,10 +25,10 @@
                              Padding="12"
                              Spacing="10"
                              BackgroundColor="{StaticResource Gray100}"
-                             IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InverseBoolConverter}}">
+                             IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InvertedBoolConverter}}">
 
             <Border StrokeThickness="0"
-                    BackgroundColor="Gray"
+                    BackgroundColor="{StaticResource Gray200}"
                     Padding="10"
                     StrokeShape="RoundRectangle 12">
                 <Entry Placeholder="{extensions:Translate SearchService}"
@@ -36,14 +37,8 @@
                        FontSize="15" />
             </Border>
 
-            <Grid ColumnDefinitions="*,*"
-                  ColumnSpacing="10">
-
-                <Border Grid.Column="0"
-                        StrokeThickness="0"
-                        BackgroundColor="Gray"
-                        Padding="8,0"
-                        StrokeShape="RoundRectangle 12">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Border Grid.Column="0" StrokeThickness="0" BackgroundColor="{StaticResource Gray200}" Padding="8,0" StrokeShape="RoundRectangle 12">
                     <Picker Title="{extensions:Translate SelectCategoryFilter}"
                             ItemsSource="{Binding Categories}"
                             SelectedItem="{Binding FilterCategory}"
@@ -54,24 +49,16 @@
                     </Picker>
                 </Border>
 
-                <Border Grid.Column="1"
-                        StrokeThickness="0"
-                        BackgroundColor="Gray"
-                        Padding="8,0"
-                        StrokeShape="RoundRectangle 12">
+                <Border Grid.Column="1" StrokeThickness="0" BackgroundColor="{StaticResource Gray200}" Padding="8,0" StrokeShape="RoundRectangle 12">
                     <Picker Title="{extensions:Translate PriceSorting}"
                             ItemsSource="{Binding PriceSortOptions}"  
                             SelectedItem="{Binding PriceSort}"
-                            FontSize="13">
-                    </Picker>
+                            FontSize="13" />
                 </Border>
-
             </Grid>
-
         </VerticalStackLayout>
 
         <Grid Grid.Row="1">
-
             <RefreshView Command="{Binding RefreshServicesCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}">
@@ -89,392 +76,149 @@
                     </CollectionView.Header>
 
                     <CollectionView.EmptyView>
-                        <VerticalStackLayout Padding="40"
-                                             VerticalOptions="Center"
-                                             HorizontalOptions="Center"
-                                             Spacing="15">
+                        <VerticalStackLayout Padding="40" VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
                             <Label Text="💼" FontSize="60" Opacity="0.3" HorizontalTextAlignment="Center" />
-                            <Label Text="{extensions:Translate NoResultsFound}"
-                                   FontSize="17" FontAttributes="Bold"
-                                   TextColor="{StaticResource Gray600}"
-                                   HorizontalTextAlignment="Center" />
-                            <Label Text="{extensions:Translate ChangeFiltersHint}"
-                                   FontSize="14" TextColor="{StaticResource Primary}"
-                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{extensions:Translate NoResultsFound}" FontSize="17" FontAttributes="Bold" TextColor="{StaticResource Gray600}" HorizontalTextAlignment="Center" />
+                            <Label Text="{extensions:Translate ChangeFiltersHint}" FontSize="14" TextColor="{StaticResource Primary}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </CollectionView.EmptyView>
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ServiceOffer">
-
-                            <Frame Margin="0,0,0,12"
-                                   Padding="15"
-                                   BorderColor="{StaticResource Gray200}"
-                                   CornerRadius="15"
-                                   BackgroundColor="White"
-                                   HasShadow="True">
-
-                                <Grid RowDefinitions="Auto,Auto,Auto,1,Auto"
-                                      RowSpacing="10">
-
-                                    <Grid Grid.Row="0"
-                                          ColumnDefinitions="*,Auto"
-                                          ColumnSpacing="10">
-
-                                        <Label Grid.Column="0"
-                                               Text="{Binding Title}"
-                                               FontAttributes="Bold"
-                                               FontSize="17"
-                                               TextColor="{StaticResource Gray900}"
-                                               LineBreakMode="TailTruncation"
-                                               MaxLines="2"
-                                               VerticalOptions="Center" />
-
-                                        <Border Grid.Column="1"
-                                                BackgroundColor="{StaticResource Gray200}"
-                                                Padding="8,4"
-                                                StrokeShape="RoundRectangle 8"
-                                                VerticalOptions="Start">
-                                            <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToTextConverter}}"
-                                                   FontSize="11"
-                                                   TextColor="{StaticResource Primary}"
-                                                   FontAttributes="Bold" />
+                            <Frame Margin="0,0,0,12" Padding="15" BorderColor="{StaticResource Gray200}" CornerRadius="15" BackgroundColor="White" HasShadow="True">
+                                <Grid RowDefinitions="Auto,Auto,Auto,1,Auto" RowSpacing="10">
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" FontSize="17" TextColor="{StaticResource Gray900}" LineBreakMode="TailTruncation" MaxLines="2" VerticalOptions="Center" />
+                                        <Border Grid.Column="1" BackgroundColor="{StaticResource Gray200}" Padding="8,4" StrokeShape="RoundRectangle 8" VerticalOptions="Start">
+                                            <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToTextConverter}}" FontSize="11" TextColor="{StaticResource Primary}" FontAttributes="Bold" />
                                         </Border>
                                     </Grid>
 
-                                    <Label Grid.Row="1"
-                                           Text="{Binding Description}"
-                                           TextColor="{StaticResource Gray600}"
-                                           LineBreakMode="WordWrap"
-                                           MaxLines="3"
-                                           FontSize="13" />
+                                    <Label Grid.Row="1" Text="{Binding Description}" TextColor="{StaticResource Gray600}" LineBreakMode="WordWrap" MaxLines="3" FontSize="13" />
 
-                                    <Grid Grid.Row="2"
-                                          ColumnDefinitions="Auto,*"
-                                          ColumnSpacing="10">
-
-                                        <ffimageloading:CachedImage Grid.Column="0"
-                                                                    Source="{Binding ProviderPhotoUrl}"
-                                                                    Aspect="AspectFill"
-                                                                    HeightRequest="36"
-                                                                    WidthRequest="36"
-                                                                    LoadingPlaceholder="person_icon.svg"
-                                                                    ErrorPlaceholder="person_icon.svg"
-                                                                    VerticalOptions="Center">
+                                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <ffimageloading:CachedImage Grid.Column="0" Source="{Binding ProviderPhotoUrl}" Aspect="AspectFill" HeightRequest="36" WidthRequest="36" LoadingPlaceholder="person_icon.svg" ErrorPlaceholder="person_icon.svg" VerticalOptions="Center">
                                             <ffimageloading:CachedImage.Clip>
                                                 <EllipseGeometry Center="18,18" RadiusX="18" RadiusY="18" />
                                             </ffimageloading:CachedImage.Clip>
                                         </ffimageloading:CachedImage>
-
-                                        <VerticalStackLayout Grid.Column="1"
-                                                             Spacing="2"
-                                                             VerticalOptions="Center">
-                                            <Label Text="{Binding ProviderName}"
-                                                   FontAttributes="Bold"
-                                                   FontSize="13"
-                                                   TextColor="{StaticResource Gray900}"
-                                                   LineBreakMode="TailTruncation" />
-                                            <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}"
-                                                   FontSize="11"
-                                                   TextColor="{StaticResource Gray500}" />
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                            <Label Text="{Binding ProviderName}" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource Gray900}" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" FontSize="11" TextColor="{StaticResource Gray500}" />
                                         </VerticalStackLayout>
                                     </Grid>
 
-                                    <BoxView Grid.Row="3"
-                                             HeightRequest="1"
-                                             Color="{StaticResource Gray200}" />
+                                    <BoxView Grid.Row="3" HeightRequest="1" Color="{StaticResource Gray200}" />
 
-                                    <Grid Grid.Row="4"
-                                          ColumnDefinitions="Auto,*"
-                                          ColumnSpacing="10">
-
-                                        <VerticalStackLayout Grid.Column="0"
-                                                             Spacing="3"
-                                                             VerticalOptions="Center">
-                                            <Label Text="{Binding Price, StringFormat='{0} ₺'}"
-                                                   FontAttributes="Bold"
-                                                   FontSize="18"
-                                                   TextColor="{StaticResource Primary}" />
+                                    <Grid Grid.Row="4" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="3" VerticalOptions="Center">
+                                            <Label Text="{Binding Price, StringFormat='{0} ₺'}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" />
                                             <HorizontalStackLayout Spacing="2">
                                                 <Label Text="⏱" FontSize="11" TextColor="{StaticResource Secondary}"/>
                                                 <Label Text="{Binding TimeCredits}" FontSize="11" TextColor="{StaticResource Secondary}" FontAttributes="Bold"/>
                                                 <Label Text="{extensions:Translate Hours}" FontSize="11" TextColor="{StaticResource Secondary}"/>
                                             </HorizontalStackLayout>
                                         </VerticalStackLayout>
-
-                                        <HorizontalStackLayout Grid.Column="1"
-                                                               Spacing="8"
-                                                               HorizontalOptions="End"
-                                                               VerticalOptions="Center">
-
-                                            <Button Text="💬"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=MessageProviderCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource Secondary}"
-                                                    TextColor="White"
-                                                    CornerRadius="10"
-                                                    HeightRequest="38"
-                                                    WidthRequest="38"
-                                                    FontSize="16"
-                                                    Padding="0"
-                                                    ToolTipProperties.Text="{extensions:Translate SendMessage}" />
-
-                                            <Button Text="{extensions:Translate Request}"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource Primary}"
-                                                    Padding="12,0"
-                                                    TextColor="White"
-                                                    CornerRadius="10"
-                                                    HeightRequest="38"
-                                                    FontSize="13"
-                                                    FontAttributes="Bold" />
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End" VerticalOptions="Center">
+                                            <Button Text="💬" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=MessageProviderCommand}" CommandParameter="{Binding .}" BackgroundColor="{StaticResource Secondary}" TextColor="White" CornerRadius="10" HeightRequest="38" WidthRequest="38" FontSize="16" Padding="0" />
+                                            <Button Text="{extensions:Translate Request}" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}" CommandParameter="{Binding .}" BackgroundColor="{StaticResource Primary}" Padding="12,0" TextColor="White" CornerRadius="10" HeightRequest="38" FontSize="13" FontAttributes="Bold" />
                                         </HorizontalStackLayout>
-
                                     </Grid>
-
                                 </Grid>
                             </Frame>
-
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
-
                 </CollectionView>
             </RefreshView>
 
-            <ScrollView IsVisible="{Binding IsLoading}"
-                        BackgroundColor="{StaticResource Gray100}"
-                        Padding="12">
+            <ScrollView IsVisible="{Binding IsLoading}" BackgroundColor="{StaticResource Gray100}" Padding="12">
                 <VerticalStackLayout Spacing="12">
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
-                    <Frame CornerRadius="15" HeightRequest="140"
-                           BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
+                    <Frame CornerRadius="15" HeightRequest="140" BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
+                    <Frame CornerRadius="15" HeightRequest="140" BackgroundColor="{StaticResource Gray200}" Opacity="0.6" />
                 </VerticalStackLayout>
             </ScrollView>
-
-            <Grid IsVisible="{Binding IsPostFormVisible}"
-                  BackgroundColor="#80000000"
-                  ZIndex="99">
-
-                <Grid.InputTransparent>
-                    False
-                </Grid.InputTransparent>
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
-                </Grid.GestureRecognizers>
-
-                <ContentView IsVisible="{Binding IsPostFormVisible}" BackgroundColor="#80000080" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ZIndex="99">
-                    <Grid VerticalOptions="End">
-                        <Border BackgroundColor="White"
-                                StrokeShape="RoundRectangle 24,24,0,0"
-                                Padding="24,30"
-                                VerticalOptions="End">
-                            <VerticalStackLayout Spacing="18">
-                                <Grid>
-                                    <Label Text="{extensions:Translate ShareNewService}" 
-                                           FontSize="20" 
-                                           FontAttributes="Bold" 
-                                           HorizontalOptions="Center"
-                                           TextColor="#212121"/>
-                                    <Button Text="✕"
-                                            Command="{Binding ClosePostFormCommand}"
-                                            HorizontalOptions="End"
-                                            BackgroundColor="Transparent"
-                                            TextColor="#757575"
-                                            FontSize="18"
-                                            Padding="0"
-                                            HeightRequest="30"/>
-                                </Grid>
-
-                                <BoxView HeightRequest="1" Color="#EEEEEE" />
-
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{extensions:Translate ServiceTitle}" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#212121"/>
-                                    <Border StrokeShape="RoundRectangle 12" 
-                                            StrokeThickness="1" 
-                                            Stroke="#E0E0E0"
-                                            Padding="12,8">
-                                        <Entry Placeholder="{extensions:Translate ServiceExample}"
-                                               Text="{Binding ServiceTitle}"
-                                               FontSize="15"
-                                               TextColor="#212121"
-                                               PlaceholderColor="#9E9E9E"/>
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{extensions:Translate ServiceDetails}" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#212121"/>
-                                    <Border StrokeShape="RoundRectangle 12" 
-                                            StrokeThickness="1" 
-                                            Stroke="#E0E0E0"
-                                            Padding="12,8">
-                                        <Editor Placeholder="{extensions:Translate ServiceDescription}"
-                                                Text="{Binding ServiceDescription}"
-                                                FontSize="15"
-                                                TextColor="#212121"
-                                                PlaceholderColor="#9E9E9E"
-                                                AutoSize="TextChanges"
-                                                MinimumHeightRequest="80"/>
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{extensions:Translate CategoryLabel}" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#212121"/>
-                                    <Border StrokeShape="RoundRectangle 12" 
-                                            StrokeThickness="1" 
-                                            Stroke="#E0E0E0"
-                                            Padding="12,0">
-                                        <Picker Title="{extensions:Translate SelectCategory}"
-                                                ItemsSource="{Binding Categories}"
-                                                SelectedItem="{Binding SelectedCategory}"
-                                                FontSize="15"
-                                                TextColor="#212121"
-                                                TitleColor="#9E9E9E">
-                                            <Picker.ItemDisplayBinding>
-                                                <Binding Converter="{StaticResource ServiceCategoryToTextConverter}" />
-                                            </Picker.ItemDisplayBinding>
-                                        </Picker>
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{extensions:Translate PriceTL}" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#212121"/>
-                                    <Border StrokeShape="RoundRectangle 12" 
-                                            StrokeThickness="1" 
-                                            Stroke="#E0E0E0"
-                                            Padding="12,8">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <Entry Placeholder="0"
-                                                   Text="{Binding ServicePrice}"
-                                                   Keyboard="Numeric"
-                                                   FontSize="15"
-                                                   TextColor="#212121"
-                                                   PlaceholderColor="#9E9E9E"/>
-                                            <Label Grid.Column="1" 
-                                                   Text="₺" 
-                                                   FontSize="15" 
-                                                   FontAttributes="Bold"
-                                                   TextColor="#4CAF50"
-                                                   VerticalOptions="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{extensions:Translate DurationHours}" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#212121"/>
-                                    <Border StrokeShape="RoundRectangle 12" 
-                                            StrokeThickness="1" 
-                                            Stroke="#E0E0E0"
-                                            Padding="16,12">
-                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                            <Button Text="−" 
-                                                    Command="{Binding DecrementTimeCreditsCommand}" 
-                                                    WidthRequest="40" 
-                                                    HeightRequest="40"
-                                                    FontSize="24" 
-                                                    BackgroundColor="#F5F5F5" 
-                                                    TextColor="#4CAF50" 
-                                                    CornerRadius="20"
-                                                    Padding="0"/>
-                                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
-                                                <Label Text="{Binding TimeCredits}" 
-                                                       FontSize="24" 
-                                                       FontAttributes="Bold" 
-                                                       TextColor="#4CAF50" 
-                                                       HorizontalOptions="Center"/>
-                                                <Label Text="{extensions:Translate Hours}" 
-                                                       FontSize="12" 
-                                                       TextColor="#757575" 
-                                                       HorizontalOptions="Center"/>
-                                            </VerticalStackLayout>
-                                            <Button Grid.Column="2" 
-                                                    Text="+" 
-                                                    Command="{Binding IncrementTimeCreditsCommand}" 
-                                                    WidthRequest="40" 
-                                                    HeightRequest="40"
-                                                    FontSize="22" 
-                                                    BackgroundColor="#F5F5F5" 
-                                                    TextColor="#4CAF50" 
-                                                    CornerRadius="20"
-                                                    Padding="0"/>
-                                        </Grid>
-                                    </Border>
-                                </VerticalStackLayout>
-
-                                <ActivityIndicator IsRunning="{Binding IsPosting}" 
-                                                   IsVisible="{Binding IsPosting}"
-                                                   Color="#4CAF50"
-                                                   HeightRequest="40"/>
-
-                                <Button Text="{extensions:Translate ShareService}"
-                                        Command="{Binding CreateServiceCommand}"
-                                        IsEnabled="{Binding IsPosting, Converter={StaticResource InverseBoolConverter}}"
-                                        BackgroundColor="#4CAF50"
-                                        TextColor="White"
-                                        FontAttributes="Bold"
-                                        FontSize="16"
-                                        CornerRadius="12"
-                                        HeightRequest="50"
-                                        Margin="0,10,0,0">
-                                    <Button.Shadow>
-                                        <Shadow Brush="#4CAF50" Offset="0,4" Radius="8" Opacity="0.3"/>
-                                    </Button.Shadow>
-                                </Button>
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
-                </ContentView>
-            </Grid>
-
-            <Grid IsVisible="{Binding IsPosting}"
-                  BackgroundColor="#80000088"
-                  ZIndex="100">
-                <VerticalStackLayout VerticalOptions="Center"
-                                     HorizontalOptions="Center"
-                                     Spacing="10">
-                    <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" />
-                    <Label Text="{extensions:Translate Processing}" TextColor="White" FontSize="15" />
-                </VerticalStackLayout>
-            </Grid>
-
-            <Button Text="+"
-                    Command="{Binding OpenPostFormCommand}"
-                    BackgroundColor="{StaticResource Primary}"
-                    TextColor="White"
-                    FontSize="32"
-                    CornerRadius="30"
-                    WidthRequest="60"
-                    HeightRequest="60"
-                    Padding="0"
-                    VerticalOptions="End"
-                    HorizontalOptions="End"
-                    Margin="20"
-                    ZIndex="10">
-                <Button.Shadow>
-                    <Shadow Brush="Black" Offset="0,5" Opacity="0.3" Radius="8" />
-                </Button.Shadow>
-            </Button>
-
         </Grid>
 
-    </Grid>
+        <Grid IsVisible="{Binding IsPostFormVisible}"
+              BackgroundColor="#80000000"
+              ZIndex="99"
+              Grid.RowSpan="2"
+              InputTransparent="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ClosePostFormCommand}" />
+            </Grid.GestureRecognizers>
 
+            <ContentView VerticalOptions="End" HorizontalOptions="Fill" ZIndex="99">
+                <Grid VerticalOptions="End">
+                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 24,24,0,0" Padding="24,30" VerticalOptions="End">
+                        <VerticalStackLayout Spacing="18">
+                            <Grid>
+                                <Label Text="{extensions:Translate ShareNewService}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#212121"/>
+                                <Button Text="✕" Command="{Binding ClosePostFormCommand}" HorizontalOptions="End" BackgroundColor="Transparent" TextColor="#757575" FontSize="18" Padding="0" HeightRequest="30"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="#EEEEEE" />
+
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{extensions:Translate ServiceTitle}" FontSize="14" FontAttributes="Bold" TextColor="#212121"/>
+                                <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="#E0E0E0" Padding="12,8">
+                                    <Entry Placeholder="{extensions:Translate ServiceExample}" Text="{Binding ServiceTitle}" FontSize="15" TextColor="#212121"/>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{extensions:Translate ServiceDetails}" FontSize="14" FontAttributes="Bold" TextColor="#212121"/>
+                                <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="#E0E0E0" Padding="12,8">
+                                    <Editor Placeholder="{extensions:Translate ServiceDescription}" Text="{Binding ServiceDescription}" FontSize="15" TextColor="#212121" AutoSize="TextChanges" MinimumHeightRequest="80"/>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{extensions:Translate CategoryLabel}" FontSize="14" FontAttributes="Bold" TextColor="#212121"/>
+                                <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="#E0E0E0" Padding="12,0">
+                                    <Picker Title="{extensions:Translate SelectCategory}" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" FontSize="15" TextColor="#212121">
+                                        <Picker.ItemDisplayBinding>
+                                            <Binding Converter="{StaticResource ServiceCategoryToTextConverter}" />
+                                        </Picker.ItemDisplayBinding>
+                                    </Picker>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <Button Text="{extensions:Translate ShareService}" Command="{Binding CreateServiceCommand}" IsEnabled="{Binding IsPosting, Converter={StaticResource InvertedBoolConverter}}" BackgroundColor="#4CAF50" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="50" Margin="0,10,0,0">
+                                <Button.Shadow>
+                                    <Shadow Brush="#4CAF50" Offset="0,4" Radius="8" Opacity="0.3"/>
+                                </Button.Shadow>
+                            </Button>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </ContentView>
+        </Grid>
+
+        <Grid IsVisible="{Binding IsPosting}" BackgroundColor="#80000088" ZIndex="100" Grid.RowSpan="2">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" />
+                <Label Text="{extensions:Translate Processing}" TextColor="White" FontSize="15" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Button Text="+"
+                Grid.Row="1"
+                Command="{Binding OpenPostFormCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                FontSize="32"
+                CornerRadius="30"
+                WidthRequest="60"
+                HeightRequest="60"
+                Padding="0"
+                VerticalOptions="End"
+                HorizontalOptions="End"
+                Margin="20"
+                ZIndex="10">
+            <Button.Shadow>
+                <Shadow Brush="Black" Offset="0,5" Opacity="0.3" Radius="8" />
+            </Button.Shadow>
+        </Button>
+
+    </Grid>
 </ContentPage>

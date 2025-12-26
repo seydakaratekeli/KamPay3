@@ -20,11 +20,11 @@
             <Color x:Key="TextSecondary">#757575</Color>
             <Color x:Key="BorderColor">#EEEEEE</Color>
 
-            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
-            <converters:StringIsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter"/>
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
             <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
             <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
@@ -166,7 +166,7 @@
                                 Margin="10,0">
 
                     <CollectionView.EmptyView>
-                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
                             <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
                                 <Label Text="📦" FontSize="60" HorizontalTextAlignment="Center"/>
                                 <Label Text="{extensions:Translate NoDataYet}" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
@@ -204,7 +204,7 @@
 
                                         <BoxView VerticalOptions="End" HeightRequest="40" Color="Transparent"/>
 
-                                        <Border IsVisible="{Binding StatusText, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+                                        <Border IsVisible="{Binding StatusText, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                                 BackgroundColor="{Binding StatusColor}"
                                                 StrokeThickness="0"
                                                 HorizontalOptions="Start"

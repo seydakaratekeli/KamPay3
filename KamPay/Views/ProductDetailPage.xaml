@@ -24,8 +24,8 @@
             <Color x:Key="BorderColor">#EEEEEE</Color>
             <Color x:Key="Danger">#D32F2F</Color>
 
-            <converters:InvertedBoolConverter x:Key="InverseBoolConverter" />
-            <converters:IsNotNullOrEmptyConverter x:Key="StringIsNotNullOrEmptyConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter" />
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter" />
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
@@ -263,7 +263,7 @@
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4"
-                                                 IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource StringIsNotNullOrEmptyConverter}}">
+                                                 IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource IsNotNullOrEmptyConverter}}">
                                 <Label Text="{extensions:Translate ExchangePreferenceLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
                                 <Frame Padding="12" BackgroundColor="#E3F2FD" BorderColor="#BBDEFB" CornerRadius="8" HasShadow="False">
                                     <Label Text="{Binding Product.ExchangePreference}" TextColor="#1565C0" FontSize="14" />
@@ -355,7 +355,7 @@
                 <!-- Sahibinin butonları -->
                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" IsVisible="{Binding IsOwner}">
                     <Button Grid.Column="0" Text="{extensions:Translate Edit}" Command="{Binding EditProductCommand}" BackgroundColor="#F5F5F5" TextColor="{StaticResource TextPrimary}" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
-                    <Button Grid.Column="1" Text="{extensions:Translate MarkAsSold}" Command="{Binding MarkAsSoldCommand}" IsVisible="{Binding Product.IsSold, Converter={StaticResource InverseBoolConverter}}" BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
+                    <Button Grid.Column="1" Text="{extensions:Translate MarkAsSold}" Command="{Binding MarkAsSoldCommand}" IsVisible="{Binding Product.IsSold, Converter={StaticResource InvertedBoolConverter}}" BackgroundColor="{StaticResource Primary}" TextColor="White" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
                     <Button Grid.Column="2" Text="{extensions:Translate Delete}" Command="{Binding DeleteProductCommand}" BackgroundColor="#FFEBEE" TextColor="{StaticResource Danger}" CornerRadius="12" FontAttributes="Bold" HeightRequest="50"/>
                 </Grid>
 
@@ -382,7 +382,7 @@
                             FontAttributes="Bold" 
                             FontSize="15" 
                             Shadow="{Shadow Brush={StaticResource Primary}, Opacity=0.4, Radius=8, Offset='0,4'}"
-                            IsVisible="{Binding HasActiveTransaction, Converter={StaticResource InverseBoolConverter}}">
+                            IsVisible="{Binding HasActiveTransaction, Converter={StaticResource InvertedBoolConverter}}">
                         <Button.Triggers>
                             <DataTrigger TargetType="Button" Binding="{Binding Product.Type}" Value="{x:Static models:ProductType.Satis}">
                                 <Setter Property="Text" Value="{extensions:Translate RequestToBuy}" />
@@ -410,7 +410,7 @@
                 <Button Grid.Column="2"
                         Text="{extensions:Translate Report}" 
                         Command="{Binding ReportProductCommand}" 
-                        IsVisible="{Binding IsOwner, Converter={StaticResource InverseBoolConverter}}"
+                        IsVisible="{Binding IsOwner, Converter={StaticResource InvertedBoolConverter}}"
                         HorizontalOptions="End" 
                         VerticalOptions="Start" 
                         BackgroundColor="Transparent" 

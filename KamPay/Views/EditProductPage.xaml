@@ -16,7 +16,7 @@
         <VerticalStackLayout Padding="20" Spacing="15">
 
             <!-- Hata Mesajı -->
-            <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+            <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                    BackgroundColor="#FFEBEE"
                    BorderColor="#F44336"
                    Padding="10"

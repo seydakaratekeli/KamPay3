@@ -14,7 +14,7 @@
             <Label Text="{Binding InstructionText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray600}"/>
 
             <!--  Süre Göstergesi -->
-            <Frame BackgroundColor="{StaticResource Primary}" Padding="10" CornerRadius="8" IsVisible="{Binding MyDelivery.QRCodeData, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
+            <Frame BackgroundColor="{StaticResource Primary}" Padding="10" CornerRadius="8" IsVisible="{Binding MyDelivery.QRCodeData, Converter={StaticResource IsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
                 <HorizontalStackLayout Spacing="10">
                     <Label Text="⏱️" FontSize="18" TextColor="White" VerticalOptions="Center"/>
                     <Label Text="{Binding TimeRemaining}" 
@@ -26,7 +26,7 @@
             </Frame>
 
             <!--  PIN Gösterimi (Kendi QR kodunuz için) -->
-            <Frame BackgroundColor="{StaticResource Secondary}" Padding="15" CornerRadius="10" IsVisible="{Binding MyDelivery.VerificationPin, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
+            <Frame BackgroundColor="{StaticResource Secondary}" Padding="15" CornerRadius="10" IsVisible="{Binding MyDelivery.VerificationPin, Converter={StaticResource IsNotNullOrEmptyConverter}}" HorizontalOptions="Center">
                 <VerticalStackLayout Spacing="5">
                     <Label Text=" PIN Kodunuz" FontSize="14" TextColor="White" HorizontalOptions="Center"/>
                     <Label Text="{Binding MyDelivery.VerificationPin}" 
@@ -47,7 +47,7 @@
             x:Name="barcodeGenerator"
             Format="QrCode"  
             Value="{Binding MyDelivery.QRCodeData}"
-            IsVisible="{Binding MyDelivery.IsUsed, Converter={StaticResource InverseBoolConverter}}"
+            IsVisible="{Binding MyDelivery.IsUsed, Converter={StaticResource InvertedBoolConverter}}"
             ForegroundColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"/>
 
@@ -108,7 +108,7 @@
                 </Frame>
                 
                 <!-- Fotoğraf Yüklenmediyse Butonları Göster -->
-                <StackLayout IsVisible="{Binding IsPhotoUploaded, Converter={StaticResource InverseBoolConverter}}" 
+                <StackLayout IsVisible="{Binding IsPhotoUploaded, Converter={StaticResource InvertedBoolConverter}}" 
                              Spacing="10">
                     <Button Text="📷 Fotoğraf Çek" 
                             Command="{Binding TakeDeliveryPhotoCommand}"
@@ -124,7 +124,7 @@
             <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanOtherCode]}" 
                     Command="{Binding ScanQRCodeCommand}" 
                     Margin="0,30,0,0"
-                    IsEnabled="{Binding OtherUserDelivery.IsUsed, Converter={StaticResource InverseBoolConverter}}"/>
+                    IsEnabled="{Binding OtherUserDelivery.IsUsed, Converter={StaticResource InvertedBoolConverter}}"/>
 
             <!--  Süre Uzatma Butonu -->
             <Button Text="⏱️ Süreyi Uzat" 

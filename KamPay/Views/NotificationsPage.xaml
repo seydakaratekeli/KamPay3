@@ -13,7 +13,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
         </ResourceDictionary>
@@ -150,7 +150,7 @@
                                              CornerRadius="5"
                                              BackgroundColor="#4CAF50"
                                              VerticalOptions="Center"
-                                             IsVisible="{Binding IsRead, Converter={StaticResource InverseBoolConverter}}"/>
+                                             IsVisible="{Binding IsRead, Converter={StaticResource InvertedBoolConverter}}"/>
                                 </Grid>
 
                                 <Border.GestureRecognizers>
