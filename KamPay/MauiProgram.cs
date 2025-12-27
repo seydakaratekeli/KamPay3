@@ -20,7 +20,7 @@ namespace KamPay
             //  Türkçe karakter desteği için encoding provider'ı kaydet
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            // Load saved language preference and set culture
+            // Load saved language preference and set culture BEFORE accessing any resources
             var savedLanguage = Preferences.Get("AppLanguage", "tr");
             CultureInfo culture;
             try
@@ -41,6 +41,11 @@ namespace KamPay
             //  Thread'lere de uygula
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
+
+            // ⚠️ ÖNEMLİ: AppResources.Culture'ı BURADA ayarlayın (ResourceManager'a erişmeden)
+            KamPay.Resources.Languages.AppResources.Culture = culture;
+
+            System.Diagnostics.Debug.WriteLine($"Uygulama başlatılıyor - Kültür: {culture.Name}");
 
             var builder = MauiApp.CreateBuilder();
 

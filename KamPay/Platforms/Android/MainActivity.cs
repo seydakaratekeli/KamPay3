@@ -3,6 +3,8 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 using System.Diagnostics;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace KamPay;
 
@@ -13,6 +15,12 @@ public class MainActivity : MauiAppCompatActivity
     {
         try
         {
+            // ⚠️ SADECE DEBUG İÇİN: SSL sertifika doğrulamasını devre dışı bırak
+#if DEBUG
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = 
+                (sender, cert, chain, sslPolicyErrors) => true;
+#endif
+
             base.OnCreate(savedInstanceState);
 
             // HATA YAKALAYICI: Kablosuz modda hataları görmek için

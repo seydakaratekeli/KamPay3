@@ -51,6 +51,7 @@ public class ServiceRequest
     public string ServiceId { get; set; } = "";
     public string ServiceTitle { get; set; } = ""; // Bildirimler ve UI için
     public string ProviderId { get; set; } = "";   // Hizmeti sunan kişi
+    public string ProviderName { get; set; } = ""; // ✅ Hizmeti sunan kişinin adı
     public string RequesterId { get; set; } = "";  // Hizmeti talep eden kişi
     public string RequesterName { get; set; } = "";
 
@@ -69,6 +70,7 @@ public class ServiceRequest
 
     public string Message { get; set; } = "";
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; // ✅ Güncelleme zamanı
     public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Pending;
     public DateTime? CompletedAt { get; set; } // Hizmetin tamamlandığı zamanı tutmak için
 

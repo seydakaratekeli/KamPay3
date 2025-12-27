@@ -64,6 +64,6 @@ public enum NotificationType
     NewOffer = 8,        // Yeni teklif/istek geldi
     OfferAccepted = 9,   // Teklifin kabul edildi
     OfferRejected = 10,  // Teklifin reddedildi
-    Quote = 11           // Fiyat teklifi bildirimi
-
+    Quote = 11,          // Fiyat teklifi bildirimi
+    ServiceCompleted = 12 // ✅ Hizmet tamamlandı bildirimi
 }

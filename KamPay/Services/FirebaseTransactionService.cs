@@ -1,16 +1,18 @@
-﻿using Firebase.Database;
+﻿using CommunityToolkit.Mvvm.Input;
+using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
+using KamPay.Services;
+using KamPay.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using KamPay.Services;
 
 namespace KamPay.Services
 {
-    public class FirebaseTransactionService : ITransactionService
+    public partial class FirebaseTransactionService : ITransactionService
     {
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
@@ -278,6 +280,31 @@ namespace KamPay.Services
         }
 
 
+        [RelayCommand]
+        private async Task CompletePaymentAsync(Transaction transaction)
+        {
+            if (transaction == null) return;
+
+            // Sadece onaylanmış ve ödemesi bekleyen satış işlemleri için yönlendir
+            if (transaction.Type == ProductType.Satis &&
+                transaction.Status == TransactionStatus.Accepted &&
+                transaction.PaymentStatus == PaymentStatus.Pending)
+            {
+                var navigationParameter = new Dictionary<string, object>
+        {
+            { "Transaction", transaction }
+        };
+
+                // Sadece navigasyon yapılır. İşlemin devamı PaymentPage'de gerçekleşir. [cite: 401]
+                await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem için şu an ödeme yapılamaz.", "Tamam");
+            }
+        }
+
+        // ✅ ITransactionService interface'ini implement et
         public async Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId)
         {
             try
@@ -285,22 +312,29 @@ namespace KamPay.Services
                 var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
 
-                if (transaction == null || transaction.BuyerId != buyerId)
-                    return ServiceResult<Transaction>.FailureResult("Yetkisiz işlem.");
+                if (transaction == null)
+                    return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
 
-                // Ödeme yöntemini doğrula ve 'Paid' yap
+                if (transaction.BuyerId != buyerId)
+                    return ServiceResult<Transaction>.FailureResult("Bu işlemi yapmaya yetkiniz yok.");
+
+                if (transaction.PaymentStatus != PaymentStatus.Pending)
+                    return ServiceResult<Transaction>.FailureResult("Ödeme zaten tamamlanmış veya beklemede değil.");
+
+                // Ödeme tamamlandı olarak işaretle
                 transaction.PaymentStatus = PaymentStatus.Paid;
-                transaction.PaymentMethod = transaction.PaymentMethod == PaymentMethodType.None ? PaymentMethodType.BankTransferSim : transaction.PaymentMethod;
                 transaction.PaymentCompletedAt = DateTime.UtcNow;
+                await transactionNode.PutAsync(transaction);
 
-                // Dahili tamamlama mantığını çalıştır (Ürünü satıldı yapar, bildirimleri gönderir)
+                // İşlemi tamamla (puan ver, ürünü kapat, bildirim gönder)
                 return await CompleteTransactionInternalAsync(transaction);
             }
             catch (Exception ex)
             {
-                return ServiceResult<Transaction>.FailureResult("İşlem tamamlanamadı.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
+                return ServiceResult<Transaction>.FailureResult("Ödeme tamamlanamadı.", ex.Message);
             }
         }
+
         // Ortak Tamamlama İşlemleri (Satış, Bağış, Takas için) 
         private async Task<ServiceResult<Transaction>> CompleteTransactionInternalAsync(Transaction transaction)
         {

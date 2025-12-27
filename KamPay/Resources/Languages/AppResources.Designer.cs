@@ -12,9 +12,9 @@ namespace KamPay.Resources.Languages {
     using System;
     
     
-   
+    /// <summary>
     ///   Yerelleştirilmiş dizeleri aramak gibi işlemler için, türü kesin olarak belirtilmiş kaynak sınıfı.
-   
+    /// </summary>
     // Bu sınıf ResGen veya Visual Studio gibi bir araç kullanılarak StronglyTypedResourceBuilder
     // sınıfı tarafından otomatik olarak oluşturuldu.
     // Üye eklemek veya kaldırmak için .ResX dosyanızı düzenleyin ve sonra da ResGen
@@ -22,7 +22,7 @@ namespace KamPay.Resources.Languages {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class AppResources {
+    public class AppResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -32,11 +32,11 @@ namespace KamPay.Resources.Languages {
         internal AppResources() {
         }
         
-       
+        /// <summary>
         ///   Bu sınıf tarafından kullanılan, önbelleğe alınmış ResourceManager örneğini döndürür.
-       
+        /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KamPay.Resources.Languages.AppResources", typeof(AppResources).Assembly);
@@ -46,12 +46,12 @@ namespace KamPay.Resources.Languages {
             }
         }
         
-       
+        /// <summary>
         ///   Tümü için geçerli iş parçacığının CurrentUICulture özelliğini geçersiz kular
         ///   CurrentUICulture özelliğini tüm kaynak aramaları için geçersiz kılar.
-       
+        /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -60,3459 +60,3764 @@ namespace KamPay.Resources.Languages {
             }
         }
         
-       
+        /// <summary>
         ///   Kabul Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Accept {
+        /// </summary>
+        public static string Accept {
             get {
                 return ResourceManager.GetString("Accept", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   &apos;{0}&apos; takası için {1}₺ ek ödemeyi kabul ediyor musunuz? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string AcceptAdditionalCashForTrade {
+            get {
+                return ResourceManager.GetString("AcceptAdditionalCashForTrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Teklif Kabul Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AcceptOffer {
+        /// </summary>
+        public static string AcceptOffer {
             get {
                 return ResourceManager.GetString("AcceptOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   &apos;{0}&apos; ürünü için {1}₺ fiyatını kabul ediyor musunuz? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string AcceptPriceForProduct {
+            get {
+                return ResourceManager.GetString("AcceptPriceForProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Beğendiğiniz ürünleri favorilere ekleyerek kolayca erişebilirsiniz. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddFavoritesHint {
+        /// </summary>
+        public static string AddFavoritesHint {
             get {
                 return ResourceManager.GetString("AddFavoritesHint", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   📷 Görsel Ekle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddImage {
+        /// </summary>
+        public static string AddImage {
             get {
                 return ResourceManager.GetString("AddImage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   📷 Görsel Ekle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddImageButton {
+        /// </summary>
+        public static string AddImageButton {
             get {
                 return ResourceManager.GetString("AddImageButton", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   💰 Ek Nakit Teklifi benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string AdditionalCashProposal {
+            get {
+                return ResourceManager.GetString("AdditionalCashProposal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürün Ekle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddProduct {
+        /// </summary>
+        public static string AddProduct {
             get {
                 return ResourceManager.GetString("AddProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Ekle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddService {
+        /// </summary>
+        public static string AddService {
             get {
                 return ResourceManager.GetString("AddService", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Favorilere Ekle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AddToFavorites {
+        /// </summary>
+        public static string AddToFavorites {
             get {
                 return ResourceManager.GetString("AddToFavorites", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Harika! {0}₺ üzerinde anlaştınız. Şimdi sohbette buluşma detaylarını konuşabilirsiniz. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string AgreedOnPrice {
+            get {
+                return ResourceManager.GetString("AgreedOnPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Uyarı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AlertNotification {
+        /// </summary>
+        public static string AlertNotification {
             get {
                 return ResourceManager.GetString("AlertNotification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tümü benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string All {
+        /// </summary>
+        public static string All {
             get {
                 return ResourceManager.GetString("All", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tüm bildirimler silindi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AllNotificationsDeleted {
+        /// </summary>
+        public static string AllNotificationsDeleted {
             get {
                 return ResourceManager.GetString("AllNotificationsDeleted", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Zaten Hesabım Var benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AlreadyHaveAccount {
+        /// </summary>
+        public static string AlreadyHaveAccount {
             get {
                 return ResourceManager.GetString("AlreadyHaveAccount", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Tutar (TL) benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string AmountTL {
+            get {
+                return ResourceManager.GetString("AmountTL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Uygula benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Apply {
+        /// </summary>
+        public static string Apply {
             get {
                 return ResourceManager.GetString("Apply", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AreYouSure {
+        /// </summary>
+        public static string AreYouSure {
             get {
                 return ResourceManager.GetString("AreYouSure", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mevcut Hizmetler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string AvailableServices {
+        /// </summary>
+        public static string AvailableServices {
             get {
                 return ResourceManager.GetString("AvailableServices", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Geri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Back {
+        /// </summary>
+        public static string Back {
             get {
                 return ResourceManager.GetString("Back", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Rozet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Badge {
+        /// </summary>
+        public static string Badge {
             get {
                 return ResourceManager.GetString("Badge", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Pano benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Board {
+        /// </summary>
+        public static string Board {
             get {
                 return ResourceManager.GetString("Board", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Maalesef şu an kutuda ürün kalmadı. Daha sonra tekrar deneyin. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string BoxEmptyMessage {
+        /// </summary>
+        public static string BoxEmptyMessage {
             get {
                 return ResourceManager.GetString("BoxEmptyMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İptal benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Cancel {
+        /// </summary>
+        public static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İptal benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CancelButton {
+        /// </summary>
+        public static string CancelButton {
             get {
                 return ResourceManager.GetString("CancelButton", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Nakit teklifiniz gönderildi. Satıcıyla sohbet edin! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string CashOfferSent {
+            get {
+                return ResourceManager.GetString("CashOfferSent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Kategori benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Category {
+        /// </summary>
+        public static string Category {
             get {
                 return ResourceManager.GetString("Category", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bebek Ürünleri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryBaby {
+        /// </summary>
+        public static string CategoryBaby {
             get {
                 return ResourceManager.GetString("CategoryBaby", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kitap ve Kırtasiye benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryBooks {
+        /// </summary>
+        public static string CategoryBooks {
             get {
                 return ResourceManager.GetString("CategoryBooks", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Temizlik benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryCleaning {
+        /// </summary>
+        public static string CategoryCleaning {
             get {
                 return ResourceManager.GetString("CategoryCleaning", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giyim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryClothing {
+        /// </summary>
+        public static string CategoryClothing {
             get {
                 return ResourceManager.GetString("CategoryClothing", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Elektronik benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryElectronics {
+        /// </summary>
+        public static string CategoryElectronics {
             get {
                 return ResourceManager.GetString("CategoryElectronics", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Oyun ve Hobi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryGames {
+        /// </summary>
+        public static string CategoryGames {
             get {
                 return ResourceManager.GetString("CategoryGames", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bahçe benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryGarden {
+        /// </summary>
+        public static string CategoryGarden {
             get {
                 return ResourceManager.GetString("CategoryGarden", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ev Eşyası benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryHomeGoods {
+        /// </summary>
+        public static string CategoryHomeGoods {
             get {
                 return ResourceManager.GetString("CategoryHomeGoods", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kategori benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryLabel {
+        /// </summary>
+        public static string CategoryLabel {
             get {
                 return ResourceManager.GetString("CategoryLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ders benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryLesson {
+        /// </summary>
+        public static string CategoryLesson {
             get {
                 return ResourceManager.GetString("CategoryLesson", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Müzik Aletleri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryMusic {
+        /// </summary>
+        public static string CategoryMusic {
             get {
                 return ResourceManager.GetString("CategoryMusic", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Diğer benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryOther {
+        /// </summary>
+        public static string CategoryOther {
             get {
                 return ResourceManager.GetString("CategoryOther", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tamir benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryRepair {
+        /// </summary>
+        public static string CategoryRepair {
             get {
                 return ResourceManager.GetString("CategoryRepair", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Spor Malzemeleri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategorySports {
+        /// </summary>
+        public static string CategorySports {
             get {
                 return ResourceManager.GetString("CategorySports", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Taşıma benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CategoryTransport {
+        /// </summary>
+        public static string CategoryTransport {
             get {
                 return ResourceManager.GetString("CategoryTransport", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Filtreleri değiştirin veya aramayı temizleyin. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ChangeFiltersHint {
+        /// </summary>
+        public static string ChangeFiltersHint {
             get {
                 return ResourceManager.GetString("ChangeFiltersHint", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Filtreleri değiştirin veya aramayı temizleyin. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ChangeFiltersOrClearSearch {
+        /// </summary>
+        public static string ChangeFiltersOrClearSearch {
             get {
                 return ResourceManager.GetString("ChangeFiltersOrClearSearch", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profil fotoğrafını değiştirmek ister misin? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ChangePhotoQuestion {
+        /// </summary>
+        public static string ChangePhotoQuestion {
             get {
                 return ResourceManager.GetString("ChangePhotoQuestion", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sohbet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Chat {
+        /// </summary>
+        public static string Chat {
             get {
                 return ResourceManager.GetString("Chat", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Temizle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Clear {
+        /// </summary>
+        public static string Clear {
             get {
                 return ResourceManager.GetString("Clear", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tümünü Temizle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ClearAllNotifications {
+        /// </summary>
+        public static string ClearAllNotifications {
             get {
                 return ResourceManager.GetString("ClearAllNotifications", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kapat benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Close {
+        /// </summary>
+        public static string Close {
             get {
                 return ResourceManager.GetString("Close", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Topluluk Paylaşımları benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CommunityPosts {
+        /// </summary>
+        public static string CommunityPosts {
             get {
                 return ResourceManager.GetString("CommunityPosts", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tamamlandı! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Completed {
+        /// </summary>
+        public static string Completed {
             get {
                 return ResourceManager.GetString("Completed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmeti Tamamla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CompleteService {
+        /// </summary>
+        public static string CompleteService {
             get {
                 return ResourceManager.GetString("CompleteService", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Durum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Condition {
+        /// </summary>
+        public static string Condition {
             get {
                 return ResourceManager.GetString("Condition", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Orta benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionFair {
+        /// </summary>
+        public static string ConditionFair {
             get {
                 return ResourceManager.GetString("ConditionFair", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İyi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionGood {
+        /// </summary>
+        public static string ConditionGood {
             get {
                 return ResourceManager.GetString("ConditionGood", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Durum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionLabel {
+        /// </summary>
+        public static string ConditionLabel {
             get {
                 return ResourceManager.GetString("ConditionLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni Gibi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionLikeNew {
+        /// </summary>
+        public static string ConditionLikeNew {
             get {
                 return ResourceManager.GetString("ConditionLikeNew", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Durumu * benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionTitle {
+        /// </summary>
+        public static string ConditionTitle {
             get {
                 return ResourceManager.GetString("ConditionTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kullanılabilir benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionUsable {
+        /// </summary>
+        public static string ConditionUsable {
             get {
                 return ResourceManager.GetString("ConditionUsable", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çok İyi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConditionVeryGood {
+        /// </summary>
+        public static string ConditionVeryGood {
             get {
                 return ResourceManager.GetString("ConditionVeryGood", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Onayla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Confirm {
+        /// </summary>
+        public static string Confirm {
             get {
                 return ResourceManager.GetString("Confirm", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Onay benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Confirmation {
+        /// </summary>
+        public static string Confirmation {
             get {
                 return ResourceManager.GetString("Confirmation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün eklemeyi iptal etmek istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmCancelMessage {
+        /// </summary>
+        public static string ConfirmCancelMessage {
             get {
                 return ResourceManager.GetString("ConfirmCancelMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tüm bildirimleri silmek istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmClearAllNotifications {
+        /// </summary>
+        public static string ConfirmClearAllNotifications {
             get {
                 return ResourceManager.GetString("ConfirmClearAllNotifications", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Silmek istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmDelete {
+        /// </summary>
+        public static string ConfirmDelete {
             get {
                 return ResourceManager.GetString("ConfirmDelete", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Emin misiniz? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string ConfirmDeletePost {
+            get {
+                return ResourceManager.GetString("ConfirmDeletePost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmDeleteProduct {
+        /// </summary>
+        public static string ConfirmDeleteProduct {
             get {
                 return ResourceManager.GetString("ConfirmDeleteProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çıkış yapmak istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmLogout {
+        /// </summary>
+        public static string ConfirmLogout {
             get {
                 return ResourceManager.GetString("ConfirmLogout", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürünü satıldı olarak işaretlemek istediğinize emin misiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmMarkAsSold {
+        /// </summary>
+        public static string ConfirmMarkAsSold {
             get {
                 return ResourceManager.GetString("ConfirmMarkAsSold", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şifreyi Onayla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmPassword {
+        /// </summary>
+        public static string ConfirmPassword {
             get {
                 return ResourceManager.GetString("ConfirmPassword", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teslim Aldım benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ConfirmReceived {
+        /// </summary>
+        public static string ConfirmReceived {
             get {
                 return ResourceManager.GetString("ConfirmReceived", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   🎉 Tebrikler! 🎉 benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Congratulations {
+        /// </summary>
+        public static string Congratulations {
             get {
                 return ResourceManager.GetString("Congratulations", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İletişim kurulamadı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ContactFailed {
+        /// </summary>
+        public static string ContactFailed {
             get {
                 return ResourceManager.GetString("ContactFailed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Paylaşılamadı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CouldNotShare {
+        /// </summary>
+        public static string CouldNotShare {
             get {
                 return ResourceManager.GetString("CouldNotShare", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mevcut Puanınız benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string CurrentPoints {
+        /// </summary>
+        public static string CurrentPoints {
             get {
                 return ResourceManager.GetString("CurrentPoints", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Mevcut Fiyat: {0:N2} ₺ benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string CurrentPrice {
+            get {
+                return ResourceManager.GetString("CurrentPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   gün önce benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DaysAgo {
+        /// </summary>
+        public static string DaysAgo {
             get {
                 return ResourceManager.GetString("DaysAgo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sil benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Delete {
+        /// </summary>
+        public static string Delete {
             get {
                 return ResourceManager.GetString("Delete", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Başarıyla silindi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DeletedSuccessfully {
+        /// </summary>
+        public static string DeletedSuccessfully {
             get {
                 return ResourceManager.GetString("DeletedSuccessfully", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Silme başarısız benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DeleteFailed {
+        /// </summary>
+        public static string DeleteFailed {
             get {
                 return ResourceManager.GetString("DeleteFailed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   TESLİM EDİLDİ ✔️ benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Delivered {
+        /// </summary>
+        public static string Delivered {
             get {
                 return ResourceManager.GetString("Delivered", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Bu teslimat iptal edilmiş. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string DeliveryCancelled {
+            get {
+                return ResourceManager.GetString("DeliveryCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Teslimat Onayı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DeliveryConfirmation {
+        /// </summary>
+        public static string DeliveryConfirmation {
             get {
                 return ResourceManager.GetString("DeliveryConfirmation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teslimat QR benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DeliveryQR {
+        /// </summary>
+        public static string DeliveryQR {
             get {
                 return ResourceManager.GetString("DeliveryQR", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Demo Kullanıcı Bilgileri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DemoUserInfo {
+        /// </summary>
+        public static string DemoUserInfo {
             get {
                 return ResourceManager.GetString("DemoUserInfo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Açıklama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Description {
+        /// </summary>
+        public static string Description {
             get {
                 return ResourceManager.GetString("Description", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Açıklama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DescriptionLabel {
+        /// </summary>
+        public static string DescriptionLabel {
             get {
                 return ResourceManager.GetString("DescriptionLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bu ürünü Sürpriz Kutu&apos;ya bağışla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DonateSurpriseBox {
+        /// </summary>
+        public static string DonateSurpriseBox {
             get {
                 return ResourceManager.GetString("DonateSurpriseBox", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bu ürünü Sürpriz Kutu&apos;ya bağışla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DonateToSurpriseBox {
+        /// </summary>
+        public static string DonateToSurpriseBox {
             get {
                 return ResourceManager.GetString("DonateToSurpriseBox", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bağış benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Donation {
+        /// </summary>
+        public static string Donation {
             get {
                 return ResourceManager.GetString("Donation", resourceCulture);
             }
         }
         
-       
-        ///   Hesabın yok mu? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DontHaveAccount {
+        /// <summary>
+        ///   Hesabınız yok mu? benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string DontHaveAccount {
             get {
                 return ResourceManager.GetString("DontHaveAccount", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Süre (Saat) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string DurationHours {
+        /// </summary>
+        public static string DurationHours {
             get {
                 return ResourceManager.GetString("DurationHours", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Düzenle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Edit {
+        /// </summary>
+        public static string Edit {
             get {
                 return ResourceManager.GetString("Edit", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürünü Düzenle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EditProduct {
+        /// </summary>
+        public static string EditProduct {
             get {
                 return ResourceManager.GetString("EditProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profili Düzenle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EditProfile {
+        /// </summary>
+        public static string EditProfile {
             get {
                 return ResourceManager.GetString("EditProfile", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   E-posta benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Email {
+        /// </summary>
+        public static string Email {
             get {
                 return ResourceManager.GetString("Email", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   E-posta doğrulama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EmailVerification {
+        /// </summary>
+        public static string EmailVerification {
             get {
                 return ResourceManager.GetString("EmailVerification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Merhaba,
+        ///
+        ///KamPay hesabınızı doğrulamak için aşağıdaki kodu kullanın:
+        ///
+        ///Doğrulama Kodu: {0}
+        ///
+        ///Bu kod 15 dakika boyunca geçerlidir.
+        ///
+        ///KamPay Ekibi benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EmailVerificationBody {
+            get {
+                return ResourceManager.GetString("EmailVerificationBody", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   KamPay - E-posta Doğrulama Kodu benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EmailVerificationSubject {
+            get {
+                return ResourceManager.GetString("EmailVerificationSubject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   6 haneli PIN kodunu girin: benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string Enter6DigitPIN {
+            get {
+                return ResourceManager.GetString("Enter6DigitPIN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Takas için eklemek istediğiniz nakit tutarını girin (0 girebilirsiniz): benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EnterAdditionalCash {
+            get {
+                return ResourceManager.GetString("EnterAdditionalCash", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Yeni adınızı girin: benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EnterNewFirstName {
+        /// </summary>
+        public static string EnterNewFirstName {
             get {
                 return ResourceManager.GetString("EnterNewFirstName", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni soyadınızı girin: benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EnterNewLastName {
+        /// </summary>
+        public static string EnterNewLastName {
             get {
                 return ResourceManager.GetString("EnterNewLastName", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni kullanıcı adınızı girin: benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EnterNewUsername {
+        /// </summary>
+        public static string EnterNewUsername {
             get {
                 return ResourceManager.GetString("EnterNewUsername", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Teklif etmek istediğiniz fiyatı girin: benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EnterProposedPrice {
+            get {
+                return ResourceManager.GetString("EnterProposedPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Geçerli bir tutar girin benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EnterValidAmount {
+            get {
+                return ResourceManager.GetString("EnterValidAmount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Geçerli bir fiyat girin benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string EnterValidPrice {
+            get {
+                return ResourceManager.GetString("EnterValidPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   E-postanıza gönderilen 6 haneli kodu girin. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string EnterVerificationCode {
+        /// </summary>
+        public static string EnterVerificationCode {
             get {
                 return ResourceManager.GetString("EnterVerificationCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hata benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Error {
+        /// </summary>
+        public static string Error {
             get {
                 return ResourceManager.GetString("Error", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Takas benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Exchange {
+        /// </summary>
+        public static string Exchange {
             get {
                 return ResourceManager.GetString("Exchange", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Takas Tercihi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ExchangePreference {
+        /// </summary>
+        public static string ExchangePreference {
             get {
                 return ResourceManager.GetString("ExchangePreference", resourceCulture);
             }
         }
         
-       
-        ///   Takas Tercihi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ExchangePreferenceLabel {
-            get {
-                return ResourceManager.GetString("ExchangePreferenceLabel", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   Ne ile takas yapmak istersiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ExchangePreferencePlaceholder {
+        /// </summary>
+        public static string ExchangePreferencePlaceholder {
             get {
                 return ResourceManager.GetString("ExchangePreferencePlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sahte ürün benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FakeProduct {
+        /// </summary>
+        public static string FakeProduct {
             get {
                 return ResourceManager.GetString("FakeProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Favoriler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Favorites {
+        /// </summary>
+        public static string Favorites {
             get {
                 return ResourceManager.GetString("Favorites", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Favoriler yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FavoritesLoading {
+        /// </summary>
+        public static string FavoritesLoading {
             get {
                 return ResourceManager.GetString("FavoritesLoading", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Favoriler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FavoritesTitle {
+        /// </summary>
+        public static string FavoritesTitle {
             get {
                 return ResourceManager.GetString("FavoritesTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ücret benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FeeLabel {
+        /// </summary>
+        public static string FeeLabel {
             get {
                 return ResourceManager.GetString("FeeLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Lütfen tüm alanları doldurun benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FillAllFields {
+        /// </summary>
+        public static string FillAllFields {
             get {
                 return ResourceManager.GetString("FillAllFields", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Filtrele benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Filter {
+        /// </summary>
+        public static string Filter {
             get {
                 return ResourceManager.GetString("Filter", resourceCulture);
             }
         }
         
-       
-        ///   Filtrele ve Sırala benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FilterAndSort {
+        /// <summary>
+        ///   Filtrele ve Sıralama benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string FilterAndSort {
             get {
                 return ResourceManager.GetString("FilterAndSort", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İsim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string FirstName {
+        /// </summary>
+        public static string FirstName {
             get {
                 return ResourceManager.GetString("FirstName", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satılık benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ForSale {
+        /// </summary>
+        public static string ForSale {
             get {
                 return ResourceManager.GetString("ForSale", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   ÜCRETSİZ benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Free {
+        /// </summary>
+        public static string Free {
             get {
                 return ResourceManager.GetString("Free", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum alınıyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string GettingLocation {
+        /// </summary>
+        public static string GettingLocation {
             get {
                 return ResourceManager.GetString("GettingLocation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İyilik Panosu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string GoodDeedBoard {
+        /// </summary>
+        public static string GoodDeedBoard {
             get {
                 return ResourceManager.GetString("GoodDeedBoard", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İyilik Panosu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string GoodDeedBoardTitle {
+        /// </summary>
+        public static string GoodDeedBoardTitle {
             get {
                 return ResourceManager.GetString("GoodDeedBoardTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Harika! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string Great {
+            get {
+                return ResourceManager.GetString("Great", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Zaten hesabınız var? Giriş Yap benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string HaveAccountLogin {
+        /// </summary>
+        public static string HaveAccountLogin {
             get {
                 return ResourceManager.GetString("HaveAccountLogin", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ana Sayfa benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Home {
+        /// </summary>
+        public static string Home {
             get {
                 return ResourceManager.GetString("Home", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ana Sayfa benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string HomePage {
+        /// </summary>
+        public static string HomePage {
             get {
                 return ResourceManager.GetString("HomePage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Saat benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Hour {
+        /// </summary>
+        public static string Hour {
             get {
                 return ResourceManager.GetString("Hour", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Saat benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Hours {
+        /// </summary>
+        public static string Hours {
             get {
                 return ResourceManager.GetString("Hours", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   saat önce benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string HoursAgo {
+        /// </summary>
+        public static string HoursAgo {
             get {
                 return ResourceManager.GetString("HoursAgo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Görsel seçilirken hata oluştu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ImageSelectionError {
+        /// </summary>
+        public static string ImageSelectionError {
             get {
                 return ResourceManager.GetString("ImageSelectionError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Görselleri (Maksimum 5) * benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ImagesTitle {
+        /// </summary>
+        public static string ImagesTitle {
             get {
                 return ResourceManager.GetString("ImagesTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Resimler yüklenemedi. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ImagesUploadError {
+        /// </summary>
+        public static string ImagesUploadError {
             get {
                 return ResourceManager.GetString("ImagesUploadError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Uygunsuz içerik benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string InappropriateContent {
+        /// </summary>
+        public static string InappropriateContent {
             get {
                 return ResourceManager.GetString("InappropriateContent", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Gelen Teklifler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string IncomingOffers {
+        /// </summary>
+        public static string IncomingOffers {
             get {
                 return ResourceManager.GetString("IncomingOffers", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Gelen Talepler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string IncomingRequests {
+        /// </summary>
+        public static string IncomingRequests {
             get {
                 return ResourceManager.GetString("IncomingRequests", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bilgi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Info {
+        /// </summary>
+        public static string Info {
             get {
                 return ResourceManager.GetString("Info", resourceCulture);
             }
         }
         
-       
-        ///   Yetersiz puan! Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string InsufficientPoints {
+        /// <summary>
+        ///   Yetersiz puan! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string InsufficientPoints {
             get {
                 return ResourceManager.GetString("InsufficientPoints", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Daha fazla puan kazanmak için takas yapabilir veya ürün ekleyebilirsiniz. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string InsufficientPointsMessage {
+        /// </summary>
+        public static string InsufficientPointsMessage {
             get {
                 return ResourceManager.GetString("InsufficientPointsMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Geçersiz e-posta benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string InvalidEmail {
+        /// </summary>
+        public static string InvalidEmail {
             get {
                 return ResourceManager.GetString("InvalidEmail", resourceCulture);
             }
         }
         
-       
-        ///   Almak İstiyorum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string IWantToTake {
-            get {
-                return ResourceManager.GetString("IWantToTake", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   Az önce benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string JustNow {
+        /// </summary>
+        public static string JustNow {
             get {
                 return ResourceManager.GetString("JustNow", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Dil değiştirildi benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string LanguageChanged {
+            get {
+                return ResourceManager.GetString("LanguageChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   🌐 Language / Dil benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LanguageDil {
+        /// </summary>
+        public static string LanguageDil {
             get {
                 return ResourceManager.GetString("LanguageDil", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Soyisim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LastName {
+        /// </summary>
+        public static string LastName {
             get {
                 return ResourceManager.GetString("LastName", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Loading {
+        /// </summary>
+        public static string Loading {
             get {
                 return ResourceManager.GetString("Loading", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Location {
+        /// </summary>
+        public static string Location {
             get {
                 return ResourceManager.GetString("Location", resourceCulture);
             }
         }
         
-       
-        ///   Konum alınırken hata oluştu. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationError {
+        /// <summary>
+        ///   Konum alınınca hata oluştu. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string LocationError {
             get {
                 return ResourceManager.GetString("LocationError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationLabel {
+        /// </summary>
+        public static string LocationLabel {
             get {
                 return ResourceManager.GetString("LocationLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum servisi desteklenmiyor. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationNotSupported {
+        /// </summary>
+        public static string LocationNotSupported {
             get {
                 return ResourceManager.GetString("LocationNotSupported", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum izni verilmedi. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationPermissionDenied {
+        /// </summary>
+        public static string LocationPermissionDenied {
             get {
                 return ResourceManager.GetString("LocationPermissionDenied", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum almak için izin vermeniz gerekmektedir. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationPermissionMessage {
+        /// </summary>
+        public static string LocationPermissionMessage {
             get {
                 return ResourceManager.GetString("LocationPermissionMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Konum * benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LocationTitle {
+        /// </summary>
+        public static string LocationTitle {
             get {
                 return ResourceManager.GetString("LocationTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giriş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Login {
+        /// </summary>
+        public static string Login {
             get {
                 return ResourceManager.GetString("Login", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giriş yapılamadı. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LoginFailed {
+        /// </summary>
+        public static string LoginFailed {
             get {
                 return ResourceManager.GetString("LoginFailed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bu işlem için giriş yapmalısınız. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LoginRequired {
+        /// </summary>
+        public static string LoginRequired {
             get {
                 return ResourceManager.GetString("LoginRequired", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giriş başarılı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LoginSuccess {
+        /// </summary>
+        public static string LoginSuccess {
             get {
                 return ResourceManager.GetString("LoginSuccess", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giriş Yap benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LoginTitle {
+        /// </summary>
+        public static string LoginTitle {
             get {
                 return ResourceManager.GetString("LoginTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çıkış Yap benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Logout {
+        /// </summary>
+        public static string Logout {
             get {
                 return ResourceManager.GetString("Logout", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çıkış benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string LogoutTitle {
+        /// </summary>
+        public static string LogoutTitle {
             get {
                 return ResourceManager.GetString("LogoutTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ödeme Yap benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MakePayment {
+        /// </summary>
+        public static string MakePayment {
             get {
                 return ResourceManager.GetString("MakePayment", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Takas Teklif Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MakeTradeOffer {
+        /// </summary>
+        public static string MakeTradeOffer {
             get {
                 return ResourceManager.GetString("MakeTradeOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MapInstruction {
+        /// </summary>
+        public static string MapInstruction {
             get {
                 return ResourceManager.GetString("MapInstruction", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Harita üzerine tıklayarak konumunuzu seçin veya 📍 butonuna basarak mevcut konumunuzu kullanın benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MapLocationInfo {
+        /// </summary>
+        public static string MapLocationInfo {
             get {
                 return ResourceManager.GetString("MapLocationInfo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Harita açılamadı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MapOpenFailed {
+        /// </summary>
+        public static string MapOpenFailed {
             get {
                 return ResourceManager.GetString("MapOpenFailed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tümünü Okundu İşaretle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MarkAllAsRead {
+        /// </summary>
+        public static string MarkAllAsRead {
             get {
                 return ResourceManager.GetString("MarkAllAsRead", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satıldı İşaretle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MarkAsSold {
+        /// </summary>
+        public static string MarkAsSold {
             get {
                 return ResourceManager.GetString("MarkAsSold", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   En fazla 5 görsel ekleyebilirsiniz benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MaxImagesWarning {
+        /// </summary>
+        public static string MaxImagesWarning {
             get {
                 return ResourceManager.GetString("MaxImagesWarning", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesaj benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MessageNotification {
+        /// </summary>
+        public static string MessageNotification {
             get {
                 return ResourceManager.GetString("MessageNotification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesajlar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Messages {
+        /// </summary>
+        public static string Messages {
             get {
                 return ResourceManager.GetString("Messages", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesajlar yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MessagesLoading {
+        /// </summary>
+        public static string MessagesLoading {
             get {
                 return ResourceManager.GetString("MessagesLoading", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesajlar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MessagesTitle {
+        /// </summary>
+        public static string MessagesTitle {
             get {
                 return ResourceManager.GetString("MessagesTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   dakika önce benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MinutesAgo {
+        /// </summary>
+        public static string MinutesAgo {
             get {
                 return ResourceManager.GetString("MinutesAgo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yanıltıcı bilgi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MisleadingInfo {
+        /// </summary>
+        public static string MisleadingInfo {
             get {
                 return ResourceManager.GetString("MisleadingInfo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Lütfen başlık, kategori ve en az bir resim eklediğinizden emin olun. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MissingFieldsError {
+        /// </summary>
+        public static string MissingFieldsError {
             get {
                 return ResourceManager.GetString("MissingFieldsError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Eksik bilgi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MissingInfo {
+        /// </summary>
+        public static string MissingInfo {
             get {
                 return ResourceManager.GetString("MissingInfo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Lütfen ürün konumu alın. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MissingLocationError {
+        /// </summary>
+        public static string MissingLocationError {
             get {
                 return ResourceManager.GetString("MissingLocationError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İşlemlerim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MyActions {
+        /// </summary>
+        public static string MyActions {
             get {
                 return ResourceManager.GetString("MyActions", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Rozetlerim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MyBadges {
+        /// </summary>
+        public static string MyBadges {
             get {
                 return ResourceManager.GetString("MyBadges", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tekliflerim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MyOffers {
+        /// </summary>
+        public static string MyOffers {
             get {
                 return ResourceManager.GetString("MyOffers", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Benim Ürünüm benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MyProduct {
+        /// </summary>
+        public static string MyProduct {
             get {
                 return ResourceManager.GetString("MyProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürünlerim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string MyProducts {
+        /// </summary>
+        public static string MyProducts {
             get {
                 return ResourceManager.GetString("MyProducts", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Pazarlık Onayı benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string NegotiationApproval {
+            get {
+                return ResourceManager.GetString("NegotiationApproval", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Yeni Bildirim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NewNotification {
+        /// </summary>
+        public static string NewNotification {
             get {
                 return ResourceManager.GetString("NewNotification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni Hizmet Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NewServiceShare {
+        /// </summary>
+        public static string NewServiceShare {
             get {
                 return ResourceManager.GetString("NewServiceShare", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hayır benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string No {
+        /// </summary>
+        public static string No {
             get {
                 return ResourceManager.GetString("No", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hesabın yok mu? Kayıt ol benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoAccountRegister {
+        /// </summary>
+        public static string NoAccountRegister {
             get {
                 return ResourceManager.GetString("NoAccountRegister", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz rozet kazanmadınız benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoBadgesYet {
+        /// </summary>
+        public static string NoBadgesYet {
             get {
                 return ResourceManager.GetString("NoBadgesYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz veri yok benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoDataYet {
+        /// </summary>
+        public static string NoDataYet {
             get {
                 return ResourceManager.GetString("NoDataYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şu an müsait bağış ürünü yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoDonationAvailable {
+        /// </summary>
+        public static string NoDonationAvailable {
             get {
                 return ResourceManager.GetString("NoDonationAvailable", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz favori ürününüz yok benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoFavoritesYet {
+        /// </summary>
+        public static string NoFavoritesYet {
             get {
                 return ResourceManager.GetString("NoFavoritesYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz gelen bir teklif yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoIncomingOffers {
+        /// </summary>
+        public static string NoIncomingOffers {
             get {
                 return ResourceManager.GetString("NoIncomingOffers", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz size gelen bir hizmet talebi yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoIncomingRequests {
+        /// </summary>
+        public static string NoIncomingRequests {
             get {
                 return ResourceManager.GetString("NoIncomingRequests", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz mesajınız yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoMessagesYet {
+        /// </summary>
+        public static string NoMessagesYet {
             get {
                 return ResourceManager.GetString("NoMessagesYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz mesaj yok benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoMessageYet {
+        /// </summary>
+        public static string NoMessageYet {
             get {
                 return ResourceManager.GetString("NoMessageYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şu an yeni bir bildiriminiz yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoNotificationsMessage {
+        /// </summary>
+        public static string NoNotificationsMessage {
             get {
                 return ResourceManager.GetString("NoNotificationsMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz bildirim yok benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoNotificationsYet {
+        /// </summary>
+        public static string NoNotificationsYet {
             get {
                 return ResourceManager.GetString("NoNotificationsYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz yaptığınız bir teklif yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoOutgoingOffers {
+        /// </summary>
+        public static string NoOutgoingOffers {
             get {
                 return ResourceManager.GetString("NoOutgoingOffers", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz gönderdiğiniz bir hizmet talebi yok. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoOutgoingRequests {
+        /// </summary>
+        public static string NoOutgoingRequests {
             get {
                 return ResourceManager.GetString("NoOutgoingRequests", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Arama kriterlerinize uygun ürün bulunamadı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoProductsFound {
+        /// </summary>
+        public static string NoProductsFound {
             get {
                 return ResourceManager.GetString("NoProductsFound", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Henüz ürün eklemediniz benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoProductsYet {
+        /// </summary>
+        public static string NoProductsYet {
             get {
                 return ResourceManager.GetString("NoProductsYet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sonuç bulunamadı. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NoResultsFound {
+        /// </summary>
+        public static string NoResultsFound {
             get {
                 return ResourceManager.GetString("NoResultsFound", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bildirim silindi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NotificationDeleted {
+        /// </summary>
+        public static string NotificationDeleted {
             get {
                 return ResourceManager.GetString("NotificationDeleted", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bildirimler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NotificationsTitle {
+        /// </summary>
+        public static string NotificationsTitle {
             get {
                 return ResourceManager.GetString("NotificationsTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Belirtilmemiş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string NotSpecified {
+        /// </summary>
+        public static string NotSpecified {
             get {
                 return ResourceManager.GetString("NotSpecified", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teklifler yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OffersLoading {
+        /// </summary>
+        public static string OffersLoading {
             get {
                 return ResourceManager.GetString("OffersLoading", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teklifler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OffersTitle {
+        /// </summary>
+        public static string OffersTitle {
             get {
                 return ResourceManager.GetString("OffersTitle", resourceCulture);
             }
         }
         
-       
-        ///   Takas Teklif Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OfferTrade {
-            get {
-                return ResourceManager.GetString("OfferTrade", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   Tamam benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Ok {
+        /// </summary>
+        public static string Ok {
             get {
                 return ResourceManager.GetString("Ok", resourceCulture);
             }
         }
         
-       
-        ///   🎁 100 Puana Kutu Aç! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OpenBoxFor100Points {
+        /// <summary>
+        ///   🎉 100 Puana Kutu Aç! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string OpenBoxFor100Points {
             get {
                 return ResourceManager.GetString("OpenBoxFor100Points", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sürpriz kutunuz açılıyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OpeningBox {
+        /// </summary>
+        public static string OpeningBox {
             get {
                 return ResourceManager.GetString("OpeningBox", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İşlem başarısız benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OperationFailed {
+        /// </summary>
+        public static string OperationFailed {
             get {
                 return ResourceManager.GetString("OperationFailed", resourceCulture);
             }
         }
         
-       
-        ///   İşlem başarılı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OperationSuccess {
+        /// <summary>
+        ///   İşlem başarısız oldu. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string OperationFailedTryAgain {
+            get {
+                return ResourceManager.GetString("OperationFailedTryAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   İşlem başarıyla benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string OperationSuccess {
             get {
                 return ResourceManager.GetString("OperationSuccess", resourceCulture);
             }
         }
         
-       
-        ///   Sipariş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OrderNotification {
+        /// <summary>
+        ///   Sipariiş benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string OrderNotification {
             get {
                 return ResourceManager.GetString("OrderNotification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Diğer benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Other {
+        /// </summary>
+        public static string Other {
             get {
                 return ResourceManager.GetString("Other", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Diğer Ürün benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OtherProduct {
+        /// </summary>
+        public static string OtherProduct {
             get {
                 return ResourceManager.GetString("OtherProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giden Teklifler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OutgoingOffers {
+        /// </summary>
+        public static string OutgoingOffers {
             get {
                 return ResourceManager.GetString("OutgoingOffers", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Giden Talepler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string OutgoingRequests {
+        /// </summary>
+        public static string OutgoingRequests {
             get {
                 return ResourceManager.GetString("OutgoingRequests", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şifre benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Password {
+        /// </summary>
+        public static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şifre Tekrar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PasswordConfirm {
+        /// </summary>
+        public static string PasswordConfirm {
             get {
                 return ResourceManager.GetString("PasswordConfirm", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şifreler eşleşmiyor benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PasswordsDoNotMatch {
+        /// </summary>
+        public static string PasswordsDoNotMatch {
             get {
                 return ResourceManager.GetString("PasswordsDoNotMatch", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   İzin Gerekli benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PermissionRequired {
+        /// </summary>
+        public static string PermissionRequired {
             get {
                 return ResourceManager.GetString("PermissionRequired", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fotoğraf yüklenemedi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PhotoUploadFailed {
+        /// </summary>
+        public static string PhotoUploadFailed {
             get {
                 return ResourceManager.GetString("PhotoUploadFailed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   PIN kodu gereklidir. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PINRequired {
+            get {
+                return ResourceManager.GetString("PINRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   PIN Doğrulama benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PINVerification {
+            get {
+                return ResourceManager.GetString("PINVerification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Puan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Points {
+        /// </summary>
+        public static string Points {
             get {
                 return ResourceManager.GetString("Points", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   İlan paylaşıldı! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PostCreatedSuccess {
+            get {
+                return ResourceManager.GetString("PostCreatedSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   İlan Tipi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostType {
+        /// </summary>
+        public static string PostType {
             get {
                 return ResourceManager.GetString("PostType", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Duyuru benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeAnnouncement {
+        /// </summary>
+        public static string PostTypeAnnouncement {
             get {
                 return ResourceManager.GetString("PostTypeAnnouncement", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yardım Talebi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeHelpRequest {
+        /// </summary>
+        public static string PostTypeHelpRequest {
             get {
                 return ResourceManager.GetString("PostTypeHelpRequest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teklif benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeOffer {
+        /// </summary>
+        public static string PostTypeOffer {
             get {
                 return ResourceManager.GetString("PostTypeOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Talep benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeRequest {
+        /// </summary>
+        public static string PostTypeRequest {
             get {
                 return ResourceManager.GetString("PostTypeRequest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teşekkür benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeThankYou {
+        /// </summary>
+        public static string PostTypeThankYou {
             get {
                 return ResourceManager.GetString("PostTypeThankYou", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Gönüllü Aranıyor benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PostTypeVolunteer {
+        /// </summary>
+        public static string PostTypeVolunteer {
             get {
                 return ResourceManager.GetString("PostTypeVolunteer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Price {
+        /// </summary>
+        public static string Price {
             get {
                 return ResourceManager.GetString("Price", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hepsi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceAll {
+        /// </summary>
+        public static string PriceAll {
             get {
                 return ResourceManager.GetString("PriceAll", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Artan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceAscending {
+        /// </summary>
+        public static string PriceAscending {
             get {
                 return ResourceManager.GetString("PriceAscending", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   ✅ Fiyat Onayı benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PriceConfirmation {
+            get {
+                return ResourceManager.GetString("PriceConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Azalan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceDescending {
+        /// </summary>
+        public static string PriceDescending {
             get {
                 return ResourceManager.GetString("PriceDescending", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat (₺) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceLabel {
+        /// </summary>
+        public static string PriceLabel {
             get {
                 return ResourceManager.GetString("PriceLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat girin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PricePlaceholder {
+        /// </summary>
+        public static string PricePlaceholder {
             get {
                 return ResourceManager.GetString("PricePlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   💰 Fiyat Teklifi benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PriceProposal {
+            get {
+                return ResourceManager.GetString("PriceProposal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Fiyat teklifiniz gönderildi. Satıcıyla sohbet edin! benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PriceProposalSent {
+            get {
+                return ResourceManager.GetString("PriceProposalSent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Artan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceSortAscending {
+        /// </summary>
+        public static string PriceSortAscending {
             get {
                 return ResourceManager.GetString("PriceSortAscending", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Azalan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceSortDescending {
+        /// </summary>
+        public static string PriceSortDescending {
             get {
                 return ResourceManager.GetString("PriceSortDescending", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat sıralama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceSorting {
+        /// </summary>
+        public static string PriceSorting {
             get {
                 return ResourceManager.GetString("PriceSorting", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat Sıralama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceSortTitle {
+        /// </summary>
+        public static string PriceSortTitle {
             get {
                 return ResourceManager.GetString("PriceSortTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat (₺) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PriceTL {
+        /// </summary>
+        public static string PriceTL {
             get {
                 return ResourceManager.GetString("PriceTL", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Fiyat (TL) benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string PriceTLPlaceholder {
+            get {
+                return ResourceManager.GetString("PriceTLPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   İşlem yapılıyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Processing {
+        /// </summary>
+        public static string Processing {
             get {
                 return ResourceManager.GetString("Processing", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Product {
+        /// </summary>
+        public static string Product {
             get {
                 return ResourceManager.GetString("Product", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürününüz başarıyla eklendi! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductAddedSuccess {
+        /// </summary>
+        public static string ProductAddedSuccess {
             get {
                 return ResourceManager.GetString("ProductAddedSuccess", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Durumu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductCondition {
+        /// </summary>
+        public static string ProductCondition {
             get {
                 return ResourceManager.GetString("ProductCondition", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün silindi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductDeleted {
+        /// </summary>
+        public static string ProductDeleted {
             get {
                 return ResourceManager.GetString("ProductDeleted", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   ürününü teslim aldığınız onaylandı. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string ProductDeliveryConfirmed {
+            get {
+                return ResourceManager.GetString("ProductDeliveryConfirmed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ürün Açıklaması benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductDescription {
+        /// </summary>
+        public static string ProductDescription {
             get {
                 return ResourceManager.GetString("ProductDescription", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Açıklaması * benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductDescriptionPlaceholder {
+        /// </summary>
+        public static string ProductDescriptionPlaceholder {
             get {
                 return ResourceManager.GetString("ProductDescriptionPlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Detayı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductDetail {
-            get {
-                return ResourceManager.GetString("ProductDetail", resourceCulture);
-            }
-        }
-        
-       
-        ///   Ürün Detayı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductDetailTitle {
+        /// </summary>
+        public static string ProductDetailTitle {
             get {
                 return ResourceManager.GetString("ProductDetailTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Görselleri (Maksimum 5) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductImages {
+        /// </summary>
+        public static string ProductImages {
             get {
                 return ResourceManager.GetString("ProductImages", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Bilgileri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductInfo {
+        /// </summary>
+        public static string ProductInfo {
             get {
                 return ResourceManager.GetString("ProductInfo", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Bilgileri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductInfoTitle {
+        /// </summary>
+        public static string ProductInfoTitle {
             get {
                 return ResourceManager.GetString("ProductInfoTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Listesi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductList {
+        /// </summary>
+        public static string ProductList {
             get {
                 return ResourceManager.GetString("ProductList", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün yüklenirken hata oluştu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductLoadError {
+        /// </summary>
+        public static string ProductLoadError {
             get {
                 return ResourceManager.GetString("ProductLoadError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün satıldı olarak işaretlendi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductMarkedAsSold {
+        /// </summary>
+        public static string ProductMarkedAsSold {
             get {
                 return ResourceManager.GetString("ProductMarkedAsSold", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün bulunamadı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductNotFound {
+        /// </summary>
+        public static string ProductNotFound {
             get {
                 return ResourceManager.GetString("ProductNotFound", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Başlığı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductTitle {
+        /// </summary>
+        public static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Başlığı * benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductTitlePlaceholder {
+        /// </summary>
+        public static string ProductTitlePlaceholder {
             get {
                 return ResourceManager.GetString("ProductTitlePlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün Tipi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductType {
+        /// </summary>
+        public static string ProductType {
             get {
                 return ResourceManager.GetString("ProductType", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bağış benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductTypeDonation {
+        /// </summary>
+        public static string ProductTypeDonation {
             get {
                 return ResourceManager.GetString("ProductTypeDonation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Takas benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductTypeExchange {
+        /// </summary>
+        public static string ProductTypeExchange {
             get {
                 return ResourceManager.GetString("ProductTypeExchange", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satılık benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductTypeSale {
+        /// </summary>
+        public static string ProductTypeSale {
             get {
                 return ResourceManager.GetString("ProductTypeSale", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   &quot;{0}&quot; ürününü kazandınız! Ürün sahibine bildirim gönderildi. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProductWonMessage {
+        /// </summary>
+        public static string ProductWonMessage {
             get {
                 return ResourceManager.GetString("ProductWonMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profil benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Profile {
+        /// </summary>
+        public static string Profile {
             get {
                 return ResourceManager.GetString("Profile", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profil Fotoğrafı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProfilePhoto {
+        /// </summary>
+        public static string ProfilePhoto {
             get {
                 return ResourceManager.GetString("ProfilePhoto", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profil güncellendi! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ProfileUpdated {
+        /// </summary>
+        public static string ProfileUpdated {
             get {
                 return ResourceManager.GetString("ProfileUpdated", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yayın Tarihi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PublishDate {
+        /// </summary>
+        public static string PublishDate {
             get {
                 return ResourceManager.GetString("PublishDate", resourceCulture);
             }
         }
         
-       
-        ///   Yayın Tarihi: benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string PublishDateLabel {
-            get {
-                return ResourceManager.GetString("PublishDateLabel", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   QR Kod benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string QRCode {
+        /// </summary>
+        public static string QRCode {
             get {
                 return ResourceManager.GetString("QRCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Bu QR kod daha önce kullanılmış. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string QRCodeAlreadyUsed {
+            get {
+                return ResourceManager.GetString("QRCodeAlreadyUsed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   QR kodun süresi dolmuş. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string QRCodeExpired {
+            get {
+                return ResourceManager.GetString("QRCodeExpired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   QR kod bulunamadı. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string QRCodeNotFound {
+            get {
+                return ResourceManager.GetString("QRCodeNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   TESLİM ALINDI ✔️ benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Received {
+        /// </summary>
+        public static string Received {
             get {
                 return ResourceManager.GetString("Received", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kayıt Ol benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Register {
+        /// </summary>
+        public static string Register {
             get {
                 return ResourceManager.GetString("Register", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kayıt Ol benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RegisterTitle {
+        /// </summary>
+        public static string RegisterTitle {
             get {
                 return ResourceManager.GetString("RegisterTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Reddet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Reject {
+        /// </summary>
+        public static string Reject {
             get {
                 return ResourceManager.GetString("Reject", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teklif Reddet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RejectOffer {
+        /// </summary>
+        public static string RejectOffer {
             get {
                 return ResourceManager.GetString("RejectOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Beni hatırla benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RememberMe {
+        /// </summary>
+        public static string RememberMe {
             get {
                 return ResourceManager.GetString("RememberMe", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çıkar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Remove {
+        /// </summary>
+        public static string Remove {
             get {
                 return ResourceManager.GetString("Remove", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Favorilerden Çıkar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RemoveFromFavorites {
+        /// </summary>
+        public static string RemoveFromFavorites {
             get {
                 return ResourceManager.GetString("RemoveFromFavorites", resourceCulture);
             }
         }
         
-       
-        ///   🚩 Şikayet Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Report {
+        /// <summary>
+        ///   🛑 Şikayet Et benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string Report {
             get {
                 return ResourceManager.GetString("Report", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şikayet Nedeni benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ReportReason {
+        /// </summary>
+        public static string ReportReason {
             get {
                 return ResourceManager.GetString("ReportReason", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Şikayetiniz alındı. İnceleme süreci başlatıldı. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ReportReceived {
+        /// </summary>
+        public static string ReportReceived {
             get {
                 return ResourceManager.GetString("ReportReceived", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Talep Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Request {
+        /// </summary>
+        public static string Request {
             get {
                 return ResourceManager.GetString("Request", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Talep Eden: {0} benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RequestedBy {
+        /// </summary>
+        public static string RequestedBy {
             get {
                 return ResourceManager.GetString("RequestedBy", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmeti Talep Et benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RequestService {
+        /// </summary>
+        public static string RequestService {
             get {
                 return ResourceManager.GetString("RequestService", resourceCulture);
             }
         }
         
-       
-        ///   Satın Almak İste benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string RequestToBuy {
-            get {
-                return ResourceManager.GetString("RequestToBuy", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   Kodu Tekrar Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ResendCode {
+        /// </summary>
+        public static string ResendCode {
             get {
                 return ResourceManager.GetString("ResendCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kaydet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Save {
+        /// </summary>
+        public static string Save {
             get {
                 return ResourceManager.GetString("Save", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kaydet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SaveButton {
+        /// </summary>
+        public static string SaveButton {
             get {
                 return ResourceManager.GetString("SaveButton", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Başarıyla kaydedildi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SavedSuccessfully {
+        /// </summary>
+        public static string SavedSuccessfully {
             get {
                 return ResourceManager.GetString("SavedSuccessfully", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kaydediliyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Saving {
+        /// </summary>
+        public static string Saving {
             get {
                 return ResourceManager.GetString("Saving", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün kaydediliyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SavingProduct {
+        /// </summary>
+        public static string SavingProduct {
             get {
                 return ResourceManager.GetString("SavingProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Karşı Tarafın Kodunu Tara benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ScanOtherCode {
+        /// </summary>
+        public static string ScanOtherCode {
             get {
                 return ResourceManager.GetString("ScanOtherCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   QR Kod Tara benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ScanQRCode {
+        /// </summary>
+        public static string ScanQRCode {
             get {
                 return ResourceManager.GetString("ScanQRCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teslimatı onaylamak için QR kodu kameraya okutun. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ScanQRInstruction {
+        /// </summary>
+        public static string ScanQRInstruction {
             get {
                 return ResourceManager.GetString("ScanQRInstruction", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   QR Kod Tara benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ScanQRTitle {
+        /// </summary>
+        public static string ScanQRTitle {
             get {
                 return ResourceManager.GetString("ScanQRTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ara benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Search {
+        /// </summary>
+        public static string Search {
             get {
                 return ResourceManager.GetString("Search", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sohbetlerde ara... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SearchInChats {
+        /// </summary>
+        public static string SearchInChats {
             get {
                 return ResourceManager.GetString("SearchInChats", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ürün ara... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SearchProduct {
+        /// </summary>
+        public static string SearchProduct {
             get {
                 return ResourceManager.GetString("SearchProduct", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ne arıyorsunuz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SearchProducts {
+        /// </summary>
+        public static string SearchProducts {
             get {
                 return ResourceManager.GetString("SearchProducts", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet ara... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SearchService {
+        /// </summary>
+        public static string SearchService {
             get {
                 return ResourceManager.GetString("SearchService", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kategori Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectCategory {
+        /// </summary>
+        public static string SelectCategory {
             get {
                 return ResourceManager.GetString("SelectCategory", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kategori Seçiniz benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectCategoryFilter {
+        /// </summary>
+        public static string SelectCategoryFilter {
             get {
                 return ResourceManager.GetString("SelectCategoryFilter", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kategori Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectCategoryPost {
+        /// </summary>
+        public static string SelectCategoryPost {
             get {
                 return ResourceManager.GetString("SelectCategoryPost", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kategori Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectCategoryTitle {
+        /// </summary>
+        public static string SelectCategoryTitle {
             get {
                 return ResourceManager.GetString("SelectCategoryTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Durum Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectCondition {
+        /// </summary>
+        public static string SelectCondition {
             get {
                 return ResourceManager.GetString("SelectCondition", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Durum Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectConditionTitle {
+        /// </summary>
+        public static string SelectConditionTitle {
             get {
                 return ResourceManager.GetString("SelectConditionTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   🌐 Dil Seçin / Select Language benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectLanguage {
+        /// </summary>
+        public static string SelectLanguage {
             get {
                 return ResourceManager.GetString("SelectLanguage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni profil fotoğrafı seç benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectNewPhoto {
+        /// </summary>
+        public static string SelectNewPhoto {
             get {
                 return ResourceManager.GetString("SelectNewPhoto", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sıralama Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectSorting {
+        /// </summary>
+        public static string SelectSorting {
             get {
                 return ResourceManager.GetString("SelectSorting", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tip Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectType {
+        /// </summary>
+        public static string SelectType {
             get {
                 return ResourceManager.GetString("SelectType", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tip Seçin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SelectTypeTitle {
+        /// </summary>
+        public static string SelectTypeTitle {
             get {
                 return ResourceManager.GetString("SelectTypeTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satıcı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Seller {
+        /// </summary>
+        public static string Seller {
             get {
                 return ResourceManager.GetString("Seller", resourceCulture);
             }
         }
         
-       
-        ///   Satıcı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SellerLabel {
+        /// <summary>
+        ///   Satıcının Karşı Teklifi: {0:N2} ₺ benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string SellerCounterOffer {
             get {
-                return ResourceManager.GetString("SellerLabel", resourceCulture);
+                return ResourceManager.GetString("SellerCounterOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satıcı: {0} benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SellerName {
+        /// </summary>
+        public static string SellerName {
             get {
                 return ResourceManager.GetString("SellerName", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Send {
+        /// </summary>
+        public static string Send {
             get {
                 return ResourceManager.GetString("Send", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Gönder benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string SendButton {
+            get {
+                return ResourceManager.GetString("SendButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   İlk mesajı gönderin! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SendFirstMessage {
+        /// </summary>
+        public static string SendFirstMessage {
             get {
                 return ResourceManager.GetString("SendFirstMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Gönderiliyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Sending {
+        /// </summary>
+        public static string Sending {
             get {
                 return ResourceManager.GetString("Sending", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesaj Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SendMessage {
+        /// </summary>
+        public static string SendMessage {
             get {
                 return ResourceManager.GetString("SendMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teklif Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SendOffer {
+        /// </summary>
+        public static string SendOffer {
             get {
                 return ResourceManager.GetString("SendOffer", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fotoğraf Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SendPhoto {
+        /// </summary>
+        public static string SendPhoto {
             get {
                 return ResourceManager.GetString("SendPhoto", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Talep Gönder benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SendRequest {
+        /// </summary>
+        public static string SendRequest {
             get {
                 return ResourceManager.GetString("SendRequest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Service {
+        /// </summary>
+        public static string Service {
             get {
                 return ResourceManager.GetString("Service", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çocuk Bakımı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryChildcare {
+        /// </summary>
+        public static string ServiceCategoryChildcare {
             get {
                 return ResourceManager.GetString("ServiceCategoryChildcare", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yemek benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryCooking {
+        /// </summary>
+        public static string ServiceCategoryCooking {
             get {
                 return ResourceManager.GetString("ServiceCategoryCooking", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Eğitim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryEducation {
+        /// </summary>
+        public static string ServiceCategoryEducation {
             get {
                 return ResourceManager.GetString("ServiceCategoryEducation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Taşıma benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryMoving {
+        /// </summary>
+        public static string ServiceCategoryMoving {
             get {
                 return ResourceManager.GetString("ServiceCategoryMoving", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Diğer benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryOther {
+        /// </summary>
+        public static string ServiceCategoryOther {
             get {
                 return ResourceManager.GetString("ServiceCategoryOther", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Evcil Hayvan benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryPetCare {
+        /// </summary>
+        public static string ServiceCategoryPetCare {
             get {
                 return ResourceManager.GetString("ServiceCategoryPetCare", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Teknik benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryTechnical {
+        /// </summary>
+        public static string ServiceCategoryTechnical {
             get {
                 return ResourceManager.GetString("ServiceCategoryTechnical", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Çeviri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceCategoryTranslation {
+        /// </summary>
+        public static string ServiceCategoryTranslation {
             get {
                 return ResourceManager.GetString("ServiceCategoryTranslation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Açıklaması benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceDescription {
+        /// </summary>
+        public static string ServiceDescription {
             get {
                 return ResourceManager.GetString("ServiceDescription", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet açıklaması girin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceDescriptionPlaceholder {
+        /// </summary>
+        public static string ServiceDescriptionPlaceholder {
             get {
                 return ResourceManager.GetString("ServiceDescriptionPlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Detaylar benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceDetails {
+        /// </summary>
+        public static string ServiceDetails {
             get {
                 return ResourceManager.GetString("ServiceDetails", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Örneğin: Müzik dersi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceExample {
+        /// </summary>
+        public static string ServiceExample {
             get {
                 return ResourceManager.GetString("ServiceExample", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Talebi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceRequest {
+        /// </summary>
+        public static string ServiceRequest {
             get {
                 return ResourceManager.GetString("ServiceRequest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Talepleri benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceRequests {
+        /// </summary>
+        public static string ServiceRequests {
             get {
                 return ResourceManager.GetString("ServiceRequests", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet talepleri yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceRequestsLoading {
+        /// </summary>
+        public static string ServiceRequestsLoading {
             get {
                 return ResourceManager.GetString("ServiceRequestsLoading", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Taleplerim benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceRequestsTitle {
+        /// </summary>
+        public static string ServiceRequestsTitle {
             get {
                 return ResourceManager.GetString("ServiceRequestsTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmetler benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Services {
+        /// </summary>
+        public static string Services {
             get {
                 return ResourceManager.GetString("Services", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet ara... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceSearchPlaceholder {
+        /// </summary>
+        public static string ServiceSearchPlaceholder {
             get {
                 return ResourceManager.GetString("ServiceSearchPlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Paylaşımı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceSharingTitle {
+        /// </summary>
+        public static string ServiceSharingTitle {
             get {
                 return ResourceManager.GetString("ServiceSharingTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet Başlığı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceTitle {
+        /// </summary>
+        public static string ServiceTitle {
             get {
                 return ResourceManager.GetString("ServiceTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmet başlığı girin benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ServiceTitlePlaceholder {
+        /// </summary>
+        public static string ServiceTitlePlaceholder {
             get {
                 return ResourceManager.GetString("ServiceTitlePlaceholder", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Oturum açılmamış. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string SessionNotFound {
+            get {
+                return ResourceManager.GetString("SessionNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Oturum bulunamadı. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SessionNotFoundError {
+        /// </summary>
+        public static string SessionNotFoundError {
             get {
                 return ResourceManager.GetString("SessionNotFoundError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Share {
+        /// </summary>
+        public static string Share {
             get {
                 return ResourceManager.GetString("Share", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   KamPay ile paylaşıldı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SharedWithKamPay {
+        /// </summary>
+        public static string SharedWithKamPay {
             get {
                 return ResourceManager.GetString("SharedWithKamPay", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni İyilik Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShareNewGoodDeed {
+        /// </summary>
+        public static string ShareNewGoodDeed {
             get {
                 return ResourceManager.GetString("ShareNewGoodDeed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yeni Hizmet Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShareNewService {
+        /// </summary>
+        public static string ShareNewService {
             get {
                 return ResourceManager.GetString("ShareNewService", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Paylaş benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string SharePost {
+            get {
+                return ResourceManager.GetString("SharePost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Profilimi Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShareProfile {
+        /// </summary>
+        public static string ShareProfile {
             get {
                 return ResourceManager.GetString("ShareProfile", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hizmeti Paylaş benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShareService {
+        /// </summary>
+        public static string ShareService {
             get {
                 return ResourceManager.GetString("ShareService", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Düşüncelerinizi paylaşın... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShareYourThoughts {
+        /// </summary>
+        public static string ShareYourThoughts {
             get {
                 return ResourceManager.GetString("ShareYourThoughts", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   QR Kod Göster benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ShowQRCode {
+        /// </summary>
+        public static string ShowQRCode {
             get {
                 return ResourceManager.GetString("ShowQRCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sıralama benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Sorting {
+        /// </summary>
+        public static string Sorting {
             get {
                 return ResourceManager.GetString("Sorting", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   En Çok Favorilenen benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortMostFavorited {
+        /// </summary>
+        public static string SortMostFavorited {
             get {
                 return ResourceManager.GetString("SortMostFavorited", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   En Çok Görüntülenen benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortMostViewed {
+        /// </summary>
+        public static string SortMostViewed {
             get {
                 return ResourceManager.GetString("SortMostViewed", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   En Yeni benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortNewest {
+        /// </summary>
+        public static string SortNewest {
             get {
                 return ResourceManager.GetString("SortNewest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   En Eski benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortOldest {
+        /// </summary>
+        public static string SortOldest {
             get {
                 return ResourceManager.GetString("SortOldest", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat (Artan) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortPriceAsc {
+        /// </summary>
+        public static string SortPriceAsc {
             get {
                 return ResourceManager.GetString("SortPriceAsc", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Fiyat (Azalan) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SortPriceDesc {
+        /// </summary>
+        public static string SortPriceDesc {
             get {
                 return ResourceManager.GetString("SortPriceDesc", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Bir ürün üzerinden mesajlaşmaya başlayabilirsiniz. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string StartChatFromProduct {
+        /// </summary>
+        public static string StartChatFromProduct {
             get {
                 return ResourceManager.GetString("StartChatFromProduct", resourceCulture);
             }
         }
         
-       
-        ///   Başarılı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Success {
+        /// <summary>
+        ///   Başarıyla benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string Success {
             get {
                 return ResourceManager.GetString("Success", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   100 puan karşılığında bir sürpriz kutu açarak bağışlanmış ürünlerden birini kazanma şansı yakala! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SurpriseBoxDescription {
+        /// </summary>
+        public static string SurpriseBoxDescription {
             get {
                 return ResourceManager.GetString("SurpriseBoxDescription", resourceCulture);
             }
         }
         
-       
-        ///   Sürpriz Kutu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SurpriseBoxTitle {
+        /// <summary>
+        ///    benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string SurpriseBoxTitle {
             get {
                 return ResourceManager.GetString("SurpriseBoxTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Sistem benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string SystemNotification {
+        /// </summary>
+        public static string SystemNotification {
             get {
                 return ResourceManager.GetString("SystemNotification", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Süre (Zaman Kredisi) benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TimeCredit {
+        /// </summary>
+        public static string TimeCredit {
             get {
                 return ResourceManager.GetString("TimeCredit", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Zaman Kredisi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TimeCredits {
+        /// </summary>
+        public static string TimeCredits {
             get {
                 return ResourceManager.GetString("TimeCredits", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   {0} Zaman Kredisi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TimeCreditsFormat {
+        /// </summary>
+        public static string TimeCreditsFormat {
             get {
                 return ResourceManager.GetString("TimeCreditsFormat", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Zaman Kredisi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TimeCreditsLabel {
+        /// </summary>
+        public static string TimeCreditsLabel {
             get {
                 return ResourceManager.GetString("TimeCreditsLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Başlık ve açıklama gerekli benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string TitleAndDescriptionRequired {
+            get {
+                return ResourceManager.GetString("TitleAndDescriptionRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Başlık benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TitleLabel {
+        /// </summary>
+        public static string TitleLabel {
             get {
                 return ResourceManager.GetString("TitleLabel", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Belirlenen buluşma noktasına çok uzaksınız. Mesafe: {0:N0} metre (Max: {1} metre) benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string TooFarFromMeetingPoint {
+            get {
+                return ResourceManager.GetString("TooFarFromMeetingPoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Çok fazla yanlış PIN denemesi. QR kod iptal edildi. benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string TooManyPINAttempts {
+            get {
+                return ResourceManager.GetString("TooManyPINAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Konu Başlığı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TopicTitle {
+        /// </summary>
+        public static string TopicTitle {
             get {
                 return ResourceManager.GetString("TopicTitle", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Toplam {0} rozet kazandınız! benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TotalBadges {
+        /// </summary>
+        public static string TotalBadges {
             get {
                 return ResourceManager.GetString("TotalBadges", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Mesajınızı yazın... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string TypeMessage {
+        /// </summary>
+        public static string TypeMessage {
             get {
                 return ResourceManager.GetString("TypeMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Beklenmeyen hata benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UnexpectedError {
+        /// </summary>
+        public static string UnexpectedError {
             get {
                 return ResourceManager.GetString("UnexpectedError", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Üniversite E-maili benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UniversityEmail {
+        /// </summary>
+        public static string UniversityEmail {
             get {
                 return ResourceManager.GetString("UniversityEmail", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Güncelle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Update {
+        /// </summary>
+        public static string Update {
             get {
                 return ResourceManager.GetString("Update", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Başarıyla güncellendi benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UpdatedSuccessfully {
+        /// </summary>
+        public static string UpdatedSuccessfully {
             get {
                 return ResourceManager.GetString("UpdatedSuccessfully", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Profil Güncelle benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UpdateProfile {
+        /// </summary>
+        public static string UpdateProfile {
             get {
                 return ResourceManager.GetString("UpdateProfile", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Resimler yükleniyor... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UploadingImages {
+        /// </summary>
+        public static string UploadingImages {
             get {
                 return ResourceManager.GetString("UploadingImages", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kullanıcı 1 benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string User1 {
+        /// </summary>
+        public static string User1 {
             get {
                 return ResourceManager.GetString("User1", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kullanıcı 2 benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string User2 {
+        /// </summary>
+        public static string User2 {
             get {
                 return ResourceManager.GetString("User2", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Kullanıcı bilgisi bulunamadı. benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string UserNotFound {
+        /// </summary>
+        public static string UserNotFound {
             get {
                 return ResourceManager.GetString("UserNotFound", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Doğrulama Kodu benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string VerificationCode {
+        /// </summary>
+        public static string VerificationCode {
             get {
                 return ResourceManager.GetString("VerificationCode", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Doğrula benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Verify {
+        /// </summary>
+        public static string Verify {
             get {
                 return ResourceManager.GetString("Verify", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Görüntülenme benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ViewCount {
+        /// </summary>
+        public static string ViewCount {
             get {
                 return ResourceManager.GetString("ViewCount", resourceCulture);
             }
         }
         
-       
-        ///   🎁 Ürünümü Görmek İstiyorum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ViewMyProduct {
+        /// <summary>
+        ///   🎉 Ürünümü Görmek İstiyorum benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string ViewMyProduct {
             get {
                 return ResourceManager.GetString("ViewMyProduct", resourceCulture);
             }
         }
         
-       
-        ///   Görüntülenme benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string ViewsLabel {
-            get {
-                return ResourceManager.GetString("ViewsLabel", resourceCulture);
-            }
-        }
-        
-       
+        /// <summary>
         ///   ONAY BEKLİYOR... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WaitingConfirmation {
+        /// </summary>
+        public static string WaitingConfirmation {
             get {
                 return ResourceManager.GetString("WaitingConfirmation", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Satın Almak İste benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WantToBuy {
+        /// </summary>
+        public static string WantToBuy {
             get {
                 return ResourceManager.GetString("WantToBuy", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Almak İstiyorum benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WantToGet {
+        /// </summary>
+        public static string WantToGet {
             get {
                 return ResourceManager.GetString("WantToGet", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Uyarı benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Warning {
+        /// </summary>
+        public static string Warning {
             get {
                 return ResourceManager.GetString("Warning", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hoş geldiniz benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Welcome {
+        /// </summary>
+        public static string Welcome {
             get {
                 return ResourceManager.GetString("Welcome", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Tekrar Hoşgeldiniz benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WelcomeBack {
+        /// </summary>
+        public static string WelcomeBack {
             get {
                 return ResourceManager.GetString("WelcomeBack", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Hoş geldiniz 👋 benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WelcomeMessage {
+        /// </summary>
+        public static string WelcomeMessage {
             get {
                 return ResourceManager.GetString("WelcomeMessage", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Ne ile takas yapmak istersiniz? benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WhatToExchange {
+        /// </summary>
+        public static string WhatToExchange {
             get {
                 return ResourceManager.GetString("WhatToExchange", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Yorum yaz... benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string WriteComment {
+        /// </summary>
+        public static string WriteComment {
             get {
                 return ResourceManager.GetString("WriteComment", resourceCulture);
             }
         }
         
-       
+        /// <summary>
+        ///   Yanlış PIN. Kalan deneme: {0} benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string WrongPINRemainingAttempts {
+            get {
+                return ResourceManager.GetString("WrongPINRemainingAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Evet benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string Yes {
+        /// </summary>
+        public static string Yes {
             get {
                 return ResourceManager.GetString("Yes", resourceCulture);
             }
         }
         
-       
+        /// <summary>
         ///   Evet, Sil benzeri yerelleştirilmiş bir dize arar.
-       
-        internal static string YesDelete {
+        /// </summary>
+        public static string YesDelete {
             get {
                 return ResourceManager.GetString("YesDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Evet, Kabul Ediyorum benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string YesIAccept {
+            get {
+                return ResourceManager.GetString("YesIAccept", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sizin Teklifiniz: {0:N2} ₺ benzeri yerelleştirilmiş bir dize arar.
+        /// </summary>
+        public static string YourOffer {
+            get {
+                return ResourceManager.GetString("YourOffer", resourceCulture);
             }
         }
     }

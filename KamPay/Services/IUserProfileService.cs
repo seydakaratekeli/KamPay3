@@ -15,7 +15,9 @@ namespace KamPay.Services
         MakeDonation,
         ReceiveDonation,
         ShareService,
-        WriteReview
+        WriteReview,
+        ProvideService,      // ✅ Hizmet sağlama
+        ReceiveService       // ✅ Hizmet alma
     }
 
     public interface IUserProfileService

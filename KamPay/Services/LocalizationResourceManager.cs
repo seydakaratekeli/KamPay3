@@ -5,16 +5,13 @@ using KamPay.Resources.Languages;
 
 namespace KamPay.Services;
 
-// Yerelleştirme ve dil değiştirme işlemlerini yönetmek için tekil (singleton) servis.
-// Dil değiştiğinde kullanıcı arayüzü güncellemelerini desteklemek için INotifyPropertyChanged arayüzünü uygular.
 public class LocalizationResourceManager : INotifyPropertyChanged
 {
-    // bu sayfa, uygulamanın çok dilli desteğini yönetir ve dil değişikliklerini bildirir.
     private const string LanguagePreferenceKey = "AppLanguage";
-    private const string DefaultLanguage = "tr"; 
-    
-    private static readonly Lazy<LocalizationResourceManager> _instance = 
-        new(() => new LocalizationResourceManager());
+    private const string DefaultLanguage = ""; // Neutral culture
+
+    private static readonly Lazy<LocalizationResourceManager> _instance =
+        new(() => new LocalizationResourceManager(), LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static LocalizationResourceManager Instance => _instance.Value;
 
@@ -22,76 +19,205 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 
     private LocalizationResourceManager()
     {
-        // Başlatma sırasında kaydedilmiş dil tercihini yükle
-        var savedLanguage = Preferences.Get(LanguagePreferenceKey, DefaultLanguage);
-        SetCulture(savedLanguage, savePreference: false);
+        try
+        {
+            // ResourceManager'ı önce başlat ve kontrol et
+            var resourceManager = AppResources.ResourceManager;
+            if (resourceManager == null)
+            {
+                System.Diagnostics.Debug.WriteLine("⚠️ KRITIK: ResourceManager başlatılamadı!");
+            }
+            
+            // Başlatma sırasında kaydedilmiş dil tercihini yükle
+            var savedLanguage = Preferences.Get(LanguagePreferenceKey, DefaultLanguage);
+            
+            // Eğer kaydedilmiş dil boşsa veya "tr" ise, neutral culture kullan
+            if (string.IsNullOrEmpty(savedLanguage) || savedLanguage == "tr")
+            {
+                savedLanguage = ""; // Neutral culture
+            }
+            
+            SetCulture(savedLanguage, savePreference: false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"⚠️ LocalizationResourceManager başlatma hatası: {ex.GetType().Name}");
+            System.Diagnostics.Debug.WriteLine($"   Mesaj: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"   StackTrace: {ex.StackTrace}");
+            
+            // Fallback olarak neutral culture kullan
+            try
+            {
+                SetCulture(DefaultLanguage, savePreference: false);
+            }
+            catch
+            {
+                // Son çare: hiçbir şey yapma
+                System.Diagnostics.Debug.WriteLine("⚠️ SetCulture bile başarısız oldu!");
+            }
+        }
     }
 
-    // Kaynak dizelerine anahtar ile erişmek için dizinleyici.
-    // Kullanım: LocalizationResourceManager.Instance["Profile"]
     public string this[string key]
     {
         get
         {
-            var value = AppResources.ResourceManager.GetString(key, AppResources.Culture);
-            return value ?? key;
+            try
+            {
+                // ResourceManager referansını yerel değişkene al (thread-safe)
+                var resourceManager = AppResources.ResourceManager;
+                
+                // ResourceManager kontrolü
+                if (resourceManager == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("ResourceManager null - fallback key döndürülüyor");
+                    return key;
+                }
+
+                // Culture referansını yerel değişkene al (yarış durumunu önler)
+                var culture = AppResources.Culture;
+                
+                // Culture null ise neutral culture kullan (AppResources.resx)
+                var value = culture == null || string.IsNullOrEmpty(culture.Name)
+                    ? resourceManager.GetString(key)
+                    : resourceManager.GetString(key, culture);
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Kaynak bulunamadı: {key}");
+                    return key;
+                }
+
+                return value;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Kaynak erişim hatası: {key}, Hata: {ex.Message}");
+                return key;
+            }
         }
     }
 
-    // Uygulama kültürünü ayarlar ve kullanıcı arayüzünü günceller.
-    // <param name="cultureCode">Kültür kodu (örneğin, Türkçe için "tr", İngilizce için "en")</param>
-    // <param name="savePreference">Tercihi kaydedip kaydetmeme (varsayılan: true)</param>
     public void SetCulture(string cultureCode, bool savePreference = true)
     {
-        CultureInfo culture;
         try
         {
-            culture = new CultureInfo(cultureCode);
-        }
-        catch (CultureNotFoundException)
-        {
-            culture = new CultureInfo(DefaultLanguage);
-            cultureCode = DefaultLanguage;
-        }
-        
-        CultureInfo.CurrentCulture = culture;
-        CultureInfo.CurrentUICulture = culture;
-        AppResources.Culture = culture;
-        
-        if (savePreference)
-        {
-            Preferences.Set(LanguagePreferenceKey, cultureCode);
-        }
+            // Eğer boş veya "tr" ise, neutral culture kullan
+            if (string.IsNullOrEmpty(cultureCode) || cultureCode == "tr")
+            {
+                // Neutral culture için Culture'ı null yap
+                AppResources.Culture = null;
+                
+                // Thread culture'ları Türkçe yap (sayılar, tarihler için)
+                var turkishCulture = new CultureInfo("tr-TR");
+                CultureInfo.DefaultThreadCurrentCulture = turkishCulture;
+                CultureInfo.DefaultThreadCurrentUICulture = turkishCulture;
+                CultureInfo.CurrentCulture = turkishCulture;
+                CultureInfo.CurrentUICulture = turkishCulture;
+                Thread.CurrentThread.CurrentCulture = turkishCulture;
+                Thread.CurrentThread.CurrentUICulture = turkishCulture;
+                
+                cultureCode = "tr";
+                System.Diagnostics.Debug.WriteLine("Neutral culture (Türkçe) ayarlandı");
+            }
+            else if (cultureCode == "en")
+            {
+                // İngilizce için en-US kullan
+                var englishCulture = new CultureInfo("en-US");
+                CultureInfo.DefaultThreadCurrentCulture = englishCulture;
+                CultureInfo.DefaultThreadCurrentUICulture = englishCulture;
+                CultureInfo.CurrentCulture = englishCulture;
+                CultureInfo.CurrentUICulture = englishCulture;
+                Thread.CurrentThread.CurrentCulture = englishCulture;
+                Thread.CurrentThread.CurrentUICulture = englishCulture;
+                
+                // AppResources.en.resx kullanılacak
+                AppResources.Culture = englishCulture;
+                System.Diagnostics.Debug.WriteLine("İngilizce kültür ayarlandı");
+            }
+            else
+            {
+                // Diğer diller için
+                var culture = new CultureInfo(cultureCode);
+                CultureInfo.DefaultThreadCurrentCulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+                CultureInfo.CurrentCulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+                Thread.CurrentThread.CurrentCulture = culture;
+                Thread.CurrentThread.CurrentUICulture = culture;
+                AppResources.Culture = culture;
+                
+                System.Diagnostics.Debug.WriteLine($"Kültür ayarlandı: {culture.Name}");
+            }
 
-        // Kaynakların değiştiğini tüm bağlantılara bildir
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+            if (savePreference)
+            {
+                Preferences.Set(LanguagePreferenceKey, cultureCode);
+            }
 
-        // ViewModel'lerin yenilenmesi için global mesaj gönder
-        WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+            WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SetCulture hatası: {ex.Message}");
+            // Hata durumunda neutral culture kullan
+            AppResources.Culture = null;
+        }
     }
 
-    // Geçerli kültür kodunu alır.
     public string GetCurrentCulture()
     {
-        return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        try
+        {
+            // Culture referansını yerel değişkene al
+            var culture = AppResources.Culture;
+            
+            // Eğer Culture null ise, "tr" döndür (neutral = Türkçe)
+            if (culture == null || string.IsNullOrEmpty(culture.Name))
+            {
+                return "tr";
+            }
+            
+            return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"GetCurrentCulture hatası: {ex.Message}");
+            return "tr"; // Fallback
+        }
     }
 
-
-    // Anahtara göre yerelleştirilmiş bir dize alır.
-
-    // <param name="key">Kaynak anahtarı</param>
-    // <returns>Yerelleştirilmiş dize veya bulunamazsa anahtar</returns>
     public string GetString(string key)
     {
-        return AppResources.ResourceManager.GetString(key, AppResources.Culture) ?? key;
+        try
+        {
+            // ResourceManager ve Culture referanslarını yerel değişkenlere al
+            var resourceManager = AppResources.ResourceManager;
+            if (resourceManager == null)
+            {
+                return key;
+            }
+
+            var culture = AppResources.Culture;
+            var value = culture == null
+                ? resourceManager.GetString(key)
+                : resourceManager.GetString(key, culture);
+                
+            return value ?? key;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"GetString hatası: {key}, Hata: {ex.Message}");
+            return key;
+        }
     }
 }
 
-// Uygulama dili değiştiğinde gönderilen mesaj.
 public class LanguageChangedMessage
 {
     public string LanguageCode { get; }
-    
+
     public LanguageChangedMessage(string languageCode)
     {
         LanguageCode = languageCode;

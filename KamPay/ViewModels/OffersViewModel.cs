@@ -488,15 +488,24 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task CompletePaymentAsync(Transaction transaction)
         {
-            if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if(transaction == null) return;
 
-            if (transaction.Type != ProductType.Satis ||
-                transaction.Status != TransactionStatus.Accepted ||
-                transaction.PaymentStatus != PaymentStatus.Pending)
+            // Sadece onaylanmış ve ödemesi bekleyen satış işlemleri için sayfaya yönlendir
+            if (transaction.Type == ProductType.Satis &&
+                transaction.Status == TransactionStatus.Accepted &&
+                transaction.PaymentStatus == PaymentStatus.Pending)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem için ödeme yapılamaz.", "Tamam");
-                return;
+                var navigationParameter = new Dictionary<string, object>
+        {
+            { "Transaction", transaction }
+        };
+
+                // Kullanıcıyı yeni oluşturduğumuz ödeme sayfasına gönderiyoruz
+                await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem için şu an ödeme yapılamaz.", "Tamam");
             }
 
             var confirm = await Application.Current.MainPage.DisplayAlert("Ödeme Simülasyonu",

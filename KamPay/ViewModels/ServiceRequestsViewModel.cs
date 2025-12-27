@@ -268,12 +268,22 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task FinishServiceAsync(ServiceRequest request)
         {
+            if (request == null) return;
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                return;
+            }
+
             var confirm = await Shell.Current.DisplayAlert("Tamamla", "Hizmeti bitirdiğinizi bildirmek istiyor musunuz?", "Evet", "Hayır");
             if (!confirm) return;
 
             IsLoading = true;
-            var result = await _serviceSharingService.ProviderFinishServiceAsync(request.RequestId, _currentUser.UserId);
-            if (result.Success) await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+            var result = await _serviceService.ProviderFinishServiceAsync(request.RequestId, currentUser.UserId);
+            if (result.Success) 
+                await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
         }
@@ -282,12 +292,22 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ConfirmServiceAsync(ServiceRequest request)
         {
+            if (request == null) return;
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                return;
+            }
+
             var confirm = await Shell.Current.DisplayAlert("Onayla", "Hizmeti aldığınızı onaylıyor musunuz? (Krediler transfer edilecektir)", "Evet", "Hayır");
             if (!confirm) return;
 
             IsLoading = true;
-            var result = await _serviceSharingService.RequesterConfirmServiceAsync(request.RequestId, _currentUser.UserId);
-            if (result.Success) await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+            var result = await _serviceService.RequesterConfirmServiceAsync(request.RequestId, currentUser.UserId);
+            if (result.Success) 
+                await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
         }

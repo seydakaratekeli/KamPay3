@@ -17,7 +17,7 @@ namespace KamPay.Services
 
         Task<ServiceResult<bool>> CompleteRequestAsync(string requestId, string currentUserId); // mevcut (kredi)
 
-        // --- YEN�: �cretli (sim�lasyon) ak��� ---
+        // --- YENİ: Ücretli (simülasyon) akışı ---
         Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string requestId, string method /* "CardSim" | "BankTransferSim" | "WalletSim" */);
         Task<ServiceResult<bool>> ConfirmPaymentSimulationAsync(string requestId, string paymentId, string? otp = null);
         Task<ServiceResult<bool>> SimulatePaymentAndCompleteAsync(string requestId, string currentUserId, PaymentMethodType method = PaymentMethodType.CardSim, string? maskedCardLast4 = null);
@@ -48,5 +48,15 @@ namespace KamPay.Services
         /// Teklifi kabul etme (hem talep eden hem de sağlayıcı kullanabilir)
        
         Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(string requestId, string currentUserId);
+
+        /// <summary>
+        /// Hizmet sağlayıcı hizmeti bitirdiğini bildirir
+        /// </summary>
+        Task<ServiceResult<bool>> ProviderFinishServiceAsync(string requestId, string providerId);
+
+        /// <summary>
+        /// Talep eden kişi hizmeti aldığını onaylar (kredi transferi yapar)
+        /// </summary>
+        Task<ServiceResult<bool>> RequesterConfirmServiceAsync(string requestId, string requesterId);
     }
 }

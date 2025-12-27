@@ -53,8 +53,22 @@ namespace KamPay.ViewModels
             _authService = authService;
             _messagingService = messagingService;
 
-            // Initialize tab titles with current language
-            UpdateTabTitles();
+            // Kaynak yöneticisinin hazır olduğundan emin olun
+            try
+            {
+                UpdateTabTitles();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles hatası: {ex.Message}");
+                // Fallback değerler
+                HomeTitle = "Ana Sayfa";
+                ServicesTitle = "Hizmetler";
+                GoodDeedBoardTitle = "İyilik Panosu";
+                MessagesTitle = "Mesajlar";
+                ProfileTitle = "Profil";
+                FavoritesTitle = "Favoriler";
+            }
 
             // Genel bildirimleri dinle
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) =>
