@@ -5,30 +5,27 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:KamPay.Views"
     xmlns:vm="clr-namespace:KamPay.ViewModels"
-    xmlns:services="clr-namespace:KamPay.Services"
     x:DataType="vm:AppShellViewModel"
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="False"
     CurrentItem="{x:Reference LoginShellContent}">
 
-    <!-- Login Page - Giriş ekranı için ayrı route -->
     <ShellContent
         x:Name="LoginShellContent"
         Route="LoginPage"
         ContentTemplate="{DataTemplate local:LoginPage}"
         Shell.FlyoutBehavior="Disabled" />
 
-    <!-- Main App - Ana uygulama TabBar -->
     <TabBar Route="MainApp">
         <Tab Title="{Binding HomeTitle}" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{Binding ServicesTitle}" Icon="briefcase.png">
+        <Tab Title="{Binding ServicesTitle}" Icon="briefcase.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
 
-        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="good_board.png">
+        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="good_board.svg">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
@@ -36,12 +33,8 @@
             <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{Binding ProfileTitle}" Icon="person_icon.png">
+        <Tab Title="{Binding ProfileTitle}" Icon="person_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
-        </Tab>
-        
-        <Tab Title="{Binding FavoritesTitle}" Icon="heart_icon.png">
-            <ShellContent ContentTemplate="{DataTemplate local:FavoritesPage}" Route="FavoritesPage" />
         </Tab>
     </TabBar>
 </Shell>

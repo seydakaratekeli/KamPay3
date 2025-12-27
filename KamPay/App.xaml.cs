@@ -1,6 +1,7 @@
-﻿using Microsoft.Maui.Controls; // Application sınıfı için gerekli using
+﻿// KamPay/App.xaml.cs
 using KamPay.ViewModels;
 using KamPay.Services;
+using KamPay.Resources;
 
 namespace KamPay
 {
@@ -10,38 +11,18 @@ namespace KamPay
         {
             InitializeComponent();
 
+            // Varsayılan dili ayarla
             LocalizationResourceManager.Instance.SetCulture("tr");
 
+            // MainPage'i hemen ata, ancak yönlendirmeyi Shell'e bırak
             this.MainPage = appShell;
-
-            Dispatcher.Dispatch(async () =>
-            {
-                try
-                {
-                    await Task.Delay(200);
-
-                    // DÜZELTME: "auth_token" yerine "current_user_id" kontrol ediliyor
-                    var userId = Preferences.Get("current_user_id", string.Empty);
-
-                    // userId boş değilse giriş yapmış demektir
-                    if (!string.IsNullOrEmpty(userId))
-                    {
-                        await Shell.Current.GoToAsync("//MainApp");
-                    }
-                    // Boşsa hiçbir şey yapmaya gerek yok, LoginPage zaten varsayılan olarak açılacaktır.
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Navigation Error: {ex.Message}");
-                }
-            });
         }
 
         protected override void OnStart()
         {
             base.OnStart();
 
-            // Her sayfa yüklendiğinde otomatik geri butonu tanımla
+            // Navigasyon sonrası geri butonu davranışı (Mevcut kodun korunmuş hali)
             Shell.Current.Navigated += (s, e) =>
             {
                 if (Shell.Current.CurrentPage is ContentPage page)
@@ -59,8 +40,6 @@ namespace KamPay
         protected override void OnSleep()
         {
             base.OnSleep();
-
-            // Cache'leri temizle
             ChatViewModel.ClearOldCache(maxAgeMinutes: 30);
         }
     }
