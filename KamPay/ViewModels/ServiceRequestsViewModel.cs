@@ -264,7 +264,33 @@ namespace KamPay.ViewModels
                 }
             }
         }
+        // SAĞLAYICI İÇİN
+        [RelayCommand]
+        private async Task FinishServiceAsync(ServiceRequest request)
+        {
+            var confirm = await Shell.Current.DisplayAlert("Tamamla", "Hizmeti bitirdiğinizi bildirmek istiyor musunuz?", "Evet", "Hayır");
+            if (!confirm) return;
 
+            IsLoading = true;
+            var result = await _serviceSharingService.ProviderFinishServiceAsync(request.RequestId, _currentUser.UserId);
+            if (result.Success) await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+            IsLoading = false;
+            await LoadRequestsAsync();
+        }
+
+        // TALEP EDEN İÇİN
+        [RelayCommand]
+        private async Task ConfirmServiceAsync(ServiceRequest request)
+        {
+            var confirm = await Shell.Current.DisplayAlert("Onayla", "Hizmeti aldığınızı onaylıyor musunuz? (Krediler transfer edilecektir)", "Evet", "Hayır");
+            if (!confirm) return;
+
+            IsLoading = true;
+            var result = await _serviceSharingService.RequesterConfirmServiceAsync(request.RequestId, _currentUser.UserId);
+            if (result.Success) await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+            IsLoading = false;
+            await LoadRequestsAsync();
+        }
         //  : Refresh command
         [RelayCommand]
         private async Task RefreshRequestsAsync()

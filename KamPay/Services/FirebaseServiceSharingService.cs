@@ -136,7 +136,52 @@ namespace KamPay.Services
             }
         }
 
-        
+        // FirebaseServiceSharingService.cs içine eklenecek
+        public async Task<ServiceResult<bool>> CompleteServiceRequestAsync(string transactionId, string providerId)
+        {
+            try
+            {
+                // 1. Ağ ve Yetki Kontrolleri
+                if (!NetworkHelper.HasInternetConnection())
+                    return ServiceResult<bool>.FailureResult("İnternet bağlantısı yok.");
+
+                var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
+                var transaction = await transactionNode.OnceSingleAsync<Transaction>();
+
+                if (transaction == null || transaction.SellerId != providerId)
+                    return ServiceResult<bool>.FailureResult("İşlem bulunamadı veya yetkiniz yok.");
+
+                // 2. Durum Kontrolü: Ödeme gerekiyorsa ödenmiş olmalı
+                if (transaction.Price > 0 && transaction.PaymentStatus != PaymentStatus.Paid)
+                    return ServiceResult<bool>.FailureResult("Hizmetin ödemesi henüz tamamlanmamış.");
+
+                // 3. İşlemi Tamamla (Transaction durumunu Completed yapar, puanları verir ve bildirim gönderir)
+                // Not: FirebaseTransactionService içindeki CompleteTransactionInternalAsync mantığına benzer 
+                // bir çağrı yapmalı veya TransactionService üzerinden bu akışı tetiklemelisiniz.
+                transaction.Status = TransactionStatus.Completed;
+                transaction.UpdatedAt = DateTime.UtcNow;
+                await transactionNode.PutAsync(transaction);
+
+                // 4. Kullanıcıya Puan Ver (Hizmet Sağlayıcıya)
+                await _userProfileService.AddPointsForAction(providerId, UserAction.ProvideService);
+
+                // 5. Alan Kişiye Bildirim Gönder
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.BuyerId,
+                    Title = "Hizmet Tamamlandı",
+                    Message = $"{transaction.SellerName}, '{transaction.ProductTitle}' hizmetini tamamladığını bildirdi.",
+                    Type = NotificationType.ServiceCompleted,
+                    ActionUrl = nameof(Views.ServiceRequestsPage)
+                });
+
+                return ServiceResult<bool>.SuccessResult(true, "Hizmet başarıyla tamamlandı.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Hata oluştu.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
+            }
+        }
         public async Task<ServiceResult<bool>> CompleteRequestAsync(string requestId, string currentUserId)
         {
             try
@@ -951,7 +996,97 @@ namespace KamPay.Services
                 return ServiceResult<bool>.FailureResult("Fiyat kabulü sırasında hata oluştu.", ex.Message);
             }
         }
+        // 1. SAĞLAYICI: "Hizmeti Tamamladım" (İşi bitirdim mesajı)
+        public async Task<ServiceResult<bool>> ProviderFinishServiceAsync(string requestId, string providerId)
+        {
+            try
+            {
+                // Ağ Kontrolü
+                if (!NetworkHelper.HasInternetConnection())
+                    return ServiceResult<bool>.FailureResult("İnternet bağlantısı yok.");
 
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null || request.ProviderId != providerId)
+                    return ServiceResult<bool>.FailureResult("Yetkisiz işlem veya talep bulunamadı.");
+
+                // Durum kontrolü: Sadece onaylanmış hizmetler bitirilebilir
+                if (request.Status != ServiceRequestStatus.Accepted)
+                    return ServiceResult<bool>.FailureResult("Bu hizmetin durumu 'Tamamlandı' olarak işaretlenmeye uygun değil.");
+
+                // Ödeme kontrolü (Eğer ücretliyse)
+                if (request.Price > 0 && request.PaymentStatus != ServicePaymentStatus.Paid)
+                    return ServiceResult<bool>.FailureResult("Hizmet bedeli henüz ödenmemiş.");
+
+                // Durumu güncelle (Yeni bir status veya flag eklenebilir, şimdilik beklemede tutuyoruz)
+                request.UpdatedAt = DateTime.UtcNow;
+                // Not: Burada status'ü hemen 'Completed' yapmıyoruz, talep edenin onayını bekliyoruz.
+                await requestNode.PutAsync(request);
+
+                // Talep edene bildirim gönder
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = request.RequesterId,
+                    Title = "Hizmet Tamamlandı mı?",
+                    Message = $"{request.ProviderName}, '{request.ServiceTitle}' hizmetini tamamladığını bildirdi. Lütfen onaylayın.",
+                    Type = NotificationType.ServiceCompleted,
+                    ActionUrl = nameof(Views.ServiceRequestsPage)
+                });
+
+                return ServiceResult<bool>.SuccessResult(true, "Hizmet tamamlandı bildirimi gönderildi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Hata oluştu.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
+            }
+        }
+
+        // 2. TALEP EDEN: "Hizmeti Aldım / Onayla" (Krediyi/Ödemeyi serbest bırakır)
+        public async Task<ServiceResult<bool>> RequesterConfirmServiceAsync(string requestId, string requesterId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null || request.RequesterId != requesterId)
+                    return ServiceResult<bool>.FailureResult("Yetkisiz işlem.");
+
+                // 1. Kredi Transferi (Zaman bankası sistemi için)
+                if (request.TimeCreditValue > 0)
+                {
+                    var transfer = await _userProfileService.TransferTimeCreditsAsync(
+                        request.RequesterId, request.ProviderId, request.TimeCreditValue, $"Hizmet Onayı: {request.ServiceTitle}");
+
+                    if (!transfer.Success) return ServiceResult<bool>.FailureResult("Kredi transferi başarısız: " + transfer.Message);
+                }
+
+                // 2. Durumu Kapat
+                request.Status = ServiceRequestStatus.Completed;
+                request.UpdatedAt = DateTime.UtcNow;
+                await requestNode.PutAsync(request);
+
+                // 3. Puan Ver (Her iki tarafa da)
+                await _userProfileService.AddPointsForAction(request.ProviderId, UserAction.ProvideService);
+                await _userProfileService.AddPointsForAction(request.RequesterId, UserAction.ReceiveService);
+
+                // 4. Sağlayıcıya Bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = request.ProviderId,
+                    Title = "İşlem Başarıyla Kapatıldı",
+                    Message = $"{request.RequesterName} hizmeti onayladı. Puan ve krediler hesabınıza eklendi.",
+                    Type = NotificationType.ServiceCompleted
+                });
+
+                return ServiceResult<bool>.SuccessResult(true, "Hizmet başarıyla onaylandı ve tamamlandı.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Hata.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
+            }
+        }
         // Yardımcı metod: Kullanıcı bilgisini getir
         private async Task<User?> GetUserAsync(string userId)
         {
