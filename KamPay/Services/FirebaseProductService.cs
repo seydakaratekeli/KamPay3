@@ -10,29 +10,48 @@ public class FirebaseProductService : IProductService
 {
     private readonly FirebaseClient _firebaseClient;
     private readonly IStorageService _storageService;
+    private readonly IProductCacheService _cacheService;
 
-    public FirebaseProductService(IStorageService storageService)
+    public FirebaseProductService(IStorageService storageService, IProductCacheService cacheService)
     {
         _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
         _storageService = storageService;
+        _cacheService = cacheService;
     }
 
     public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null)
     {
         try
         {
-            var allProducts = await _firebaseClient
-                .Child(Constants.ProductsCollection)
-                .OnceAsync<Product>();
+            List<Product> products;
 
-            var productsQuery = allProducts.Select(p =>
+            // 1. Önce önbelleği kontrol et
+            if (_cacheService.IsCacheValid)
             {
-                var product = p.Object;
-                product.ProductId = p.Key;
-                return product;
-            }).AsQueryable(); // Sorgulanabilir hale getiriyoruz
+                products = await _cacheService.GetCachedProductsAsync();
+                // Veriler önbellekten başarıyla alındı
+            }
+            else
+            {
+                // 2. Önbellek geçersizse Firebase'den çek
+                var allProducts = await _firebaseClient
+                    .Child(Constants.ProductsCollection)
+                    .OnceAsync<Product>();
 
-           
+                products = allProducts.Select(p =>
+                {
+                    var product = p.Object;
+                    product.ProductId = p.Key;
+                    return product;
+                }).ToList();
+
+                // 3. Çekilen veriyi önbelleğe kaydet (5 dakikalık geçerlilik süresi)
+                await _cacheService.SetCacheAsync(products);
+            }
+
+            // Sorgulanabilir hale getiriyoruz (Filtreleme için)
+            var productsQuery = products.AsQueryable();
+
             // Filtreleme
             if (filter != null)
             {
@@ -41,18 +60,6 @@ public class FirebaseProductService : IProductService
                 {
                     productsQuery = productsQuery.Where(p => p.IsActive);
                 }
-
-                //  : Satılmış ürünleri göstermeyi AÇIK bırakıyoruz
-                // Anasayfada "TAKAS YAPILDI" etiketiyle görünsünler
-                // ❌ KALDIRILDI: ExcludeSold filtresi
-
-                // SATILMIŞ ÜRÜNLER FİLTRESİNİ DEVRE DIŞI BIRAKTIK
-                /*
-                if (filter.ExcludeSold)
-                {
-                    productsQuery = productsQuery.Where(p => !p.IsSold);
-                }
-                */
 
                 // Arama metni
                 if (!string.IsNullOrWhiteSpace(filter.SearchText))
@@ -119,15 +126,13 @@ public class FirebaseProductService : IProductService
                 productsQuery = productsQuery.OrderByDescending(p => p.CreatedAt);
             }
 
-            var products = productsQuery.ToList();
-            return ServiceResult<List<Product>>.SuccessResult(products);
+            return ServiceResult<List<Product>>.SuccessResult(productsQuery.ToList());
         }
         catch (Exception ex)
         {
             return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", ex.Message);
         }
     }
-
     #region Diğer Metotlar
     public async Task<ServiceResult<Product>> AddProductAsync(ProductRequest request, User currentUser)
     {
@@ -138,39 +143,38 @@ public class FirebaseProductService : IProductService
             {
                 return ServiceResult<Product>.FailureResult("Ürün bilgileri geçersiz", validation.Errors.ToArray());
             }
+
             // Kategori adını önceden alalım
             var categories = await GetCategoriesAsync();
             var categoryName = categories.Data?.FirstOrDefault(c => c.CategoryId == request.CategoryId)?.Name ?? "Bilinmeyen";
 
             var product = new Product
             {
-                ProductId = Guid.NewGuid().ToString(), // ID'yi burada oluşturmak daha güvenli
-                Title = request.Title.Trim(),
-                Description = request.Description.Trim(),
+                ProductId = Guid.NewGuid().ToString(),
+
+                // GÜVENLİK: XSS ve zararlı içeriklere karşı Girdi Temizleme (Sanitization)
+                Title = InputSanitizer.SanitizeText(request.Title.Trim()),
+                Description = InputSanitizer.SanitizeText(request.Description.Trim()),
                 CategoryId = request.CategoryId ?? string.Empty,
                 CategoryName = categoryName,
                 Condition = request.Condition,
                 Type = request.Type,
                 Price = request.Price,
-                Location = request.Location?.Trim() ?? string.Empty,
+                Location = InputSanitizer.SanitizeText(request.Location?.Trim() ?? string.Empty),
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 UserId = currentUser.UserId,
                 UserName = currentUser.FullName ?? string.Empty,
                 UserEmail = currentUser.Email,
                 UserPhotoUrl = currentUser.ProfileImageUrl ?? string.Empty,
-                ExchangePreference = request.ExchangePreference?.Trim() ?? string.Empty,
-              
-                IsForSurpriseBox = request.IsForSurpriseBox,
+                ExchangePreference = InputSanitizer.SanitizeText(request.ExchangePreference?.Trim() ?? string.Empty),
 
-                // Durum bilgilerini ayarlıyoruz
+                IsForSurpriseBox = request.IsForSurpriseBox,
                 IsActive = true,
                 IsSold = false,
                 IsReserved = false,
                 CreatedAt = DateTime.UtcNow
             };
-
-
 
             // --- RESİM YÜKLEME KODU ---
             if (request.ImagePaths != null && request.ImagePaths.Any())
@@ -197,8 +201,10 @@ public class FirebaseProductService : IProductService
                 .Child(product.ProductId)
                 .PutAsync(product);
 
+            // PERFORMANS: Yeni ürünü anında önbelleğe (cache) ekleyerek liste yenileme hızını artır
+            await _cacheService.UpdateProductInCacheAsync(product);
 
-            //  Kullanıcının toplam ürün sayısını artır
+            // Kullanıcının toplam ürün sayısını artır
             var userStatsRef = _firebaseClient
                 .Child("user_stats")
                 .Child(currentUser.UserId);
@@ -207,7 +213,6 @@ public class FirebaseProductService : IProductService
 
             stats.TotalProducts++;
             await userStatsRef.PutAsync(stats);
-
 
             return ServiceResult<Product>.SuccessResult(product, "Ürün başarıyla eklendi!");
         }
@@ -279,6 +284,7 @@ public class FirebaseProductService : IProductService
                 .Child(productId)
                 .PutAsync(existingProduct);
 
+            await _cacheService.UpdateProductInCacheAsync(existingProduct);
             return ServiceResult<Product>.SuccessResult(existingProduct, "Ürün güncellendi");
         }
         catch (Exception ex)
@@ -343,7 +349,8 @@ public class FirebaseProductService : IProductService
                 await userStatsRef.PutAsync(stats);
             }
 
-            return ServiceResult<bool>.SuccessResult(true, "Ürün ve ilişkili favoriler silindi");
+            await _cacheService.RemoveProductFromCacheAsync(productId);
+            return ServiceResult<bool>.SuccessResult(true, "Ürün silindi");
         }
         catch (Exception ex)
         {
@@ -437,9 +444,8 @@ public class FirebaseProductService : IProductService
         }
     }
 
-    
+
     // SATIŞ işlemlerinde kullanılır - Ürün anasayfadan kaldırılır
-   
 
     public async Task<ServiceResult<bool>> MarkAsSoldAsync(string productId)
     {
@@ -447,15 +453,24 @@ public class FirebaseProductService : IProductService
         {
             var productNode = _firebaseClient.Child(Constants.ProductsCollection).Child(productId);
             var product = await productNode.OnceSingleAsync<Product>();
+
             if (product != null)
             {
+                // Veri bütünlüğü ve cache için ID'yi atıyoruz
+                product.ProductId = productId;
+
                 // Güncellemeler:
                 product.IsActive = false;   // Ana listeden kaldırır
                 product.IsReserved = false; // Artık rezerve değil
                 product.IsSold = true;      // SATILDI olarak işaretler
                 product.SoldAt = DateTime.UtcNow; // Satılma zamanını kaydeder
 
+                // Firebase'e kaydet
                 await productNode.PutAsync(product);
+
+                // PERFORMANS: Değişikliği anında önbelleğe (cache) yansıt
+                await _cacheService.UpdateProductInCacheAsync(product);
+
                 return ServiceResult<bool>.SuccessResult(true, "Ürün satıldı olarak işaretlendi.");
             }
             return ServiceResult<bool>.FailureResult("Ürün bulunamadı.");
@@ -465,7 +480,6 @@ public class FirebaseProductService : IProductService
             return ServiceResult<bool>.FailureResult("Ürün işaretlenirken hata oluştu.", ex.Message);
         }
     }
-
 
     public async Task<ServiceResult<bool>> MarkAsReservedAsync(string productId, bool isReserved)
     {
@@ -481,12 +495,18 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<bool>.FailureResult("Ürün bulunamadı");
             }
 
+            // Cache güncellenirken doğru anahtarı kullanması için ID'yi set ediyoruz
+            product.ProductId = productId;
             product.IsReserved = isReserved;
 
+            // Firebase'e kaydet
             await _firebaseClient
                 .Child(Constants.ProductsCollection)
                 .Child(productId)
                 .PutAsync(product);
+
+            // PERFORMANS: Rezervasyon durumunu önbellekte güncelle
+            await _cacheService.UpdateProductInCacheAsync(product);
 
             var message = isReserved ? "Ürün rezerve edildi" : "Rezervasyon kaldırıldı";
             return ServiceResult<bool>.SuccessResult(true, message);

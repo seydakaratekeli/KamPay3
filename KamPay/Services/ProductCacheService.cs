@@ -8,6 +8,7 @@ namespace KamPay.Services
     public interface IProductCacheService
     {
         Task<List<Product>> GetCachedProductsAsync(bool forceRefresh = false);
+        Task SetCacheAsync(List<Product> products); // Yeni eklenen metod
         Task InvalidateCacheAsync();
         Task UpdateProductInCacheAsync(Product product);
         Task RemoveProductFromCacheAsync(string productId);
