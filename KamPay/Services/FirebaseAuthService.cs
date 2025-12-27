@@ -33,6 +33,10 @@ namespace KamPay.Services
         {
             try
             {
+                // Ağ işlemi başlamadan önce kontrol edilebilir
+                if (!NetworkHelper.HasInternetConnection())
+                    return ServiceResult<User>.FailureResult("Bağlantı Hatası", "İnternet erişimi bulunamadı.");
+
                 // 1. Validasyon
                 var validation = ValidateRegistration(request);
                 if (!validation.IsValid)
@@ -89,10 +93,12 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<User>.FailureResult(
-                    "Kayıt sırasında bir hata oluştu",
-                    ex.Message
-                );
+                // ESKİ: ex.Message (Teknik hata mesajı)
+                // YENİ: NetworkHelper üzerinden anlamlı mesaj
+                var userMessage = NetworkHelper.GetUserFriendlyErrorMessage(ex);
+                return ServiceResult<User>.FailureResult("Kayıt sırasında bir hata oluştu", userMessage);
+
+               
             }
         }
 

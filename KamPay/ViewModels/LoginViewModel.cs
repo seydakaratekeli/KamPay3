@@ -44,6 +44,14 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task LoginAsync()
         {
+
+            // AĞ KONTROLÜ: İşlem başlamadan önce interneti kontrol et
+            if (!NetworkHelper.HasInternetConnection())
+            {
+                ErrorMessage = "İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.";
+                return;
+            }
+
             try
             {
                 IsLoading = true;
@@ -85,7 +93,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"{Res["UnexpectedError"]}: {ex.Message}";
+                ErrorMessage = NetworkHelper.GetUserFriendlyErrorMessage(ex);
             }
             finally
             {

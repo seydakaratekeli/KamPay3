@@ -354,7 +354,11 @@ namespace KamPay.ViewModels
         private async Task SaveProductAsync()
         {
             if (IsLoading) return; //
-
+            if (!NetworkHelper.HasInternetConnection())
+            {
+                await Shell.Current.DisplayAlert(Res["Error"], "Ürün eklemek için internet bağlantısı gereklidir.", Res["Ok"]);
+                return;
+            }
             try
             {
                 IsLoading = true; //
