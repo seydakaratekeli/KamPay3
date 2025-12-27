@@ -10,8 +10,8 @@ namespace KamPay
         {
             InitializeComponent();
 
-            // Varsayılan dili ayarla
-            LocalizationResourceManager.Instance.SetCulture("tr");
+            // LocalizationResourceManager.Instance.SetCulture çağrısı kaldırıldı
+            // Uygulama başlatmayı engellemesini önlemek için devre dışı bırakıldı
 
             // MainPage'i ata
             MainPage = appShell;
