@@ -19,34 +19,38 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 
     private LocalizationResourceManager()
     {
-        // Başlatma sırasında hiçbir işlem yapma - uygulama başlatmayı engelleme
-        System.Diagnostics.Debug.WriteLine("LocalizationResourceManager başlatıldı - lazy initialization kullanılacak");
+        // Başlatma tamamen devre dışı - uygulama başlatmayı engellemesini önle
+        // AppResources erişimi kaldırıldı
+        System.Diagnostics.Debug.WriteLine("LocalizationResourceManager başlatıldı - tüm metodlar devre dışı (fallback mode)");
     }
 
     public string this[string key]
     {
         get
         {
-            // Her zaman key değerini döndür - hata vermeden çalış
+            // LocalizationResourceManager devre dışı - key değerini döndür
+            // Bu sayede uygulama çalışmaya devam eder (AppResources erişimi yok)
             return key ?? string.Empty;
         }
     }
 
     public void SetCulture(string cultureCode, bool savePreference = true)
     {
-        // Hiçbir şey yapma - uygulamanın çalışmasını engelleme
+        // SetCulture devre dışı - AppResources ve event trigger'ları kaldırıldı
+        // Uygulama başlatmayı engellemesini önlemek için hiçbir işlem yapılmıyor
         System.Diagnostics.Debug.WriteLine($"SetCulture çağrıldı ama devre dışı: {cultureCode}");
     }
 
     public string GetCurrentCulture()
     {
-        // Her zaman varsayılan dili döndür
+        // Varsayılan dil döndürülüyor - gerçek culture kontrolü devre dışı
         return "tr";
     }
 
     public string GetString(string key)
     {
-        // Her zaman key değerini döndür - hata vermeden çalış
+        // LocalizationResourceManager devre dışı - key değerini döndür
+        // Bu sayede uygulama çalışmaya devam eder (AppResources erişimi yok)
         return key ?? string.Empty;
     }
 }
