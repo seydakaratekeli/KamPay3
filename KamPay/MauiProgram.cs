@@ -142,7 +142,7 @@ namespace KamPay
             );
 
             // ViewModels
-            // builder.Services.AddSingleton<AppShellViewModel>(); // Singleton olarak ekliyoruz
+            builder.Services.AddSingleton<AppShellViewModel>(); // Singleton olarak ekliyoruz
             builder.Services.AddTransient<RegisterViewModel>();
             builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<MainViewModel>();
@@ -163,7 +163,7 @@ namespace KamPay
             builder.Services.AddTransient<ServiceRequestsViewModel>(); 
             builder.Services.AddTransient<SurpriseBoxViewModel>();
             builder.Services.AddTransient<ImageViewerViewModel>();
-
+            builder.Services.AddTransient<PaymentViewModel>(); 
             // Views
             builder.Services.AddTransient<SurpriseBoxPage>();
             builder.Services.AddTransient<RegisterPage>();
@@ -178,7 +178,7 @@ namespace KamPay
             builder.Services.AddTransient<FavoritesPage>();
             builder.Services.AddTransient<ProfilePage>();
             builder.Services.AddTransient<NotificationsPage>();
-           
+            builder.Services.AddTransient<PaymentPage>();
             builder.Services.AddSingleton<OffersViewModel>();
             builder.Services.AddSingleton<OffersPage>();
             builder.Services.AddTransient<TradeOfferView>();

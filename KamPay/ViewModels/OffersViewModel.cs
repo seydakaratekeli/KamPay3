@@ -279,7 +279,30 @@ namespace KamPay.ViewModels
                 Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
             }
         }
+        // KamPay/ViewModels/OffersViewModel.cs içine ekleyin
 
+        [RelayCommand]
+        private async Task GoToPaymentAsync(Transaction transaction)
+        {
+            if (transaction == null) return;
+
+            // Sadece onaylanmış ve ödemesi bekleyen satış/hizmet işlemleri için
+            if (transaction.Status == TransactionStatus.Accepted &&
+                transaction.PaymentStatus == PaymentStatus.Pending)
+            {
+                var navigationParameter = new Dictionary<string, object>
+        {
+            { "Transaction", transaction }
+        };
+
+                // PaymentPage'e yönlendir [daha önce AppShell'e kaydetmiştik]
+                await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Bilgi", "Bu işlem için şu an ödeme yapılamaz.", "Tamam");
+            }
+        }
         //  Gerçek teklif geldi mi kontrol et
         private bool ContainsRealOffer(IList<FirebaseEvent<Transaction>> events, string userId)
         {

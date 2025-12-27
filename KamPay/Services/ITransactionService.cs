@@ -29,11 +29,22 @@ namespace KamPay.Services
 
         Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId);
 
+        /// <summary>
+        /// Ödeme simülasyonu başlatır (Hizmet veya Ürün için)
+        /// </summary>
+        Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string transactionId, string method);
+
+        /// <summary>
+        /// Ödeme simülasyonunu doğrular ve işlemi günceller
+        /// </summary>
+        Task<ServiceResult<bool>> ConfirmPaymentSimulationAsync(string transactionId, string paymentId, string? otp = null);
+
+
         //  SATIŞ Pazarlık Metodları
 
-       
+
         /// Satış için fiyat teklifi (Alıcı)
-       
+
         Task<ServiceResult<bool>> ProposePriceForSaleAsync(
             string transactionId,
             decimal proposedPrice,

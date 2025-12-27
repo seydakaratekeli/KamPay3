@@ -126,7 +126,21 @@ namespace KamPay.Services
                 return ServiceResult<Transaction>.FailureResult("Hata", ex.Message);
             }
         }
+        // Satış işlemi için simülasyonlu ödeme başlatma
+        public async Task<ServiceResult<PaymentDto>> StartSalePaymentAsync(string transactionId, string method)
+        {
+            // 1. Ağ Kontrolü (DevOps Standartı)
+            if (!NetworkHelper.HasInternetConnection())
+                return ServiceResult<PaymentDto>.FailureResult("İnternet bağlantısı yok.", "Lütfen bağlantınızı kontrol edin.");
 
+            // 2. Hız Sınırı Kontrolü (Spam Engelleme)
+            var limitCheck = RateLimiters.ApiCall.CheckLimit(transactionId);
+            if (!limitCheck.IsAllowed)
+                return ServiceResult<PaymentDto>.FailureResult(limitCheck.Message);
+
+            // Mevcut CreatePaymentSimulationAsync metodunu çağırarak ödemeyi başlatır
+            return await CreatePaymentSimulationAsync(transactionId, method);
+        }
         // --- BU METOTLAR HİZMET MODÜLÜ İÇİN KULLANILIR ---
         public async Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string transactionId, string method)
         {
@@ -199,50 +213,46 @@ namespace KamPay.Services
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
                 if (transaction == null) return ServiceResult<bool>.FailureResult("İşlem bulunamadı.");
 
-                if (transaction.PaymentSimulationId != paymentId)
-                    return ServiceResult<bool>.FailureResult("Geçersiz ödeme kimliği.");
-
+                // --- GÜVENLİK: OTP Kontrolü ve Sanitization ---
                 if (transaction.PaymentMethod == PaymentMethodType.CardSim)
                 {
+                    // Kullanıcıdan gelen OTP'yi temizle
+                    var sanitizedOtp = InputSanitizer.SanitizeText(otp ?? "");
+
                     var otpNode = _firebaseClient.Child(Constants.TempOtpsCollection).Child(paymentId);
                     var saved = await otpNode.OnceSingleAsync<TempOtpModel>();
+
                     if (saved == null) return ServiceResult<bool>.FailureResult("OTP bulunamadı.");
-                    if (DateTime.UtcNow > saved.ExpiresAt)
-                        return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
-                    if (string.IsNullOrWhiteSpace(otp) || saved.Otp != otp)
+                    if (DateTime.UtcNow > saved.ExpiresAt) return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
+                    if (string.IsNullOrWhiteSpace(sanitizedOtp) || saved.Otp != sanitizedOtp)
                         return ServiceResult<bool>.FailureResult("OTP geçersiz.");
                 }
 
-                // Başarılı ödeme
+                // --- BAŞARILI ÖDEME GÜNCELLEMESİ ---
                 transaction.PaymentStatus = PaymentStatus.Paid;
                 transaction.PaymentCompletedAt = DateTime.UtcNow;
 
-                // DİKKAT: Bu metot sadece ödemeyi onaylar.
-                // Hizmet modülü, kendi akışında 'CompleteRequest' adımında
-                // transaction.Status'ü 'Completed' yapmalıdır.
-                // Eğer bu metot SATIŞ için kullanılsaydı, 'CompleteTransactionInternalAsync'i çağırmalıydı.
-                // Ama HİZMET için kullanıldığından, sadece ödemeyi 'Paid' yapıyor.
-
-                await transactionNode.PutAsync(transaction);
-
-                // Bildirim gönder (Örn: Hizmet Sağlayıcıya)
-                await _notificationService.CreateNotificationAsync(new Notification
+                // KRİTİK ENTEGRASYON: 
+                // Eğer bu bir SATIŞ işlemiyse, işlemi burada nihayete erdir (Ürünü kapat, Puan ver, Bildirim gönder)
+                if (transaction.Type == ProductType.Satis)
                 {
-                    UserId = transaction.SellerId,
-                    Title = "Ödeme Alındı!",
-                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' hizmeti/ürünü için ödemesini tamamladı.",
-                    Type = NotificationType.ProductSold, // Veya PaymentReceived
-                    ActionUrl = nameof(Views.ServiceRequestsPage) // Veya OffersPage
-                });
+                    var completeResult = await CompleteTransactionInternalAsync(transaction);
+                    if (!completeResult.Success)
+                        return ServiceResult<bool>.FailureResult("Ödeme alındı ancak işlem tamamlanırken hata oluştu: " + completeResult.Message);
+                }
+                else
+                {
+                    await transactionNode.PutAsync(transaction);
+                }
 
-                return ServiceResult<bool>.SuccessResult(true, "Ödeme onaylandı.");
+                return ServiceResult<bool>.SuccessResult(true, "Ödeme onaylandı ve işlem tamamlandı.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Ödeme onayında hata.", ex.Message);
+                // Teknik hataları kullanıcı dostu mesajlara dönüştür
+                return ServiceResult<bool>.FailureResult("Ödeme onayında hata.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
             }
         }
-
         // --- BU METOT HİZMET MODÜLÜ İÇİNDİR ---
         public async Task<ServiceResult<bool>> SimulatePaymentAndCompleteAsync(string transactionId)
         {
@@ -268,7 +278,6 @@ namespace KamPay.Services
         }
 
 
-        //  Sadece SATIŞ Modülü İçin Hızlı Ödeme Tamamlama
         public async Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId)
         {
             try
@@ -276,45 +285,22 @@ namespace KamPay.Services
                 var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
 
-                // Kontroller
-                if (transaction == null) return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
-                if (transaction.BuyerId != buyerId) return ServiceResult<Transaction>.FailureResult("Bu işlemi yapmaya yetkiniz yok.");
-                if (transaction.Status != TransactionStatus.Accepted) return ServiceResult<Transaction>.FailureResult("Bu işlem onaylanmamış veya zaten tamamlanmış.");
-                if (transaction.PaymentStatus != PaymentStatus.Pending) return ServiceResult<Transaction>.FailureResult("Bu işlemin ödemesi zaten yapılmış veya başarısız olmuş.");
+                if (transaction == null || transaction.BuyerId != buyerId)
+                    return ServiceResult<Transaction>.FailureResult("Yetkisiz işlem.");
 
-                // *** EN ÖNEMLİ KONTROL: Hizmet ile karışmaması için ***
-                if (transaction.Type != ProductType.Satis) return ServiceResult<Transaction>.FailureResult("Bu işlem bir satış işlemi değil.");
-
-
-                // Simülasyon: Ödeme başarılı kabul ediliyor. (Hızlı simülasyon)
+                // Ödeme yöntemini doğrula ve 'Paid' yap
                 transaction.PaymentStatus = PaymentStatus.Paid;
-                transaction.PaymentMethod = PaymentMethodType.CardSim; // Hangi yöntemle olduğunu belirtelim
+                transaction.PaymentMethod = transaction.PaymentMethod == PaymentMethodType.None ? PaymentMethodType.BankTransferSim : transaction.PaymentMethod;
                 transaction.PaymentCompletedAt = DateTime.UtcNow;
-                transaction.UpdatedAt = DateTime.UtcNow;
-                await transactionNode.PutAsync(transaction);
 
-                // İşlemi tamamla (Internal metodu çağır: Ürünü satıldı yap, bildirim gönder, puan ekle)
+                // Dahili tamamlama mantığını çalıştır (Ürünü satıldı yapar, bildirimleri gönderir)
                 return await CompleteTransactionInternalAsync(transaction);
             }
             catch (Exception ex)
             {
-                // Hata durumunda ödemeyi 'Failed' olarak işaretle
-                try
-                {
-                    var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
-                    var transaction = await transactionNode.OnceSingleAsync<Transaction>();
-                    if (transaction != null && transaction.PaymentStatus == PaymentStatus.Pending)
-                    {
-                        transaction.PaymentStatus = PaymentStatus.Failed;
-                        await transactionNode.PutAsync(transaction);
-                    }
-                }
-                catch { /* Loglama */ }
-
-                return ServiceResult<Transaction>.FailureResult("Ödeme tamamlanırken hata oluştu.", ex.Message);
+                return ServiceResult<Transaction>.FailureResult("İşlem tamamlanamadı.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
             }
         }
-
         // Ortak Tamamlama İşlemleri (Satış, Bağış, Takas için) 
         private async Task<ServiceResult<Transaction>> CompleteTransactionInternalAsync(Transaction transaction)
         {
