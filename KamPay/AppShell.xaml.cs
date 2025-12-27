@@ -7,6 +7,8 @@ namespace KamPay
 {
     public partial class AppShell : Shell
     {
+        private bool _isNavigating = false;
+
         public AppShell(AppShellViewModel vm)
         {
             InitializeComponent();
@@ -41,13 +43,41 @@ namespace KamPay
         {
             base.OnAppearing();
 
-            // Kullanıcı ID kontrolü
-            var userId = Preferences.Get("current_user_id", string.Empty);
+            // Çoklu yönlendirmeyi önlemek için flag kontrol et
+            if (_isNavigating)
+                return;
 
-            if (!string.IsNullOrEmpty(userId))
+            try
             {
-                // Shell nesnesi artık hazır olduğu için yarış riski olmadan yönlendir
-                await GoToAsync("//MainApp");
+                _isNavigating = true;
+
+                // Kullanıcı ID kontrolü
+                var userId = Preferences.Get("current_user_id", string.Empty);
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // Shell nesnesi artık hazır olduğu için yönlendir
+                    // Ama hata oluşursa kapat değil, login'de kal
+                    try
+                    {
+                        await GoToAsync("//MainApp");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Navigation Error] Could not navigate to MainApp: {ex.Message}");
+                        // Hata durumunda login sayfasında kal
+                        Preferences.Remove("current_user_id");
+                        Preferences.Remove("current_user_email");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AppShell Error] {ex.Message}");
+            }
+            finally
+            {
+                _isNavigating = false;
             }
         }
     }

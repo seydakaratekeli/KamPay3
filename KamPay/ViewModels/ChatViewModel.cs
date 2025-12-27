@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using KamPay.Models;
 using KamPay.Services;
+using KamPay.Models;
 using KamPay.Views;
 using Firebase.Database;
 using Firebase.Database.Query;
@@ -27,7 +27,7 @@ namespace KamPay.ViewModels
         private readonly IStorageService _storageService;
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private User? _currentUser;
-
+        private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
         //  CACHE: Her konuşma için ayrı state
         private static readonly Dictionary<string, ConversationState> _conversationCache = new();
 
@@ -229,6 +229,7 @@ namespace KamPay.ViewModels
                             if (!string.IsNullOrEmpty(otherUserId))
                             {
                                 var otherUser = await _firebaseClient
+                         
                                     .Child(Constants.UsersCollection)
                                     .Child(otherUserId)
                                     .OnceSingleAsync<User>();
@@ -861,7 +862,13 @@ namespace KamPay.ViewModels
             {
                 return;
             }
-
+            // Hız Sınırı Kontrolü
+            var limitCheck = RateLimiters.ImageUpload.CheckLimit(_currentUser.UserId);
+            if (!limitCheck.IsAllowed)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(Res["Error"], limitCheck.Message, Res["Ok"]);
+                return;
+            }
             try
             {
                 IsUploadingImage = true;

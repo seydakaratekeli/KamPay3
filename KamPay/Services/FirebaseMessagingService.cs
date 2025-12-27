@@ -9,6 +9,7 @@ using KamPay.Models;
 using KamPay.Views;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.ViewModels;
+using KamPay.Helpers;
 
 namespace KamPay.Services
 {
@@ -35,6 +36,12 @@ namespace KamPay.Services
         {
             try
             {
+                // Rate Limiting Kontrolü: Dakikada en fazla 30 mesaj
+                var limitCheck = RateLimiters.Message.CheckLimit(sender.UserId);
+                if (!limitCheck.IsAllowed)
+                {
+                    return ServiceResult<Message>.FailureResult(limitCheck.Message);
+                }
                 if (request == null || sender == null || string.IsNullOrEmpty(request.ReceiverId))
                 {
                     return ServiceResult<Message>.FailureResult("Geçersiz istek: Gönderen veya alıcı boş olamaz.");

@@ -10,7 +10,6 @@ public partial class LoginPage : ContentPage
         BindingContext = vm;
     }
 
-    
     protected override void OnAppearing()
     {
         base.OnAppearing();
@@ -20,5 +19,11 @@ public partial class LoginPage : ContentPage
         {
             vm.ClearCredentials();
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        // Sayfa kapanýrken temizlik yap
     }
 }

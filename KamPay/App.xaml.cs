@@ -1,5 +1,4 @@
-﻿// KamPay/App.xaml.cs
-using KamPay.ViewModels;
+﻿using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
 
@@ -14,25 +13,42 @@ namespace KamPay
             // Varsayılan dili ayarla
             LocalizationResourceManager.Instance.SetCulture("tr");
 
-            // MainPage'i hemen ata, ancak yönlendirmeyi Shell'e bırak
-            this.MainPage = appShell;
+            // MainPage'i ata
+            MainPage = appShell;
         }
 
         protected override void OnStart()
         {
             base.OnStart();
 
-            // Navigasyon sonrası geri butonu davranışı (Mevcut kodun korunmuş hali)
+            // Navigasyon sonrası geri butonu davranışı
             Shell.Current.Navigated += (s, e) =>
             {
-                if (Shell.Current.CurrentPage is ContentPage page)
+                try
                 {
-                    Shell.SetBackButtonBehavior(page, new BackButtonBehavior
+                    if (Shell.Current.CurrentPage is ContentPage page)
                     {
-                        IsVisible = true,
-                        IsEnabled = true,
-                        Command = new Command(async () => await Shell.Current.GoToAsync(".."))
-                    });
+                        Shell.SetBackButtonBehavior(page, new BackButtonBehavior
+                        {
+                            IsVisible = true,
+                            IsEnabled = true,
+                            Command = new Command(async () =>
+                            {
+                                try
+                                {
+                                    await Shell.Current.GoToAsync("..");
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[Back Navigation Error] {ex.Message}");
+                                }
+                            })
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Navigation Handler Error] {ex.Message}");
                 }
             };
         }

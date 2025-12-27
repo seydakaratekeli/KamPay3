@@ -248,6 +248,12 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
         if (changePhoto)
         {
+            var limitCheck = RateLimiters.ImageUpload.CheckLimit(CurrentUser.UserId);
+            if (!limitCheck.IsAllowed)
+            {
+                await Application.Current.MainPage.DisplayAlert(Res["Error"], limitCheck.Message, Res["Ok"]);
+                return;
+            }
             try
             {
                 var file = await MediaPicker.PickPhotoAsync(new MediaPickerOptions

@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.ApplicationModel;
+using KamPay.Helpers;
 
 namespace KamPay.ViewModels
 {
@@ -352,37 +353,51 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task SaveProductAsync()
         {
-            if (IsLoading) return;
-
-            if (string.IsNullOrWhiteSpace(Title) || SelectedCategory == null || !ImagePaths.Any())
-            {
-                ErrorMessage = Res["MissingFieldsError"];
-                await Shell.Current.DisplayAlert(Res["MissingInfo"], ErrorMessage, Res["Ok"]);
-                return;
-            }
-
-            if (Latitude == null || Longitude == null)
-            {
-                await Shell.Current.DisplayAlert(Res["MissingInfo"], Res["MissingLocationError"], Res["Ok"]);
-                return;
-            }
+            if (IsLoading) return; //
 
             try
             {
-                IsLoading = true;
-                ErrorMessage = string.Empty;
-                UploadProgress = Res["SavingProduct"];
-                UploadPercentage = 0;
+                IsLoading = true; //
+                ErrorMessage = string.Empty; //
 
-                var currentUser = await _authService.GetCurrentUserAsync();
+                // 1. Önce mevcut kullanıcıyı alıyoruz
+                var currentUser = await _authService.GetCurrentUserAsync(); //
                 if (currentUser == null)
                 {
-                    await Shell.Current.DisplayAlert(Res["Error"], Res["SessionNotFoundError"], Res["Ok"]);
+                    await Shell.Current.DisplayAlert(Res["Error"], Res["SessionNotFoundError"], Res["Ok"]); //
                     return;
                 }
 
-                var productId = Guid.NewGuid().ToString();
-                var product = new Product
+                // 2. Hız Sınırı (Rate Limit) kontrolü yapıyoruz
+                // RateLimiters.ProductCreation: Saatte 10 ürün ekleme sınırıdır.
+                var limitCheck = RateLimiters.ProductCreation.CheckLimit(currentUser.UserId); //
+                if (!limitCheck.IsAllowed)
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], limitCheck.Message, Res["Ok"]); //
+                    return;
+                }
+
+                // 3. Temel Alan Validasyonları
+                if (string.IsNullOrWhiteSpace(Title) || SelectedCategory == null || !ImagePaths.Any())
+                {
+                    ErrorMessage = Res["MissingFieldsError"]; //
+                    await Shell.Current.DisplayAlert(Res["MissingInfo"], ErrorMessage, Res["Ok"]); //
+                    return;
+                }
+
+                // 4. Konum Validasyonu
+                if (Latitude == null || Longitude == null)
+                {
+                    await Shell.Current.DisplayAlert(Res["MissingInfo"], Res["MissingLocationError"], Res["Ok"]); //
+                    return;
+                }
+
+                // 5. Kayıt ve Yükleme İşlemleri Başlıyor
+                UploadProgress = Res["SavingProduct"]; //
+                UploadPercentage = 0; //
+
+                var productId = Guid.NewGuid().ToString(); //
+                var product = new Product //
                 {
                     ProductId = productId,
                     Title = this.Title.Trim(),
@@ -408,73 +423,87 @@ namespace KamPay.ViewModels
                     ImageUrls = new List<string>()
                 };
 
+                // --- RESİM YÜKLEME HIZ SINIRI KONTROLÜ ---
+                // Kullanıcının kalan yükleme hakkını alıyoruz
+                int remainingQuota = RateLimiters.ImageUpload.GetRemainingRequests(currentUser.UserId);
+
+                // Eğer yüklenmek istenen resim sayısı kalan kotadan fazlaysa işlemi durdur
+                if (remainingQuota < ImagePaths.Count)
+                {
+                    var resetTime = RateLimiters.ImageUpload.GetResetTime(currentUser.UserId);
+                    var deniedResult = RateLimitResult.Denied(resetTime); // Bekleme süresini içeren mesajı üretir
+
+                    await Shell.Current.DisplayAlert("Sınır Aşıldı",
+                        $"Resim yükleme limitine yaklaştınız. {deniedResult.Message}", "Tamam");
+                    return;
+                }
+
+                // --- YÜKLEME İŞLEMİNİ KAYDET ---
+                // Gerçek yükleme döngüsü içinde her başarılı işlem için sayacı tetikliyoruz
                 UploadPercentage = 10;
                 UploadProgress = Res["UploadingImages"];
 
                 var imageUrls = await Task.Run(async () =>
                 {
                     var urls = new List<string>();
-                    var uploadTasks = new List<Task<ServiceResult<string>>>();
-
                     for (int i = 0; i < Math.Min(ImagePaths.Count, 5); i++)
                     {
-                        var task = _storageService.UploadProductImageAsync(ImagePaths[i], productId, i);
-                        uploadTasks.Add(task);
-                    }
-
-                    var results = await Task.WhenAll(uploadTasks);
-                    foreach (var result in results)
-                    {
-                        if (result.Success && result.Data != null) urls.Add(result.Data);
+                        // IsRequestAllowed çağrısı sayacı 1 artırır
+                        if (RateLimiters.ImageUpload.IsRequestAllowed(currentUser.UserId))
+                        {
+                            var result = await _storageService.UploadProductImageAsync(ImagePaths[i], productId, i);
+                            if (result.Success && result.Data != null) urls.Add(result.Data);
+                        }
                     }
                     return urls;
                 });
 
-                UploadPercentage = 60;
+                UploadPercentage = 60; //
 
                 if (!imageUrls.Any())
                 {
-                    throw new Exception(Res["ImagesUploadError"]);
+                    throw new Exception(Res["ImagesUploadError"]); //
                 }
 
-                product.ImageUrls = imageUrls;
-                product.ThumbnailUrl = imageUrls.First();
+                product.ImageUrls = imageUrls; //
+                product.ThumbnailUrl = imageUrls.First(); //
 
-                UploadProgress = Res["SavingProduct"];
-                UploadPercentage = 80;
+                UploadProgress = Res["SavingProduct"]; //
+                UploadPercentage = 80; //
 
-                var saveResult = await _productService.SaveProductDirectlyAsync(product);
+                var saveResult = await _productService.SaveProductDirectlyAsync(product); //
 
                 if (!saveResult.Success)
                 {
-                    throw new Exception(saveResult.Message);
+                    throw new Exception(saveResult.Message); //
                 }
 
-                UploadPercentage = 90;
+                UploadPercentage = 90; //
 
+                // Puan ekleme
                 _ = Task.Run(async () =>
                 {
                     await _userProfileService.AddPointsForAction(currentUser.UserId, UserAction.AddProduct);
                 });
 
-                UploadPercentage = 100;
-                UploadProgress = Res["Completed"];
+                UploadPercentage = 100; //
+                UploadProgress = Res["Completed"]; //
 
-                await Shell.Current.DisplayAlert(Res["Success"], Res["ProductAddedSuccess"], Res["Ok"]);
+                await Shell.Current.DisplayAlert(Res["Success"], Res["ProductAddedSuccess"], Res["Ok"]); //
 
-                ClearForm();
-                await Shell.Current.GoToAsync("..");
+                ClearForm(); //
+                await Shell.Current.GoToAsync(".."); //
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"{Res["Error"]}: {ex.Message}";
-                await Shell.Current.DisplayAlert(Res["Error"], ErrorMessage, Res["Ok"]);
+                ErrorMessage = $"{Res["Error"]}: {ex.Message}"; //
+                await Shell.Current.DisplayAlert(Res["Error"], ErrorMessage, Res["Ok"]); //
             }
             finally
             {
-                IsLoading = false;
-                UploadProgress = string.Empty;
-                UploadPercentage = 0;
+                IsLoading = false; //
+                UploadProgress = string.Empty; //
+                UploadPercentage = 0; //
             }
         }
 
@@ -517,3 +546,4 @@ namespace KamPay.ViewModels
         }
     }
 }
+

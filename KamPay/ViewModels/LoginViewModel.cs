@@ -7,6 +7,7 @@ using KamPay.Models;
 using KamPay.Services;
 using KamPay.Views;
 using Microsoft.Maui.Controls;
+using KamPay.Helpers;
 
 namespace KamPay.ViewModels
 {
@@ -48,6 +49,14 @@ namespace KamPay.ViewModels
                 IsLoading = true;
                 ErrorMessage = string.Empty;
 
+                // Rate Limiting Kontrolü: 15 dakikada en fazla 5 deneme
+                var limitCheck = RateLimiters.Login.CheckLimit(Email);
+                if (!limitCheck.IsAllowed)
+                {
+                    ErrorMessage = limitCheck.Message; // "Çok fazla deneme yaptınız... X dakika bekleyin"
+                    return;
+                }
+
                 var request = new LoginRequest
                 {
                     Email = Email,
@@ -59,9 +68,10 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
+                    // Giriş başarılıysa deneme sayacını sıfırla
+                    RateLimiters.Login.Reset(Email);
 
-                    // Ana sayfaya yönlendir ()
+                    await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
                     await Shell.Current.GoToAsync("//MainApp");
                     ClearCredentials();
                 }

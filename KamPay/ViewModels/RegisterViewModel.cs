@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KamPay.Models;
 using KamPay.Services;
+using KamPay.Helpers;
 
 namespace KamPay.ViewModels
 {
@@ -154,6 +155,14 @@ namespace KamPay.ViewModels
                 if (string.IsNullOrWhiteSpace(Email))
                 {
                     ErrorMessage = "E-posta alaný boþ olamaz.";
+                    return;
+                }
+
+                // Rate Limiting Kontrolü: Saatte en fazla 3 deneme
+                var limitCheck = RateLimiters.PasswordReset.CheckLimit(Email);
+                if (!limitCheck.IsAllowed)
+                {
+                    ErrorMessage = limitCheck.Message;
                     return;
                 }
 

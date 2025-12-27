@@ -415,6 +415,19 @@ namespace KamPay.ViewModels
 
             try
             {
+                // Mevcut kullanıcıyı al (Tanımlayıcı olarak UserId kullanacağız)
+                var currentUser = await _authService.GetCurrentUserAsync();
+                if (currentUser != null)
+                {
+                    // Arama Hız Sınırı Kontrolü (60 arama / dakika)
+                    var limitCheck = RateLimiters.Search.CheckLimit(currentUser.UserId);
+                    if (!limitCheck.IsAllowed)
+                    {
+                        await Shell.Current.DisplayAlert("Hata", limitCheck.Message, "Tamam");
+                        return;
+                    }
+                }
+
                 IsLoading = true;
 
                 if (_cacheManager.TryGet(CACHE_KEY, out var cachedProducts) && cachedProducts != null)
