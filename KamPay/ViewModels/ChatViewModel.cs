@@ -636,8 +636,11 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            var messageContent = MessageText.Trim();
-            MessageText = string.Empty;
+            // GÜVENLİK: Mesaj içeriğini XSS saldırılarına karşı temizle
+            var messageContent = InputSanitizer.SanitizeText(MessageText.Trim());
+
+            // Eğer temizleme sonrası mesaj tamamen boşaldıysa işlemi iptal et
+            if (string.IsNullOrEmpty(messageContent)) return;
 
             var tempMessage = new Message
             {

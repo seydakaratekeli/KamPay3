@@ -61,9 +61,10 @@ namespace KamPay.ViewModels
 
                 var request = new RegisterRequest
                 {
-                    FirstName = FirstName,
-                    LastName = LastName,
-                    Email = Email,
+                    // Ýsimleri temizle ve güvenli formata getir
+                    FirstName = InputSanitizer.SanitizeUsername(FirstName),
+                    LastName = InputSanitizer.SanitizeUsername(LastName),
+                    Email = Email.Trim().ToLower(),
                     Password = Password,
                     PasswordConfirm = PasswordConfirm
                 };

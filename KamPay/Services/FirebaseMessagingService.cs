@@ -36,23 +36,36 @@ namespace KamPay.Services
         {
             try
             {
-                // Rate Limiting Kontrolü: Dakikada en fazla 30 mesaj
+                // 1. Rate Limiting Kontrolü: Dakikada en fazla 30 mesaj
                 var limitCheck = RateLimiters.Message.CheckLimit(sender.UserId);
                 if (!limitCheck.IsAllowed)
                 {
                     return ServiceResult<Message>.FailureResult(limitCheck.Message);
                 }
+
                 if (request == null || sender == null || string.IsNullOrEmpty(request.ReceiverId))
                 {
                     return ServiceResult<Message>.FailureResult("Geçersiz istek: Gönderen veya alıcı boş olamaz.");
                 }
 
-                // Text mesajlar için content zorunlu, Image mesajlar için ImageUrl zorunlu
-                if (request.Type == MessageType.Text && string.IsNullOrEmpty(request.Content))
+                // 2. Girdi Temizleme (Input Sanitization) ve Doğrulama
+                if (request.Type == MessageType.Text)
                 {
-                    return ServiceResult<Message>.FailureResult("Mesaj içeriği boş olamaz.");
+                    if (string.IsNullOrEmpty(request.Content))
+                    {
+                        return ServiceResult<Message>.FailureResult("Mesaj içeriği boş olamaz.");
+                    }
+
+                    // GÜVENLİK: Mesaj içeriğini XSS saldırılarına karşı temizle
+                    request.Content = InputSanitizer.SanitizeText(request.Content);
+
+                    // Temizleme sonrası içerik boş kalmışsa (sadece zararlı kodlardan oluşuyorsa) engelle
+                    if (string.IsNullOrWhiteSpace(request.Content))
+                    {
+                        return ServiceResult<Message>.FailureResult("Geçersiz mesaj içeriği.");
+                    }
                 }
-                if (request.Type == MessageType.Image && string.IsNullOrEmpty(request.ImageUrl))
+                else if (request.Type == MessageType.Image && string.IsNullOrEmpty(request.ImageUrl))
                 {
                     return ServiceResult<Message>.FailureResult("Görsel URL'i boş olamaz.");
                 }

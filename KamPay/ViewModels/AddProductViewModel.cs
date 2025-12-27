@@ -400,8 +400,8 @@ namespace KamPay.ViewModels
                 var product = new Product //
                 {
                     ProductId = productId,
-                    Title = this.Title.Trim(),
-                    Description = this.Description.Trim(),
+                    Title = InputSanitizer.SanitizeText(this.Title.Trim()),
+                    Description = InputSanitizer.SanitizeText(this.Description.Trim()),
                     CategoryId = SelectedCategory.CategoryId,
                     CategoryName = SelectedCategory.Name,
                     Condition = this.SelectedCondition,

@@ -282,15 +282,19 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
         IsLoading = true;
 
+        string sanitizedFirstName = InputSanitizer.SanitizeUsername(newFirstName);
+        string sanitizedLastName = InputSanitizer.SanitizeUsername(newLastName);
+        string sanitizedUsername = InputSanitizer.SanitizeUsername(newUsername);
+
         try
         {
             // UserStateService üzerinden profil güncelle - tüm sayfalara bildirim yapılır
             var result = await _userStateService.UpdateUserProfileAsync(
-                firstName: newFirstName,
-                lastName: newLastName,
-                username: newUsername,
-                profileImageUrl: uploadedImageUrl
-            );
+         firstName: sanitizedFirstName,
+         lastName: sanitizedLastName,
+         username: sanitizedUsername,
+         profileImageUrl: uploadedImageUrl
+             );
 
             if (result.Success)
             {
