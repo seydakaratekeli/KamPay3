@@ -97,5 +97,11 @@ namespace KamPay.Services
             string transactionId,
             string currentUserId
         );
+        
+        /// <summary>
+        /// Simülasyon için OTP'yi al (sadece test/simülasyon amaçlı)
+        /// ÖNEMLİ: Gerçek üretim ortamında bu metod kullanılmamalıdır!
+        /// </summary>
+        Task<ServiceResult<string>> GetSimulationOtpAsync(string paymentId);
     }
 }

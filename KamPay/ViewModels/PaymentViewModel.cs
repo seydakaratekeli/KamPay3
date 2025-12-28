@@ -6,7 +6,6 @@ using KamPay.Services;
 using Microsoft.Maui.Controls;
 using System.Threading.Tasks;
 using KamPay.Resources;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace KamPay.ViewModels
@@ -64,11 +63,12 @@ namespace KamPay.ViewModels
 
                     if (IsCardSelected)
                     {
-                        // Kart ödemesi için OTP'yi servisden al ve göster
-                        SimulatedOtp = await GetSimulatedOtpAsync(PaymentDetails.PaymentId);
+                        // Kart ödemesi için OTP'yi servisden al ve göster (SADECE SİMÜLASYON)
+                        var otpResult = await _transactionService.GetSimulationOtpAsync(PaymentDetails.PaymentId);
                         
-                        if (!string.IsNullOrEmpty(SimulatedOtp))
+                        if (otpResult.Success && !string.IsNullOrEmpty(otpResult.Data))
                         {
+                            SimulatedOtp = otpResult.Data;
                             await Shell.Current.DisplayAlert("Doğrulama Kodu (Simülasyon)", 
                                 $"Simülasyon için OTP kodunuz:\n\n{SimulatedOtp}\n\nBu kodu aşağıdaki alana girin.", "Tamam");
                         }
@@ -93,32 +93,6 @@ namespace KamPay.ViewModels
                 await Shell.Current.DisplayAlert(Res["Error"], error, Res["Ok"]);
             }
             finally { IsLoading = false; }
-        }
-
-        // Simülasyon için OTP'yi Firebase'den al
-        private async Task<string> GetSimulatedOtpAsync(string paymentId)
-        {
-            try
-            {
-                // Bu metod FirebaseTransactionService'teki TempOtpModel'den OTP'yi alır
-                // Gerçek uygulamada bu servis metodunda olmalı, simülasyon için burada basitleştirildi
-                var firebaseClient = new Firebase.Database.FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-                var otpNode = await firebaseClient
-                    .Child(Constants.TempOtpsCollection)
-                    .Child(paymentId)
-                    .OnceSingleAsync<Dictionary<string, object>>();
-
-                if (otpNode != null && otpNode.ContainsKey("Otp"))
-                {
-                    return otpNode["Otp"].ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"OTP alınamadı: {ex.Message}");
-            }
-            
-            return null;
         }
 
         [RelayCommand]

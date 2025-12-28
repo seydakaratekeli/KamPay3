@@ -193,7 +193,7 @@ namespace KamPay.Services
                             ExpiresAt = DateTime.UtcNow.AddMinutes(2) // OTP 2 dakika geçerli
                         });
                     
-                    Console.WriteLine($"✅ Kart ödemesi için OTP oluşturuldu: {otp} (PaymentId: {payment.PaymentId})");
+                    System.Diagnostics.Debug.WriteLine($"✅ Kart ödemesi için OTP oluşturuldu (PaymentId: {payment.PaymentId})");
                 }
 
                 // 5. HAVALE/EFT: Banka bilgileri ve referans kodu oluştur
@@ -202,7 +202,7 @@ namespace KamPay.Services
                     payment.BankName = "Ziraat Bankası";
                     payment.BankReference = GenerateBankReference(); // Benzersiz referans kodu
                     
-                    Console.WriteLine($"✅ Havale/EFT için referans oluşturuldu: {payment.BankReference}");
+                    System.Diagnostics.Debug.WriteLine($"✅ Havale/EFT için referans oluşturuldu: {payment.BankReference}");
                 }
 
                 // 6. Transaction'ı güncelle
@@ -215,7 +215,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ CreatePaymentSimulationAsync hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ CreatePaymentSimulationAsync hatası: {ex.Message}");
                 return ServiceResult<PaymentDto>.FailureResult("Simülasyon başlatılırken hata.", ex.Message);
             }
         }
@@ -249,23 +249,23 @@ namespace KamPay.Services
                     // OTP doğrulama kontrolleri
                     if (saved == null) 
                     {
-                        Console.WriteLine($"❌ OTP bulunamadı. PaymentId: {paymentId}");
+                        System.Diagnostics.Debug.WriteLine($"❌ OTP bulunamadı. PaymentId: {paymentId}");
                         return ServiceResult<bool>.FailureResult("OTP bulunamadı.");
                     }
                     
                     if (DateTime.UtcNow > saved.ExpiresAt) 
                     {
-                        Console.WriteLine($"❌ OTP süresi doldu. ExpiresAt: {saved.ExpiresAt}");
+                        System.Diagnostics.Debug.WriteLine($"❌ OTP süresi doldu. ExpiresAt: {saved.ExpiresAt}");
                         return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
                     }
                     
                     if (string.IsNullOrWhiteSpace(sanitizedOtp) || saved.Otp != sanitizedOtp)
                     {
-                        Console.WriteLine($"❌ OTP geçersiz. Beklenen: {saved.Otp}, Girilen: {sanitizedOtp}");
+                        System.Diagnostics.Debug.WriteLine($"❌ OTP geçersiz. PaymentId: {paymentId}");
                         return ServiceResult<bool>.FailureResult("OTP geçersiz.");
                     }
                     
-                    Console.WriteLine($"✅ OTP doğrulandı! PaymentId: {paymentId}");
+                    System.Diagnostics.Debug.WriteLine($"✅ OTP doğrulandı! PaymentId: {paymentId}");
                     
                     // OTP'yi kullanıldıktan sonra sil (tek kullanımlık)
                     await otpNode.DeleteAsync();
@@ -283,20 +283,20 @@ namespace KamPay.Services
                     if (!completeResult.Success)
                         return ServiceResult<bool>.FailureResult("Ödeme alındı ancak işlem tamamlanırken hata oluştu: " + completeResult.Message);
                     
-                    Console.WriteLine($"✅ Satış işlemi tamamlandı. TransactionId: {transactionId}");
+                    System.Diagnostics.Debug.WriteLine($"✅ Satış işlemi tamamlandı. TransactionId: {transactionId}");
                 }
                 // DİĞER TİPLER (Takas, Bağış, Hizmet): Sadece ödeme durumunu güncelle
                 else
                 {
                     await transactionNode.PutAsync(transaction);
-                    Console.WriteLine($"✅ Ödeme tamamlandı. TransactionId: {transactionId}, Type: {transaction.Type}");
+                    System.Diagnostics.Debug.WriteLine($"✅ Ödeme tamamlandı. TransactionId: {transactionId}, Type: {transaction.Type}");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, "Ödeme onaylandı ve işlem tamamlandı.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ConfirmPaymentSimulationAsync hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ ConfirmPaymentSimulationAsync hatası: {ex.Message}");
                 // Teknik hataları kullanıcı dostu mesajlara dönüştür
                 return ServiceResult<bool>.FailureResult("Ödeme onayında hata.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
             }
@@ -1238,6 +1238,37 @@ namespace KamPay.Services
                 Console.WriteLine($"❌ AddSystemMessageAsync hatası: {ex.Message}");
                 Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 System.Diagnostics.Debug.WriteLine($"⚠️ Sistem mesajı eklenemedi: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Simülasyon için OTP'yi Firebase'den alır
+        /// ÖNEMLİ: Bu metod sadece test/simülasyon amaçlıdır!
+        /// Gerçek üretim ortamında OTP'nin kullanıcıya gösterilmesi GÜVENLİK AÇIĞI oluşturur.
+        /// Gerçek sistemde OTP sadece SMS/Email ile gönderilmeli, asla ekranda gösterilmemelidir.
+        /// </summary>
+        public async Task<ServiceResult<string>> GetSimulationOtpAsync(string paymentId)
+        {
+            try
+            {
+                var otpNode = await _firebaseClient
+                    .Child(Constants.TempOtpsCollection)
+                    .Child(paymentId)
+                    .OnceSingleAsync<TempOtpModel>();
+
+                if (otpNode != null && !string.IsNullOrEmpty(otpNode.Otp))
+                {
+                    // Sadece simülasyon için - Gerçek sistemde bunu YAPMAYIN!
+                    System.Diagnostics.Debug.WriteLine($"⚠️ SIMÜLASYON: OTP alındı (PaymentId: {paymentId})");
+                    return ServiceResult<string>.SuccessResult(otpNode.Otp, "OTP alındı");
+                }
+                
+                return ServiceResult<string>.FailureResult("OTP bulunamadı");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ GetSimulationOtpAsync hatası: {ex.Message}");
+                return ServiceResult<string>.FailureResult("OTP alınamadı", ex.Message);
             }
         }
 
