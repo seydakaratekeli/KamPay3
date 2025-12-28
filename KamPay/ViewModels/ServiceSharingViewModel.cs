@@ -113,13 +113,29 @@ namespace KamPay.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                //  DÜZELTME: Hem Services hem de FilteredServices'teki öğeleri güncelle
+                bool hasChanges = false;
+
+                // 1. Services koleksiyonunu güncelle
                 foreach (var s in Services.Where(x => x.ProviderId == u.UserId))
+                {
+                    s.ProviderName = u.FullName;
+                    s.ProviderPhotoUrl = u.ProfileImageUrl;
+                    hasChanges = true;
+                }
+
+                // 2. FilteredServices koleksiyonunu da güncelle (UI'da görünen liste)
+                foreach (var s in FilteredServices.Where(x => x.ProviderId == u.UserId))
                 {
                     s.ProviderName = u.FullName;
                     s.ProviderPhotoUrl = u.ProfileImageUrl;
                 }
 
-                ApplyFilter();
+                // 3. Eğer değişiklik varsa, filtreyi yeniden uygula (listeyi yenile)
+                if (hasChanges)
+                {
+                    ApplyFilter();
+                }
             });
         }
 
