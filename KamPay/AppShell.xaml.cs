@@ -104,6 +104,7 @@ namespace KamPay
             Routing.RegisterRoute(nameof(ProductDetailPage), typeof(ProductDetailPage));
             Routing.RegisterRoute(nameof(ChatPage), typeof(ChatPage));
             Routing.RegisterRoute(nameof(NotificationsPage), typeof(NotificationsPage));
+            Routing.RegisterRoute(nameof(FavoritesPage), typeof(FavoritesPage));
             Routing.RegisterRoute(nameof(OffersPage), typeof(OffersPage));
             Routing.RegisterRoute(nameof(TradeOfferView), typeof(TradeOfferView));
             Routing.RegisterRoute(nameof(GoodDeedBoardPage), typeof(GoodDeedBoardPage));

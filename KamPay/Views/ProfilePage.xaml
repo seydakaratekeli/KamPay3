@@ -383,6 +383,30 @@
                                    TextColor="{StaticResource TextPrimary}"/>
                         </HorizontalStackLayout>
 
+                        <Button Text="❤️ Favoriler" 
+                                Command="{Binding GoToFavoritesCommand}" 
+                                BackgroundColor="#2196F3" 
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="48"
+                                FontAttributes="Bold">
+                            <Button.Shadow>
+                                <Shadow Brush="#2196F3" Offset="0,2" Radius="6" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
+
+                        <Button Text="🔔 Bildirimler" 
+                                Command="{Binding GoToNotificationsCommand}" 
+                                BackgroundColor="#4CAF50" 
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="48"
+                                FontAttributes="Bold">
+                            <Button.Shadow>
+                                <Shadow Brush="#4CAF50" Offset="0,2" Radius="6" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
+
                         <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyOffers]}" 
                                 Command="{Binding GoToOffersCommand}" 
                                 BackgroundColor="{StaticResource Primary}" 

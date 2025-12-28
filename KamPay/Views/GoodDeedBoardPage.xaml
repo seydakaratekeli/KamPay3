@@ -24,13 +24,14 @@
             <Color x:Key="LikeColor">#F44336</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullConverter" />
             <converters:BoolToColorConverter x:Key="LikeColorConverter"
                                              TrueColor="#F44336"
                                              FalseColor="#757575"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
         <Grid Grid.Row="0" RowDefinitions="Auto">
@@ -69,15 +70,94 @@
             </Grid>
         </Grid>
 
+        <!-- : SEARCH AND FILTER SECTION -->
+        <Grid Grid.Row="1" Padding="15,15,15,10" RowDefinitions="Auto,Auto" RowSpacing="10">
+            <!-- Search Bar -->
+            <Border Grid.Row="0"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    Padding="15,0"
+                    HeightRequest="50">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08"/>
+                </Border.Shadow>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Image Grid.Column="0" 
+                           Source="search_icon.svg" 
+                           HeightRequest="20" 
+                           WidthRequest="20"
+                           VerticalOptions="Center"
+                           Margin="0,0,10,0">
+                        <Image.Behaviors>
+                            <toolkit:IconTintColorBehavior TintColor="{StaticResource TextSecondary}"/>
+                        </Image.Behaviors>
+                    </Image>
+                    <Entry Grid.Column="1"
+                           Placeholder="İyilik ara..."
+                           Text="{Binding SearchText}"
+                           FontSize="15"
+                           VerticalOptions="Center"
+                           BackgroundColor="Transparent"
+                           TextColor="{StaticResource TextPrimary}"
+                           PlaceholderColor="{StaticResource TextSecondary}"/>
+                </Grid>
+            </Border>
+
+            <!-- Category Filter -->
+            <Border Grid.Row="1"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    Padding="15,0"
+                    HeightRequest="50">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08"/>
+                </Border.Shadow>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Picker Grid.Column="0"
+                            Title="Kategori Seçiniz"
+                            ItemsSource="{Binding FilterPostTypes}"
+                            SelectedItem="{Binding FilterPostType}"
+                            FontSize="15"
+                            TextColor="{StaticResource TextPrimary}">
+                        <Picker.ItemDisplayBinding>
+                            <Binding Converter="{StaticResource PostTypeToTextConverter}" />
+                        </Picker.ItemDisplayBinding>
+                    </Picker>
+                    
+                    <!-- Clear Filter Button -->
+                    <Border Grid.Column="1"
+                            IsVisible="{Binding FilterPostType, Converter={StaticResource IsNotNullConverter}}"
+                            StrokeShape="RoundRectangle 15"
+                            BackgroundColor="#FFE5E5"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            StrokeThickness="0"
+                            VerticalOptions="Center">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ClearCategoryFilterCommand}"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="✕" 
+                               TextColor="#F44336"
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontAttributes="Bold"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
         <!-- ✨ MAIN CONTENT -->
-        <RefreshView Grid.Row="1"
+        <RefreshView Grid.Row="2"
                      Command="{Binding RefreshPostsCommand}"
                      IsRefreshing="{Binding IsRefreshing}"
                      RefreshColor="{StaticResource Primary}">
 
-            <CollectionView ItemsSource="{Binding Posts}" 
+            <CollectionView ItemsSource="{Binding FilteredPosts}" 
                             SelectionMode="None"
-                            Margin="15,15,15,15">
+                            Margin="15,5,15,15">
 
                 <CollectionView.EmptyView>
                     <Grid VerticalOptions="Center" 
@@ -324,7 +404,7 @@
         </RefreshView>
 
         <!-- ✨ ADD POST FORM OVERLAY -->
-        <Grid Grid.RowSpan="2"
+        <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsPostFormVisible}" 
               BackgroundColor="#80000000" 
               ZIndex="999"
@@ -455,7 +535,7 @@
         </Grid>
 
         <!-- Floating Action Button -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="2"
                 StrokeShape="RoundRectangle 32"
                 BackgroundColor="{StaticResource Primary}"
                 WidthRequest="64"
@@ -481,7 +561,7 @@
         </Border>
 
         <!-- Loading Overlay -->
-        <Grid Grid.RowSpan="2"
+        <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsSkeletonVisible}"
               BackgroundColor="#F5F9FC"
               ZIndex="1100"

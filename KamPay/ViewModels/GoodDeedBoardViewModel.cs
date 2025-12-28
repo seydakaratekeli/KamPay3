@@ -30,15 +30,15 @@ namespace KamPay.ViewModels
         private readonly SemaphoreSlim _commentLock = new(1, 1);
         private readonly Dictionary<string, GoodDeedPost> _postsCache = new();
 
+        // : Tüm ilanlar (filtrelenmeden önce)
+        private List<GoodDeedPost> _allPosts = new();
+
         private bool _initialLoadComplete = false;
         private CancellationTokenSource? _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 6000;
 
         [ObservableProperty]
         private bool isPostFormVisible;
-
-        //  : private string newCommentText; SİLİNDİ
-        // Artık her post kendi 'DraftComment' özelliğini kullanıyor.
 
         [ObservableProperty]
         private bool isLoading;
@@ -61,8 +61,23 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private PostType selectedType;
 
+        // : Arama ve filtreleme özellikleri
+        [ObservableProperty]
+        private string searchText = "";
+
+        [ObservableProperty]
+        private PostType? filterPostType = null;
+
+        // : UI koleksiyonları
         public ObservableCollection<GoodDeedPost> Posts { get; } = new();
+        public ObservableCollection<GoodDeedPost> FilteredPosts { get; } = new();
         public List<PostType> PostTypes { get; } = Enum.GetValues(typeof(PostType)).Cast<PostType>().ToList();
+
+        // : Filtre için kategori listesi (null = "Hepsi" seçeneği dahil)
+        public List<PostType?> FilterPostTypes { get; } =
+            new List<PostType?> { null }
+            .Concat(Enum.GetValues(typeof(PostType)).Cast<PostType?>())
+            .ToList();
 
         public GoodDeedBoardViewModel(
             IGoodDeedService goodDeedService,
@@ -77,6 +92,13 @@ namespace KamPay.ViewModels
 
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
             _userStateService.UserProfileChanged += OnUserProfileChanged;
+
+            // Dil değiştiğinde filtreyi yeniden uygula
+            LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
+            {
+                OnPropertyChanged(nameof(FilterPostTypes));
+                ApplyFilter();
+            };
         }
 
         private void OnUserProfileChanged(object sender, User updatedUser)
@@ -85,7 +107,21 @@ namespace KamPay.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                // _allPosts listesindeki kullanıcı bilgilerini güncelle
+                foreach (var post in _allPosts.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    post.UserName = updatedUser.FullName;
+                    post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
+                }
+
+                // Posts ve FilteredPosts koleksiyonlarını da güncelle
                 foreach (var post in Posts.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    post.UserName = updatedUser.FullName;
+                    post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
+                }
+
+                foreach (var post in FilteredPosts.Where(p => p.UserId == updatedUser.UserId))
                 {
                     post.UserName = updatedUser.FullName;
                     post.UserProfileImageUrl = updatedUser.ProfileImageUrl;
@@ -122,6 +158,14 @@ namespace KamPay.ViewModels
             post.RefreshCommentsUI();
         }
 
+        // : Filtre temizleme komutu
+        [RelayCommand]
+        private void ClearCategoryFilter()
+        {
+            FilterPostType = null;
+            ApplyFilter();
+        }
+
         [RelayCommand]
         private async Task RefreshPostsAsync()
         {
@@ -130,6 +174,8 @@ namespace KamPay.ViewModels
             {
                 StopListening();
                 Posts.Clear();
+                FilteredPosts.Clear();
+                _allPosts.Clear();
                 _postsCache.Clear();
                 _initialLoadComplete = false;
 
@@ -139,6 +185,51 @@ namespace KamPay.ViewModels
             finally
             {
                 IsRefreshing = false;
+            }
+        }
+
+        // : Filtreleme metodları
+        partial void OnSearchTextChanged(string value) => ApplyFilter();
+        partial void OnFilterPostTypeChanged(PostType? value) => ApplyFilter();
+
+        /// <summary>
+        /// Arama ve kategori filtreleme işlemini uygular
+        /// </summary>
+        [RelayCommand]
+        private void ApplyFilter()
+        {
+            FilterPosts();
+        }
+
+        private void FilterPosts()
+        {
+            var query = _allPosts.AsEnumerable();
+
+            // Arama filtresi
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLower();
+                query = query.Where(p =>
+                    (p.Title ?? "").Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Description ?? "").Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                    (p.UserName ?? "").Contains(searchLower, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            // Kategori filtresi
+            if (FilterPostType != null)
+            {
+                query = query.Where(p => p.Type == FilterPostType.Value);
+            }
+
+            // Tarihe göre sırala (en yeni önce)
+            query = query.OrderByDescending(p => p.CreatedAt);
+
+            // Filtrelenmiş listeyi güncelle
+            FilteredPosts.Clear();
+            foreach (var post in query)
+            {
+                FilteredPosts.Add(post);
             }
         }
 
@@ -218,10 +309,8 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null) return;
 
-            // 1. ANLIK GÜNCELLEME (Optimistik): Sunucuyu beklemeden arayüzü değiştir
             bool isLikedNewState = !post.IsLiked;
 
-            // UI'ı hemen güncelle
             post.IsLiked = isLikedNewState;
 
             if (isLikedNewState)
@@ -239,12 +328,10 @@ namespace KamPay.ViewModels
 
             try
             {
-                // 2. Arka planda sunucuya gönder
                 var result = await _goodDeedService.LikePostAsync(post.PostId, currentUser.UserId);
 
                 if (!result.Success)
                 {
-                    // 3. HATA OLURSA: Yapılan değişikliği geri al (Rollback)
                     post.IsLiked = !isLikedNewState;
 
                     if (isLikedNewState)
@@ -266,7 +353,6 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                // Hata durumunda rollback
                 post.IsLiked = !isLikedNewState;
                 if (isLikedNewState)
                     post.LikeCount = Math.Max(0, post.LikeCount - 1);
@@ -335,7 +421,6 @@ namespace KamPay.ViewModels
 
             post.DraftComment = string.Empty;
 
-            // Optimistik UI Güncellemesi
             post.Comments ??= new Dictionary<string, Comment>();
             post.Comments[comment.CommentId] = comment;
             post.CommentCount++;
@@ -345,7 +430,6 @@ namespace KamPay.ViewModels
 
             if (!result.Success)
             {
-                // Hata olursa geri al
                 post.Comments.Remove(comment.CommentId);
                 post.CommentCount--;
                 post.RefreshCommentsUI();
@@ -499,14 +583,18 @@ namespace KamPay.ViewModels
                 {
                     foreach (var post in posts)
                     {
-                        var existing = Posts.FirstOrDefault(p => p.PostId == post.PostId);
+                        var existing = _allPosts.FirstOrDefault(p => p.PostId == post.PostId);
                         if (existing == null)
                         {
+                            _allPosts.Add(post);
                             InsertPostSorted(post);
                             _postsCache[post.PostId] = post;
                             StartListeningForComments(post);
                         }
                     }
+
+                    // : İlk yükleme sonrası filtreyi uygula
+                    ApplyFilter();
 
                     if (!_initialLoadComplete)
                     {
@@ -559,6 +647,7 @@ namespace KamPay.ViewModels
                     }
 
                     var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
+                    var existingInAllPosts = _allPosts.FirstOrDefault(p => p.PostId == post.PostId);
 
                     if (e.EventType == FirebaseEventType.InsertOrUpdate)
                     {
@@ -568,7 +657,6 @@ namespace KamPay.ViewModels
 
                             // UI state koru
                             post.IsCommentsExpanded = existingPost.IsCommentsExpanded;
-                            //  : Yorum kutusu görünürlüğünü ve yazılan taslak metni koru
                             post.IsCommentBoxVisible = existingPost.IsCommentBoxVisible;
                             post.DraftComment = existingPost.DraftComment;
 
@@ -588,11 +676,24 @@ namespace KamPay.ViewModels
                             _postsCache[post.PostId] = post;
                             StartListeningForComments(post);
                         }
+
+                        // : _allPosts listesini de güncelle
+                        if (existingInAllPosts != null)
+                        {
+                            var indexInAll = _allPosts.IndexOf(existingInAllPosts);
+                            _allPosts[indexInAll] = post;
+                        }
+                        else
+                        {
+                            _allPosts.Add(post);
+                        }
+
                         hasChanges = true;
                     }
                     else if (e.EventType == FirebaseEventType.Delete && existingPost != null)
                     {
                         Posts.Remove(existingPost);
+                        _allPosts.Remove(existingInAllPosts);
                         _postsCache.Remove(post.PostId);
 
                         if (_commentSubscriptions.ContainsKey(post.PostId))
@@ -615,10 +716,12 @@ namespace KamPay.ViewModels
                 try
                 {
                     SortPostsInPlace();
+                    // : Değişiklik olduysa filtreyi yeniden uygula
+                    ApplyFilter();
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"❌ Sort hatası: {ex.Message}");
+                    Debug.WriteLine($"❌ Sort/Filter hatası: {ex.Message}");
                 }
             }
         }
@@ -714,15 +817,6 @@ namespace KamPay.ViewModels
             {
                 post.CommentCount = post.Comments.Count;
                 post.RefreshCommentsUI();
-
-                var existingPost = Posts.FirstOrDefault(p => p.PostId == post.PostId);
-                if (existingPost != null)
-                {
-                    // CollectionView'in UI güncellemesini tetikle
-                    // Not: ObservableObject olduğu için 'set' işlemi property change event'i fırlatır
-                    // Ancak CollectionView bazen derin değişiklikleri algılamaz, bu yüzden replace yapılabilir
-                    // Ama yukarıda 'RefreshCommentsUI' çağrıldı, bu yeterli olmalı.
-                }
             }
         }
 
@@ -768,6 +862,7 @@ namespace KamPay.ViewModels
 
                 _commentSubscriptions.Clear();
                 _postsCache.Clear();
+                _allPosts.Clear();
                 _initialLoadComplete = false;
 
                 Debug.WriteLine("✅ Dispose tamamlandı");

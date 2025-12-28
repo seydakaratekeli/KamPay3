@@ -8,8 +8,9 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="KamPay.Views.NotificationsPage"
              x:DataType="vm:NotificationsViewModel"
-             Title="{extensions:Translate NotificationsTitle}"
-             Shell.BackgroundColor="#4CAF50">
+             Title=""
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="Transparent">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -19,154 +20,260 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="{extensions:Translate ClearAllNotifications}" 
-                     Command="{Binding ClearAllCommand}" 
-                     Order="Secondary"/>
-        <ToolbarItem Text="{extensions:Translate MarkAllAsRead}" 
-                     Command="{Binding MarkAllAsReadCommand}" 
-                     Order="Secondary"/>
-    </ContentPage.ToolbarItems>
+    <Grid>
+        <!-- Background Circle Animation -->
+        <Ellipse x:Name="Circle1"
+                 Fill="#1A4CAF50"
+                 WidthRequest="400"
+                 HeightRequest="400"
+                 HorizontalOptions="End"
+                 VerticalOptions="Start"
+                 TranslationX="150"
+                 TranslationY="-150"
+                 Opacity="0.6"/>
 
-    <Grid BackgroundColor="#F5F5F5">
+        <Grid RowDefinitions="Auto,*" Padding="0">
+            <!-- Header Section -->
+            <VerticalStackLayout x:Name="HeaderSection" 
+                                 Grid.Row="0" 
+                                 Spacing="10" 
+                                 Padding="20,50,20,20"
+                                 BackgroundColor="#4CAF50">
 
-        <RefreshView Command="{Binding RefreshNotificationsCommand}"
-                     IsRefreshing="{Binding IsRefreshing}"
-                     RefreshColor="#4CAF50">
-
-            <CollectionView ItemsSource="{Binding Notifications}"
-                            SelectionMode="None"
-                            Margin="10">
-
-                <CollectionView.EmptyView>
-                    <VerticalStackLayout VerticalOptions="Center" 
-                                         HorizontalOptions="Center" 
-                                         Spacing="15"
-                                         Padding="30">
-                        <Image Source="bell_icon.svg" 
-                               HeightRequest="80" 
-                               WidthRequest="80" 
-                               Opacity="0.3">
-                            <Image.Behaviors>
-                                <toolkit:IconTintColorBehavior TintColor="Gray"/>
-                            </Image.Behaviors>
-                        </Image>
-
-                        <Label Text="{extensions:Translate NoNotificationsYet}" 
-                               FontSize="18" 
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="5">
+                        <Label Text="🔔 Bildirimler"
+                               FontSize="28"
                                FontAttributes="Bold"
-                               TextColor="{StaticResource Gray600}"
-                               HorizontalTextAlignment="Center"/>
-
-                        <Label Text="{extensions:Translate NoNotificationsMessage}"
+                               TextColor="White"/>
+                        <Label Text="Güncel bildirimleriniz"
                                FontSize="14"
-                               TextColor="{StaticResource Gray500}"
-                               HorizontalTextAlignment="Center"/>
+                               TextColor="#E8F5E9"
+                               Opacity="0.9"/>
                     </VerticalStackLayout>
-                </CollectionView.EmptyView>
 
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Notification">
-                        <SwipeView>
-                            <SwipeView.RightItems>
-                                <SwipeItems>
-                                    <SwipeItem Text="{extensions:Translate Delete}"
-                                               BackgroundColor="#F44336"
-                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
-                                               CommandParameter="{Binding .}"/>
-                                </SwipeItems>
-                            </SwipeView.RightItems>
+                    <Border Grid.Column="1"
+                            StrokeShape="RoundRectangle 20"
+                            StrokeThickness="0"
+                            BackgroundColor="#66BB6A"
+                            Padding="10"
+                            VerticalOptions="Center">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding MarkAllAsReadCommand}"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="✓ Tümü"
+                               TextColor="White"
+                               FontSize="12"
+                               FontAttributes="Bold"/>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
 
-                            <Border StrokeShape="RoundRectangle 12"
-                                    StrokeThickness="0"
-                                    BackgroundColor="{Binding IsRead, Converter={StaticResource BoolToColorConverter}, FallbackValue=White}"
-                                    Margin="0,0,0,10"
-                                    Padding="15">
+            <!-- Content Section -->
+            <Grid x:Name="ContentSection" Grid.Row="1" BackgroundColor="#F5F5F5">
+                <RefreshView Command="{Binding RefreshNotificationsCommand}"
+                             IsRefreshing="{Binding IsRefreshing}"
+                             RefreshColor="#4CAF50">
 
-                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="15">
-                                    <Frame Grid.Column="0"
-                                           CornerRadius="20"
-                                           HeightRequest="40"
-                                           WidthRequest="40"
-                                           Padding="0"
-                                           BackgroundColor="#E3F2FD"
-                                           BorderColor="Transparent"
-                                           VerticalOptions="Start">
-                                        <Label Text="🔔" 
-                                               FontSize="18" 
-                                               HorizontalOptions="Center" 
-                                               VerticalOptions="Center"/>
-                                    </Frame>
+                    <CollectionView ItemsSource="{Binding Notifications}"
+                                    SelectionMode="None"
+                                    Margin="10,10,10,0">
 
-                                    <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                        <Label Text="{Binding Title}" 
-                                               FontSize="15" 
-                                               FontAttributes="Bold" 
-                                               TextColor="#212121"
-                                               LineBreakMode="TailTruncation"/>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout VerticalOptions="Center" 
+                                                 HorizontalOptions="Center" 
+                                                 Spacing="15"
+                                                 Padding="30">
+                                <Label Text="🔔"
+                                       FontSize="60"
+                                       HorizontalTextAlignment="Center"
+                                       Opacity="0.3"/>
 
-                                        <Label Text="{Binding Message}" 
-                                               FontSize="13" 
-                                               TextColor="#616161" 
-                                               LineBreakMode="WordWrap"
-                                               MaxLines="3"/>
+                                <Label Text="Bildirim Yok" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource Gray600}"
+                                       HorizontalTextAlignment="Center"/>
 
-                                        <HorizontalStackLayout Spacing="10" Margin="0,5,0,0">
-                                            <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" 
-                                                   FontSize="11" 
-                                                   TextColor="#9E9E9E"/>
+                                <Label Text="Yeni bildirimleriniz burada görünecek"
+                                       FontSize="14"
+                                       TextColor="{StaticResource Gray500}"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
 
-                                            <Border StrokeShape="RoundRectangle 4" 
-                                                    StrokeThickness="0" 
-                                                    BackgroundColor="#F5F5F5" 
-                                                    Padding="6,2">
-                                                <Label FontSize="10" TextColor="#757575">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Notification">
+                                <SwipeView Margin="0,0,0,10">
+                                    <SwipeView.RightItems>
+                                        <SwipeItems>
+                                            <SwipeItem Text="Sil"
+                                                       BackgroundColor="#F44336"
+                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
+                                                       CommandParameter="{Binding .}">
+                                                <SwipeItem.IconImageSource>
+                                                    <FontImageSource FontFamily="MaterialIcons" 
+                                                                     Glyph="&#xe872;" 
+                                                                     Color="White"/>
+                                                </SwipeItem.IconImageSource>
+                                            </SwipeItem>
+                                        </SwipeItems>
+                                    </SwipeView.RightItems>
+
+                                    <Border StrokeShape="RoundRectangle 16"
+                                            StrokeThickness="0"
+                                            BackgroundColor="White"
+                                            Padding="15">
+
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Opacity="0.08" Radius="8" Offset="0,2"/>
+                                        </Border.Shadow>
+
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsRead}" Value="False">
+                                                <Setter Property="BackgroundColor" Value="#E8F5E9"/>
+                                            </DataTrigger>
+                                        </Border.Triggers>
+
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                            <!-- Icon -->
+                                            <Border Grid.Column="0"
+                                                    StrokeShape="RoundRectangle 20"
+                                                    HeightRequest="40"
+                                                    WidthRequest="40"
+                                                    Padding="0"
+                                                    StrokeThickness="0"
+                                                    VerticalOptions="Start">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="NewMessage">
+                                                        <Setter Property="BackgroundColor" Value="#E3F2FD"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="ProductSold">
+                                                        <Setter Property="BackgroundColor" Value="#FFF3E0"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="BadgeEarned">
+                                                        <Setter Property="BackgroundColor" Value="#F3E5F5"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="SystemNotice">
+                                                        <Setter Property="BackgroundColor" Value="#E8F5E9"/>
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+
+                                                <Label HorizontalOptions="Center" 
+                                                       VerticalOptions="Center"
+                                                       FontSize="20">
                                                     <Label.Triggers>
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SystemNotice">
-                                                            <Setter Property="Text" Value="{extensions:Translate SystemNotification}"/>
-                                                        </DataTrigger>
-
-                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ProductSold">
-                                                            <Setter Property="Text" Value="{extensions:Translate OrderNotification}"/>
-                                                        </DataTrigger>
-
                                                         <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewMessage">
-                                                            <Setter Property="Text" Value="{extensions:Translate MessageNotification}"/>
+                                                            <Setter Property="Text" Value="💬"/>
                                                         </DataTrigger>
-
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ProductSold">
+                                                            <Setter Property="Text" Value="🎉"/>
+                                                        </DataTrigger>
                                                         <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="BadgeEarned">
-                                                            <Setter Property="Text" Value="{extensions:Translate AlertNotification}"/>
+                                                            <Setter Property="Text" Value="🏆"/>
                                                         </DataTrigger>
-
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SystemNotice">
+                                                            <Setter Property="Text" Value="📢"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewFavorite">
+                                                            <Setter Property="Text" Value="❤️"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="DonationMade">
+                                                            <Setter Property="Text" Value="🎁"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="PointsEarned">
+                                                            <Setter Property="Text" Value="⭐"/>
+                                                        </DataTrigger>
                                                     </Label.Triggers>
                                                 </Label>
                                             </Border>
-                                        </HorizontalStackLayout>
-                                    </VerticalStackLayout>
 
-                                    <BoxView Grid.Column="2"
-                                             HeightRequest="10"
-                                             WidthRequest="10"
-                                             CornerRadius="5"
-                                             BackgroundColor="#4CAF50"
-                                             VerticalOptions="Center"
-                                             IsVisible="{Binding IsRead, Converter={StaticResource InvertedBoolConverter}}"/>
-                                </Grid>
+                                            <!-- Content -->
+                                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                                <Label Text="{Binding Title}" 
+                                                       FontSize="15" 
+                                                       FontAttributes="Bold" 
+                                                       TextColor="#212121"
+                                                       LineBreakMode="TailTruncation"/>
 
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkAsReadCommand}"
-                                                          CommandParameter="{Binding .}"/>
-                                </Border.GestureRecognizers>
-                            </Border>
-                        </SwipeView>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+                                                <Label Text="{Binding Message}" 
+                                                       FontSize="13" 
+                                                       TextColor="#616161" 
+                                                       LineBreakMode="WordWrap"
+                                                       MaxLines="3"/>
 
-        <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#80000000">
-            <ActivityIndicator IsRunning="True" Color="#4CAF50" VerticalOptions="Center" HorizontalOptions="Center"/>
+                                                <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
+                                                    <Label Text="🕒"
+                                                           FontSize="11"
+                                                           VerticalOptions="Center"/>
+                                                    <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" 
+                                                           FontSize="11" 
+                                                           TextColor="#9E9E9E"
+                                                           VerticalOptions="Center"/>
+
+                                                    <Border StrokeShape="RoundRectangle 8" 
+                                                            StrokeThickness="0" 
+                                                            BackgroundColor="#F5F5F5" 
+                                                            Padding="6,2"
+                                                            VerticalOptions="Center">
+                                                        <Label FontSize="10" 
+                                                               TextColor="#757575"
+                                                               FontAttributes="Bold">
+                                                            <Label.Triggers>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SystemNotice">
+                                                                    <Setter Property="Text" Value="Sistem"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ProductSold">
+                                                                    <Setter Property="Text" Value="Satış"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewMessage">
+                                                                    <Setter Property="Text" Value="Mesaj"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="BadgeEarned">
+                                                                    <Setter Property="Text" Value="Rozet"/>
+                                                                </DataTrigger>
+                                                            </Label.Triggers>
+                                                        </Label>
+                                                    </Border>
+                                                </HorizontalStackLayout>
+                                            </VerticalStackLayout>
+
+                                            <!-- Unread Indicator -->
+                                            <BoxView Grid.Column="2"
+                                                     HeightRequest="10"
+                                                     WidthRequest="10"
+                                                     CornerRadius="5"
+                                                     BackgroundColor="#4CAF50"
+                                                     VerticalOptions="Center"
+                                                     IsVisible="{Binding IsRead, Converter={StaticResource InvertedBoolConverter}}"/>
+                                        </Grid>
+
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=MarkAsReadCommand}"
+                                                                  CommandParameter="{Binding .}"/>
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                </SwipeView>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <!-- Loading Indicator -->
+                <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#80000000">
+                    <VerticalStackLayout VerticalOptions="Center"
+                                         HorizontalOptions="Center"
+                                         Spacing="10">
+                        <ActivityIndicator IsRunning="True" 
+                                           Color="#4CAF50" 
+                                           WidthRequest="50"
+                                           HeightRequest="50"/>
+                        <Label Text="Yükleniyor..."
+                               TextColor="White"
+                               FontSize="14"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
-
 </ContentPage>

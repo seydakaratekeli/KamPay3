@@ -5,6 +5,7 @@ namespace KamPay.Views
     public partial class NotificationsPage : ContentPage
     {
         private readonly NotificationsViewModel _viewModel;
+        private bool _hasAnimated = false;
 
         public NotificationsPage(NotificationsViewModel vm)
         {
@@ -21,6 +22,62 @@ namespace KamPay.Views
             {
                 await _viewModel.InitializeAsync();
             }
+
+            // Animasyonlarý çalýþtýr
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
+        }
+
+        private async Task AnimatePageAsync()
+        {
+            // Reset states
+            HeaderSection.Opacity = 0;
+            HeaderSection.TranslationY = -30;
+            ContentSection.Opacity = 0;
+            ContentSection.TranslationY = 40;
+
+            // Background animation
+            AnimateBackgroundCircle();
+
+            // Header animation
+            await Task.WhenAll(
+                HeaderSection.FadeTo(1, 600, Easing.CubicOut),
+                HeaderSection.TranslateTo(0, 0, 600, Easing.CubicOut)
+            );
+
+            await Task.Delay(150);
+
+            // Content animation
+            await Task.WhenAll(
+                ContentSection.FadeTo(1, 700, Easing.CubicOut),
+                ContentSection.TranslateTo(0, 0, 700, Easing.CubicOut)
+            );
+        }
+
+        private void AnimateBackgroundCircle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await Circle1.RotateTo(360, 30000, Easing.Linear);
+                            Circle1.Rotation = 0;
+                        });
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            });
         }
     }
 }

@@ -488,6 +488,18 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task GoToFavoritesAsync()
+    {
+        await Shell.Current.GoToAsync(nameof(FavoritesPage));
+    }
+
+    [RelayCommand]
+    private async Task GoToNotificationsAsync()
+    {
+        await Shell.Current.GoToAsync(nameof(NotificationsPage));
+    }
+
+    [RelayCommand]
     private async Task ChangeLanguageAsync()
     {
         var action = await Application.Current!.MainPage!.DisplayActionSheet(

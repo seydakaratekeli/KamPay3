@@ -1298,6 +1298,29 @@ KamPay Ekibi</value>
   <data name="DurationHint" xml:space="preserve">
     <value>Hizmetin ortalama ne kadar süreceğini belirtiniz</value>
   </data>
+  
+  <!-- Missing ProductDetail Page Keys -->
+  <data name="ViewsLabel" xml:space="preserve">
+    <value>Görüntülenme</value>
+  </data>
+  <data name="SellerProfile" xml:space="preserve">
+    <value>Satıcı Profili</value>
+  </data>
+  <data name="OfferTrade" xml:space="preserve">
+    <value>Takas Teklif Et</value>
+  </data>
+  <data name="RequestToBuy" xml:space="preserve">
+    <value>Satın Almak İstiyorum</value>
+  </data>
+  <data name="IWantToTake" xml:space="preserve">
+    <value>Almak İstiyorum</value>
+  </data>
+  <data name="Go" xml:space="preserve">
+    <value>Git</value>
+  </data>
+  <data name="ExchangePreferenceLabel" xml:space="preserve">
+    <value>Takas Tercihi</value>
+  </data>
 </root>
 
 
