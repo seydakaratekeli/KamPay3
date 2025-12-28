@@ -104,7 +104,7 @@
                                             <Label Text="{Binding CommentCount}" FontSize="12" VerticalOptions="Center" TextColor="{StaticResource Gray600}"/>
                                         </HorizontalStackLayout>
 
-                                        <ImageButton Source="bin_icon.png" 
+                                        <ImageButton Source="bin_icon.svg" 
                                                      IsVisible="{Binding IsOwner}" 
                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=DeletePostCommand}" 
                                                      CommandParameter="{Binding .}" 
