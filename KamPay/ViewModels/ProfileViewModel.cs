@@ -130,16 +130,27 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             var userResult = await _userStateService.RefreshCurrentUserAsync();
             if (!userResult.Success || userResult.Data == null)
             {
-                // Fallback: If UserStateService fails (e.g., network issues with profile service),
+                // ✅ Fallback: If UserStateService fails (e.g., network issues with profile service),
                 // use direct auth service to ensure basic user info is available for this session
+                Console.WriteLine($"⚠️ UserStateService başarısız: {userResult.Message}");
                 CurrentUser = await _authService.GetCurrentUserAsync();
+                
+                if (CurrentUser == null)
+                {
+                    Console.WriteLine("❌ Auth service de başarısız oldu");
+                    return;
+                }
             }
             else
             {
                 CurrentUser = userResult.Data;
             }
             
-            if (CurrentUser == null) return;
+            // ✅ Kullanıcı bilgilerini logla
+            Console.WriteLine($"👤 LoadProfileAsync - CurrentUser:");
+            Console.WriteLine($"   Name: {CurrentUser.FullName}");
+            Console.WriteLine($"   Email: {CurrentUser.Email}");
+            Console.WriteLine($"   ProfileImage: {CurrentUser.ProfileImageUrl ?? "YOK"}");
 
             //  PARALEL YÜKLEME: 3 işlemi aynı anda başlat (profil artık UserStateService'den geliyor)
             var statsTask = _profileService.GetUserStatsAsync(CurrentUser.UserId);
@@ -191,6 +202,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ LoadProfileAsync hatası: {ex.Message}");
             await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally

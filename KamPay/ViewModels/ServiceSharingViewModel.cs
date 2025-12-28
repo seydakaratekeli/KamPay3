@@ -377,9 +377,15 @@ private void OpenPostForm() => IsPostFormVisible = true;
                     return;
                 }
 
-                if (ServicePrice <= 0)
+                if (ServicePrice < 0)
                 {
-                    await DisplayAsync("Uyarı", "Geçerli bir fiyat giriniz.");
+                    await DisplayAsync("Uyarı", "Fiyat 0 veya daha büyük olmalıdır.");
+                    return;
+                }
+
+                if (TimeCredits <= 0 || TimeCredits > 10)
+                {
+                    await DisplayAsync("Uyarı", "Süre 1-10 saat arasında olmalıdır.");
                     return;
                 }
 

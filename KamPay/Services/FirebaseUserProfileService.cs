@@ -79,10 +79,20 @@ namespace KamPay.Services
                 {
                     return ServiceResult<UserProfile>.FailureResult("Kullanıcı profili bulunamadı.");
                 }
+                
+                // ✅ Debug log - hangi alanların boş olduğunu görelim
+                Console.WriteLine($"📋 GetUserProfileAsync - UserId: {userId}");
+                Console.WriteLine($"   FirstName: '{profile.FirstName ?? "NULL"}'");
+                Console.WriteLine($"   LastName: '{profile.LastName ?? "NULL"}'");
+                Console.WriteLine($"   Username: '{profile.Username ?? "NULL"}'");
+                Console.WriteLine($"   Email: '{profile.Email ?? "NULL"}'");
+                Console.WriteLine($"   ProfileImageUrl: '{profile.ProfileImageUrl ?? "NULL"}'");
+                
                 return ServiceResult<UserProfile>.SuccessResult(profile);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ GetUserProfileAsync hatası: {ex.Message}");
                 return ServiceResult<UserProfile>.FailureResult("Profil yüklenemedi.", ex.Message);
             }
         }

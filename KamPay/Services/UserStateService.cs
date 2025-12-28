@@ -53,7 +53,7 @@ namespace KamPay.Services
                 {
                     var profile = profileResult.Data;
 
-                    //   Doğrudan atama YAPMA.
+                    //  Doğrudan atama YAPMA.
                     // Sadece gelen veri doluysa (null veya boş değilse) üzerine yaz.
 
                     if (!string.IsNullOrWhiteSpace(profile.FirstName))
@@ -68,6 +68,15 @@ namespace KamPay.Services
                     // Email genellikle Auth'dan gelir ama yine de kontrol edelim
                     if (!string.IsNullOrWhiteSpace(profile.Email))
                         user.Email = profile.Email;
+                    
+                    // ✅ Username güncellemesi de kontrollü olsun
+                    if (!string.IsNullOrWhiteSpace(profile.Username))
+                        user.Username = profile.Username;
+                }
+                else
+                {
+                    // ✅ Profil servisi başarısız olsa bile, auth'dan gelen kullanıcı bilgilerini kullan
+                    Console.WriteLine($"⚠️ Profil servisi başarısız oldu, auth verileri kullanılıyor: {profileResult.Message}");
                 }
 
                 _currentUser = user;
@@ -75,6 +84,14 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
+                // ✅ Hata durumunda bile mevcut kullanıcıyı koruyalım
+                Console.WriteLine($"❌ RefreshCurrentUserAsync hatası: {ex.Message}");
+                
+                if (_currentUser != null)
+                {
+                    return ServiceResult<User>.SuccessResult(_currentUser, "Önbellekten yüklendi");
+                }
+                
                 return ServiceResult<User>.FailureResult("Kullanıcı bilgileri yüklenemedi", ex.Message);
             }
         }

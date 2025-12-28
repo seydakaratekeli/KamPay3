@@ -1284,6 +1284,20 @@ KamPay Ekibi</value>
   <data name="SharePost" xml:space="preserve">
     <value>Paylaş</value>
   </data>
+  
+  <!-- Service Price and Duration -->
+  <data name="ServicePrice" xml:space="preserve">
+    <value>Hizmet Ücreti</value>
+  </data>
+  <data name="PriceHint" xml:space="preserve">
+    <value>Örneğin: 150 ₺ (Opsiyonel: 0 yazarak ücretsiz hizmet sunabilirsiniz)</value>
+  </data>
+  <data name="EstimatedDuration" xml:space="preserve">
+    <value>Tahmini Süre</value>
+  </data>
+  <data name="DurationHint" xml:space="preserve">
+    <value>Hizmetin ortalama ne kadar süreceğini belirtiniz</value>
+  </data>
 </root>
 
 
