@@ -42,8 +42,16 @@ namespace KamPay
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
 
-            // ⚠️ ÖNEMLİ: AppResources.Culture'ı BURADA ayarlayın (ResourceManager'a erişmeden)
-            KamPay.Resources.Languages.AppResources.Culture = culture;
+            // ⚠️ AppResources.Culture ayarlaması devre dışı bırakıldı
+            // LocalizationResourceManager devre dışı olduğu için bu satır da kaldırıldı
+            try
+            {
+                KamPay.Resources.Languages.AppResources.Culture = culture;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AppResources.Culture ayarlanamadı (bu beklenen bir durum): {ex.Message}");
+            }
 
             System.Diagnostics.Debug.WriteLine($"Uygulama başlatılıyor - Kültür: {culture.Name}");
 
