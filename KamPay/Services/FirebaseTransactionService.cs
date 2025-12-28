@@ -659,10 +659,35 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Teklif fiyatını doğrula
+                var priceValidation = NegotiationRules.ValidateProposedPrice(
+                    proposedPrice, 
+                    transaction.Price);
+                
+                if (!priceValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(priceValidation.ErrorMessage);
+
                 // Güncelle
                 transaction.ProposedPriceByBuyer = proposedPrice;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -728,9 +753,35 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Karşı teklifi doğrula
+                var counterValidation = NegotiationRules.ValidateCounterOffer(
+                    counterOffer, 
+                    transaction.Price,
+                    transaction.ProposedPriceByBuyer);
+                
+                if (!counterValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(counterValidation.ErrorMessage);
+
                 transaction.CounterOfferBySeller = counterOffer;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk karşı teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -804,9 +855,32 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Ek nakit teklifini doğrula
+                var cashValidation = NegotiationRules.ValidateAdditionalCash(additionalCash);
+                
+                if (!cashValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(cashValidation.ErrorMessage);
+
                 transaction.AdditionalCashByRequester = additionalCash;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -876,9 +950,32 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Ek nakit karşı teklifini doğrula
+                var cashValidation = NegotiationRules.ValidateAdditionalCash(counterCash);
+                
+                if (!cashValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(cashValidation.ErrorMessage);
+
                 transaction.CounterCashByOwner = counterCash;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk karşı teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -964,7 +1061,22 @@ namespace KamPay.Services
                 }
 
                 transaction.IsNegotiating = false;
-                transaction.NegotiationNotes = $"Anlaşılan tutar: {agreedAmount:N2}₺ - {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                
+                // NegotiationRules helper'ını kullanarak detaylı özet oluştur
+                var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
+                decimal? originalPrice = transaction.Type == ProductType.Satis 
+                    ? transaction.Price 
+                    : null; // Takas için orijinal fiyat kavramı yok
+                
+                var negotiationSummary = NegotiationRules.GetNegotiationSummary(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt,
+                    originalPrice,
+                    agreedAmount);
+                
+                negotiationSummary += $"👤 Kabul Eden: {acceptedBy}\n";
+                
+                transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
                 await _firebaseClient

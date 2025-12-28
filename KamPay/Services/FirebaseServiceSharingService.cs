@@ -722,6 +722,16 @@ namespace KamPay.Services
                 request.ProposedPriceByRequester = proposedPrice;
                 request.IsNegotiating = true;
                 request.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk teklif ise başlangıç tarihini ayarla
+                if (!request.NegotiationStartedAt.HasValue)
+                {
+                    request.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                request.NegotiationRoundCount++;
+                
                 await requestNode.PutAsync(request);
 
                 Console.WriteLine($"✅ Fiyat teklifi kaydedildi");
@@ -822,6 +832,16 @@ namespace KamPay.Services
                 request.CounterOfferByProvider = counterOffer;
                 request.IsNegotiating = true;
                 request.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk karşı teklif ise başlangıç tarihini ayarla
+                if (!request.NegotiationStartedAt.HasValue)
+                {
+                    request.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                request.NegotiationRoundCount++;
+                
                 await requestNode.PutAsync(request);
 
                 Console.WriteLine($"✅ Karşı teklif kaydedildi");
@@ -936,7 +956,22 @@ namespace KamPay.Services
                 request.QuotedPrice = agreedPrice;
                 request.Price = agreedPrice;
                 request.IsNegotiating = false;
-                request.NegotiationNotes = $"Fiyat {agreedPrice} ₺ olarak anlaşıldı. Kabul eden: {currentUserId}";
+                
+                // Detaylı pazarlık özeti oluştur
+                var acceptedBy = request.RequesterId == currentUserId ? "Talep Eden" : "Sağlayıcı";
+                var negotiationDuration = request.NegotiationStartedAt.HasValue 
+                    ? (DateTime.UtcNow - request.NegotiationStartedAt.Value).TotalMinutes 
+                    : 0;
+                
+                var negotiationSummary = $"✅ Anlaşma Sağlandı\n" +
+                    $"Fiyat: {agreedPrice:N2}₺\n" +
+                    $"Kabul Eden: {acceptedBy}\n" +
+                    $"Pazarlık Turu: {request.NegotiationRoundCount}\n" +
+                    $"Süre: {negotiationDuration:N0} dakika\n" +
+                    $"Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                
+                request.NegotiationNotes += (string.IsNullOrEmpty(request.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
+                
                 await requestNode.PutAsync(request);
 
                 Console.WriteLine($"✅ Anlaşma kaydedildi");

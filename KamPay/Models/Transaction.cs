@@ -87,9 +87,19 @@ namespace KamPay.Models
         public DateTime? LastNegotiationDate { get; set; }
         
        
+        // Pazarlık başlangıç tarihi
+        
+        public DateTime? NegotiationStartedAt { get; set; }
+        
+       
         // Pazarlık notları
         
         public string NegotiationNotes { get; set; } = "";
+        
+       
+        // Pazarlık turu sayısı (kaç kez teklif/karşı teklif yapıldı)
+        
+        public int NegotiationRoundCount { get; set; } = 0;
         
        
         // Mesajlaşma için conversation ID

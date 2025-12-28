@@ -1,0 +1,195 @@
+using KamPay.Models;
+using System;
+
+namespace KamPay.Helpers
+{
+    /// <summary>
+    /// Pazarlık kuralları ve limitleri için helper sınıf
+    /// </summary>
+    public static class NegotiationRules
+    {
+        // Maksimum pazarlık turu sayısı
+        public const int MaxNegotiationRounds = 10;
+        
+        // Pazarlık zaman aşımı (saat cinsinden)
+        public const int NegotiationTimeoutHours = 48;
+        
+        // Minimum teklif oranı (orijinal fiyatın %'si olarak)
+        public const decimal MinOfferPercentage = 50m; // %50
+        
+        // Maksimum karşı teklif oranı (orijinal fiyatın %'si olarak)
+        public const decimal MaxCounterOfferPercentage = 100m; // %100
+        
+        /// <summary>
+        /// Pazarlık turlarının maksimum sayıya ulaşıp ulaşmadığını kontrol eder
+        /// </summary>
+        public static bool HasReachedMaxRounds(int currentRounds)
+        {
+            return currentRounds >= MaxNegotiationRounds;
+        }
+        
+        /// <summary>
+        /// Pazarlık zaman aşımına uğramış mı kontrol eder
+        /// </summary>
+        public static bool IsNegotiationExpired(DateTime? negotiationStartedAt)
+        {
+            if (!negotiationStartedAt.HasValue)
+                return false;
+                
+            var elapsed = DateTime.UtcNow - negotiationStartedAt.Value;
+            return elapsed.TotalHours > NegotiationTimeoutHours;
+        }
+        
+        /// <summary>
+        /// Teklif edilen fiyatın geçerli aralıkta olup olmadığını kontrol eder (SATIŞ için)
+        /// </summary>
+        public static ValidationResult ValidateProposedPrice(decimal proposedPrice, decimal originalPrice)
+        {
+            if (proposedPrice <= 0)
+            {
+                return ValidationResult.Failure("Teklif fiyatı sıfırdan büyük olmalıdır.");
+            }
+            
+            var minAllowedPrice = originalPrice * (MinOfferPercentage / 100m);
+            
+            if (proposedPrice < minAllowedPrice)
+            {
+                return ValidationResult.Failure(
+                    $"Teklif fiyatı çok düşük. Minimum: {minAllowedPrice:N2}₺ (Orijinal fiyatın %{MinOfferPercentage:N0})"
+                );
+            }
+            
+            if (proposedPrice > originalPrice)
+            {
+                return ValidationResult.Warning(
+                    $"Teklif fiyatı orijinal fiyattan yüksek. Direkt kabul edebilirsiniz."
+                );
+            }
+            
+            return ValidationResult.Success();
+        }
+        
+        /// <summary>
+        /// Karşı teklif fiyatının geçerli aralıkta olup olmadığını kontrol eder (SATIŞ için)
+        /// </summary>
+        public static ValidationResult ValidateCounterOffer(decimal counterOffer, decimal originalPrice, decimal? proposedPrice)
+        {
+            if (counterOffer <= 0)
+            {
+                return ValidationResult.Failure("Karşı teklif fiyatı sıfırdan büyük olmalıdır.");
+            }
+            
+            if (counterOffer > originalPrice)
+            {
+                return ValidationResult.Failure(
+                    $"Karşı teklif orijinal fiyattan yüksek olamaz. Maksimum: {originalPrice:N2}₺"
+                );
+            }
+            
+            // Eğer alıcı bir teklif vermişse, karşı teklif bundan düşük olamaz (mantıklı pazarlık)
+            if (proposedPrice.HasValue && counterOffer < proposedPrice.Value)
+            {
+                return ValidationResult.Warning(
+                    $"Karşı teklif, alıcının teklifinden düşük. Bu mantıklı olmayabilir."
+                );
+            }
+            
+            return ValidationResult.Success();
+        }
+        
+        /// <summary>
+        /// Takas için ek nakit teklifinin geçerli olup olmadığını kontrol eder
+        /// </summary>
+        public static ValidationResult ValidateAdditionalCash(decimal additionalCash)
+        {
+            if (additionalCash < 0)
+            {
+                return ValidationResult.Failure("Ek nakit negatif olamaz.");
+            }
+            
+            // Ek nakit 0 olabilir (sade takas)
+            return ValidationResult.Success();
+        }
+        
+        /// <summary>
+        /// Pazarlığa devam edilip edilemeyeceğini kontrol eder
+        /// </summary>
+        public static ValidationResult CanContinueNegotiation(
+            int currentRounds, 
+            DateTime? negotiationStartedAt)
+        {
+            if (HasReachedMaxRounds(currentRounds))
+            {
+                return ValidationResult.Failure(
+                    $"Maksimum pazarlık turu sayısına ({MaxNegotiationRounds}) ulaşıldı. " +
+                    "Lütfen mevcut teklifi kabul edin veya reddedin."
+                );
+            }
+            
+            if (IsNegotiationExpired(negotiationStartedAt))
+            {
+                return ValidationResult.Failure(
+                    $"Pazarlık süresi doldu ({NegotiationTimeoutHours} saat). " +
+                    "Bu pazarlık artık aktif değil."
+                );
+            }
+            
+            return ValidationResult.Success();
+        }
+        
+        /// <summary>
+        /// Pazarlık özeti mesajı oluşturur
+        /// </summary>
+        public static string GetNegotiationSummary(
+            int roundCount,
+            DateTime? startedAt,
+            decimal? originalPrice = null,
+            decimal? finalPrice = null)
+        {
+            var duration = startedAt.HasValue 
+                ? (DateTime.UtcNow - startedAt.Value).TotalMinutes 
+                : 0;
+            
+            var summary = $"📊 Pazarlık İstatistikleri\n";
+            summary += $"━━━━━━━━━━━━━━━━━━━━\n";
+            summary += $"🔄 Tur Sayısı: {roundCount}\n";
+            summary += $"⏱️ Süre: {duration:N0} dakika\n";
+            
+            if (originalPrice.HasValue && finalPrice.HasValue && originalPrice.Value > 0)
+            {
+                var discount = ((originalPrice.Value - finalPrice.Value) / originalPrice.Value) * 100m;
+                summary += $"💰 Orijinal Fiyat: {originalPrice.Value:N2}₺\n";
+                summary += $"✅ Anlaşılan Fiyat: {finalPrice.Value:N2}₺\n";
+                summary += $"📉 İndirim: %{discount:N1}\n";
+            }
+            
+            summary += $"📅 Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}\n";
+            
+            return summary;
+        }
+        
+        /// <summary>
+        /// Akıllı öneri: Ortalama indirim oranına göre fiyat önerir
+        /// </summary>
+        public static decimal SuggestPrice(
+            decimal originalPrice, 
+            decimal? buyerOffer = null,
+            decimal? sellerCounter = null)
+        {
+            // Eğer her iki taraf da teklif verdiyse, ortalamasını al
+            if (buyerOffer.HasValue && sellerCounter.HasValue)
+            {
+                return Math.Round((buyerOffer.Value + sellerCounter.Value) / 2m, 2);
+            }
+            
+            // Sadece alıcı teklif verdiyse, orijinal ile ortalama al
+            if (buyerOffer.HasValue)
+            {
+                return Math.Round((buyerOffer.Value + originalPrice) / 2m, 2);
+            }
+            
+            // Varsayılan: %15 indirim öner
+            return Math.Round(originalPrice * 0.85m, 2);
+        }
+    }
+}

@@ -83,7 +83,16 @@ public class ServiceRequest
     public decimal? CounterOfferByProvider { get; set; } // Sağlayıcının karşı teklifi
     public bool IsNegotiating { get; set; } = false; // Pazarlık devam ediyor mu?
     public DateTime? LastNegotiationDate { get; set; } // Son pazarlık tarihi
+    public DateTime? NegotiationStartedAt { get; set; } // Pazarlık başlangıç tarihi
     public string NegotiationNotes { get; set; } = ""; // Pazarlık notları
+    public int NegotiationRoundCount { get; set; } = 0; // Pazarlık turu sayısı
+    
+    /// <summary>
+    /// Hesaplanan değer: Anlaşılan fiyat
+    /// Öncelik sırası: Sağlayıcının karşı teklifi → Talep edenin teklifi → Kilitli fiyat → Orijinal fiyat
+    /// Price non-nullable olduğu için null dönmez
+    /// </summary>
+    public decimal AgreedPrice => CounterOfferByProvider ?? ProposedPriceByRequester ?? QuotedPrice ?? Price;
 }
 
 public enum ServiceRequestStatus
