@@ -663,6 +663,15 @@ namespace KamPay.Services
                 transaction.ProposedPriceByBuyer = proposedPrice;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -731,6 +740,15 @@ namespace KamPay.Services
                 transaction.CounterOfferBySeller = counterOffer;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk karşı teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -807,6 +825,15 @@ namespace KamPay.Services
                 transaction.AdditionalCashByRequester = additionalCash;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -879,6 +906,15 @@ namespace KamPay.Services
                 transaction.CounterCashByOwner = counterCash;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
+                
+                // İlk karşı teklif ise başlangıç tarihini ayarla
+                if (!transaction.NegotiationStartedAt.HasValue)
+                {
+                    transaction.NegotiationStartedAt = DateTime.UtcNow;
+                }
+                
+                // Pazarlık turu sayısını artır
+                transaction.NegotiationRoundCount++;
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -964,7 +1000,21 @@ namespace KamPay.Services
                 }
 
                 transaction.IsNegotiating = false;
-                transaction.NegotiationNotes = $"Anlaşılan tutar: {agreedAmount:N2}₺ - {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                
+                // Detaylı pazarlık özeti oluştur
+                var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
+                var negotiationDuration = transaction.NegotiationStartedAt.HasValue 
+                    ? (DateTime.UtcNow - transaction.NegotiationStartedAt.Value).TotalMinutes 
+                    : 0;
+                
+                var negotiationSummary = $"✅ Anlaşma Sağlandı\n" +
+                    $"Tutar: {agreedAmount:N2}₺\n" +
+                    $"Kabul Eden: {acceptedBy}\n" +
+                    $"Pazarlık Turu: {transaction.NegotiationRoundCount}\n" +
+                    $"Süre: {negotiationDuration:N0} dakika\n" +
+                    $"Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                
+                transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
                 await _firebaseClient
