@@ -33,7 +33,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task LogoutAsync()
         {
-            // Gerekirse çıkış işlemini burada yap
+            // Çıkış işlemi - LoginPage'e yönlendir
             await Shell.Current.GoToAsync("//LoginPage");
         }
     }

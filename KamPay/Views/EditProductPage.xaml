@@ -7,356 +7,466 @@
              xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.EditProductPage"
-             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProduct]}"
-             Shell.BackgroundColor="{StaticResource Primary}">
+             Shell.NavBarIsVisible="False">
 
+    <Grid>
+        <!-- Gradient Background Header -->
+        <BoxView VerticalOptions="Start" HeightRequest="180">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1E88E5" Offset="0.0" />
+                    <GradientStop Color="#1565C0" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
 
+        <!-- Animated Background Circle -->
+        <Ellipse x:Name="Circle1" 
+                 WidthRequest="220" 
+                 HeightRequest="220"
+                 Fill="White"
+                 Opacity="0.05"
+                 HorizontalOptions="End"
+                 VerticalOptions="Start"
+                 Margin="0,-80,-80,0"/>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <ScrollView>
+            <VerticalStackLayout x:Name="MainContent" Spacing="0">
 
-            <!-- Hata Mesajı -->
-            <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                   BackgroundColor="#FFEBEE"
-                   BorderColor="#F44336"
-                   Padding="10"
-                   CornerRadius="8">
-                <Label Text="{Binding ErrorMessage}"
-                       TextColor="#C62828"
-                       FontSize="14" />
-            </Frame>
-
-            <!-- Başlık -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductInfo]}" 
-                   FontSize="20" 
-                   FontAttributes="Bold"
-                   TextColor="#333" />
-
-            <!-- Ürün Başlığı -->
-            <Frame Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductTitle]}"
-                       Text="{Binding Title}"
-                       MaxLength="100"
-                       FontSize="16" />
-            </Frame>
-
-            <!-- Açıklama -->
-            <Frame Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Editor Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductDescription]}"
-                        Text="{Binding Description}"
-                        HeightRequest="120"
-                        MaxLength="1000"
-                        FontSize="16"
-                        AutoSize="TextChanges" />
-            </Frame>
-
-            <!-- Kategori Seçimi -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Category]}" 
-                   FontSize="16" 
-                   FontAttributes="Bold"
-                   TextColor="#666" />
-
-            <Frame Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Picker ItemsSource="{Binding Categories}"
-                        SelectedItem="{Binding SelectedCategory}"
-                        ItemDisplayBinding="{Binding Name}"
-                        FontSize="16"
-                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCategory]}" />
-            </Frame>
-
-            <!-- Ürün Tipi -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductType]}" 
-                   FontSize="16" 
-                   FontAttributes="Bold"
-                   TextColor="#666" />
-
-            <Frame Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Picker ItemsSource="{Binding ProductTypes}"
-                        SelectedItem="{Binding SelectedType}"
-                        FontSize="16"
-                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectType]}">
-                    <Picker.ItemDisplayBinding>
-                        <Binding>
-                            <Binding.Converter>
-                                <conv:ProductTypeConverter />
-                            </Binding.Converter>
-                        </Binding>
-                    </Picker.ItemDisplayBinding>
-                </Picker>
-            </Frame>
-
-            <!-- Fiyat (Satılık ise) -->
-            <Frame IsVisible="{Binding ShowPriceField}"
-                   Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <HorizontalStackLayout Padding="10">
-                    <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Price]}"
-                           Text="{Binding Price}"
-                           Keyboard="Numeric"
-                           FontSize="16"
-                           HorizontalOptions="FillAndExpand" />
-                    <Label Text="₺" 
-                           VerticalOptions="Center"
-                           FontSize="18"
+                <!-- Header Section -->
+                <VerticalStackLayout x:Name="HeaderSection" Spacing="10" Padding="20,40,20,25">
+                    <Label Text="✏️" FontSize="42" HorizontalOptions="Center"/>
+                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProduct]}"
+                           FontSize="24"
                            FontAttributes="Bold"
-                           TextColor="#4CAF50" />
-                </HorizontalStackLayout>
-            </Frame>
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Ürününüzü güncelleyin"
+                           FontSize="13"
+                           TextColor="White"
+                           Opacity="0.9"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
 
-            <!-- Takas Tercihi (Takas ise) -->
-            <Frame IsVisible="{Binding ShowExchangeField}"
-                   Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WhatToExchange]}"
-                       Text="{Binding ExchangePreference}"
-                       FontSize="16" />
-            </Frame>
+                <!-- Main Form Card -->
+                <Border x:Name="FormCard"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="20"
+                        Margin="15,-15,15,20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="24"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.15" Radius="20" Offset="0,8"/>
+                    </Border.Shadow>
 
-            <!-- Durum -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductCondition]}" 
-                   FontSize="16" 
-                   FontAttributes="Bold"
-                   TextColor="#666" />
+                    <VerticalStackLayout Spacing="16">
 
-            <Frame Padding="0" 
-                   BorderColor="#E0E0E0"
-                   CornerRadius="8">
-                <Picker ItemsSource="{Binding Conditions}"
-                        SelectedItem="{Binding SelectedCondition}"
-                        FontSize="16"
-                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCondition]}">
-                    <Picker.ItemDisplayBinding>
-                        <Binding>
-                            <Binding.Converter>
-                                <conv:ProductConditionConverter />
-                            </Binding.Converter>
-                        </Binding>
-                    </Picker.ItemDisplayBinding>
-                </Picker>
-            </Frame>
-
-            <!-- Konum -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Location]}"
-                   FontSize="16" 
-                   FontAttributes="Bold"
-                   TextColor="#666" />
-
-            <!-- Etkileşimli Harita -->
-            <Border StrokeShape="RoundRectangle 12" 
-                    StrokeThickness="0"
-                    HeightRequest="250"
-                    Margin="0,8,0,0">
-                <Grid>
-                    <mapsui:MapControl x:Name="ProductMap"
-                                       VerticalOptions="FillAndExpand"
-                                       HorizontalOptions="FillAndExpand" />
-                    
-                    <!-- Zoom and Navigation Controls -->
-                    <VerticalStackLayout HorizontalOptions="End" 
-                                        VerticalOptions="Start"
-                                        Margin="12"
-                                        Spacing="8">
-                        
-                        <!-- Zoom In Button -->
-                        <Border StrokeShape="RoundRectangle 20"
-                                BackgroundColor="White"
-                                WidthRequest="40"
-                                HeightRequest="40"
-                                Padding="0">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                            </Border.Shadow>
-                            <Button Text="+"
-                                    Clicked="OnZoomInClicked"
-                                    FontSize="22"
-                                    FontAttributes="Bold"
-                                    BackgroundColor="Transparent"
-                                    TextColor="#333"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0"/>
+                        <!-- Error Message -->
+                        <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                BackgroundColor="#FFEBEE"
+                                StrokeThickness="0"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="{Binding ErrorMessage}"
+                                   TextColor="#EF5350"
+                                   FontSize="13"
+                                   FontAttributes="Bold"/>
                         </Border>
-                        
-                        <!-- Zoom Out Button -->
-                        <Border StrokeShape="RoundRectangle 20"
-                                BackgroundColor="White"
-                                WidthRequest="40"
-                                HeightRequest="40"
-                                Padding="0">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                            </Border.Shadow>
-                            <Button Text="−"
-                                    Clicked="OnZoomOutClicked"
-                                    FontSize="22"
-                                    FontAttributes="Bold"
-                                    BackgroundColor="Transparent"
-                                    TextColor="#333"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0"/>
+
+                        <!-- Product Info Section -->
+                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductInfo]}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#212121"/>
+
+                        <!-- Title Input -->
+                        <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductTitle]}"
+                                   Text="{Binding Title}"
+                                   MaxLength="100"
+                                   FontSize="15"
+                                   TextColor="#212121"
+                                   PlaceholderColor="#9E9E9E"
+                                   BackgroundColor="Transparent"
+                                   HeightRequest="48"
+                                   Margin="16,0"/>
                         </Border>
-                        
-                        <!-- Separator -->
-                        <BoxView HeightRequest="1" 
-                                 WidthRequest="30"
-                                 BackgroundColor="#E0E0E0"
-                                 HorizontalOptions="Center"
-                                 Margin="0,4"/>
-                        
-                        <!-- My Location Button -->
-                        <Border StrokeShape="RoundRectangle 20"
-                                BackgroundColor="White"
-                                WidthRequest="40"
-                                HeightRequest="40"
-                                Padding="0">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                            </Border.Shadow>
-                            <Button Text="📍"
-                                    Command="{Binding UseCurrentLocationCommand}"
-                                    FontSize="18"
+
+                        <!-- Description Input -->
+                        <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Editor Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductDescription]}"
+                                    Text="{Binding Description}"
+                                    MinimumHeightRequest="100"
+                                    MaxLength="1000"
+                                    FontSize="15"
+                                    TextColor="#212121"
+                                    PlaceholderColor="#9E9E9E"
                                     BackgroundColor="Transparent"
-                                    TextColor="#4CAF50"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0"/>
+                                    AutoSize="TextChanges"
+                                    Margin="16,8"/>
                         </Border>
-                        
-                        <!-- Reset/Center Button -->
-                        <Border StrokeShape="RoundRectangle 20"
-                                BackgroundColor="White"
-                                WidthRequest="40"
-                                HeightRequest="40"
-                                Padding="0">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                            </Border.Shadow>
-                            <Button Text="🎯"
-                                    Clicked="OnResetLocationClicked"
-                                    FontSize="18"
-                                    BackgroundColor="Transparent"
-                                    TextColor="#2196F3"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0"/>
-                        </Border>
-                    </VerticalStackLayout>
-                    
-                    <!-- Seçili konum bilgisi -->
-                    <Border StrokeShape="RoundRectangle 12"
-                            BackgroundColor="#F5F5F5"
-                            Padding="12,8"
-                            Margin="12"
-                            VerticalOptions="End"
-                            HorizontalOptions="FillAndExpand"
-                            IsVisible="{Binding HasLocation}">
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                        </Border.Shadow>
-                        <HorizontalStackLayout Spacing="8">
-                            <Label Text="📌" 
-                                   FontSize="16"
-                                   VerticalOptions="Center"/>
-                            <Label Text="{Binding Location}"
-                                   FontSize="12"
-                                   TextColor="#333"
-                                   VerticalOptions="Center"
-                                   LineBreakMode="TailTruncation"
-                                   MaxLines="2"
-                                   HorizontalOptions="FillAndExpand"/>
-                        </HorizontalStackLayout>
-                    </Border>
-                </Grid>
-            </Border>
 
-            <!-- Konum bilgi metni -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MapLocationInfo]}"
-                   FontSize="12"
-                   TextColor="{StaticResource Gray600}"
-                   Margin="0,4,0,0"/>
+                        <!-- Category Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Category]}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding Categories}"
+                                        SelectedItem="{Binding SelectedCategory}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCategory]}"
+                                        BackgroundColor="Transparent"
+                                        Margin="16,0"
+                                        HeightRequest="48"/>
+                            </Border>
+                        </VerticalStackLayout>
 
-            <!-- Görseller -->
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductImages]}" 
-                   FontSize="16" 
-                   FontAttributes="Bold"
-                   TextColor="#666" />
+                        <!-- Product Type Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductType]}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding ProductTypes}"
+                                        SelectedItem="{Binding SelectedType}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectType]}"
+                                        BackgroundColor="Transparent"
+                                        Margin="16,0"
+                                        HeightRequest="48">
+                                    <Picker.ItemDisplayBinding>
+                                        <Binding>
+                                            <Binding.Converter>
+                                                <conv:ProductTypeConverter/>
+                                            </Binding.Converter>
+                                        </Binding>
+                                    </Picker.ItemDisplayBinding>
+                                </Picker>
+                            </Border>
+                        </VerticalStackLayout>
 
-            <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[AddImage]}"
-                    Command="{Binding PickImagesCommand}"
-                    BackgroundColor="#2196F3"
-                    TextColor="White"
-                    CornerRadius="8"
-                    HeightRequest="50" />
-
-            <!-- Seçili Görseller -->
-            <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
-                        Wrap="Wrap"
-                        JustifyContent="Start"
-                        AlignItems="Start">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate>
-                        <Frame Padding="5"
-                               Margin="5"
-                               CornerRadius="8"
-                               WidthRequest="100"
-                               HeightRequest="100">
-                            <Grid>
-                                <Image Source="{Binding .}"
-                                       Aspect="AspectFill" />
-                                <Button Text="✕"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditProductViewModel}}, Path=RemoveImageCommand}"
-                                        CommandParameter="{Binding .}"
-                                        BackgroundColor="#F44336"
-                                        TextColor="White"
-                                        WidthRequest="30"
-                                        HeightRequest="30"
-                                        CornerRadius="15"
-                                        HorizontalOptions="End"
-                                        VerticalOptions="Start"
-                                        Margin="5" />
+                        <!-- Price Input -->
+                        <Border IsVisible="{Binding ShowPriceField}"
+                                BackgroundColor="#F5F9FC"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Grid Padding="16,0" ColumnDefinitions="*,Auto">
+                                <Entry Grid.Column="0"
+                                       Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Price]}"
+                                       Text="{Binding Price}"
+                                       Keyboard="Numeric"
+                                       FontSize="15"
+                                       TextColor="#212121"
+                                       PlaceholderColor="#9E9E9E"
+                                       BackgroundColor="Transparent"
+                                       HeightRequest="48"/>
+                                <Label Grid.Column="1"
+                                       Text="₺"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="#1E88E5"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,8,0"/>
                             </Grid>
-                        </Frame>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+                        </Border>
 
-            <!-- Butonlar -->
-            <Grid ColumnDefinitions="*,*" 
-                  ColumnSpacing="10"
-                  Margin="0,20,0,0">
-                <Button Grid.Column="0"
-                        Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Cancel]}"
-                        Command="{Binding CancelCommand}"
-                        BackgroundColor="#757575"
-                        TextColor="White"
-                        CornerRadius="8"
-                        HeightRequest="50" />
+                        <!-- Exchange Preference -->
+                        <Border IsVisible="{Binding ShowExchangeField}"
+                                BackgroundColor="#F5F9FC"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WhatToExchange]}"
+                                   Text="{Binding ExchangePreference}"
+                                   FontSize="15"
+                                   TextColor="#212121"
+                                   PlaceholderColor="#9E9E9E"
+                                   BackgroundColor="Transparent"
+                                   HeightRequest="48"
+                                   Margin="16,0"/>
+                        </Border>
 
-                <Button Grid.Column="1"
-            Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Update]}" Command="{Binding SaveProductCommand}" BackgroundColor="#4CAF50"
-            TextColor="White"
-            CornerRadius="8"
-            HeightRequest="50" />
-            </Grid>
+                        <!-- Condition Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductCondition]}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding Conditions}"
+                                        SelectedItem="{Binding SelectedCondition}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SelectCondition]}"
+                                        BackgroundColor="Transparent"
+                                        Margin="16,0"
+                                        HeightRequest="48">
+                                    <Picker.ItemDisplayBinding>
+                                        <Binding>
+                                            <Binding.Converter>
+                                                <conv:ProductConditionConverter/>
+                                            </Binding.Converter>
+                                        </Binding>
+                                    </Picker.ItemDisplayBinding>
+                                </Picker>
+                            </Border>
+                        </VerticalStackLayout>
 
-            <!-- Loading Indicator -->
-            <ActivityIndicator IsRunning="{Binding IsLoading}"
-                              IsVisible="{Binding IsLoading}"
-                              Color="#4CAF50"
-                              HeightRequest="50" />
+                        <!-- Location Section -->
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Location]}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
 
-        </VerticalStackLayout>
-    </ScrollView>
+                            <Border StrokeShape="RoundRectangle 16"
+                                    StrokeThickness="0"
+                                    HeightRequest="220">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.08" Radius="8" Offset="0,2"/>
+                                </Border.Shadow>
+                                <Grid>
+                                    <mapsui:MapControl x:Name="ProductMap"
+                                                       VerticalOptions="FillAndExpand"
+                                                       HorizontalOptions="FillAndExpand"/>
 
+                                    <!-- Zoom Controls -->
+                                    <VerticalStackLayout HorizontalOptions="End"
+                                                        VerticalOptions="Start"
+                                                        Margin="12"
+                                                        Spacing="8">
+
+                                        <Border StrokeShape="RoundRectangle 20"
+                                                BackgroundColor="White"
+                                                WidthRequest="40"
+                                                HeightRequest="40"
+                                                Padding="0">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                            </Border.Shadow>
+                                            <Button Text="+"
+                                                    Clicked="OnZoomInClicked"
+                                                    FontSize="22"
+                                                    FontAttributes="Bold"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#212121"
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"/>
+                                        </Border>
+
+                                        <Border StrokeShape="RoundRectangle 20"
+                                                BackgroundColor="White"
+                                                WidthRequest="40"
+                                                HeightRequest="40"
+                                                Padding="0">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                            </Border.Shadow>
+                                            <Button Text="−"
+                                                    Clicked="OnZoomOutClicked"
+                                                    FontSize="22"
+                                                    FontAttributes="Bold"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#212121"
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"/>
+                                        </Border>
+
+                                        <BoxView HeightRequest="1"
+                                                 WidthRequest="30"
+                                                 BackgroundColor="#E0E0E0"
+                                                 HorizontalOptions="Center"
+                                                 Margin="0,4"/>
+
+                                        <Border StrokeShape="RoundRectangle 20"
+                                                BackgroundColor="White"
+                                                WidthRequest="40"
+                                                HeightRequest="40"
+                                                Padding="0">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                            </Border.Shadow>
+                                            <Button Text="📍"
+                                                    Command="{Binding UseCurrentLocationCommand}"
+                                                    FontSize="18"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#1E88E5"
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"/>
+                                        </Border>
+
+                                        <Border StrokeShape="RoundRectangle 20"
+                                                BackgroundColor="White"
+                                                WidthRequest="40"
+                                                HeightRequest="40"
+                                                Padding="0">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                            </Border.Shadow>
+                                            <Button Text="🎯"
+                                                    Clicked="OnResetLocationClicked"
+                                                    FontSize="18"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#2196F3"
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"/>
+                                        </Border>
+                                    </VerticalStackLayout>
+
+                                    <!-- Location Display -->
+                                    <Border StrokeShape="RoundRectangle 12"
+                                            BackgroundColor="White"
+                                            Padding="12"
+                                            Margin="12"
+                                            VerticalOptions="End"
+                                            HorizontalOptions="FillAndExpand"
+                                            IsVisible="{Binding HasLocation}">
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                        </Border.Shadow>
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="📌" FontSize="16" VerticalOptions="Center"/>
+                                            <Label Text="{Binding Location}"
+                                                   FontSize="12"
+                                                   TextColor="#212121"
+                                                   VerticalOptions="Center"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="2"
+                                                   HorizontalOptions="FillAndExpand"/>
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MapLocationInfo]}"
+                                   FontSize="12"
+                                   TextColor="#9E9E9E"/>
+                        </VerticalStackLayout>
+
+                        <!-- Images Section -->
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductImages]}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+
+                            <Button Text="📷 Resim Ekle"
+                                    Command="{Binding PickImagesCommand}"
+                                    BackgroundColor="#E3F2FD"
+                                    TextColor="#1E88E5"
+                                    FontAttributes="Bold"
+                                    CornerRadius="12"
+                                    HeightRequest="50"
+                                    BorderColor="#1E88E5"
+                                    BorderWidth="2"/>
+
+                            <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
+                                        Wrap="Wrap"
+                                        JustifyContent="Start">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border StrokeShape="RoundRectangle 12"
+                                                StrokeThickness="0"
+                                                WidthRequest="100"
+                                                HeightRequest="100"
+                                                Margin="4">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Opacity="0.1" Radius="4" Offset="0,2"/>
+                                            </Border.Shadow>
+                                            <Grid>
+                                                <Image Source="{Binding .}" Aspect="AspectFill"/>
+                                                <Button Text="✕"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditProductViewModel}}, Path=RemoveImageCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#EF5350"
+                                                        TextColor="White"
+                                                        FontSize="16"
+                                                        FontAttributes="Bold"
+                                                        WidthRequest="32"
+                                                        HeightRequest="32"
+                                                        CornerRadius="16"
+                                                        Padding="0"
+                                                        HorizontalOptions="End"
+                                                        VerticalOptions="Start"
+                                                        Margin="4"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Action Buttons -->
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="12"
+                              Margin="0,20,0,0">
+                            <Button Grid.Column="0"
+                                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Cancel]}"
+                                    Command="{Binding CancelCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#757575"
+                                    BorderColor="#E0E0E0"
+                                    BorderWidth="2"
+                                    CornerRadius="12"
+                                    FontAttributes="Bold"
+                                    HeightRequest="54"/>
+
+                            <Button Grid.Column="1"
+                                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Update]}"
+                                    Command="{Binding SaveProductCommand}"
+                                    BackgroundColor="#1E88E5"
+                                    TextColor="White"
+                                    CornerRadius="12"
+                                    FontAttributes="Bold"
+                                    HeightRequest="54">
+                                <Button.Shadow>
+                                    <Shadow Brush="#1E88E5" Opacity="0.3" Radius="10" Offset="0,4"/>
+                                </Button.Shadow>
+                            </Button>
+                        </Grid>
+
+                        <!-- Loading Indicator -->
+                        <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                           IsVisible="{Binding IsLoading}"
+                                           Color="#1E88E5"
+                                           HeightRequest="40"
+                                           Margin="0,10"/>
+
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

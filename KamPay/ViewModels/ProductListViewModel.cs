@@ -128,7 +128,20 @@ namespace KamPay.ViewModels
             });
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) => { HasUnreadNotifications = m.Value; });
 
-            _ = InitializeViewModel();
+            // ✅ Constructor'da otomatik başlat
+            _ = InitializeAsync();
+        }
+
+        // ✅ Tek InitializeAsync metodu
+        public async Task InitializeAsync()
+        {
+            await LoadCategoriesAsync();
+            StartListeningForNotifications();
+
+            if (string.IsNullOrEmpty(UserId))
+            {
+                await UltraFastLoadAsync();
+            }
         }
 
         public async Task UltraFastLoadAsync()
@@ -193,17 +206,6 @@ namespace KamPay.ViewModels
             }
 
             ExecuteFiltering();
-        }
-
-        public async Task InitializeViewModel()
-        {
-            await LoadCategoriesAsync();
-            StartListeningForNotifications();
-
-            if (string.IsNullOrEmpty(UserId))
-            {
-                await UltraFastLoadAsync();
-            }
         }
 
         #region Veri Yükleme ve Filtreleme Mantığı

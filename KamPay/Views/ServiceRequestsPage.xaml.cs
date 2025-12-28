@@ -6,6 +6,7 @@ namespace KamPay.Views
     {
         private readonly ServiceRequestsViewModel _viewModel;
         private bool _isFirstLoad = true; // / İlk yüklenme kontrolü
+        private bool _hasAnimated = false;
 
         public ServiceRequestsPage(ServiceRequestsViewModel vm)
         {
@@ -28,9 +29,17 @@ namespace KamPay.Views
             }
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            // Animasyon
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
 
             //  Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
             if (_isFirstLoad)
@@ -42,6 +51,64 @@ namespace KamPay.Views
             {
                 System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsPage: Cache'den gösterildi (Listener zaten aktif)");
             }
+        }
+
+        private async Task AnimatePageAsync()
+        {
+            // Reset states
+            HeaderSection.Opacity = 0;
+            HeaderSection.TranslationY = -30;
+            TabSection.Opacity = 0;
+            TabSection.TranslationY = -20;
+            ContentSection.Opacity = 0;
+            ContentSection.TranslationY = 50;
+
+            // Background animation
+            AnimateBackgroundCircle();
+
+            // Header animation
+            await Task.WhenAll(
+                HeaderSection.FadeTo(1, 600, Easing.CubicOut),
+                HeaderSection.TranslateTo(0, 0, 600, Easing.CubicOut)
+            );
+
+            await Task.Delay(100);
+
+            // Tab section animation
+            await Task.WhenAll(
+                TabSection.FadeTo(1, 500, Easing.CubicOut),
+                TabSection.TranslateTo(0, 0, 500, Easing.CubicOut)
+            );
+
+            await Task.Delay(100);
+
+            // Content animation
+            await Task.WhenAll(
+                ContentSection.FadeTo(1, 700, Easing.CubicOut),
+                ContentSection.TranslateTo(0, 0, 700, Easing.CubicOut)
+            );
+        }
+
+        private void AnimateBackgroundCircle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await Circle1.RotateTo(360, 28000, Easing.Linear);
+                            Circle1.Rotation = 0;
+                        });
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            });
         }
 
         protected override void OnDisappearing()

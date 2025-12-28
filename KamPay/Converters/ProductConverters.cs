@@ -378,6 +378,31 @@ namespace KamPay.Converters
         }
     }
 
+    // String'den Color'a dönüştürücü (Badge için)
+    public class StringToColorConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is string colorHex && !string.IsNullOrEmpty(colorHex))
+            {
+                try
+                {
+                    return Color.FromArgb(colorHex);
+                }
+                catch
+                {
+                    return Color.FromArgb("#1E88E5"); // Default blue
+                }
+            }
+            return Color.FromArgb("#1E88E5");
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     // Ürün kategori adlarını yerelleştirilmiş metne dönüştür.
 
     // Firebase'de saklanan Türkçe kategori adlarını yerelleştirilmiş kaynak anahtarlarına eşler.

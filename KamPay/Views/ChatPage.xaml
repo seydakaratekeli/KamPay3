@@ -3,91 +3,143 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ChatPage"
-             Title="">
- 
-    <!-- gerçek zamanlı presence (WebSocket/RTDB presence) bunu bi araştır— şu anda basit LastLoginAt kontrollü bir tahmin kullanılıyor. -->
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F9FC">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Primary">#1E88E5</Color>
+            <Color x:Key="PrimaryDark">#1565C0</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="Background">#F5F9FC</Color>
+            <Color x:Key="TextPrimary">#212121</Color>
+            <Color x:Key="TextSecondary">#757575</Color>
+            <Color x:Key="BorderColor">#E0E0E0</Color>
+            <Color x:Key="SenderBubble">#1E88E5</Color>
+            <Color x:Key="ReceiverBubble">#FFFFFF</Color>
+            <Color x:Key="SystemMessageBg">#E3F2FD</Color>
+
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
         
-        <!--  ÖZEL HEADER (Profil Fotoğrafı + İsim + Son Görülme) -->
-        <Grid Grid.Row="0" 
-              BackgroundColor="{StaticResource Primary}"
-              Padding="15,10"
-              ColumnDefinitions="Auto,Auto,*,Auto"
-              ColumnSpacing="10">
-            
-            <!-- Geri Butonu -->
-            <ImageButton Grid.Column="0"
-                         Source="back_icon.svg"
-                         Command="{Binding GoBackCommand}"
-                         WidthRequest="30"
-                         HeightRequest="30"
-                         VerticalOptions="Center"
-                         BackgroundColor="Transparent"
-                         Aspect="AspectFit"/>
-            
-            <!-- Profil Fotoğrafı -->
-            <Border Grid.Column="1" 
-                    StrokeThickness="2"
-                    Stroke="White"
-                    WidthRequest="45"
-                    HeightRequest="45"
-                    VerticalOptions="Center">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="22.5"/>
-                </Border.StrokeShape>
-                <ffimageloading:CachedImage 
-                    Source="{Binding OtherUserPhoto}"
-                    Aspect="AspectFill"
-                    LoadingPlaceholder="default_avatar.png"
-                    ErrorPlaceholder="default_avatar.png"
-                    DownsampleToViewSize="True"
-                    VerticalOptions="Center"
-                    HorizontalOptions="Center"/>
-            </Border>
-            
-            <!-- İsim ve Son Görülme Durumu -->
-            <VerticalStackLayout Grid.Column="2" 
-                                 VerticalOptions="Center"
-                                 Spacing="2">
-                <Label Text="{Binding OtherUserName}"
-                       FontSize="18"
-                       FontAttributes="Bold"
-                       TextColor="White"
-                       LineBreakMode="TailTruncation"
-                       MaxLines="1"/>
+        <!--  ✨ ÖZEL HEADER (Gradient + Profil Bilgileri) -->
+        <Grid Grid.Row="0" RowDefinitions="Auto" x:Name="HeaderSection">
+            <!-- Gradient Background -->
+            <BoxView>
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1E88E5" Offset="0.0" />
+                        <GradientStop Color="#1565C0" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
 
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <!-- Online Dot -->
-                    <Border WidthRequest="10" HeightRequest="10" BackgroundColor="#4CAF50" StrokeThickness="0" IsVisible="{Binding IsOtherUserOnline}">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="5"/>
-                        </Border.StrokeShape>
-                    </Border>
+            <!-- Animated Background Circle -->
+            <Ellipse x:Name="Circle1" 
+                     WidthRequest="150" 
+                     HeightRequest="150"
+                     Fill="White"
+                     Opacity="0.05"
+                     HorizontalOptions="End"
+                     VerticalOptions="Start"
+                     Margin="0,-60,-60,0"/>
 
-                    <Label Text="{Binding OnlineStatusText}"
+            <Grid Padding="15,10,15,15"
+                  ColumnDefinitions="Auto,Auto,*"
+                  ColumnSpacing="12">
+                
+                <!-- Geri Butonu -->
+                <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="LightGray"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        VerticalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoBackCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="↩"
+                           FontSize="25"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           FontAttributes="Bold"/>
+                </Border>
+                
+                <!-- Profil Fotoğrafı -->
+                <Border Grid.Column="1" 
+                        StrokeThickness="2"
+                        Stroke="White"
+                        WidthRequest="50"
+                        HeightRequest="50"
+                        VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="25"/>
+                    </Border.StrokeShape>
+                    <Grid>
+                        <ffimageloading:CachedImage 
+                            Source="{Binding OtherUserPhoto}"
+                            Aspect="AspectFill"
+                            LoadingPlaceholder="person_icon.svg"
+                            ErrorPlaceholder="person_icon.svg"
+                            DownsampleToViewSize="True"
+                            CacheDuration="7"
+                            RetryCount="3"
+                            RetryDelay="250">
+                            <ffimageloading:CachedImage.Clip>
+                                <EllipseGeometry Center="25,25" RadiusX="25" RadiusY="25"/>
+                            </ffimageloading:CachedImage.Clip>
+                        </ffimageloading:CachedImage>
+                        
+                        <!-- Online indicator -->
+                        <Border WidthRequest="14" 
+                                HeightRequest="14" 
+                                BackgroundColor="Blue" 
+                                StrokeThickness="2"
+                                Stroke="White"
+                                HorizontalOptions="End"
+                                VerticalOptions="End"
+                                Margin="0,0,-2,-2"
+                                IsVisible="{Binding IsOtherUserOnline}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="7"/>
+                            </Border.StrokeShape>
+                        </Border>
+                    </Grid>
+                </Border>
+                
+                <!-- İsim ve Son Görülme Durumu -->
+                <VerticalStackLayout Grid.Column="2" 
+                                     VerticalOptions="Center"
+                                     Spacing="3">
+                    <Label Text="{Binding OtherUserName, FallbackValue='Yükleniyor...'}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1"/>
+
+                    <Label Text="{Binding OnlineStatusText, FallbackValue='Bağlanıyor...'}"
                            FontSize="12"
-                           TextColor="#E8F5E9"
-                           Opacity="0.95"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-            
-            <!-- Menü Butonu (Opsiyonel) -->
-            <ImageButton Grid.Column="3"
-                         Source="more_vert.svg"
-                         WidthRequest="30"
-                         HeightRequest="30"
-                         VerticalOptions="Center"
-                         BackgroundColor="Transparent"
-                         Aspect="AspectFit"/>
+                           TextColor="White"
+                           Opacity="0.85"/>
+                </VerticalStackLayout>
+            </Grid>
         </Grid>
 
-        <!--  Mesaj Listesi (Pull-to-Refresh ile) -->
+        <!--  ✨ Mesaj Listesi -->
         <RefreshView Grid.Row="1"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
+                     RefreshColor="{StaticResource Primary}"
                      IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
             <CollectionView x:Name="MessagesCollectionView"
@@ -95,61 +147,65 @@
                             ItemsLayout="VerticalList"
                             VerticalScrollBarVisibility="Never"
                             SelectionMode="None"
-                            ItemsUpdatingScrollMode="KeepLastItemInView">
+                            ItemsUpdatingScrollMode="KeepLastItemInView"
+                            Margin="15,10,15,10">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Message">
-                        <Grid Padding="10,5">
+                        <Grid Padding="0,4">
                             
-                            <!--  System Mesajı Template -->
-                            <Frame Padding="15,10"
-                                   CornerRadius="10"
-                                   BorderColor="Transparent"
-                                   BackgroundColor="#FFF9C4"
-                                   HasShadow="False"
+                            <!--  System Mesajı - Mavi ton -->
+                            <Border Padding="12,8"
+                                   StrokeShape="RoundRectangle 12"
+                                   StrokeThickness="0"
+                                   BackgroundColor="{StaticResource SystemMessageBg}"
                                    HorizontalOptions="Center"
-                                   MaximumWidthRequest="320"
+                                   MaximumWidthRequest="300"
                                    IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=System}">
                                 <Label Text="{Binding Content}"
                                        LineBreakMode="WordWrap"
-                                       TextColor="#F57C00"
-                                       FontSize="13"
+                                       TextColor="{StaticResource Primary}"
+                                       FontSize="12"
                                        HorizontalTextAlignment="Center"
                                        FontAttributes="Bold"/>
-                            </Frame>
+                            </Border>
                             
-                            <!--  Normal Mesajlar (Text ve Image) -->
-                            <Frame Padding="12"
-                                   CornerRadius="15"
-                                   BorderColor="Transparent"
-                                   HasShadow="False"
+                            <!--  Normal Mesajlar -->
+                            <Border Padding="12"
+                                   StrokeShape="RoundRectangle 16"
+                                   StrokeThickness="0"
                                    MaximumWidthRequest="280"
                                    IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='System,Invert=True'}">
-                                <Frame.Style>
-                                    <Style TargetType="Frame">
+                                <Border.Style>
+                                    <Style TargetType="Border">
                                         <Setter Property="HorizontalOptions" Value="Start" />
-                                        <Setter Property="BackgroundColor" Value="#E0E0E0" />
+                                        <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                                        <Setter Property="Shadow">
+                                            <Shadow Brush="Black" Offset="0,1" Radius="6" Opacity="0.08"/>
+                                        </Setter>
                                         <Style.Triggers>
-                                            <DataTrigger TargetType="Frame"
+                                            <DataTrigger TargetType="Border"
                                                          Binding="{Binding IsSentByMe}"
                                                          Value="True">
                                                 <Setter Property="HorizontalOptions" Value="End" />
-                                                <Setter Property="BackgroundColor"
-                                                        Value="{StaticResource Primary}" />
+                                                <Setter Property="BackgroundColor" Value="#1E88E5" />
+                                                <Setter Property="Shadow">
+                                                    <Shadow Brush="#1E88E5" Offset="0,2" Radius="8" Opacity="0.3"/>
+                                                </Setter>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Frame.Style>
+                                </Border.Style>
 
-                                <VerticalStackLayout Spacing="5">
+                                <VerticalStackLayout Spacing="6">
                                     <!--  Fotoğraf Mesajı -->
                                     <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}">
                                         <Border StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 10"
-                                                MaximumWidthRequest="250"
+                                                StrokeShape="RoundRectangle 12"
+                                                MaximumWidthRequest="240"
                                                 MaximumHeightRequest="200">
                                             <Image Source="{Binding ImageUrl}"
                                                    Aspect="AspectFill"
-                                                   WidthRequest="250"
+                                                   WidthRequest="240"
                                                    HeightRequest="200">
                                                 <Image.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ViewImageCommand}"
@@ -157,10 +213,9 @@
                                                 </Image.GestureRecognizers>
                                             </Image>
                                         </Border>
-                                        <!-- Loading Indicator for Image -->
                                         <ActivityIndicator IsRunning="{Binding IsImageLoading}"
                                                            IsVisible="{Binding IsImageLoading}"
-                                                           Color="White"
+                                                           Color="{StaticResource Primary}"
                                                            VerticalOptions="Center"
                                                            HorizontalOptions="Center" />
                                     </Grid>
@@ -168,10 +223,11 @@
                                     <!--  Text Mesajı -->
                                     <Label Text="{Binding Content}"
                                            LineBreakMode="WordWrap"
+                                           FontSize="15"
                                            IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
                                         <Label.Style>
                                             <Style TargetType="Label">
-                                                <Setter Property="TextColor" Value="Black" />
+                                                <Setter Property="TextColor" Value="#212121" />
                                                 <Style.Triggers>
                                                     <DataTrigger TargetType="Label"
                                                                  Binding="{Binding IsSentByMe}"
@@ -184,27 +240,26 @@
                                     </Label>
 
                                     <!-- Zaman ve Durum -->
-                                    <HorizontalStackLayout Spacing="5" HorizontalOptions="End">
+                                    <HorizontalStackLayout Spacing="4" HorizontalOptions="End">
                                         <Label Text="{Binding TimeText}"
                                                FontSize="10">
                                             <Label.Style>
                                                 <Style TargetType="Label">
-                                                    <Setter Property="TextColor" Value="{StaticResource Gray}" />
+                                                    <Setter Property="TextColor" Value="#757575" />
                                                     <Style.Triggers>
                                                         <DataTrigger TargetType="Label"
                                                                      Binding="{Binding IsSentByMe}"
                                                                      Value="True">
-                                                            <Setter Property="TextColor" Value="#B2DFDB" />
+                                                            <Setter Property="TextColor" Value="#E3F2FD" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Label.Style>
                                         </Label>
 
-                                        <!-- Gönderim durumu (sadece kendi mesajlarında) -->
-                                        <Label FontSize="12"
+                                        <Label FontSize="11"
                                                IsVisible="{Binding IsSentByMe}"
-                                               TextColor="#B2DFDB">
+                                               TextColor="#E3F2FD">
                                             <Label.Triggers>
                                                 <DataTrigger TargetType="Label" 
                                                             Binding="{Binding IsDelivered}" 
@@ -220,154 +275,145 @@
                                         </Label>
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
-                            </Frame>
+                            </Border>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 
                 <!--  Boş görünüm -->
                 <CollectionView.EmptyView>
-                    <VerticalStackLayout Padding="40"
-                                         VerticalOptions="Center"
-                                         HorizontalOptions="Center">
-                        <Label Text="💬"
-                               FontSize="60"
-                               HorizontalTextAlignment="Center"
-                               Opacity="0.3" />
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessageYet]}"
-                               FontSize="16"
-                               TextColor="#757575"
-                               HorizontalTextAlignment="Center"
-                               Margin="0,10,0,0" />
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SendFirstMessage]}"
-                               FontSize="12"
-                               TextColor="#BDBDBD"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
+                    <Grid VerticalOptions="Center" 
+                          HorizontalOptions="Center" 
+                          Padding="20">
+                        <Border BackgroundColor="White"
+                                StrokeThickness="0"
+                                Padding="30"
+                                WidthRequest="280"
+                                HeightRequest="220">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="20"/>
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                            </Border.Shadow>
+                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="💬" FontSize="60" HorizontalTextAlignment="Center"/>
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessageYet]}"
+                                       FontSize="16"
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalTextAlignment="Center"
+                                       FontAttributes="Bold"/>
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SendFirstMessage]}"
+                                       FontSize="13"
+                                       TextColor="{StaticResource Primary}"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
                 </CollectionView.EmptyView>
             </CollectionView>
         </RefreshView>
 
-        <!-- Mesaj Gönderme Alanı -->
-        <Frame Grid.Row="2"
-               Padding="10"
-               CornerRadius="0"
-               BorderColor="#E0E0E0"
+        <!-- ✨ Mesaj Gönderme Alanı -->
+        <Border Grid.Row="2"
+               Padding="15,12"
+               StrokeShape="RoundRectangle 0"
+               StrokeThickness="0"
                BackgroundColor="White"
-               HasShadow="True">
+               x:Name="MessageInputSection">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,-2" Radius="10" Opacity="0.08"/>
+            </Border.Shadow>
             <Grid ColumnDefinitions="Auto,*,Auto"
-                  ColumnSpacing="10"
-                  RowDefinitions="Auto">
+                  ColumnSpacing="10">
                 
                 <!--  Fotoğraf Butonu -->
-                <Button Grid.Column="0"
-                        Text="📷"
-                        Command="{Binding PickImageCommand}"
-                        BackgroundColor="Transparent"
-                        TextColor="{StaticResource Primary}"
-                        BorderWidth="0"
-                        WidthRequest="45"
-                        HeightRequest="45"
-                        FontSize="24"
-                        Padding="0"
-                        VerticalOptions="Center" />
+                <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="#E3F2FD"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        StrokeThickness="0">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding PickImageCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="📷"
+                           FontSize="24"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
                 
                 <!-- Mesaj Entry -->
-                <Frame Grid.Column="1"
-                       Padding="12,8"
-                       CornerRadius="20"
-                       BorderColor="#E0E0E0"
-                       BackgroundColor="#F5F5F5"
-                       HasShadow="False"
-                       VerticalOptions="Center">
+                <Border Grid.Column="1"
+                       Padding="14,0"
+                       StrokeShape="RoundRectangle 24"
+                       StrokeThickness="1"
+                       Stroke="{StaticResource BorderColor}"
+                       BackgroundColor="#F5F9FC"
+                       MinimumHeightRequest="48">
                     <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[TypeMessage]}"
                            Text="{Binding MessageText}"
                            ReturnCommand="{Binding SendMessageCommand}"
                            MaxLength="1000"
                            VerticalOptions="Center"
+                           FontSize="15"
+                           TextColor="{StaticResource TextPrimary}"
+                           PlaceholderColor="{StaticResource TextSecondary}"
                            BackgroundColor="Transparent" />
-                </Frame>
+                </Border>
 
                 <!-- Gönder Butonu -->
-                <Button Grid.Column="2"
-                        Text="📤"
-                        Command="{Binding SendMessageCommand}"
-                        IsEnabled="{Binding IsSending, Converter={StaticResource InvertedBoolConverter}}"
+                <Border Grid.Column="2"
+                        StrokeShape="RoundRectangle 24"
                         BackgroundColor="{StaticResource Primary}"
-                        TextColor="White"
-                        CornerRadius="25"
-                        WidthRequest="50"
-                        HeightRequest="50"
-                        Padding="0"
-                        FontSize="20"
-                        VerticalOptions="Center" />
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,3" Radius="8" Opacity="0.3"/>
+                    </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SendMessageCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="➤"
+                           FontSize="20"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Margin="2,0,0,0"/>
+                </Border>
             </Grid>
-        </Frame>
+        </Border>
 
-        <!--  Skeleton Loader (İlk Yükleme) -->
+        <!--  ✨ Loading Overlay -->
         <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="White"
+              BackgroundColor="#F5F9FC"
+              ZIndex="1100"
               InputTransparent="False">
-
-            <VerticalStackLayout Padding="15" Spacing="10" Margin="0,60,0,0">
-                <!-- Skeleton Message 1 (Alıcı) -->
-                <HorizontalStackLayout Spacing="10" HorizontalOptions="Start">
-                    <Frame Padding="12" 
-                           CornerRadius="15" 
-                           BackgroundColor="#E0E0E0"
-                           BorderColor="Transparent"
-                           MaximumWidthRequest="250">
-                        <VerticalStackLayout Spacing="5">
-                            <BoxView HeightRequest="14" WidthRequest="180" BackgroundColor="#D0D0D0" CornerRadius="3"/>
-                            <BoxView HeightRequest="14" WidthRequest="150" BackgroundColor="#D0D0D0" CornerRadius="3"/>
-                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#C0C0C0" CornerRadius="2" HorizontalOptions="End"/>
-                        </VerticalStackLayout>
-                    </Frame>
-                </HorizontalStackLayout>
-
-                <!-- Skeleton Message 2 (Gönderici) -->
-                <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
-                    <Frame Padding="12" 
-                           CornerRadius="15" 
-                           BackgroundColor="#B2DFDB"
-                           BorderColor="Transparent"
-                           MaximumWidthRequest="250">
-                        <VerticalStackLayout Spacing="5">
-                            <BoxView HeightRequest="14" WidthRequest="200" BackgroundColor="#A0CFC9" CornerRadius="3"/>
-                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#90BFB9" CornerRadius="2" HorizontalOptions="End"/>
-                        </VerticalStackLayout>
-                    </Frame>
-                </HorizontalStackLayout>
-
-                <!-- Skeleton Message 3 (Alıcı) -->
-                <HorizontalStackLayout Spacing="10" HorizontalOptions="Start">
-                    <Frame Padding="12" 
-                           CornerRadius="15" 
-                           BackgroundColor="#E0E0E0"
-                           BorderColor="Transparent"
-                           MaximumWidthRequest="250">
-                        <VerticalStackLayout Spacing="5">
-                            <BoxView HeightRequest="14" WidthRequest="120" BackgroundColor="#D0D0D0" CornerRadius="3"/>
-                            <BoxView HeightRequest="10" WidthRequest="50" BackgroundColor="#C0C0C0" CornerRadius="2" HorizontalOptions="End"/>
-                        </VerticalStackLayout>
-                    </Frame>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-
-            <!-- Loading Overlay -->
-            <VerticalStackLayout VerticalOptions="Center"
-                                 HorizontalOptions="Center"
-                                 Spacing="10">
-                <ActivityIndicator IsRunning="True"
-                                   Color="{StaticResource Primary}"
-                                   WidthRequest="40"
-                                   HeightRequest="40" />
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MessagesLoading]}"
-                       TextColor="{StaticResource Primary}"
-                       FontSize="12"
-                       HorizontalTextAlignment="Center" />
-            </VerticalStackLayout>
+            <Border BackgroundColor="White"
+                    WidthRequest="100"
+                    HeightRequest="100"
+                    StrokeThickness="0"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,8"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{StaticResource Primary}"
+                                       WidthRequest="40"
+                                       HeightRequest="40" />
+                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MessagesLoading]}"
+                           TextColor="{StaticResource Primary}"
+                           FontSize="13" />
+                </VerticalStackLayout>
+            </Border>
         </Grid>
     </Grid>
 </ContentPage>

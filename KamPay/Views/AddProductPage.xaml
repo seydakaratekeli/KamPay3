@@ -9,7 +9,7 @@
              x:Class="KamPay.Views.AddProductPage"
              x:DataType="vm:AddProductViewModel"
              Title="{extensions:Translate AddProduct}"
-             Shell.BackgroundColor="#4CAF50">
+             Shell.NavBarIsVisible="False">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -19,302 +19,456 @@
     </ContentPage.Resources>
 
     <Grid>
+        <!-- Gradient Background Header -->
+        <BoxView VerticalOptions="Start" HeightRequest="200">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1E88E5" Offset="0.0" />
+                    <GradientStop Color="#1565C0" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
+
+        <!-- Animated Background Circle -->
+        <Ellipse x:Name="Circle1" 
+                 WidthRequest="250" 
+                 HeightRequest="250"
+                 Fill="White"
+                 Opacity="0.05"
+                 HorizontalOptions="End"
+                 VerticalOptions="Start"
+                 Margin="0,-100,-100,0"/>
+
         <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="15">
+            <VerticalStackLayout x:Name="MainContent" Spacing="0">
 
-                <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                       BackgroundColor="#FFEBEE"
-                       BorderColor="#F44336"
-                       Padding="10"
-                       CornerRadius="8">
-                    <Label Text="{Binding ErrorMessage}"
-                           TextColor="#C62828"
-                           FontSize="14" />
-                </Frame>
+                <!-- Header Section -->
+                <VerticalStackLayout x:Name="HeaderSection" Spacing="12" Padding="20,50,20,30">
+                    <Label Text="📦" FontSize="48" HorizontalOptions="Center"/>
+                    <Label Text="{extensions:Translate AddProduct}"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Ürününüzü ekleyin ve paylaşın"
+                           FontSize="14"
+                           TextColor="White"
+                           Opacity="0.9"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
 
-                <Frame IsVisible="{Binding IsLoading}"
-                       BackgroundColor="#E3F2FD"
-                       BorderColor="#2196F3"
-                       Padding="15"
-                       CornerRadius="8">
-                    <VerticalStackLayout Spacing="10">
-                        <Label Text="{Binding UploadProgress}"
-                               TextColor="#1976D2"
-                               FontSize="14"
-                               FontAttributes="Bold" />
-                        <ProgressBar Progress="{Binding UploadPercentage}"
-                                     ProgressColor="#2196F3"
-                                     HeightRequest="8" />
-                        <Label Text="{Binding UploadPercentage, StringFormat='{0:P0}'}"
-                               TextColor="#1976D2"
-                               FontSize="12"
-                               HorizontalTextAlignment="End" />
-                    </VerticalStackLayout>
-                </Frame>
+                <!-- Main Form Card -->
+                <Border x:Name="FormCard"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="20"
+                        Margin="15,-20,15,20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="24"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.15" Radius="20" Offset="0,8"/>
+                    </Border.Shadow>
 
-                <Label Text="{extensions:Translate ProductInfoTitle}" 
-                       FontSize="20" 
-                       FontAttributes="Bold"
-                       TextColor="#333" />
+                    <VerticalStackLayout Spacing="18">
 
-                <Frame Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Entry Placeholder="{extensions:Translate ProductTitlePlaceholder}"
-                           Text="{Binding Title}"
-                           MaxLength="100"
-                           FontSize="16" />
-                </Frame>
+                        <!-- Error Message -->
+                        <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                BackgroundColor="#FFEBEE"
+                                StrokeThickness="0"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="{Binding ErrorMessage}"
+                                   TextColor="#EF5350"
+                                   FontSize="13"
+                                   FontAttributes="Bold"/>
+                        </Border>
 
-                <Frame Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Editor Placeholder="{extensions:Translate ProductDescriptionPlaceholder}"
-                            Text="{Binding Description}"
-                            HeightRequest="120"
-                            MaxLength="1000"
-                            FontSize="16"
-                            AutoSize="TextChanges" />
-                </Frame>
+                        <!-- Upload Progress -->
+                        <Border IsVisible="{Binding IsLoading}"
+                                BackgroundColor="#E3F2FD"
+                                StrokeThickness="0"
+                                Padding="16">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="{Binding UploadProgress}"
+                                       TextColor="#1976D2"
+                                       FontSize="14"
+                                       FontAttributes="Bold"/>
+                                <ProgressBar Progress="{Binding UploadPercentage}"
+                                             ProgressColor="#2196F3"
+                                             HeightRequest="8"/>
+                                <Label Text="{Binding UploadPercentage, StringFormat='{0:P0}'}"
+                                       TextColor="#1976D2"
+                                       FontSize="12"
+                                       HorizontalTextAlignment="End"/>
+                            </VerticalStackLayout>
+                        </Border>
 
-                <Label Text="{extensions:Translate CategoryLabel}" 
-                       FontSize="16" 
-                       FontAttributes="Bold"
-                       TextColor="#666" />
-
-                <Frame Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Picker ItemsSource="{Binding Categories}"
-                            SelectedItem="{Binding SelectedCategory}"
-                            FontSize="16"
-                            Title="{extensions:Translate SelectCategoryTitle}">
-                        <Picker.ItemDisplayBinding>
-                            <Binding Path="Name" Converter="{StaticResource ProductCategoryToTextConverter}" />
-                        </Picker.ItemDisplayBinding>
-                    </Picker>
-                </Frame>
-
-                <Label Text="{extensions:Translate ProductType}" 
-                       FontSize="16" 
-                       FontAttributes="Bold"
-                       TextColor="#666" />
-
-                <Frame Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Picker ItemsSource="{Binding TypeStrings}"
-                            SelectedIndex="{Binding SelectedTypeIndex}"
-                            FontSize="16"
-                            Title="{extensions:Translate SelectTypeTitle}">
-                    </Picker>
-                </Frame>
-
-                <StackLayout Orientation="Horizontal" 
-                             Padding="5,10" 
-                             IsVisible="{Binding IsDonationTypeSelected}">
-                    <Label Text="{extensions:Translate DonateToSurpriseBox}" 
-                           VerticalOptions="Center"
-                           TextColor="#333"/>
-                    <Switch IsToggled="{Binding IsForSurpriseBox}" 
-                            HorizontalOptions="EndAndExpand"
-                            OnColor="#4CAF50"/>
-                </StackLayout>
-
-                <Frame IsVisible="{Binding ShowPriceField}"
-                       Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <HorizontalStackLayout Padding="10">
-                        <Entry Placeholder="{extensions:Translate PricePlaceholder}"
-                               Text="{Binding Price}"
-                               Keyboard="Numeric"
-                               FontSize="16"
-                               HorizontalOptions="FillAndExpand" />
-                        <Label Text="₺" 
-                               VerticalOptions="Center"
+                        <!-- Product Info Section -->
+                        <Label Text="{extensions:Translate ProductInfoTitle}"
                                FontSize="18"
                                FontAttributes="Bold"
-                               TextColor="#4CAF50" />
-                    </HorizontalStackLayout>
-                </Frame>
+                               TextColor="#212121"/>
 
-                <Frame IsVisible="{Binding ShowExchangeField}"
-                       Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Entry Placeholder="{extensions:Translate ExchangePreferencePlaceholder}"
-                           Text="{Binding ExchangePreference}"
-                           FontSize="16" />
-                </Frame>
+                        <!-- Title Input -->
+                        <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Entry Placeholder="{extensions:Translate ProductTitlePlaceholder}"
+                                   Text="{Binding Title}"
+                                   MaxLength="100"
+                                   FontSize="15"
+                                   TextColor="#212121"
+                                   PlaceholderColor="#9E9E9E"
+                                   BackgroundColor="Transparent"
+                                   HeightRequest="48"
+                                   Margin="16,0"/>
+                        </Border>
 
-                <Label Text="{extensions:Translate ConditionTitle}" 
-                       FontSize="16" 
-                       FontAttributes="Bold"
-                       TextColor="#666" />
+                        <!-- Description Input -->
+                        <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Editor Placeholder="{extensions:Translate ProductDescriptionPlaceholder}"
+                                    Text="{Binding Description}"
+                                    MinimumHeightRequest="100"
+                                    MaxLength="1000"
+                                    FontSize="15"
+                                    TextColor="#212121"
+                                    PlaceholderColor="#9E9E9E"
+                                    BackgroundColor="Transparent"
+                                    AutoSize="TextChanges"
+                                    Margin="16,8"/>
+                        </Border>
 
-                <Frame Padding="0" 
-                       BorderColor="#E0E0E0"
-                       CornerRadius="8">
-                    <Picker ItemsSource="{Binding ConditionStrings}"
-                            SelectedIndex="{Binding SelectedConditionIndex}"
-                            FontSize="16"
-                            Title="{extensions:Translate SelectConditionTitle}">
-                    </Picker>
-                </Frame>
-
-                <Label Text="{extensions:Translate LocationTitle}"
-                       FontSize="16" 
-                       FontAttributes="Bold"
-                       TextColor="#666" />
-
-                <Border StrokeShape="RoundRectangle 12" 
-                        StrokeThickness="0"
-                        HeightRequest="250"
-                        Margin="0,8,0,0">
-                    <Grid>
-                        <mapsui:MapControl x:Name="ProductMap"
-                                           VerticalOptions="FillAndExpand"
-                                           HorizontalOptions="FillAndExpand" />
-
-                        <VerticalStackLayout HorizontalOptions="End" 
-                                            VerticalOptions="Start"
-                                            Margin="12"
-                                            Spacing="8">
-                            <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="White"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    Padding="0">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                                </Border.Shadow>
-                                <Button Text="📍"
-                                        Command="{Binding UseCurrentLocationCommand}"
-                                        FontSize="18"
+                        <!-- Category Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{extensions:Translate CategoryLabel}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding Categories}"
+                                        SelectedItem="{Binding SelectedCategory}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{extensions:Translate SelectCategoryTitle}"
                                         BackgroundColor="Transparent"
-                                        TextColor="#4CAF50"
-                                        WidthRequest="40"
-                                        HeightRequest="40"
-                                        Padding="0"/>
+                                        Margin="16,0"
+                                        HeightRequest="48">
+                                    <Picker.ItemDisplayBinding>
+                                        <Binding Path="Name" Converter="{StaticResource ProductCategoryToTextConverter}"/>
+                                    </Picker.ItemDisplayBinding>
+                                </Picker>
                             </Border>
                         </VerticalStackLayout>
 
-                        <Border StrokeShape="RoundRectangle 12"
-                                BackgroundColor="#F5F5F5"
-                                Padding="12,8"
-                                Margin="12"
-                                VerticalOptions="End"
-                                HorizontalOptions="FillAndExpand"
-                                IsVisible="{Binding HasLocation}">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
-                            </Border.Shadow>
-                            <HorizontalStackLayout Spacing="8">
-                                <Label Text="📌" 
-                                       FontSize="16"
-                                       VerticalOptions="Center"/>
-                                <Label Text="{Binding Location}"
-                                       FontSize="12"
-                                       TextColor="#333"
+                        <!-- Product Type Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{extensions:Translate ProductType}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding TypeStrings}"
+                                        SelectedIndex="{Binding SelectedTypeIndex}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{extensions:Translate SelectTypeTitle}"
+                                        BackgroundColor="Transparent"
+                                        Margin="16,0"
+                                        HeightRequest="48"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Surprise Box Toggle -->
+                        <Border IsVisible="{Binding IsDonationTypeSelected}"
+                                BackgroundColor="#FFF3E0"
+                                StrokeThickness="0"
+                                Padding="16">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="12">
+                                <Label Text="🎁" FontSize="24" VerticalOptions="Center"/>
+                                <Label Text="{extensions:Translate DonateToSurpriseBox}"
                                        VerticalOptions="Center"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="2"
-                                       HorizontalOptions="FillAndExpand"/>
+                                       TextColor="#E65100"
+                                       FontSize="14"
+                                       HorizontalOptions="StartAndExpand"/>
+                                <Switch IsToggled="{Binding IsForSurpriseBox}"
+                                        OnColor="#FF9800"
+                                        VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                         </Border>
-                    </Grid>
-                </Border>
 
-                <Label Text="{extensions:Translate MapInstruction}"
-                       FontSize="12"
-                       TextColor="{StaticResource Gray600}"
-                       Margin="0,4,0,0"/>
+                        <!-- Price Input -->
+                        <Border IsVisible="{Binding ShowPriceField}"
+                                BackgroundColor="#F5F9FC"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Grid Padding="16,0" ColumnDefinitions="*,Auto">
+                                <Entry Grid.Column="0"
+                                       Placeholder="{extensions:Translate PricePlaceholder}"
+                                       Text="{Binding Price}"
+                                       Keyboard="Numeric"
+                                       FontSize="15"
+                                       TextColor="#212121"
+                                       PlaceholderColor="#9E9E9E"
+                                       BackgroundColor="Transparent"
+                                       HeightRequest="48"/>
+                                <Label Grid.Column="1"
+                                       Text="₺"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="#1E88E5"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,8,0"/>
+                            </Grid>
+                        </Border>
 
-                <Label Text="{extensions:Translate ImagesTitle}" 
-                       FontSize="16" 
-                       FontAttributes="Bold"
-                       TextColor="#666" />
+                        <!-- Exchange Preference -->
+                        <Border IsVisible="{Binding ShowExchangeField}"
+                                BackgroundColor="#F5F9FC"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Entry Placeholder="{extensions:Translate ExchangePreferencePlaceholder}"
+                                   Text="{Binding ExchangePreference}"
+                                   FontSize="15"
+                                   TextColor="#212121"
+                                   PlaceholderColor="#9E9E9E"
+                                   BackgroundColor="Transparent"
+                                   HeightRequest="48"
+                                   Margin="16,0"/>
+                        </Border>
 
-                <Button Text="{extensions:Translate AddImageButton}"
-                        Command="{Binding PickImagesCommand}"
-                        BackgroundColor="#2196F3"
-                        TextColor="White"
-                        CornerRadius="8"
-                        HeightRequest="50" />
+                        <!-- Condition Picker -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{extensions:Translate ConditionTitle}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            <Border BackgroundColor="#F5F9FC" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Picker ItemsSource="{Binding ConditionStrings}"
+                                        SelectedIndex="{Binding SelectedConditionIndex}"
+                                        FontSize="15"
+                                        TextColor="#212121"
+                                        Title="{extensions:Translate SelectConditionTitle}"
+                                        BackgroundColor="Transparent"
+                                        Margin="16,0"
+                                        HeightRequest="48"/>
+                            </Border>
+                        </VerticalStackLayout>
 
-                <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
-                            Wrap="Wrap"
-                            JustifyContent="Start"
-                            AlignItems="Start">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Padding="5"
-                                   Margin="5"
-                                   CornerRadius="8"
-                                   WidthRequest="100"
-                                   HeightRequest="100">
+                        <!-- Location Section -->
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{extensions:Translate LocationTitle}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
+                            
+                            <Border StrokeShape="RoundRectangle 16"
+                                    StrokeThickness="0"
+                                    HeightRequest="220">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.08" Radius="8" Offset="0,2"/>
+                                </Border.Shadow>
                                 <Grid>
-                                    <Image Source="{Binding .}"
-                                           Aspect="AspectFill" />
-                                    <Button Text="✕"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AddProductViewModel}}, Path=RemoveImageCommand}"
-                                            CommandParameter="{Binding .}"
-                                            BackgroundColor="#F44336"
-                                            TextColor="White"
-                                            WidthRequest="30"
-                                            HeightRequest="30"
-                                            CornerRadius="15"
+                                    <mapsui:MapControl x:Name="ProductMap"
+                                                       VerticalOptions="FillAndExpand"
+                                                       HorizontalOptions="FillAndExpand"/>
+
+                                    <!-- Location Button -->
+                                    <Border StrokeShape="RoundRectangle 28"
+                                            BackgroundColor="White"
+                                            WidthRequest="56"
+                                            HeightRequest="56"
                                             HorizontalOptions="End"
                                             VerticalOptions="Start"
-                                            Margin="5" />
+                                            Margin="12"
+                                            Padding="0">
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Offset="0,4" Radius="8" Opacity="0.2"/>
+                                        </Border.Shadow>
+                                        <Button Text="📍"
+                                                Command="{Binding UseCurrentLocationCommand}"
+                                                FontSize="24"
+                                                BackgroundColor="Transparent"
+                                                TextColor="#1E88E5"
+                                                WidthRequest="56"
+                                                HeightRequest="56"
+                                                Padding="0"/>
+                                    </Border>
+
+                                    <!-- Location Display -->
+                                    <Border StrokeShape="RoundRectangle 12"
+                                            BackgroundColor="White"
+                                            Padding="12"
+                                            Margin="12"
+                                            VerticalOptions="End"
+                                            HorizontalOptions="FillAndExpand"
+                                            IsVisible="{Binding HasLocation}">
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.2"/>
+                                        </Border.Shadow>
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="📌" FontSize="16" VerticalOptions="Center"/>
+                                            <Label Text="{Binding Location}"
+                                                   FontSize="12"
+                                                   TextColor="#212121"
+                                                   VerticalOptions="Center"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="2"
+                                                   HorizontalOptions="FillAndExpand"/>
+                                        </HorizontalStackLayout>
+                                    </Border>
                                 </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
+                            </Border>
+                            <Label Text="{extensions:Translate MapInstruction}"
+                                   FontSize="12"
+                                   TextColor="#9E9E9E"/>
+                        </VerticalStackLayout>
 
-                <Grid ColumnDefinitions="*,*" 
-                      ColumnSpacing="10"
-                      Margin="0,20,0,0">
-                    <Button Grid.Column="0"
-                            Text="{extensions:Translate CancelButton}"
-                            Command="{Binding CancelCommand}"
-                            BackgroundColor="#757575"
-                            TextColor="White"
-                            CornerRadius="8"
-                            HeightRequest="50" />
+                        <!-- Images Section -->
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{extensions:Translate ImagesTitle}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#757575"/>
 
-                    <Button Grid.Column="1"
-                            Text="{extensions:Translate SaveButton}"
-                            Command="{Binding SaveProductCommand}"
-                            BackgroundColor="#4CAF50"
-                            TextColor="White"
-                            CornerRadius="8"
-                            HeightRequest="50" />
-                </Grid>
+                            <Button Text="📷 Resim Ekle"
+                                    Command="{Binding PickImagesCommand}"
+                                    BackgroundColor="#E3F2FD"
+                                    TextColor="#1E88E5"
+                                    FontAttributes="Bold"
+                                    CornerRadius="12"
+                                    HeightRequest="50"
+                                    BorderColor="#1E88E5"
+                                    BorderWidth="2"/>
+
+                            <FlexLayout BindableLayout.ItemsSource="{Binding ImagePaths}"
+                                        Wrap="Wrap"
+                                        JustifyContent="Start">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border StrokeShape="RoundRectangle 12"
+                                                StrokeThickness="0"
+                                                WidthRequest="100"
+                                                HeightRequest="100"
+                                                Margin="4">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Opacity="0.1" Radius="4" Offset="0,2"/>
+                                            </Border.Shadow>
+                                            <Grid>
+                                                <Image Source="{Binding .}" Aspect="AspectFill"/>
+                                                <Button Text="✕"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AddProductViewModel}}, Path=RemoveImageCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#EF5350"
+                                                        TextColor="White"
+                                                        FontSize="16"
+                                                        FontAttributes="Bold"
+                                                        WidthRequest="32"
+                                                        HeightRequest="32"
+                                                        CornerRadius="16"
+                                                        Padding="0"
+                                                        HorizontalOptions="End"
+                                                        VerticalOptions="Start"
+                                                        Margin="4"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Action Buttons -->
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="12"
+                              Margin="0,20,0,0">
+                            <Button Grid.Column="0"
+                                    Text="{extensions:Translate CancelButton}"
+                                    Command="{Binding CancelCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#757575"
+                                    BorderColor="#E0E0E0"
+                                    BorderWidth="2"
+                                    CornerRadius="12"
+                                    FontAttributes="Bold"
+                                    HeightRequest="54"/>
+
+                            <Button Grid.Column="1"
+                                    Text="{extensions:Translate SaveButton}"
+                                    Command="{Binding SaveProductCommand}"
+                                    BackgroundColor="#1E88E5"
+                                    TextColor="White"
+                                    CornerRadius="12"
+                                    FontAttributes="Bold"
+                                    HeightRequest="54">
+                                <Button.Shadow>
+                                    <Shadow Brush="#1E88E5" Opacity="0.3" Radius="10" Offset="0,4"/>
+                                </Button.Shadow>
+                            </Button>
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
 
             </VerticalStackLayout>
         </ScrollView>
 
+        <!-- Loading Overlay -->
         <Grid IsVisible="{Binding IsLoading}"
               BackgroundColor="#80000000"
+              ZIndex="999"
               InputTransparent="False">
-            <VerticalStackLayout VerticalOptions="Center"
-                                 HorizontalOptions="Center"
-                                 Spacing="15">
-                <ActivityIndicator IsRunning="True"
-                                   Color="White"
-                                   WidthRequest="50"
-                                   HeightRequest="50" />
-                <Label Text="{Binding UploadProgress}"
-                       TextColor="White"
-                       FontSize="16"
-                       FontAttributes="Bold"
-                       HorizontalTextAlignment="Center"
-                       IsVisible="{Binding UploadProgress, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
-            </VerticalStackLayout>
+            <Border BackgroundColor="White"
+                    WidthRequest="140"
+                    HeightRequest="140"
+                    StrokeThickness="0"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.2" Radius="20" Offset="0,10"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="12"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="#1E88E5"
+                                       WidthRequest="40"
+                                       HeightRequest="40"/>
+                    <Label Text="{Binding UploadProgress}"
+                           TextColor="#1E88E5"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="{Binding UploadProgress, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+                </VerticalStackLayout>
+            </Border>
         </Grid>
     </Grid>
-
 </ContentPage>

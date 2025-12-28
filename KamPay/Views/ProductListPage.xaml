@@ -1,74 +1,113 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
-             xmlns:local="clr-namespace:KamPay.Services"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              xmlns:extensions="clr-namespace:KamPay.Extensions"
              x:DataType="vm:ProductListViewModel"
              x:Class="KamPay.Views.ProductListPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F5F5">
+             BackgroundColor="#F5F9FC">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#4CAF50</Color>
+            <Color x:Key="Primary">#1E88E5</Color>
+            <Color x:Key="PrimaryDark">#1565C0</Color>
             <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="Background">#F5F9FC</Color>
             <Color x:Key="TextPrimary">#212121</Color>
             <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#EEEEEE</Color>
+            <Color x:Key="BorderColor">#E0E0E0</Color>
+            <Color x:Key="SurpriseBox">lightblue</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
             <converters:EqualityToBorderColorConverter x:Key="EqualityToBorderColorConverter" />
             <converters:EqualityToTextColorConverter x:Key="EqualityToTextColorConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
-            <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
-            <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
             <converters:ProductTypeToBadgeColorConverter x:Key="ProductTypeToBadgeColorConverter"/>
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto, Auto, *">
+    <Grid RowDefinitions="Auto, *">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,10" BackgroundColor="{StaticResource Surface}">
-            <Label Text="KamPay" 
-                   FontSize="26" 
-                   FontAttributes="Bold" 
-                   TextColor="{StaticResource Primary}" 
-                   VerticalOptions="Center" />
+        <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
+        <Grid Grid.Row="0" RowDefinitions="Auto, Auto">
+            <!-- Gradient Background -->
+            <BoxView Grid.RowSpan="2">
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1E88E5" Offset="0.0" />
+                        <GradientStop Color="#1565C0" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
 
-            <Grid Grid.Column="1" VerticalOptions="Center">
-                <Button Text="🔔" 
-                        FontSize="22" 
-                        BackgroundColor="Transparent" 
-                        BorderColor="Transparent" 
-                        TextColor="{StaticResource TextPrimary}" 
-                        Command="{Binding GoToNotificationsCommand}"
-                        WidthRequest="40" HeightRequest="40" Padding="0"/>
+            <!-- Animated Background Circle -->
+            <Ellipse x:Name="Circle1" 
+                     Grid.RowSpan="2"
+                     WidthRequest="200" 
+                     HeightRequest="200"
+                     Fill="White"
+                     Opacity="0.05"
+                     HorizontalOptions="End"
+                     VerticalOptions="Start"
+                     Margin="0,-80,-80,0"/>
 
-                <Border StrokeThickness="0" 
-                        BackgroundColor="#FF5252" 
-                        HeightRequest="12" 
-                        WidthRequest="12" 
-                        HorizontalOptions="End" 
-                        VerticalOptions="Start" 
-                        Margin="0,6,8,0" 
-                        IsVisible="{Binding HasUnreadNotifications}">
+            <!-- Title & Notification -->
+            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Padding="20,50,20,15">
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="KamPay" 
+                           FontSize="28" 
+                           FontAttributes="Bold" 
+                           TextColor="White" />
+                    <Label Text="Kampüste Paylaşım Platformu" 
+                           FontSize="13" 
+                           TextColor="White" 
+                           Opacity="0.9"/>
+                </VerticalStackLayout>
+
+                <Border Grid.Column="1" 
+                        VerticalOptions="Center"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        WidthRequest="44"
+                        HeightRequest="44"
+                        Opacity="0.95">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="6" />
+                        <RoundRectangle CornerRadius="22"/>
                     </Border.StrokeShape>
+                    <Grid>
+                        <Button Text="🔔" 
+                                FontSize="20" 
+                                BackgroundColor="Transparent" 
+                                BorderColor="Transparent" 
+                                TextColor="{StaticResource Primary}" 
+                                Command="{Binding GoToNotificationsCommand}"
+                                Padding="0"/>
+
+                        <Border StrokeThickness="0" 
+                                BackgroundColor="#EF5350" 
+                                HeightRequest="12" 
+                                WidthRequest="12" 
+                                HorizontalOptions="End" 
+                                VerticalOptions="Start" 
+                                Margin="0,4,4,0" 
+                                IsVisible="{Binding HasUnreadNotifications}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                        </Border>
+                    </Grid>
                 </Border>
             </Grid>
-        </Grid>
 
-        <VerticalStackLayout Grid.Row="1" Padding="15,10" Spacing="15" BackgroundColor="#F5F5F5">
-
-            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+            <!-- Search & Filter -->
+            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="12" Padding="20,0,20,20">
                 <Border Grid.Column="0"
                         StrokeShape="RoundRectangle 12"
                         StrokeThickness="0"
@@ -76,15 +115,15 @@
                         HeightRequest="50"
                         Padding="15,0">
                     <Border.Shadow>
-                        <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05"/>
+                        <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
                     </Border.Shadow>
 
                     <Grid ColumnDefinitions="Auto,*">
-                        <Label Text="🔍" VerticalOptions="Center" Opacity="0.5" FontSize="16"/>
+                        <Label Text="🔍" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
                         <Entry Grid.Column="1"
                                Text="{Binding SearchText}"
                                Placeholder="{extensions:Translate SearchProduct}"
-                               FontSize="14"
+                               FontSize="15"
                                TextColor="{StaticResource TextPrimary}"
                                PlaceholderColor="{StaticResource TextSecondary}"
                                BackgroundColor="Transparent"
@@ -93,33 +132,46 @@
                     </Grid>
                 </Border>
 
-                <Button Grid.Column="1" 
-                        Text="{extensions:Translate Filter}"
-                        ImageSource="{FontImage Glyph='🔽', Color=White, Size=14}"
-                        ContentLayout="Right,8"
-                        FontSize="13"
-                        FontAttributes="Bold"
-                        TextColor="White"
-                        BackgroundColor="{StaticResource Primary}"
-                        CornerRadius="12"
+                <Border Grid.Column="1"
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        WidthRequest="50"
                         HeightRequest="50"
-                        Padding="15,0"
-                        Command="{Binding ToggleFilterPanelCommand}">
-                    <Button.Shadow>
-                        <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
-                    </Button.Shadow>
-                </Button>
+                        Padding="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
+                    </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleFilterPanelCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="⚙️"
+                           FontSize="22"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="{StaticResource Primary}"/>
+                </Border>
             </Grid>
+        </Grid>
 
-            <CollectionView ItemsSource="{Binding Categories}"
-                            ItemsLayout="HorizontalList"
+        <!-- ✨ MAIN CONTENT -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,*">
+            
+            <!-- Category Chips -->
+            <CollectionView Grid.Row="0"
+                            ItemsSource="{Binding Categories}"
                             SelectionMode="None"
-                            HeightRequest="40"
-                            Margin="0,0,0,5">
+                            Margin="15,15,15,10"
+                            HeightRequest="40">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8"/>
+                </CollectionView.ItemsLayout>
+
+                <!-- "Tümü" Button as Header -->
                 <CollectionView.Header>
                     <Border StrokeShape="RoundRectangle 20"
-                            StrokeThickness="1"
-                            Padding="16,8"
+                            StrokeThickness="2"
+                            Padding="16,10"
                             Margin="0,0,8,0"
                             BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
                             Stroke="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
@@ -133,12 +185,12 @@
                     </Border>
                 </CollectionView.Header>
 
+                <!-- Category Items -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Category">
                         <Border StrokeShape="RoundRectangle 20"
-                                StrokeThickness="1"
-                                Padding="16,8"
-                                Margin="0,0,8,0"
+                                StrokeThickness="2"
+                                Padding="16,10"
                                 BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={Binding CategoryId}}"
                                 Stroke="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=SelectedCategory.CategoryId, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={Binding CategoryId}}">
                             <Border.GestureRecognizers>
@@ -152,10 +204,10 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-        </VerticalStackLayout>
 
-        <Grid Grid.Row="2" BackgroundColor="#F5F5F5">
-            <RefreshView Command="{Binding RefreshProductsCommand}"
+            <!-- Products Grid -->
+            <RefreshView Grid.Row="1"
+                         Command="{Binding RefreshProductsCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}">
 
@@ -163,19 +215,41 @@
                                 SelectionMode="None"
                                 RemainingItemsThreshold="5"
                                 RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}"
-                                Margin="10,0">
+                                Margin="15,0,15,15">
 
                     <CollectionView.EmptyView>
-                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
-                            <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
-                                <Label Text="📦" FontSize="60" HorizontalTextAlignment="Center"/>
-                                <Label Text="{extensions:Translate NoDataYet}" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                        <Grid VerticalOptions="Center" 
+                              HorizontalOptions="Center" 
+                              Padding="20" 
+                              IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                            <Border BackgroundColor="White"
+                                    StrokeThickness="0"
+                                    Padding="30"
+                                    WidthRequest="280"
+                                    HeightRequest="240">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="20"/>
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                                </Border.Shadow>
+                                <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Label Text="📦" FontSize="70" HorizontalTextAlignment="Center"/>
+                                    <Label Text="{extensions:Translate NoDataYet}" 
+                                           FontSize="16" 
+                                           TextColor="{StaticResource TextSecondary}" 
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+                            </Border>
                         </Grid>
                     </CollectionView.EmptyView>
 
                     <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10"/>
+                        <GridItemsLayout Orientation="Vertical" 
+                                         Span="2" 
+                                         HorizontalItemSpacing="12" 
+                                         VerticalItemSpacing="12"/>
                     </CollectionView.ItemsLayout>
 
                     <CollectionView.ItemTemplate>
@@ -183,17 +257,18 @@
                             <Border StrokeShape="RoundRectangle 16"
                                     StrokeThickness="0"
                                     BackgroundColor="White"
-                                    HeightRequest="260">
+                                    HeightRequest="270">
                                 <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.08"/>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
                                 </Border.Shadow>
 
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" CommandParameter="{Binding .}"/>
                                 </Border.GestureRecognizers>
 
-                                <Grid RowDefinitions="150,Auto,*,Auto">
+                                <Grid RowDefinitions="155,Auto,*,Auto">
 
+                                    <!-- Product Image -->
                                     <Grid Grid.Row="0">
                                         <ffimageloading:CachedImage Source="{Binding ThumbnailUrl}"
                                                                     Aspect="AspectFill"
@@ -202,35 +277,49 @@
                                                                     DownsampleToViewSize="True"
                                                                     FadeAnimationEnabled="True"/>
 
-                                        <BoxView VerticalOptions="End" HeightRequest="40" Color="Transparent"/>
+                                        <!-- Gradient Overlay -->
+                                        <BoxView VerticalOptions="End" HeightRequest="50">
+                                            <BoxView.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="Transparent" Offset="0.0" />
+                                                    <GradientStop Color="#40000000" Offset="1.0" />
+                                                </LinearGradientBrush>
+                                            </BoxView.Background>
+                                        </BoxView>
 
+                                        <!-- Status Badge -->
                                         <Border IsVisible="{Binding StatusText, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                                 BackgroundColor="{Binding StatusColor}"
                                                 StrokeThickness="0"
                                                 HorizontalOptions="Start"
                                                 VerticalOptions="Start"
-                                                Margin="8"
+                                                Margin="10"
                                                 Padding="8,4"
-                                                StrokeShape="RoundRectangle 6">
-                                            <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                                StrokeShape="RoundRectangle 8">
+                                            <Label Text="{Binding StatusText}" 
+                                                   TextColor="White" 
+                                                   FontSize="10" 
+                                                   FontAttributes="Bold"/>
                                         </Border>
 
+                                        <!-- Type Badge -->
                                         <Border BackgroundColor="White"
                                                 StrokeThickness="0"
                                                 HorizontalOptions="End"
                                                 VerticalOptions="Start"
-                                                Margin="8"
-                                                Padding="8,4"
-                                                StrokeShape="RoundRectangle 6"
-                                                Opacity="0.9">
+                                                Margin="10"
+                                                Padding="10,5"
+                                                StrokeShape="RoundRectangle 10"
+                                                Opacity="0.95">
                                             <Label Text="{Binding Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}" 
                                                    TextColor="{Binding Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}" 
-                                                   FontSize="10" 
+                                                   FontSize="11" 
                                                    FontAttributes="Bold"/>
                                         </Border>
                                     </Grid>
 
-                                    <VerticalStackLayout Grid.Row="1" Padding="10,10,10,0" Spacing="4">
+                                    <!-- Product Info -->
+                                    <VerticalStackLayout Grid.Row="1" Padding="12,12,12,6" Spacing="5">
 
                                         <Label Text="{Binding Title}" 
                                                FontSize="15" 
@@ -239,11 +328,12 @@
                                                LineBreakMode="TailTruncation"
                                                FontAttributes="Bold"/>
 
+                                        <!-- Price Display -->
                                         <Grid>
                                             <Label Text="{Binding Price, StringFormat='₺{0:N0}'}" 
-                                                   FontSize="13" 
+                                                   FontSize="16" 
                                                    FontAttributes="Bold" 
-                                                   TextColor="{StaticResource Primary}">
+                                                   TextColor="DodgerBlue">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Bagis">
                                                         <Setter Property="IsVisible" Value="False" />
@@ -255,9 +345,9 @@
                                             </Label>
 
                                             <Label Text="{extensions:Translate Donation}" 
-                                                   FontSize="13" 
+                                                   FontSize="12" 
                                                    FontAttributes="Bold" 
-                                                   TextColor="{StaticResource Primary}"
+                                                   TextColor="DarkRed"
                                                    IsVisible="False">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Bagis">
@@ -267,9 +357,9 @@
                                             </Label>
 
                                             <Label Text="{extensions:Translate Exchange}" 
-                                                   FontSize="13" 
+                                                   FontSize="12" 
                                                    FontAttributes="Bold" 
-                                                   TextColor="#FF9800"
+                                                   TextColor="DarkGreen"
                                                    IsVisible="False">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Takas">
@@ -282,7 +372,8 @@
 
                                     <BoxView Grid.Row="2" Color="Transparent" />
 
-                                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="10" VerticalOptions="End">
+                                    <!-- User & Stats -->
+                                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="12,8,12,12" VerticalOptions="End">
                                         <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
                                             <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" 
                                                                         HeightRequest="24" WidthRequest="24" 
@@ -293,17 +384,22 @@
                                                     <EllipseGeometry Center="12,12" RadiusX="12" RadiusY="12"/>
                                                 </ffimageloading:CachedImage.Clip>
                                             </ffimageloading:CachedImage>
-                                            <Label Text="{Binding UserName}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" LineBreakMode="TailTruncation" MaximumWidthRequest="60"/>
+                                            <Label Text="{Binding UserName}" 
+                                                   FontSize="11" 
+                                                   TextColor="{StaticResource TextSecondary}" 
+                                                   VerticalOptions="Center" 
+                                                   LineBreakMode="TailTruncation" 
+                                                   MaximumWidthRequest="60"/>
                                         </HorizontalStackLayout>
 
-                                        <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
-                                            <HorizontalStackLayout Spacing="2">
-                                                <Label Text="❤️" FontSize="10" VerticalOptions="Center"/>
-                                                <Label Text="{Binding FavoriteCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                        <HorizontalStackLayout Grid.Column="2" Spacing="10" VerticalOptions="Center">
+                                            <HorizontalStackLayout Spacing="3">
+                                                <Label Text="❤️" FontSize="11" VerticalOptions="Center"/>
+                                                <Label Text="{Binding FavoriteCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" FontAttributes="Bold"/>
                                             </HorizontalStackLayout>
-                                            <HorizontalStackLayout Spacing="2">
-                                                <Label Text="👁️" FontSize="10" VerticalOptions="Center"/>
-                                                <Label Text="{Binding ViewCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                            <HorizontalStackLayout Spacing="3">
+                                                <Label Text="👁️" FontSize="11" VerticalOptions="Center"/>
+                                                <Label Text="{Binding ViewCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" FontAttributes="Bold"/>
                                             </HorizontalStackLayout>
                                         </HorizontalStackLayout>
                                     </Grid>
@@ -314,45 +410,79 @@
                 </CollectionView>
             </RefreshView>
 
-            <VerticalStackLayout VerticalOptions="End" HorizontalOptions="End" Spacing="16" Margin="20">
-                <Button Text="🎁"
-                        Command="{Binding GoToSurpriseBoxCommand}"
-                        BackgroundColor="#FF9800"
-                        TextColor="White"
-                        FontSize="24"
+            <!-- Floating Action Buttons -->
+            <VerticalStackLayout Grid.RowSpan="2" 
+                                 VerticalOptions="End" 
+                                 HorizontalOptions="End" 
+                                 Spacing="16" 
+                                 Margin="20,0,20,20">
+                <!-- Surprise Box Button -->
+                <Border StrokeShape="RoundRectangle 28"
+                        BackgroundColor="{StaticResource SurpriseBox}"
                         WidthRequest="56"
                         HeightRequest="56"
-                        CornerRadius="28"
-                        Padding="0">
-                    <Button.Shadow>
-                        <Shadow Brush="#FF9800" Offset="0,4" Opacity="0.4" Radius="8"/>
-                    </Button.Shadow>
-                </Button>
+                        StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="{StaticResource SurpriseBox}" Offset="0,6" Opacity="0.35" Radius="12"/>
+                    </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToSurpriseBoxCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="🎁"
+                           FontSize="28"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
 
-                <Button Text="+"
-                        Command="{Binding GoToAddProductCommand}"
+                <!-- Add Product Button -->
+                <Border StrokeShape="RoundRectangle 32"
                         BackgroundColor="{StaticResource Primary}"
-                        TextColor="White"
-                        FontSize="32"
                         WidthRequest="64"
                         HeightRequest="64"
-                        CornerRadius="32"
-                        Padding="0,0,0,4">
-                    <Button.Shadow>
-                        <Shadow Brush="{StaticResource Primary}" Offset="0,6" Opacity="0.5" Radius="10"/>
-                    </Button.Shadow>
-                </Button>
+                        StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,8" Opacity="0.4" Radius="15"/>
+                    </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToAddProductCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="+"
+                           FontSize="36"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Margin="0,0,0,2"/>
+                </Border>
             </VerticalStackLayout>
 
-            <ActivityIndicator IsRunning="{Binding IsLoading}" 
-                               IsVisible="{Binding IsLoading}" 
-                               Color="{StaticResource Primary}" 
-                               VerticalOptions="Center" 
-                               HorizontalOptions="Center"
-                               HeightRequest="50" WidthRequest="50"/>
+            <!-- Loading -->
+            <Grid Grid.RowSpan="2" 
+                  IsVisible="{Binding IsSkeletonVisible}"
+                  BackgroundColor="#F5F9FC"
+                  InputTransparent="False">
+                <Border BackgroundColor="White"
+                        WidthRequest="100"
+                        HeightRequest="100"
+                        StrokeThickness="0"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,8"/>
+                    </Border.Shadow>
+                    <ActivityIndicator IsRunning="True" 
+                                       Color="{StaticResource Primary}" 
+                                       WidthRequest="40" 
+                                       HeightRequest="40"/>
+                </Border>
+            </Grid>
         </Grid>
 
-        <Grid Grid.RowSpan="3" 
+        <!-- ✨ FILTER PANEL -->
+        <Grid Grid.RowSpan="2" 
               BackgroundColor="#80000000" 
               IsVisible="{Binding ShowFilterPanel}"
               ZIndex="99">
@@ -368,37 +498,53 @@
                     <TapGestureRecognizer />
                 </Border.GestureRecognizers>
                 <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,-4" Radius="15" Opacity="0.2"/>
+                    <Shadow Brush="Black" Offset="0,-4" Radius="20" Opacity="0.2"/>
                 </Border.Shadow>
 
                 <VerticalStackLayout Spacing="20">
+                    <!-- Header -->
                     <Grid>
                         <Label Text="{extensions:Translate FilterAndSort}" 
                                FontSize="20" 
-                               FontAttributes="Bold" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextPrimary}"
                                HorizontalOptions="Center"/>
-                        <Button Text="✕" 
-                                Command="{Binding ToggleFilterPanelCommand}"
-                                HorizontalOptions="End" 
-                                BackgroundColor="Transparent" 
-                                TextColor="{StaticResource TextSecondary}"
-                                FontSize="18"
-                                Padding="0"
-                                HeightRequest="30"/>
+                        <Border StrokeShape="RoundRectangle 20"
+                                BackgroundColor="#F5F9FC"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                HorizontalOptions="End"
+                                StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleFilterPanelCommand}"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="✕" 
+                                   TextColor="{StaticResource TextSecondary}"
+                                   FontSize="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
                     </Grid>
 
                     <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
 
-                    <VerticalStackLayout Spacing="10">
+                    <!-- Product Type -->
+                    <VerticalStackLayout Spacing="12">
                         <Label Text="{extensions:Translate ProductType}" 
                                FontAttributes="Bold" 
+                               FontSize="15"
                                TextColor="{StaticResource TextPrimary}" />
                         <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
                             <Button Text="{extensions:Translate All}" 
                                     Grid.Column="0" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="" 
-                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}">
+                                    HeightRequest="42" 
+                                    Padding="0" 
+                                    FontSize="12" 
+                                    CornerRadius="10" 
+                                    BorderWidth="2" 
+                                    BorderColor="{StaticResource BorderColor}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="{x:Null}">
                                         <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
@@ -416,7 +562,14 @@
                                     Grid.Column="1" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Satis" 
-                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                    HeightRequest="42" 
+                                    Padding="0" 
+                                    FontSize="12" 
+                                    CornerRadius="10" 
+                                    BorderWidth="2" 
+                                    BorderColor="{StaticResource BorderColor}" 
+                                    BackgroundColor="White" 
+                                    TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Satis">
                                         <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
@@ -430,12 +583,19 @@
                                     Grid.Column="2" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Bagis" 
-                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                    HeightRequest="42" 
+                                    Padding="0" 
+                                    FontSize="12" 
+                                    CornerRadius="10" 
+                                    BorderWidth="2" 
+                                    BorderColor="{StaticResource BorderColor}" 
+                                    BackgroundColor="White" 
+                                    TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="BackgroundColor" Value="#66BB6A" />
                                         <Setter Property="TextColor" Value="White" />
-                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="BorderColor" Value="#66BB6A" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
@@ -444,42 +604,58 @@
                                     Grid.Column="3" 
                                     Command="{Binding SetProductTypeCommand}" 
                                     CommandParameter="Takas" 
-                                    HeightRequest="40" Padding="0" FontSize="12" CornerRadius="8" BorderWidth="1" BorderColor="{StaticResource BorderColor}" BackgroundColor="White" TextColor="{StaticResource TextPrimary}">
+                                    HeightRequest="42" 
+                                    Padding="0" 
+                                    FontSize="12" 
+                                    CornerRadius="10" 
+                                    BorderWidth="2" 
+                                    BorderColor="{StaticResource BorderColor}" 
+                                    BackgroundColor="White" 
+                                    TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Takas">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="BackgroundColor" Value="{StaticResource SurpriseBox}" />
                                         <Setter Property="TextColor" Value="White" />
-                                        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="BorderColor" Value="{StaticResource SurpriseBox}" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
                         </Grid>
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout Spacing="10">
+                    <!-- Sort Options -->
+                    <VerticalStackLayout Spacing="12">
                         <Label Text="{extensions:Translate Sorting}" 
-           FontAttributes="Bold" 
-           TextColor="{StaticResource TextPrimary}" />
+                               FontAttributes="Bold" 
+                               FontSize="15"
+                               TextColor="{StaticResource TextPrimary}" />
 
-                        <Border StrokeShape="RoundRectangle 10" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="10,0">
+                        <Border StrokeShape="RoundRectangle 12" 
+                                StrokeThickness="2" 
+                                Stroke="{StaticResource BorderColor}" 
+                                Padding="10,0"
+                                BackgroundColor="White">
                             <Picker Title="{extensions:Translate SelectSorting}" 
-                ItemsSource="{Binding SortOptionStrings}"
-                SelectedIndex="{Binding SelectedSortIndex}"
-                TextColor="{StaticResource TextPrimary}"
-                TitleColor="{StaticResource TextSecondary}">
+                                    ItemsSource="{Binding SortOptionStrings}"
+                                    SelectedIndex="{Binding SelectedSortIndex}"
+                                    TextColor="{StaticResource TextPrimary}"
+                                    TitleColor="{StaticResource TextSecondary}"
+                                    FontSize="14">
                             </Picker>
                         </Border>
                     </VerticalStackLayout>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
+                    <!-- Action Buttons -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,10,0,0">
                         <Button Text="{extensions:Translate Clear}" 
                                 Grid.Column="0"
                                 BackgroundColor="White" 
                                 TextColor="{StaticResource TextSecondary}" 
                                 BorderColor="{StaticResource BorderColor}"
-                                BorderWidth="1"
+                                BorderWidth="2"
                                 CornerRadius="12"
-                                HeightRequest="50"
+                                HeightRequest="52"
+                                FontSize="14"
                                 FontAttributes="Bold"
                                 Command="{Binding ClearFiltersCommand}"/>
 
@@ -488,11 +664,12 @@
                                 BackgroundColor="{StaticResource Primary}" 
                                 TextColor="White" 
                                 CornerRadius="12"
-                                HeightRequest="50"
+                                HeightRequest="52"
+                                FontSize="14"
                                 FontAttributes="Bold"
                                 Command="{Binding ApplyFiltersCommand}">
                             <Button.Shadow>
-                                <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                                <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="10" Opacity="0.3"/>
                             </Button.Shadow>
                         </Button>
                     </Grid>

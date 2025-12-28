@@ -1,31 +1,61 @@
 using KamPay.ViewModels;
-using KamPay.Services; // LocalizationResourceManager için
+using Mapsui;
+using Mapsui.Extensions;
+using Mapsui.Projections;
+using Mapsui.UI.Maui;
 
-namespace KamPay.Views;
-
-public partial class ProductListPage : ContentPage
+namespace KamPay.Views
 {
-    private readonly ProductListViewModel _viewModel;
-
-    public ProductListPage(ProductListViewModel vm)
+    public partial class ProductListPage : ContentPage
     {
-        InitializeComponent();
-        _viewModel = vm;
-        BindingContext = _viewModel;
-    }
+        private readonly ProductListViewModel _viewModel;
+        private bool _hasAnimated = false;
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-    }
+        public ProductListPage(ProductListViewModel vm)
+        {
+            InitializeComponent();
+            _viewModel = vm;
+            BindingContext = vm;
+        }
 
-    protected override void OnDisappearing()
-    {
-        base.OnDisappearing();
-    }
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
 
-    ~ProductListPage()
-    {
-        _viewModel?.Dispose();
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
+        }
+
+        private async Task AnimatePageAsync()
+        {
+            // Arka plan animasyonu
+            AnimateBackgroundCircle();
+        }
+
+        private void AnimateBackgroundCircle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await Circle1.RotateTo(360, 30000, Easing.Linear);
+                            Circle1.Rotation = 0;
+                        });
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            });
+        }
     }
 }

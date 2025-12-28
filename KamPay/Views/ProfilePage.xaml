@@ -5,251 +5,466 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ProfilePage"
              x:DataType="vm:ProfileViewModel"
-             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Profile]}"
-             Shell.BackgroundColor="#4CAF50">
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F9FC">
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <Color x:Key="Primary">#1E88E5</Color>
+            <Color x:Key="PrimaryDark">#1565C0</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="Background">#F5F9FC</Color>
+            <Color x:Key="TextPrimary">#212121</Color>
+            <Color x:Key="TextSecondary">#757575</Color>
+            <Color x:Key="BorderColor">#E0E0E0</Color>
+            <Color x:Key="AccentOrange">#FF9800</Color>
+            <Color x:Key="AccentPurple">darkred</Color>
+            <Color x:Key="AccentRed">#F44336</Color>
+
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:ColorToLightConverter x:Key="ColorToLightConverter" />
             <converters:FirstCharConverter x:Key="FirstCharConverter" />
+            <converters:StringToColorConverter x:Key="StringToColorConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid>
-        <ScrollView>
-            <VerticalStackLayout Spacing="0" Padding="0,0,0,15">
+    <Grid RowDefinitions="Auto,*">
 
-                <!--  Header Section with Edit Button -->
-                <Frame Padding="20" CornerRadius="0" BackgroundColor="#4CAF50" BorderColor="Transparent">
-                    <VerticalStackLayout Spacing="15">
+        <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
+        <Grid Grid.Row="0" RowDefinitions="Auto" x:Name="HeaderSection">
+            <!-- Gradient Background -->
+            <BoxView>
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1E88E5" Offset="0.0" />
+                        <GradientStop Color="#1565C0" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
 
-                        <!--  Profile Image with Edit Icon -  -->
-                        <Grid HorizontalOptions="Center">
-                            <Frame Padding="0" WidthRequest="100" HeightRequest="100" 
-                                   CornerRadius="50" IsClippedToBounds="True" 
-                                   BackgroundColor="White">
+            <!-- Animated Background Circle -->
+            <Ellipse x:Name="Circle1" 
+                     WidthRequest="200" 
+                     HeightRequest="200"
+                     Fill="White"
+                     Opacity="0.05"
+                     HorizontalOptions="End"
+                     VerticalOptions="Start"
+                     Margin="0,-80,-80,0"/>
 
-                                <!-- Profil fotoğrafı varsa göster, yoksa placeholder -->
-                                <Grid>
-                                    <Image Source="{Binding CurrentUser.ProfileImageUrl}" 
-                                           Aspect="AspectFill"
-                                           IsVisible="{Binding HasProfileImage}"/>
+            <Grid Padding="20,50,20,30" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="15">
 
-                                    <!-- Placeholder - fotoğraf yoksa göster -->
-                                    <Label Text="{Binding CurrentUser.FullName, Converter={StaticResource FirstCharConverter}}" 
-                                           FontSize="40" FontAttributes="Bold" TextColor="#4CAF50" 
-                                           HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
-                                           IsVisible="{Binding HasProfileImage, Converter={StaticResource InvertedBoolConverter}}" />
-                                </Grid>
-                            </Frame>
+                <!-- Profile Picture with Edit Icon -->
+                <Grid Grid.Row="0" HorizontalOptions="Center" x:Name="ProfileImageSection">
+                    <Border StrokeThickness="4"
+                            Stroke="White"
+                            WidthRequest="110"
+                            HeightRequest="110"
+                            BackgroundColor="White">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="55"/>
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.2"/>
+                        </Border.Shadow>
+                        <Grid>
+                            <ffimageloading:CachedImage 
+                                Source="{Binding CurrentUser.ProfileImageUrl}" 
+                                Aspect="AspectFill"
+                                IsVisible="{Binding HasProfileImage}"
+                                LoadingPlaceholder="person_icon.svg"
+                                ErrorPlaceholder="person_icon.svg"
+                                DownsampleToViewSize="True"
+                                CacheDuration="7">
+                                <ffimageloading:CachedImage.Clip>
+                                    <EllipseGeometry Center="55,55" RadiusX="55" RadiusY="55"/>
+                                </ffimageloading:CachedImage.Clip>
+                            </ffimageloading:CachedImage>
 
-                            <!-- Edit Icon on Profile Picture -->
-                            <Frame Padding="5" WidthRequest="32" HeightRequest="32" 
-                                   CornerRadius="16" BackgroundColor="White"
-                                   BorderColor="#4CAF50" HasShadow="True"
-                                   HorizontalOptions="End" VerticalOptions="End"
-                                   Margin="0,0,0,0">
-                                <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
-                                </Frame.GestureRecognizers>
-                                <Label Text="✏️" FontSize="16" 
-                                       HorizontalOptions="Center" VerticalOptions="Center" />
-                            </Frame>
+                            <Label Text="{Binding CurrentUser.FullName, Converter={StaticResource FirstCharConverter}}" 
+                                   FontSize="42" 
+                                   FontAttributes="Bold" 
+                                   TextColor="{StaticResource Primary}" 
+                                   HorizontalTextAlignment="Center" 
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding HasProfileImage, Converter={StaticResource InvertedBoolConverter}}" />
                         </Grid>
+                    </Border>
 
-                        <Label Text="{Binding CurrentUser.FullName}" 
-                               FontSize="24" FontAttributes="Bold" 
-                               TextColor="White" HorizontalTextAlignment="Center" />
-                        <Label Text="{Binding CurrentUser.Email}" 
-                               FontSize="14" TextColor="White" Opacity="0.9" 
-                               HorizontalTextAlignment="Center" />
+                    <!-- Edit Icon -->
+                    <Border StrokeShape="RoundRectangle 18"
+                            BackgroundColor="White"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="End"
+                            Margin="0,0,0,0">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="8" Opacity="0.3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="✏️" 
+                               FontSize="18" 
+                               HorizontalOptions="Center" 
+                               VerticalOptions="Center" />
+                    </Border>
+                </Grid>
 
-                        <!--  Edit Profile Button -->
-                        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProfile]}"
-                                Command="{Binding EditProfileCommand}"
-                                BackgroundColor="White"
-                                TextColor="#4CAF50"
-                                FontAttributes="Bold"
-                                CornerRadius="20"
-                                HeightRequest="40"
-                                Margin="20,10,20,0" />
+                <!-- Name -->
+                <Label Grid.Row="1" 
+                       Text="{Binding CurrentUser.FullName}" 
+                       FontSize="26" 
+                       FontAttributes="Bold" 
+                       TextColor="White" 
+                       HorizontalTextAlignment="Center" 
+                       x:Name="NameLabel"/>
 
-                        <!-- Stats Grid -->
-                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,15,0,0">
-                            <Frame Grid.Column="0" Padding="15" CornerRadius="15" BackgroundColor="White">
-                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
-                                    <Label Text="{Binding UserStats.TotalProducts}" 
-                                           FontSize="24" FontAttributes="Bold" 
-                                           TextColor="#4CAF50" HorizontalTextAlignment="Center" />
-                                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Product]}" FontSize="12" TextColor="#666" 
-                                           HorizontalTextAlignment="Center" />
-                                </VerticalStackLayout>
-                            </Frame>
-                            <Frame Grid.Column="1" Padding="15" CornerRadius="15" BackgroundColor="White">
-                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
-                                    <Label Text="{Binding UserStats.Points}" 
-                                           FontSize="24" FontAttributes="Bold" 
-                                           TextColor="#FF9800" HorizontalTextAlignment="Center" />
-                                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Points]}" FontSize="12" TextColor="#666" 
-                                           HorizontalTextAlignment="Center" />
-                                </VerticalStackLayout>
-                            </Frame>
-                            <Frame Grid.Column="2" Padding="15" CornerRadius="15" BackgroundColor="White">
-                                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
-                                    <Label Text="{Binding MyBadges.Count}" 
-                                           FontSize="24" FontAttributes="Bold" 
-                                           TextColor="#2196F3" HorizontalTextAlignment="Center" />
-                                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Badge]}" FontSize="12" TextColor="#666" 
-                                           HorizontalTextAlignment="Center" />
-                                </VerticalStackLayout>
-                            </Frame>
-                        </Grid>
-                    </VerticalStackLayout>
-                </Frame>
+                <!-- Email -->
+                <Label Grid.Row="2" 
+                       Text="{Binding CurrentUser.Email}" 
+                       FontSize="14" 
+                       TextColor="White" 
+                       Opacity="0.9" 
+                       HorizontalTextAlignment="Center"
+                       x:Name="EmailLabel"/>
+
+                <!-- Stats Grid -->
+                <Grid Grid.Row="3" 
+                      ColumnDefinitions="*,*,*" 
+                      ColumnSpacing="12" 
+                      Margin="0,5,0,0"
+                      x:Name="StatsSection">
+                    <Border Grid.Column="0" 
+                            StrokeShape="RoundRectangle 15"
+                            StrokeThickness="0"
+                            BackgroundColor="White"
+                            Padding="15">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
+                        </Border.Shadow>
+                        <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                            <Label Text="{Binding UserStats.TotalProducts}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold" 
+                                   TextColor="{StaticResource Primary}" 
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Product]}" 
+                                   FontSize="11" 
+                                   TextColor="{StaticResource TextSecondary}" 
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="1" 
+                            StrokeShape="RoundRectangle 15"
+                            StrokeThickness="0"
+                            BackgroundColor="White"
+                            Padding="15">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
+                        </Border.Shadow>
+                        <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                            <Label Text="{Binding UserStats.Points}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold" 
+                                   TextColor="{StaticResource AccentOrange}" 
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Points]}" 
+                                   FontSize="11" 
+                                   TextColor="{StaticResource TextSecondary}" 
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="2" 
+                            StrokeShape="RoundRectangle 15"
+                            StrokeThickness="0"
+                            BackgroundColor="White"
+                            Padding="15">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
+                        </Border.Shadow>
+                        <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                            <Label Text="{Binding MyBadges.Count}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold" 
+                                   TextColor="{StaticResource Primary}" 
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Badge]}" 
+                                   FontSize="11" 
+                                   TextColor="{StaticResource TextSecondary}" 
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ✨ MAIN CONTENT -->
+        <ScrollView Grid.Row="1" x:Name="ContentSection">
+            <VerticalStackLayout Spacing="15" Padding="15">
+
+                <!-- Edit Profile Button -->
+                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[EditProfile]}"
+                        Command="{Binding EditProfileCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="12"
+                        HeightRequest="50">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
 
                 <!-- Badges Section -->
-                <Frame Margin="15,15,15,0" Padding="15" CornerRadius="15" 
-                       BorderColor="#E0E0E0" BackgroundColor="White">
-                    <VerticalStackLayout Spacing="10">
+                <Border StrokeShape="RoundRectangle 16"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        Padding="20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="15">
                         <Grid ColumnDefinitions="*,Auto">
-                            <StackLayout Grid.Column="0" Orientation="Horizontal" Spacing="5">
-                                <Label Text="🏆" FontSize="18" />
+                            <HorizontalStackLayout Grid.Column="0" Spacing="8">
+                                <Label Text="🏆" FontSize="20" />
                                 <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyBadges]}" 
-                                       FontSize="18" FontAttributes="Bold" />
-                            </StackLayout>
-                            <Button Grid.Column="1" Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[All]}" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </HorizontalStackLayout>
+                            <Button Grid.Column="1" 
+                                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[All]}" 
                                     Command="{Binding ViewAllBadgesCommand}" 
-                                    BackgroundColor="Transparent" TextColor="#4CAF50" 
-                                    FontSize="14" Padding="0" />
+                                    BackgroundColor="Transparent" 
+                                    TextColor="{StaticResource Primary}" 
+                                    FontSize="13" 
+                                    Padding="0" />
                         </Grid>
+
                         <FlexLayout BindableLayout.ItemsSource="{Binding MyBadges}" 
-                                    Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                                    Wrap="Wrap" 
+                                    JustifyContent="Start" 
+                                    AlignItems="Start">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="models:UserBadge">
-                                    <Frame Padding="10" Margin="5" CornerRadius="10" 
-                                           BorderColor="{Binding BadgeColor}" 
-                                           BackgroundColor="{Binding BadgeColor, Converter={StaticResource ColorToLightConverter}}">
+                                    <Border Padding="12" 
+                                            Margin="5" 
+                                            StrokeShape="RoundRectangle 12" 
+                                            StrokeThickness="2"
+                                            Stroke="{Binding BadgeColor, Converter={StaticResource StringToColorConverter}}" 
+                                            BackgroundColor="{Binding BadgeColor, Converter={StaticResource ColorToLightConverter}}">
                                         <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-                                            <Label Text="🏅" FontSize="32" 
+                                            <Label Text="🏅" 
+                                                   FontSize="32" 
                                                    HorizontalTextAlignment="Center" />
-                                            <Label Text="{Binding BadgeName}" FontSize="10" 
-                                                   FontAttributes="Bold" HorizontalTextAlignment="Center" 
-                                                   MaxLines="2" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding BadgeName}" 
+                                                   FontSize="10" 
+                                                   FontAttributes="Bold" 
+                                                   HorizontalTextAlignment="Center" 
+                                                   MaxLines="2" 
+                                                   LineBreakMode="TailTruncation" />
                                         </VerticalStackLayout>
-                                    </Frame>
+                                    </Border>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                             <BindableLayout.EmptyView>
-                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoBadgesYet]}" FontSize="14" 
-                                       TextColor="#757575" HorizontalTextAlignment="Center" 
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoBadgesYet]}" 
+                                       FontSize="14" 
+                                       TextColor="{StaticResource TextSecondary}" 
+                                       HorizontalTextAlignment="Center" 
                                        Margin="0,10" />
                             </BindableLayout.EmptyView>
                         </FlexLayout>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
                 <!-- Products Section -->
-                <Frame Margin="15" Padding="15" CornerRadius="15" 
-                       BorderColor="#E0E0E0" BackgroundColor="White">
-                    <VerticalStackLayout Spacing="10">
+                <Border StrokeShape="RoundRectangle 16"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        Padding="20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="15">
                         <Grid ColumnDefinitions="*,Auto">
-                            <StackLayout Grid.Column="0" Orientation="Horizontal" Spacing="5">
-                                <Label Text="📦" FontSize="18" />
+                            <HorizontalStackLayout Grid.Column="0" Spacing="8">
+                                <Label Text="📦" FontSize="20" />
                                 <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyProducts]}" 
-                                       FontSize="18" FontAttributes="Bold" />
-                            </StackLayout>
-                            <Button Grid.Column="1" Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[All]}" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextPrimary}"/>
+                            </HorizontalStackLayout>
+                            <Button Grid.Column="1" 
+                                    Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[All]}" 
                                     Command="{Binding ViewAllProductsCommand}" 
-                                    BackgroundColor="Transparent" TextColor="#4CAF50" 
-                                    FontSize="14" Padding="0" />
+                                    BackgroundColor="Transparent" 
+                                    TextColor="{StaticResource Primary}" 
+                                    FontSize="13" 
+                                    Padding="0" />
                         </Grid>
+
                         <CollectionView ItemsSource="{Binding MyProducts}" 
-                                        SelectionMode="None" HeightRequest="200">
+                                        SelectionMode="None" 
+                                        HeightRequest="200">
                             <CollectionView.ItemsLayout>
-                                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
+                                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
                             </CollectionView.ItemsLayout>
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:Product">
-                                    <Frame Padding="0" CornerRadius="15" WidthRequest="150" 
-                                           BorderColor="#E0E0E0" BackgroundColor="White">
-                                        <Frame.GestureRecognizers>
+                                    <Border StrokeShape="RoundRectangle 16" 
+                                            StrokeThickness="0"
+                                            WidthRequest="150" 
+                                            BackgroundColor="White">
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08"/>
+                                        </Border.Shadow>
+                                        <Border.GestureRecognizers>
                                             <TapGestureRecognizer 
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}, Path=ProductTappedCommand}" 
                                                 CommandParameter="{Binding .}" />
-                                        </Frame.GestureRecognizers>
+                                        </Border.GestureRecognizers>
                                         <VerticalStackLayout>
-                                            <Image Source="{Binding ThumbnailUrl}" 
-                                                   Aspect="AspectFill" HeightRequest="120">
-                                                <Image.Clip>
-                                                    <RoundRectangleGeometry Rect="0,0,150,120" 
-                                                                            CornerRadius="15,15,0,0" />
-                                                </Image.Clip>
-                                            </Image>
-                                            <VerticalStackLayout Padding="10" Spacing="5">
-                                                <Label Text="{Binding Title}" FontSize="14" 
-                                                       FontAttributes="Bold" LineBreakMode="TailTruncation" 
-                                                       MaxLines="1" />
-                                                <Label Text="{Binding PriceText}" FontSize="14" 
-                                                       TextColor="#4CAF50" FontAttributes="Bold" />
+                                            <Border StrokeShape="RoundRectangle 16,16,0,0"
+                                                    StrokeThickness="0"
+                                                    HeightRequest="120">
+                                                <Image Source="{Binding ThumbnailUrl}" 
+                                                       Aspect="AspectFill"/>
+                                            </Border>
+                                            <VerticalStackLayout Padding="12" Spacing="5">
+                                                <Label Text="{Binding Title}" 
+                                                       FontSize="14" 
+                                                       FontAttributes="Bold" 
+                                                       LineBreakMode="TailTruncation" 
+                                                       MaxLines="1"
+                                                       TextColor="{StaticResource TextPrimary}"/>
+                                                <Label Text="{Binding PriceText}" 
+                                                       FontSize="14" 
+                                                       TextColor="{StaticResource Primary}" 
+                                                       FontAttributes="Bold" />
                                             </VerticalStackLayout>
                                         </VerticalStackLayout>
-                                    </Frame>
+                                    </Border>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                             <CollectionView.EmptyView>
-                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoProductsYet]}" FontSize="14" 
-                                       TextColor="#757575" HorizontalTextAlignment="Center" 
+                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoProductsYet]}" 
+                                       FontSize="14" 
+                                       TextColor="{StaticResource TextSecondary}" 
+                                       HorizontalTextAlignment="Center" 
                                        VerticalTextAlignment="Center" />
                             </CollectionView.EmptyView>
                         </CollectionView>
                     </VerticalStackLayout>
-                </Frame>
-
-                <!-- Language Button -->
-                <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LanguageDil]}"
-                        Command="{Binding ChangeLanguageCommand}"
-                        BackgroundColor="#9C27B0"
-                        TextColor="White"
-                        CornerRadius="10"
-                        HeightRequest="50"
-                        Margin="15,0,15,0" />
+                </Border>
 
                 <!-- Actions Section -->
-                <Frame Margin="15,15,15,0" Padding="15" CornerRadius="15" 
-                       BorderColor="#E0E0E0" BackgroundColor="White">
-                    <VerticalStackLayout Spacing="10">
-                        <StackLayout Orientation="Horizontal" Spacing="5">
-                            <Label Text="📜" FontSize="18" />
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyActions]}" FontSize="18" FontAttributes="Bold" />
-                        </StackLayout>
+                <Border StrokeShape="RoundRectangle 16"
+                        StrokeThickness="0"
+                        BackgroundColor="White"
+                        Padding="20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="12">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="📜" FontSize="20" />
+                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyActions]}" 
+                                   FontSize="18" 
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimary}"/>
+                        </HorizontalStackLayout>
+
                         <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyOffers]}" 
                                 Command="{Binding GoToOffersCommand}" 
-                                BackgroundColor="#4CAF50" TextColor="White" />
+                                BackgroundColor="{StaticResource Primary}" 
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="48"
+                                FontAttributes="Bold">
+                            <Button.Shadow>
+                                <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
+
                         <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ServiceRequests]}" 
                                 Command="{Binding GoToServiceRequestsCommand}"
-                                BackgroundColor="#2196F3" TextColor="White" />
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="48"
+                                FontAttributes="Bold">
+                            <Button.Shadow>
+                                <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
+
+                        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[LanguageDil]}"
+                                Command="{Binding ChangeLanguageCommand}"
+                                BackgroundColor="{StaticResource AccentPurple}"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="48"
+                                FontAttributes="Bold">
+                            <Button.Shadow>
+                                <Shadow Brush="{StaticResource AccentPurple}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                            </Button.Shadow>
+                        </Button>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
                 <!-- Logout Button -->
                 <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Logout]}"
                         Command="{Binding LogoutCommand}"
-                        BackgroundColor="#F44336"
+                        BackgroundColor="{StaticResource AccentRed}"
                         TextColor="White"
-                        CornerRadius="10"
+                        CornerRadius="12"
                         HeightRequest="50"
-                        Margin="15,15,15,0" />
+                        FontAttributes="Bold">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource AccentRed}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
 
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Loading Indicator -->
-        <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#80000000">
-            <ActivityIndicator IsRunning="True" Color="White" 
-                               VerticalOptions="Center" HorizontalOptions="Center" />
+        <!-- Loading Overlay -->
+        <Grid Grid.RowSpan="2"
+              IsVisible="{Binding IsLoading}"
+              BackgroundColor="#F5F9FC"
+              ZIndex="1100"
+              InputTransparent="False">
+            <Border BackgroundColor="White"
+                    WidthRequest="100"
+                    HeightRequest="100"
+                    StrokeThickness="0"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,8"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{StaticResource Primary}"
+                                       WidthRequest="40"
+                                       HeightRequest="40" />
+                    <Label Text="Yükleniyor..."
+                           TextColor="{StaticResource Primary}"
+                           FontSize="13" />
+                </VerticalStackLayout>
+            </Border>
         </Grid>
-
     </Grid>
 </ContentPage>

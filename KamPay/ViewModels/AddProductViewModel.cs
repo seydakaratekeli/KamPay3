@@ -24,6 +24,9 @@ namespace KamPay.ViewModels
         private bool _categoriesLoaded = false;
         private static List<Category>? _cachedCategories;
 
+        // ✅ HARITA İÇİN EVENT
+        public event EventHandler? MapInitializationRequested;
+
         [ObservableProperty] private double? latitude;
         [ObservableProperty] private double? longitude;
         [ObservableProperty] private string title = "";
@@ -97,7 +100,14 @@ namespace KamPay.ViewModels
             ShowPriceField = true;
             ShowExchangeField = false;
 
+            // ✅ Varsayılan konum (Bartın, Turkey)
+            Latitude = 41.5810;
+            Longitude = 32.4610;
+
             LoadCachedCategories();
+
+            // ✅ Harita başlatma isteği gönder
+            MapInitializationRequested?.Invoke(this, EventArgs.Empty);
 
             //  DİL DEĞİŞİMİNİ DİNLE
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
@@ -282,6 +292,18 @@ namespace KamPay.ViewModels
             {
                 Location = $"{latitude:F4}, {longitude:F4}";
                 OnPropertyChanged(nameof(HasLocation));
+            }
+        }
+
+        // ✅ HARITADAN KONUM GÜNCELLEME KOMUTU
+        [RelayCommand]
+        public void UpdateLocation(Tuple<double, double> coordinates)
+        {
+            if (coordinates != null)
+            {
+                Latitude = coordinates.Item1;
+                Longitude = coordinates.Item2;
+                _ = UpdateLocationFromCoordinatesAsync(coordinates.Item1, coordinates.Item2);
             }
         }
 
@@ -537,8 +559,9 @@ namespace KamPay.ViewModels
             ExchangePreference = string.Empty;
             ImagePaths.Clear();
             ErrorMessage = string.Empty;
-            Latitude = null;
-            Longitude = null;
+            // ✅ Varsayılan konuma dön
+            Latitude = 41.5810;
+            Longitude = 32.4610;
             IsForSurpriseBox = false;
 
             if (Categories.Any()) SelectedCategory = Categories.First();
@@ -547,6 +570,12 @@ namespace KamPay.ViewModels
             // İndeksleri de sıfırla
             SelectedConditionIndex = _conditionEnums.IndexOf(SelectedCondition);
             SelectedTypeIndex = _typeEnums.IndexOf(SelectedType);
+        }
+
+        // ✅ Harita başlatma metodunu public yap
+        public void TriggerMapInitialization()
+        {
+            MapInitializationRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 }

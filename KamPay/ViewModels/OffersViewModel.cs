@@ -216,7 +216,9 @@ namespace KamPay.ViewModels
 
                 var userOffers = snapshot
                     .Where(s => s.Object != null && 
-                               (s.Object.SellerId == userId || s.Object.BuyerId == userId))
+                               (s.Object.SellerId == userId || s.Object.BuyerId == userId) &&
+                               // ✅ HİZMET TRANSACTION'LARINI FİLTRELE
+                               !(s.Key != null && s.Key.StartsWith("service_")))
                     .Select(s =>
                     {
                         var transaction = s.Object;
@@ -310,7 +312,9 @@ namespace KamPay.ViewModels
                 e.Object != null &&
                 !string.IsNullOrWhiteSpace(e.Key) &&
                 !string.IsNullOrWhiteSpace(e.Object?.TransactionId) &&
-                (e.Object.SellerId == userId || e.Object.BuyerId == userId)
+                (e.Object.SellerId == userId || e.Object.BuyerId == userId) &&
+                // ✅ HİZMET TRANSACTION'LARINI FİLTRELE
+                !(e.Key != null && e.Key.StartsWith("service_"))
             );
         }
 
@@ -326,9 +330,27 @@ namespace KamPay.ViewModels
                 var transaction = e.Object;
                 transaction.TransactionId = e.Key;
 
-                // Sadece ilgili kullanıcıya ait teklifleri işle
+                // ✅ Sadece ilgili kullanıcıya ait teklifleri işle
                 if (transaction.SellerId != userId && transaction.BuyerId != userId)
                     continue;
+
+                // ✅ KRİTİK FİLTRE: Hizmet transaction'larını hariç tut
+                // Hizmetler için oluşturulan geçici transaction'lar "service_" ile başlıyor
+                if (!string.IsNullOrEmpty(transaction.TransactionId) && 
+                    transaction.TransactionId.StartsWith("service_"))
+                {
+                    Debug.WriteLine($"⚠️ Hizmet transaction'ı atlanıyor: {transaction.TransactionId}");
+                    continue;
+                }
+
+                // ✅ EXTRA KORUMA: ProductId kontrolü
+                // Eğer ProductId bir ServiceId ise (ServiceOffer koleksiyonunda varsa), atla
+                if (!string.IsNullOrEmpty(transaction.ProductId) && 
+                    transaction.ProductId.Length > 10) // ServiceId'ler genellikle GUID formatında
+                {
+                    // Bu ekstra bir kontrol, gerekirse ServiceOffer collection'ında arama yapabilirsiniz
+                    // Şimdilik TransactionId kontrolü yeterli olacaktır
+                }
 
                 if (transaction.SellerId == userId)
                 {

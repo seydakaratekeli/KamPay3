@@ -7,6 +7,7 @@ namespace KamPay.Views
     public partial class ChatPage : ContentPage
     {
         private readonly ChatViewModel _viewModel;
+        private bool _hasAnimated = false;
 
         public ChatPage(ChatViewModel viewModel)
         {
@@ -21,14 +22,71 @@ namespace KamPay.Views
             });
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            // Animasyonları çalıştır
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
+
             // Sayfa göründüğünde son mesaja kaydır (biraz gecikmeyle)
             _ = Task.Run(async () =>
             {
                 await Task.Delay(500);
                 ScrollToLastMessage();
+            });
+        }
+
+        private async Task AnimatePageAsync()
+        {
+            // Reset states
+            HeaderSection.Opacity = 0;
+            HeaderSection.TranslationY = -20;
+            MessageInputSection.Opacity = 0;
+            MessageInputSection.TranslationY = 20;
+
+            // Background animation
+            AnimateBackgroundCircle();
+
+            // Header animation
+            await Task.WhenAll(
+                HeaderSection.FadeTo(1, 500, Easing.CubicOut),
+                HeaderSection.TranslateTo(0, 0, 500, Easing.CubicOut)
+            );
+
+            await Task.Delay(100);
+
+            // Message input animation
+            await Task.WhenAll(
+                MessageInputSection.FadeTo(1, 500, Easing.CubicOut),
+                MessageInputSection.TranslateTo(0, 0, 500, Easing.CubicOut)
+            );
+        }
+
+        private void AnimateBackgroundCircle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await Circle1.RotateTo(360, 25000, Easing.Linear);
+                            Circle1.Rotation = 0;
+                        });
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
             });
         }
 

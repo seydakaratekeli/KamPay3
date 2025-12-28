@@ -6,6 +6,7 @@ namespace KamPay.Views
     public partial class OffersPage : ContentPage
     {
         private readonly OffersViewModel _viewModel;
+        private bool _hasAnimated = false;
 
         public OffersPage(OffersViewModel vm)
         {
@@ -14,21 +15,79 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        //  YANLIŞ: OnDisappearing'de Dispose ÇAĞIRMA
-        // Sebep: Geri dönünce listener yok oluyor ve yeniden başlıyor.
-
-        //  DOĞRU: Sadece sayfa tamamen bellekten kaldırılınca dispose et
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-            //  BURADA DİSPOSE ETME! Sadece log at
-            System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
-        }
-
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
             System.Diagnostics.Debug.WriteLine("✅ OffersPage: Aktif (Listener zaten çalışıyor)");
+
+            // Animasyonları çalıştır
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
+        }
+
+        private async Task AnimatePageAsync()
+        {
+            // Reset states
+            HeaderSection.Opacity = 0;
+            HeaderSection.TranslationY = -30;
+            TabSection.Opacity = 0;
+            TabSection.TranslationY = 20;
+            ContentSection.Opacity = 0;
+            ContentSection.TranslationY = 30;
+
+            // Background animation
+            AnimateBackgroundCircle();
+
+            // Header animation
+            await HeaderSection.FadeTo(1, 400, Easing.CubicOut);
+
+            await Task.Delay(100);
+
+            // Tab section animation
+            await Task.WhenAll(
+                TabSection.FadeTo(1, 500, Easing.CubicOut),
+                TabSection.TranslateTo(0, 0, 500, Easing.CubicOut)
+            );
+
+            await Task.Delay(150);
+
+            // Content section animation
+            await Task.WhenAll(
+                ContentSection.FadeTo(1, 600, Easing.CubicOut),
+                ContentSection.TranslateTo(0, 0, 600, Easing.CubicOut)
+            );
+        }
+
+        private void AnimateBackgroundCircle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await MainThread.InvokeOnMainThreadAsync(async () =>
+                        {
+                            await Circle1.RotateTo(360, 30000, Easing.Linear);
+                            Circle1.Rotation = 0;
+                        });
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            });
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
         }
 
         //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır

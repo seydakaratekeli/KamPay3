@@ -14,27 +14,24 @@ namespace KamPay.Views;
 public partial class EditProductPage : ContentPage
 {
     private readonly EditProductViewModel _viewModel;
+    private bool _hasAnimated = false;
 
-    // Default location (Bartın, Turkey)
     private const double DefaultLatitude = 41.5810;
     private const double DefaultLongitude = 32.4610;
+    private const double DefaultZoomResolution = 5000;
+    private const double SelectedZoomResolution = 500;
+    private const double InitialZoomMultiplier = 2;
+    private const double MinZoomResolution = 100;
+    private const double MaxZoomResolution = 50000;
+    private const double ZoomStep = 2.0;
 
-    // Optimized zoom resolutions for better user experience
-    private const double DefaultZoomResolution = 5000;      // Default city view
-    private const double SelectedZoomResolution = 500;      // Selected location view
-    private const double InitialZoomMultiplier = 2;         // Initial zoom multiplier
-    private const double MinZoomResolution = 100;            // Maximum zoom in
-    private const double MaxZoomResolution = 50000;          // Maximum zoom out
-    private const double ZoomStep = 2.0;                     // Zoom step factor
-
-    // Pin styling
     private const string PinFillColor = "#F44336";
     private const string PinOutlineColor = "#FFFFFF";
 
     private WritableLayer? _pinLayer;
     private bool _isMapInfoSubscribed;
     private bool _isMapInitialized;
-    private MPoint? _selectedLocation; // Store selected location for reset
+    private MPoint? _selectedLocation;
 
     public EditProductPage(EditProductViewModel vm)
     {
@@ -42,7 +39,6 @@ public partial class EditProductPage : ContentPage
         _viewModel = vm;
         BindingContext = vm;
 
-        // Harita konum güncellemelerini dinle (📍 butonu için)
         WeakReferenceMessenger.Default.Register<MapLocationUpdateMessage>(this, (r, message) =>
         {
             MainThread.BeginInvokeOnMainThread(() =>
@@ -62,9 +58,6 @@ public partial class EditProductPage : ContentPage
             {
                 ProductMap.Map.Info += OnMapInfo;
                 _isMapInfoSubscribed = true;
-
-                // NOT: Mapsui varsayılan olarak çift tıklama ile zoom özelliğine sahiptir.
-                // Manuel olarak event eklemeye gerek yoktur.
             }
 
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -72,11 +65,67 @@ public partial class EditProductPage : ContentPage
             Console.WriteLine("📍 EditProductPage harita başlatılıyor...");
             await InitializeMapAsync();
             Console.WriteLine("✅ EditProductPage harita başlatıldı");
+
+            // Animasyon
+            if (!_hasAnimated)
+            {
+                _hasAnimated = true;
+                await Task.Delay(100);
+                await AnimatePageAsync();
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ EditProductPage OnAppearing Hatası: {ex.Message}");
         }
+    }
+
+    private async Task AnimatePageAsync()
+    {
+        // Reset states
+        HeaderSection.Opacity = 0;
+        HeaderSection.TranslationY = -30;
+        FormCard.Opacity = 0;
+        FormCard.TranslationY = 50;
+
+        // Background animation
+        AnimateBackgroundCircle();
+
+        // Header animation
+        await Task.WhenAll(
+            HeaderSection.FadeTo(1, 600, Easing.CubicOut),
+            HeaderSection.TranslateTo(0, 0, 600, Easing.CubicOut)
+        );
+
+        await Task.Delay(150);
+
+        // Form card animation
+        await Task.WhenAll(
+            FormCard.FadeTo(1, 700, Easing.CubicOut),
+            FormCard.TranslateTo(0, 0, 700, Easing.CubicOut)
+        );
+    }
+
+    private void AnimateBackgroundCircle()
+    {
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                try
+                {
+                    await MainThread.InvokeOnMainThreadAsync(async () =>
+                    {
+                        await Circle1.RotateTo(360, 28000, Easing.Linear);
+                        Circle1.Rotation = 0;
+                    });
+                }
+                catch
+                {
+                    break;
+                }
+            }
+        });
     }
 
     protected override void OnDisappearing()
@@ -89,14 +138,12 @@ public partial class EditProductPage : ContentPage
         if (_isMapInfoSubscribed && ProductMap?.Map != null)
         {
             ProductMap.Map.Info -= OnMapInfo;
-            // Event aboneliği kaldırıldı çünkü yukarıda eklenmedi.
             _isMapInfoSubscribed = false;
         }
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // When Latitude/Longitude changes from product load, update map
         if ((e.PropertyName == nameof(EditProductViewModel.Latitude) ||
              e.PropertyName == nameof(EditProductViewModel.Longitude)) &&
             _viewModel.Latitude.HasValue && _viewModel.Longitude.HasValue)
@@ -108,7 +155,6 @@ public partial class EditProductPage : ContentPage
         }
     }
 
-    // Harita tıklama
     private async void OnMapInfo(object? sender, MapInfoEventArgs e)
     {
         if (BindingContext is EditProductViewModel viewModel &&
@@ -116,7 +162,6 @@ public partial class EditProductPage : ContentPage
         {
             var worldPosition = e.MapInfo.WorldPosition;
 
-            // Store selected location for reset functionality
             _selectedLocation = worldPosition;
 
             var lonLat = SphericalMercator.ToLonLat(worldPosition.X, worldPosition.Y);
@@ -129,7 +174,7 @@ public partial class EditProductPage : ContentPage
             await viewModel.UpdateLocationFromCoordinatesAsync(lonLat.lat, lonLat.lon);
 
             ProductMap.Map?.Navigator.CenterOn(worldPosition);
-            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500); // Add smooth animation
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
         }
     }
 
@@ -152,13 +197,12 @@ public partial class EditProductPage : ContentPage
         {
             var spherical = SphericalMercator.FromLonLat(longitude, latitude);
 
-            // Store as selected location
             _selectedLocation = new MPoint(spherical.x, spherical.y);
 
             UpdatePinOnMap(spherical.x, spherical.y);
 
             ProductMap.Map?.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
-            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500); // Add smooth animation
+            ProductMap.Map?.Navigator.ZoomTo(SelectedZoomResolution, 500);
         }
         catch (Exception ex)
         {
@@ -175,10 +219,8 @@ public partial class EditProductPage : ContentPage
             var map = ProductMap.Map;
             if (map == null) return;
 
-            // OpenStreetMap layer
             map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
-            // Pin layer
             _pinLayer = new WritableLayer
             {
                 Name = "Pins",
@@ -193,7 +235,6 @@ public partial class EditProductPage : ContentPage
 
             map.Layers.Add(_pinLayer);
 
-            // Check if product already has location
             if (_viewModel.Latitude.HasValue && _viewModel.Longitude.HasValue)
             {
                 var spherical = SphericalMercator.FromLonLat(_viewModel.Longitude.Value, _viewModel.Latitude.Value);
@@ -204,7 +245,6 @@ public partial class EditProductPage : ContentPage
             }
             else
             {
-                // Try to get user's location
                 var location = await Geolocation.GetLastKnownLocationAsync();
 
                 if (location != null)
@@ -216,7 +256,6 @@ public partial class EditProductPage : ContentPage
                 }
                 else
                 {
-                    // Default Bartın
                     var spherical = SphericalMercator.FromLonLat(DefaultLongitude, DefaultLatitude);
 
                     map.Navigator.CenterOn(new MPoint(spherical.x, spherical.y));
@@ -240,7 +279,6 @@ public partial class EditProductPage : ContentPage
         }
     }
 
-    // Event handlers for XAML buttons
     private void OnZoomInClicked(object? sender, EventArgs e)
     {
         ZoomIn();
@@ -256,7 +294,6 @@ public partial class EditProductPage : ContentPage
         GoToSelectedLocation();
     }
 
-    // Zoom in method
     private void ZoomIn()
     {
         if (ProductMap?.Map?.Navigator == null) return;
@@ -264,10 +301,9 @@ public partial class EditProductPage : ContentPage
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Max(MinZoomResolution, currentResolution / ZoomStep);
 
-        ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
+        ProductMap.Map.Navigator.ZoomTo(newResolution, 500);
     }
 
-    // Zoom out method  
     private void ZoomOut()
     {
         if (ProductMap?.Map?.Navigator == null) return;
@@ -275,10 +311,9 @@ public partial class EditProductPage : ContentPage
         var currentResolution = ProductMap.Map.Navigator.Viewport.Resolution;
         var newResolution = Math.Min(MaxZoomResolution, currentResolution * ZoomStep);
 
-        ProductMap.Map.Navigator.ZoomTo(newResolution, 500); // 500ms animation
+        ProductMap.Map.Navigator.ZoomTo(newResolution, 500);
     }
 
-    // Go back to selected location
     private void GoToSelectedLocation()
     {
         if (_selectedLocation != null && ProductMap?.Map?.Navigator != null)
