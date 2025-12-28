@@ -659,6 +659,22 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Teklif fiyatını doğrula
+                var priceValidation = NegotiationRules.ValidateProposedPrice(
+                    proposedPrice, 
+                    transaction.Price);
+                
+                if (!priceValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(priceValidation.ErrorMessage);
+
                 // Güncelle
                 transaction.ProposedPriceByBuyer = proposedPrice;
                 transaction.IsNegotiating = true;
@@ -736,6 +752,23 @@ namespace KamPay.Services
 
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Karşı teklifi doğrula
+                var counterValidation = NegotiationRules.ValidateCounterOffer(
+                    counterOffer, 
+                    transaction.Price,
+                    transaction.ProposedPriceByBuyer);
+                
+                if (!counterValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(counterValidation.ErrorMessage);
 
                 transaction.CounterOfferBySeller = counterOffer;
                 transaction.IsNegotiating = true;
@@ -822,6 +855,20 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Ek nakit teklifini doğrula
+                var cashValidation = NegotiationRules.ValidateAdditionalCash(additionalCash);
+                
+                if (!cashValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(cashValidation.ErrorMessage);
+
                 transaction.AdditionalCashByRequester = additionalCash;
                 transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
@@ -902,6 +949,20 @@ namespace KamPay.Services
 
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                // Pazarlık devam edebilir mi kontrol et
+                var canContinue = NegotiationRules.CanContinueNegotiation(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt);
+                
+                if (!canContinue.IsValid)
+                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+
+                // Ek nakit karşı teklifini doğrula
+                var cashValidation = NegotiationRules.ValidateAdditionalCash(counterCash);
+                
+                if (!cashValidation.IsValid)
+                    return ServiceResult<bool>.FailureResult(cashValidation.ErrorMessage);
 
                 transaction.CounterCashByOwner = counterCash;
                 transaction.IsNegotiating = true;
@@ -1001,18 +1062,19 @@ namespace KamPay.Services
 
                 transaction.IsNegotiating = false;
                 
-                // Detaylı pazarlık özeti oluştur
+                // NegotiationRules helper'ını kullanarak detaylı özet oluştur
                 var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
-                var negotiationDuration = transaction.NegotiationStartedAt.HasValue 
-                    ? (DateTime.UtcNow - transaction.NegotiationStartedAt.Value).TotalMinutes 
-                    : 0;
+                decimal? originalPrice = transaction.Type == ProductType.Satis 
+                    ? transaction.Price 
+                    : null; // Takas için orijinal fiyat kavramı yok
                 
-                var negotiationSummary = $"✅ Anlaşma Sağlandı\n" +
-                    $"Tutar: {agreedAmount:N2}₺\n" +
-                    $"Kabul Eden: {acceptedBy}\n" +
-                    $"Pazarlık Turu: {transaction.NegotiationRoundCount}\n" +
-                    $"Süre: {negotiationDuration:N0} dakika\n" +
-                    $"Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
+                var negotiationSummary = NegotiationRules.GetNegotiationSummary(
+                    transaction.NegotiationRoundCount,
+                    transaction.NegotiationStartedAt,
+                    originalPrice,
+                    agreedAmount);
+                
+                negotiationSummary += $"👤 Kabul Eden: {acceptedBy}\n";
                 
                 transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
                 transaction.UpdatedAt = DateTime.UtcNow;
