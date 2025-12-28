@@ -9,11 +9,14 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 {
     private const string LanguagePreferenceKey = "AppLanguage";
     private const string DefaultLanguage = ""; // Neutral culture
+    private bool _isInitialized = false;
 
     private static readonly Lazy<LocalizationResourceManager> _instance =
         new(() => new LocalizationResourceManager(), LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static LocalizationResourceManager Instance => _instance.Value;
+    
+    public bool IsInitialized => _isInitialized;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -30,6 +33,7 @@ public class LocalizationResourceManager : INotifyPropertyChanged
                 System.Diagnostics.Debug.WriteLine("⚠️ KRITIK: ResourceManager başlatılamadı!");
                 // ResourceManager null ise, varsayılan culture ile devam et
                 AppResources.Culture = null;
+                _isInitialized = false;
                 return;
             }
             
@@ -46,6 +50,7 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             }
             
             SetCulture(savedLanguage, savePreference: false);
+            _isInitialized = true;
             System.Diagnostics.Debug.WriteLine("✓ LocalizationResourceManager başarıyla başlatıldı");
         }
         catch (Exception ex)
@@ -59,11 +64,13 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             {
                 AppResources.Culture = null;
                 System.Diagnostics.Debug.WriteLine("⚙️ Fallback: Neutral culture kullanılıyor");
+                _isInitialized = true; // Fallback ile de başarılı sayalım
             }
             catch (Exception fallbackEx)
             {
                 // Son çare: hiçbir şey yapma
                 System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture fallback bile başarısız oldu: {fallbackEx.Message}");
+                _isInitialized = false;
             }
         }
     }

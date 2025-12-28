@@ -67,25 +67,41 @@ namespace KamPay.ViewModels
             {
                 try
                 {
-                    // Small delay to ensure resources are fully initialized
-                    Task.Delay(100).ContinueWith(_ =>
+                    // Wait for resources to be initialized with multiple attempts
+                    const int maxAttempts = 5;
+                    const int delayMs = 100;
+                    
+                    Task.Run(async () =>
                     {
-                        MainThread.BeginInvokeOnMainThread(() =>
+                        for (int attempt = 0; attempt < maxAttempts; attempt++)
                         {
-                            try
+                            await Task.Delay(delayMs * (attempt + 1)); // Exponential backoff
+                            
+                            if (LocalizationResourceManager.Instance?.IsInitialized == true)
                             {
-                                UpdateTabTitles();
+                                MainThread.BeginInvokeOnMainThread(() =>
+                                {
+                                    try
+                                    {
+                                        UpdateTabTitles();
+                                        System.Diagnostics.Debug.WriteLine("✓ Tab titles updated successfully");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"⚠️ UpdateTabTitles deferred error: {ex.Message}");
+                                    }
+                                });
+                                return;
                             }
-                            catch (Exception ex)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles deferred error: {ex.Message}");
-                            }
-                        });
+                        }
+                        
+                        // If resources still not initialized after all attempts, keep fallback values
+                        System.Diagnostics.Debug.WriteLine("⚠️ Resources not initialized after max attempts, using fallback values");
                     });
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Deferred initialization error: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Deferred initialization error: {ex.Message}");
                 }
             });
 
@@ -165,8 +181,9 @@ namespace KamPay.ViewModels
                 }
                 return value;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"GetLocalizedString error for key '{key}': {ex.Message}");
                 return fallback;
             }
         }
