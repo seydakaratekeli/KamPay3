@@ -8,13 +8,31 @@ namespace KamPay
     {
         public App(AppShell appShell)
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
 
-            // Varsayılan dili ayarla
-            LocalizationResourceManager.Instance.SetCulture("tr");
+                // Varsayılan dili ayarla - hata olsa bile devam et
+                try
+                {
+                    LocalizationResourceManager.Instance.SetCulture("tr");
+                    System.Diagnostics.Debug.WriteLine("✓ Varsayılan dil (Türkçe) ayarlandı");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Dil ayarlama hatası (devam ediliyor): {ex.Message}");
+                }
 
-            // MainPage'i ata
-            MainPage = appShell;
+                // MainPage'i ata
+                MainPage = appShell;
+                System.Diagnostics.Debug.WriteLine("✓ MainPage (AppShell) atandı");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: App constructor hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                throw; // Constructor'da kritik hatalar yeniden fırlatılmalı
+            }
         }
 
         protected override void OnStart()

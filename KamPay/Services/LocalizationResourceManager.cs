@@ -9,11 +9,14 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 {
     private const string LanguagePreferenceKey = "AppLanguage";
     private const string DefaultLanguage = ""; // Neutral culture
+    private bool _isInitialized = false;
 
     private static readonly Lazy<LocalizationResourceManager> _instance =
         new(() => new LocalizationResourceManager(), LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static LocalizationResourceManager Instance => _instance.Value;
+    
+    public bool IsInitialized => _isInitialized;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -21,15 +24,25 @@ public class LocalizationResourceManager : INotifyPropertyChanged
     {
         try
         {
-            // ResourceManager'ı önce başlat ve kontrol et
+            System.Diagnostics.Debug.WriteLine("⚙️ LocalizationResourceManager başlatılıyor...");
+            
+            // ResourceManager'ı başlat ve kontrol et
             var resourceManager = AppResources.ResourceManager;
             if (resourceManager == null)
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ KRITIK: ResourceManager başlatılamadı!");
+                // ResourceManager null ise, varsayılan culture ile devam et
+                AppResources.Culture = null;
+                // Mark as not initialized - critical failure
+                _isInitialized = false;
+                return;
             }
+            
+            System.Diagnostics.Debug.WriteLine("✓ ResourceManager başarıyla başlatıldı");
             
             // Başlatma sırasında kaydedilmiş dil tercihini yükle
             var savedLanguage = Preferences.Get(LanguagePreferenceKey, DefaultLanguage);
+            System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil: '{savedLanguage}'");
             
             // Eğer kaydedilmiş dil boşsa veya "tr" ise, neutral culture kullan
             if (string.IsNullOrEmpty(savedLanguage) || savedLanguage == "tr")
@@ -38,6 +51,8 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             }
             
             SetCulture(savedLanguage, savePreference: false);
+            _isInitialized = true;
+            System.Diagnostics.Debug.WriteLine("✓ LocalizationResourceManager başarıyla başlatıldı");
         }
         catch (Exception ex)
         {
@@ -48,12 +63,18 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             // Fallback olarak neutral culture kullan
             try
             {
-                SetCulture(DefaultLanguage, savePreference: false);
+                AppResources.Culture = null;
+                System.Diagnostics.Debug.WriteLine("⚙️ Fallback: Neutral culture kullanılıyor");
+                // Even though initialization failed, we can still function with neutral culture
+                // Mark as initialized so the app can continue
+                _isInitialized = true;
             }
-            catch
+            catch (Exception fallbackEx)
             {
                 // Son çare: hiçbir şey yapma
-                System.Diagnostics.Debug.WriteLine("⚠️ SetCulture bile başarısız oldu!");
+                System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture fallback bile başarısız oldu: {fallbackEx.Message}");
+                // Complete failure - mark as not initialized
+                _isInitialized = false;
             }
         }
     }
@@ -64,13 +85,20 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         {
             try
             {
+                // Null check for key
+                if (string.IsNullOrEmpty(key))
+                {
+                    System.Diagnostics.Debug.WriteLine("⚠️ Boş anahtar ile kaynak erişimi denendi");
+                    return string.Empty;
+                }
+
                 // ResourceManager referansını yerel değişkene al (thread-safe)
                 var resourceManager = AppResources.ResourceManager;
                 
                 // ResourceManager kontrolü
                 if (resourceManager == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("ResourceManager null - fallback key döndürülüyor");
+                    System.Diagnostics.Debug.WriteLine($"⚠️ ResourceManager null - fallback key döndürülüyor: {key}");
                     return key;
                 }
 
@@ -84,7 +112,7 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 
                 if (string.IsNullOrEmpty(value))
                 {
-                    System.Diagnostics.Debug.WriteLine($"Kaynak bulunamadı: {key}");
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Kaynak bulunamadı: {key}");
                     return key;
                 }
 
@@ -92,7 +120,7 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Kaynak erişim hatası: {key}, Hata: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"⚠️ Kaynak erişim hatası: {key}, Hata: {ex.Message}");
                 return key;
             }
         }
