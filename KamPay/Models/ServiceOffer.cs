@@ -87,7 +87,11 @@ public class ServiceRequest
     public string NegotiationNotes { get; set; } = ""; // Pazarlık notları
     public int NegotiationRoundCount { get; set; } = 0; // Pazarlık turu sayısı
     
-    // Hesaplanan değer: Anlaşılan fiyat
+    /// <summary>
+    /// Hesaplanan değer: Anlaşılan fiyat
+    /// Öncelik sırası: Sağlayıcının karşı teklifi → Talep edenin teklifi → Kilitli fiyat → Orijinal fiyat
+    /// Price non-nullable olduğu için null dönmez
+    /// </summary>
     public decimal AgreedPrice => CounterOfferByProvider ?? ProposedPriceByRequester ?? QuotedPrice ?? Price;
 }
 
