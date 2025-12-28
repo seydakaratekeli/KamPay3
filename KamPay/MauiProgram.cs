@@ -26,47 +26,19 @@ namespace KamPay
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 System.Diagnostics.Debug.WriteLine("✓ Encoding provider kaydedildi");
 
-                // Load saved language preference and set culture BEFORE accessing any resources
-                var savedLanguage = Preferences.Get("AppLanguage", "tr");
-                System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
-
-                CultureInfo culture;
+                // ⚠️ ÖNEMLI: Culture ayarını daha minimalist yap
+                // Sadece neutral culture kullan, satellite assembly yüklenmesini bekle
                 try
                 {
-                    culture = new CultureInfo(savedLanguage);
-                }
-                catch (CultureNotFoundException)
-                {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz kültür kodu: {savedLanguage}, varsayılana dönülüyor");
-                    culture = new CultureInfo("tr");
-                }
-
-                //  Türkçe karakter desteği için kültür ayarları
-                CultureInfo.DefaultThreadCurrentCulture = culture;
-                CultureInfo.DefaultThreadCurrentUICulture = culture;
-                CultureInfo.CurrentCulture = culture;
-                CultureInfo.CurrentUICulture = culture;
-
-                //  Thread'lere de uygula
-                Thread.CurrentThread.CurrentCulture = culture;
-                Thread.CurrentThread.CurrentUICulture = culture;
-
-                System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarları uygulandı: {culture.Name}");
-
-                // ⚠️ ÖNEMLİ: AppResources.Culture'ı BURADA ayarlayın (ResourceManager'a erişmeden)
-                try
-                {
-                    AppResources.Culture = culture;
-                    System.Diagnostics.Debug.WriteLine("✓ AppResources.Culture ayarlandı");
+                    // Invariant culture ile başla, sonra LocalizationResourceManager ayarlayacak
+                    CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                    CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+                    System.Diagnostics.Debug.WriteLine("✓ Invariant culture ayarlandı (geçici)");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ AppResources.Culture ayarlama hatası: {ex.Message}");
-                    // Null bırak, neutral culture kullanılacak
-                    AppResources.Culture = null;
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Culture ayarlama hatası: {ex.Message}");
                 }
-
-                System.Diagnostics.Debug.WriteLine($"⚙️ Uygulama başlatılıyor - Kültür: {culture.Name}");
 
                 var builder = MauiApp.CreateBuilder();
                 System.Diagnostics.Debug.WriteLine("✓ MauiApp builder oluşturuldu");

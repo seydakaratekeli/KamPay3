@@ -4,8 +4,6 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:KamPay.Views"
-    xmlns:vm="clr-namespace:KamPay.ViewModels"
-    x:DataType="vm:AppShellViewModel"
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="False"
     CurrentItem="{x:Reference LoginShellContent}">
@@ -16,24 +14,24 @@
         ContentTemplate="{DataTemplate local:LoginPage}"
         Shell.FlyoutBehavior="Disabled" />
 
-    <TabBar Route="MainApp">
-        <Tab Title="{Binding HomeTitle}" Icon="home_icon.svg">
+    <TabBar x:Name="MainTabBar" Route="MainApp">
+        <Tab x:Name="HomeTab" Title="Ana Sayfa" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab Title="{Binding ServicesTitle}" Icon="briefcase.svg">
+        <Tab x:Name="ServicesTab" Title="Hizmetler" Icon="briefcase.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
         </Tab>
 
-        <Tab Title="{Binding GoodDeedBoardTitle}" Icon="good_board.svg">
+        <Tab x:Name="GoodDeedTab" Title="İyilik Panosu" Icon="good_board.svg">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab Title="{Binding MessagesTitle}" Icon="message_icon.svg">
+        <Tab x:Name="MessagesTab" Title="Mesajlar" Icon="message_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
         </Tab>
 
-        <Tab Title="{Binding ProfileTitle}" Icon="person_icon.svg">
+        <Tab x:Name="ProfileTab" Title="Profil" Icon="person_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" Route="ProfilePage" />
         </Tab>
     </TabBar>

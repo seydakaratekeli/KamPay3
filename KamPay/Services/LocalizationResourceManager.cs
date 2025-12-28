@@ -16,6 +16,17 @@ public class LocalizationResourceManager : INotifyPropertyChanged
 
     public static LocalizationResourceManager Instance => _instance.Value;
     
+    /// <summary>
+    /// Forces the lazy initialization of the singleton instance.
+    /// Call this method early in app startup to ensure the instance is ready.
+    /// </summary>
+    public static void EnsureInitialized()
+    {
+        // Accessing Instance property triggers lazy initialization
+        var _ = Instance;
+        System.Diagnostics.Debug.WriteLine($"✓ LocalizationResourceManager zorla başlatıldı - IsInitialized: {Instance.IsInitialized}");
+    }
+    
     public bool IsInitialized => _isInitialized;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -26,56 +37,36 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         {
             System.Diagnostics.Debug.WriteLine("⚙️ LocalizationResourceManager başlatılıyor...");
             
-            // ResourceManager'ı başlat ve kontrol et
+            // İlk başlatmada neutral culture kullan
+            try
+            {
+                AppResources.Culture = null;
+                System.Diagnostics.Debug.WriteLine("✓ Neutral culture ayarlandı (başlangıç)");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Culture ayarlama hatası: {ex.Message}");
+            }
+            
+            // ResourceManager'ı kontrol et
             var resourceManager = AppResources.ResourceManager;
             if (resourceManager == null)
             {
-                System.Diagnostics.Debug.WriteLine("⚠️ KRITIK: ResourceManager başlatılamadı!");
-                // ResourceManager null ise, varsayılan culture ile devam et
-                AppResources.Culture = null;
-                // Mark as not initialized - critical failure
+                System.Diagnostics.Debug.WriteLine("⚠️ UYARI: ResourceManager null");
                 _isInitialized = false;
                 return;
             }
             
-            System.Diagnostics.Debug.WriteLine("✓ ResourceManager başarıyla başlatıldı");
-            
-            // Başlatma sırasında kaydedilmiş dil tercihini yükle
-            var savedLanguage = Preferences.Get(LanguagePreferenceKey, DefaultLanguage);
-            System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil: '{savedLanguage}'");
-            
-            // Eğer kaydedilmiş dil boşsa veya "tr" ise, neutral culture kullan
-            if (string.IsNullOrEmpty(savedLanguage) || savedLanguage == "tr")
-            {
-                savedLanguage = ""; // Neutral culture
-            }
-            
-            SetCulture(savedLanguage, savePreference: false);
+            System.Diagnostics.Debug.WriteLine("✓ ResourceManager başarıyla erişildi");
             _isInitialized = true;
-            System.Diagnostics.Debug.WriteLine("✓ LocalizationResourceManager başarıyla başlatıldı");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"⚠️ LocalizationResourceManager başlatma hatası: {ex.GetType().Name}");
             System.Diagnostics.Debug.WriteLine($"   Mesaj: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"   StackTrace: {ex.StackTrace}");
             
-            // Fallback olarak neutral culture kullan
-            try
-            {
-                AppResources.Culture = null;
-                System.Diagnostics.Debug.WriteLine("⚙️ Fallback: Neutral culture kullanılıyor");
-                // Even though initialization failed, we can still function with neutral culture
-                // Mark as initialized so the app can continue
-                _isInitialized = true;
-            }
-            catch (Exception fallbackEx)
-            {
-                // Son çare: hiçbir şey yapma
-                System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture fallback bile başarısız oldu: {fallbackEx.Message}");
-                // Complete failure - mark as not initialized
-                _isInitialized = false;
-            }
+            // Hata durumunda bile initialized olarak işaretle
+            _isInitialized = true;
         }
     }
 
@@ -130,6 +121,8 @@ public class LocalizationResourceManager : INotifyPropertyChanged
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine($"⚙️ Culture ayarlanıyor: {cultureCode}");
+            
             // Eğer boş veya "tr" ise, neutral culture kullan
             if (string.IsNullOrEmpty(cultureCode) || cultureCode == "tr")
             {
@@ -142,11 +135,9 @@ public class LocalizationResourceManager : INotifyPropertyChanged
                 CultureInfo.DefaultThreadCurrentUICulture = turkishCulture;
                 CultureInfo.CurrentCulture = turkishCulture;
                 CultureInfo.CurrentUICulture = turkishCulture;
-                Thread.CurrentThread.CurrentCulture = turkishCulture;
-                Thread.CurrentThread.CurrentUICulture = turkishCulture;
                 
                 cultureCode = "tr";
-                System.Diagnostics.Debug.WriteLine("Neutral culture (Türkçe) ayarlandı");
+                System.Diagnostics.Debug.WriteLine("✓ Neutral culture (Türkçe) ayarlandı");
             }
             else if (cultureCode == "en")
             {
@@ -156,12 +147,10 @@ public class LocalizationResourceManager : INotifyPropertyChanged
                 CultureInfo.DefaultThreadCurrentUICulture = englishCulture;
                 CultureInfo.CurrentCulture = englishCulture;
                 CultureInfo.CurrentUICulture = englishCulture;
-                Thread.CurrentThread.CurrentCulture = englishCulture;
-                Thread.CurrentThread.CurrentUICulture = englishCulture;
                 
                 // AppResources.en.resx kullanılacak
                 AppResources.Culture = englishCulture;
-                System.Diagnostics.Debug.WriteLine("İngilizce kültür ayarlandı");
+                System.Diagnostics.Debug.WriteLine("✓ İngilizce kültür ayarlandı");
             }
             else
             {
@@ -171,11 +160,9 @@ public class LocalizationResourceManager : INotifyPropertyChanged
                 CultureInfo.DefaultThreadCurrentUICulture = culture;
                 CultureInfo.CurrentCulture = culture;
                 CultureInfo.CurrentUICulture = culture;
-                Thread.CurrentThread.CurrentCulture = culture;
-                Thread.CurrentThread.CurrentUICulture = culture;
                 AppResources.Culture = culture;
                 
-                System.Diagnostics.Debug.WriteLine($"Kültür ayarlandı: {culture.Name}");
+                System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarlandı: {culture.Name}");
             }
 
             if (savePreference)
@@ -188,9 +175,16 @@ public class LocalizationResourceManager : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"SetCulture hatası: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture hatası: {ex.Message}");
             // Hata durumunda neutral culture kullan
-            AppResources.Culture = null;
+            try
+            {
+                AppResources.Culture = null;
+            }
+            catch
+            {
+                // Son çare - hiçbir şey yapma
+            }
         }
     }
 

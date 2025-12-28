@@ -1,6 +1,7 @@
 ﻿using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
+using System.Globalization;
 
 namespace KamPay
 {
@@ -12,16 +13,37 @@ namespace KamPay
             {
                 InitializeComponent();
 
-                // Varsayılan dili ayarla - hata olsa bile devam et
-                try
+                // Localization'ı daha güvenli başlat - hata olsa bile devam et
+                Task.Run(async () =>
                 {
-                    LocalizationResourceManager.Instance.SetCulture("tr");
-                    System.Diagnostics.Debug.WriteLine("✓ Varsayılan dil (Türkçe) ayarlandı");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Dil ayarlama hatası (devam ediliyor): {ex.Message}");
-                }
+                    try
+                    {
+                        // Biraz bekle - runtime'ın hazır olmasını sağla
+                        await Task.Delay(100);
+                        
+                        // Kaydedilmiş dil tercihini al
+                        var savedLanguage = Preferences.Get("AppLanguage", "tr");
+                        System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
+                        
+                        // Culture ayarla
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            try
+                            {
+                                LocalizationResourceManager.Instance.SetCulture(savedLanguage);
+                                System.Diagnostics.Debug.WriteLine($"✓ Dil ayarlandı: {savedLanguage}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"⚠️ Dil ayarlama hatası (fallback kullanılıyor): {ex.Message}");
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️ Localization başlatma hatası: {ex.Message}");
+                    }
+                });
 
                 // MainPage'i ata
                 MainPage = appShell;

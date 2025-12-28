@@ -8,6 +8,7 @@ namespace KamPay
     public partial class AppShell : Shell
     {
         private bool _isNavigating = false;
+        private readonly AppShellViewModel _viewModel;
 
         public AppShell(AppShellViewModel vm)
         {
@@ -18,12 +19,16 @@ namespace KamPay
                 InitializeComponent();
                 System.Diagnostics.Debug.WriteLine("✓ AppShell.InitializeComponent tamamlandı");
                 
+                _viewModel = vm;
                 BindingContext = vm;
                 System.Diagnostics.Debug.WriteLine("✓ AppShell.BindingContext atandı");
 
                 // Rota Kayıtları (Mevcut kodun aynısı)
                 RegisterRoutes();
                 System.Diagnostics.Debug.WriteLine("✓ AppShell rotaları kaydedildi");
+                
+                // Tab title'ları ayarla
+                SetupTabTitles();
                 
                 System.Diagnostics.Debug.WriteLine("✓ AppShell başarıyla başlatıldı");
             }
@@ -32,6 +37,61 @@ namespace KamPay
                 System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: AppShell constructor hatası: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
                 throw; // Constructor'da kritik hatalar yeniden fırlatılmalı
+            }
+        }
+
+        private void SetupTabTitles()
+        {
+            try
+            {
+                // ViewModel'den PropertyChanged eventi dinle
+                _viewModel.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == null || 
+                        e.PropertyName == nameof(AppShellViewModel.HomeTitle) ||
+                        e.PropertyName == nameof(AppShellViewModel.ServicesTitle) ||
+                        e.PropertyName == nameof(AppShellViewModel.GoodDeedBoardTitle) ||
+                        e.PropertyName == nameof(AppShellViewModel.MessagesTitle) ||
+                        e.PropertyName == nameof(AppShellViewModel.ProfileTitle))
+                    {
+                        UpdateTabTitles();
+                    }
+                };
+                
+                // İlk kez title'ları ayarla
+                UpdateTabTitles();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Tab title setup hatası: {ex.Message}");
+            }
+        }
+
+        private void UpdateTabTitles()
+        {
+            try
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!string.IsNullOrEmpty(_viewModel.HomeTitle))
+                        HomeTab.Title = _viewModel.HomeTitle;
+                    
+                    if (!string.IsNullOrEmpty(_viewModel.ServicesTitle))
+                        ServicesTab.Title = _viewModel.ServicesTitle;
+                    
+                    if (!string.IsNullOrEmpty(_viewModel.GoodDeedBoardTitle))
+                        GoodDeedTab.Title = _viewModel.GoodDeedBoardTitle;
+                    
+                    if (!string.IsNullOrEmpty(_viewModel.MessagesTitle))
+                        MessagesTab.Title = _viewModel.MessagesTitle;
+                    
+                    if (!string.IsNullOrEmpty(_viewModel.ProfileTitle))
+                        ProfileTab.Title = _viewModel.ProfileTitle;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Tab title güncelleme hatası: {ex.Message}");
             }
         }
 
