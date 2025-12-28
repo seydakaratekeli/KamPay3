@@ -33,6 +33,7 @@ public class LocalizationResourceManager : INotifyPropertyChanged
                 System.Diagnostics.Debug.WriteLine("⚠️ KRITIK: ResourceManager başlatılamadı!");
                 // ResourceManager null ise, varsayılan culture ile devam et
                 AppResources.Culture = null;
+                // Mark as not initialized - critical failure
                 _isInitialized = false;
                 return;
             }
@@ -64,12 +65,15 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             {
                 AppResources.Culture = null;
                 System.Diagnostics.Debug.WriteLine("⚙️ Fallback: Neutral culture kullanılıyor");
-                _isInitialized = true; // Fallback ile de başarılı sayalım
+                // Even though initialization failed, we can still function with neutral culture
+                // Mark as initialized so the app can continue
+                _isInitialized = true;
             }
             catch (Exception fallbackEx)
             {
                 // Son çare: hiçbir şey yapma
                 System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture fallback bile başarısız oldu: {fallbackEx.Message}");
+                // Complete failure - mark as not initialized
                 _isInitialized = false;
             }
         }

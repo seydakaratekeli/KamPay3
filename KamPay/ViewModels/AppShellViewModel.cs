@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -15,6 +16,10 @@ namespace KamPay.ViewModels
 {
     public partial class AppShellViewModel : ObservableObject, IDisposable
     {
+        // Constants for resource initialization retry logic
+        private const int MaxResourceInitRetries = 5;
+        private const int InitialRetryDelayMs = 100;
+
         [ObservableProperty]
         private bool hasUnreadNotifications;
 
@@ -63,47 +68,7 @@ namespace KamPay.ViewModels
 
             // Defer resource initialization to avoid constructor exceptions
             // This will be called after the UI is fully loaded
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                try
-                {
-                    // Wait for resources to be initialized with multiple attempts
-                    const int maxAttempts = 5;
-                    const int delayMs = 100;
-                    
-                    Task.Run(async () =>
-                    {
-                        for (int attempt = 0; attempt < maxAttempts; attempt++)
-                        {
-                            await Task.Delay(delayMs * (attempt + 1)); // Exponential backoff
-                            
-                            if (LocalizationResourceManager.Instance?.IsInitialized == true)
-                            {
-                                MainThread.BeginInvokeOnMainThread(() =>
-                                {
-                                    try
-                                    {
-                                        UpdateTabTitles();
-                                        System.Diagnostics.Debug.WriteLine("✓ Tab titles updated successfully");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"⚠️ UpdateTabTitles deferred error: {ex.Message}");
-                                    }
-                                });
-                                return;
-                            }
-                        }
-                        
-                        // If resources still not initialized after all attempts, keep fallback values
-                        System.Diagnostics.Debug.WriteLine("⚠️ Resources not initialized after max attempts, using fallback values");
-                    });
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Deferred initialization error: {ex.Message}");
-                }
-            });
+            _ = InitializeTabTitlesAsync();
 
             // Genel bildirimleri dinle
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) =>
@@ -141,6 +106,47 @@ namespace KamPay.ViewModels
                     HasUnreadMessages = false;
                 }
             });
+        }
+
+        /// <summary>
+        /// Asynchronously initializes tab titles with retry logic to wait for LocalizationResourceManager.
+        /// Uses exponential backoff to avoid busy-waiting.
+        /// </summary>
+        private async Task InitializeTabTitlesAsync()
+        {
+            try
+            {
+                // Wait for resources to be initialized with multiple attempts
+                for (int attempt = 0; attempt < MaxResourceInitRetries; attempt++)
+                {
+                    await Task.Delay(InitialRetryDelayMs * (attempt + 1)); // Exponential backoff
+                    
+                    if (LocalizationResourceManager.Instance?.IsInitialized == true)
+                    {
+                        // Update on UI thread
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            try
+                            {
+                                UpdateTabTitles();
+                                System.Diagnostics.Debug.WriteLine("✓ Tab titles updated successfully");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"⚠️ UpdateTabTitles deferred error: {ex.Message}");
+                            }
+                        });
+                        return;
+                    }
+                }
+                
+                // If resources still not initialized after all attempts, keep fallback values
+                System.Diagnostics.Debug.WriteLine("⚠️ Resources not initialized after max attempts, using fallback values");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ InitializeTabTitlesAsync error: {ex.Message}");
+            }
         }
 
         private void UpdateTabTitles()
