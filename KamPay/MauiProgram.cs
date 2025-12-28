@@ -17,37 +17,58 @@ namespace KamPay
     {
         public static MauiApp CreateMauiApp()
         {
-            //  Türkçe karakter desteği için encoding provider'ı kaydet
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            // Load saved language preference and set culture BEFORE accessing any resources
-            var savedLanguage = Preferences.Get("AppLanguage", "tr");
-            CultureInfo culture;
             try
             {
-                culture = new CultureInfo(savedLanguage);
-            }
-            catch (CultureNotFoundException)
-            {
-                culture = new CultureInfo("tr");
-            }
-            
-            //  Türkçe karakter desteği için kültür ayarları
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            
-            //  Thread'lere de uygula
-            Thread.CurrentThread.CurrentCulture = culture;
-            Thread.CurrentThread.CurrentUICulture = culture;
+                System.Diagnostics.Debug.WriteLine("⚙️ MauiApp başlatılıyor...");
+                
+                //  Türkçe karakter desteği için encoding provider'ı kaydet
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                System.Diagnostics.Debug.WriteLine("✓ Encoding provider kaydedildi");
 
-            // ⚠️ ÖNEMLİ: AppResources.Culture'ı BURADA ayarlayın (ResourceManager'a erişmeden)
-            KamPay.Resources.Languages.AppResources.Culture = culture;
+                // Load saved language preference and set culture BEFORE accessing any resources
+                var savedLanguage = Preferences.Get("AppLanguage", "tr");
+                System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
+                
+                CultureInfo culture;
+                try
+                {
+                    culture = new CultureInfo(savedLanguage);
+                }
+                catch (CultureNotFoundException)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz kültür kodu: {savedLanguage}, varsayılana dönülüyor");
+                    culture = new CultureInfo("tr");
+                }
+                
+                //  Türkçe karakter desteği için kültür ayarları
+                CultureInfo.DefaultThreadCurrentCulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+                CultureInfo.CurrentCulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+                
+                //  Thread'lere de uygula
+                Thread.CurrentThread.CurrentCulture = culture;
+                Thread.CurrentThread.CurrentUICulture = culture;
 
-            System.Diagnostics.Debug.WriteLine($"Uygulama başlatılıyor - Kültür: {culture.Name}");
+                System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarları uygulandı: {culture.Name}");
 
-            var builder = MauiApp.CreateBuilder();
+                // ⚠️ ÖNEMLİ: AppResources.Culture'ı BURADA ayarlayın (ResourceManager'a erişmeden)
+                try
+                {
+                    AppResources.Culture = culture;
+                    System.Diagnostics.Debug.WriteLine("✓ AppResources.Culture ayarlandı");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ AppResources.Culture ayarlama hatası: {ex.Message}");
+                    // Null bırak, neutral culture kullanılacak
+                    AppResources.Culture = null;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"⚙️ Uygulama başlatılıyor - Kültür: {culture.Name}");
+
+                var builder = MauiApp.CreateBuilder();
+                System.Diagnostics.Debug.WriteLine("✓ MauiApp builder oluşturuldu");
 
             builder
                 .UseMauiApp<App>()
@@ -202,7 +223,17 @@ namespace KamPay
             builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            System.Diagnostics.Debug.WriteLine("⚙️ MauiApp build ediliyor...");
+            var app = builder.Build();
+            System.Diagnostics.Debug.WriteLine("✓ MauiApp başarıyla oluşturuldu");
+            
+            return app;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: MauiProgram.CreateMauiApp hatası: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+            throw; // Kritik hatalar yeniden fırlatılmalı
         }
     }
 }

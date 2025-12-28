@@ -11,11 +11,28 @@ namespace KamPay
 
         public AppShell(AppShellViewModel vm)
         {
-            InitializeComponent();
-            BindingContext = vm;
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("⚙️ AppShell başlatılıyor...");
+                
+                InitializeComponent();
+                System.Diagnostics.Debug.WriteLine("✓ AppShell.InitializeComponent tamamlandı");
+                
+                BindingContext = vm;
+                System.Diagnostics.Debug.WriteLine("✓ AppShell.BindingContext atandı");
 
-            // Rota Kayıtları (Mevcut kodun aynısı)
-            RegisterRoutes();
+                // Rota Kayıtları (Mevcut kodun aynısı)
+                RegisterRoutes();
+                System.Diagnostics.Debug.WriteLine("✓ AppShell rotaları kaydedildi");
+                
+                System.Diagnostics.Debug.WriteLine("✓ AppShell başarıyla başlatıldı");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: AppShell constructor hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                throw; // Constructor'da kritik hatalar yeniden fırlatılmalı
+            }
         }
 
         private void RegisterRoutes()

@@ -53,22 +53,41 @@ namespace KamPay.ViewModels
             _authService = authService;
             _messagingService = messagingService;
 
-            // Kaynak yöneticisinin hazır olduğundan emin olun
-            try
+            // Initialize with fallback values first to prevent crashes
+            HomeTitle = "Ana Sayfa";
+            ServicesTitle = "Hizmetler";
+            GoodDeedBoardTitle = "İyilik Panosu";
+            MessagesTitle = "Mesajlar";
+            ProfileTitle = "Profil";
+            FavoritesTitle = "Favoriler";
+
+            // Defer resource initialization to avoid constructor exceptions
+            // This will be called after the UI is fully loaded
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                UpdateTabTitles();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles hatası: {ex.Message}");
-                // Fallback değerler
-                HomeTitle = "Ana Sayfa";
-                ServicesTitle = "Hizmetler";
-                GoodDeedBoardTitle = "İyilik Panosu";
-                MessagesTitle = "Mesajlar";
-                ProfileTitle = "Profil";
-                FavoritesTitle = "Favoriler";
-            }
+                try
+                {
+                    // Small delay to ensure resources are fully initialized
+                    Task.Delay(100).ContinueWith(_ =>
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            try
+                            {
+                                UpdateTabTitles();
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles deferred error: {ex.Message}");
+                            }
+                        });
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Deferred initialization error: {ex.Message}");
+                }
+            });
 
             // Genel bildirimleri dinle
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) =>
@@ -110,13 +129,46 @@ namespace KamPay.ViewModels
 
         private void UpdateTabTitles()
         {
-            var res = LocalizationResourceManager.Instance;
-            HomeTitle = res["Home"];
-            ServicesTitle = res["Services"];
-            GoodDeedBoardTitle = res["GoodDeedBoard"];
-            MessagesTitle = res["Messages"];
-            ProfileTitle = res["Profile"];
-            FavoritesTitle = res["Favorites"];
+            try
+            {
+                var res = LocalizationResourceManager.Instance;
+                if (res == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("LocalizationResourceManager.Instance is null");
+                    return;
+                }
+
+                // Try to get localized strings with fallback
+                HomeTitle = GetLocalizedString(res, "Home", "Ana Sayfa");
+                ServicesTitle = GetLocalizedString(res, "Services", "Hizmetler");
+                GoodDeedBoardTitle = GetLocalizedString(res, "GoodDeedBoard", "İyilik Panosu");
+                MessagesTitle = GetLocalizedString(res, "Messages", "Mesajlar");
+                ProfileTitle = GetLocalizedString(res, "Profile", "Profil");
+                FavoritesTitle = GetLocalizedString(res, "Favorites", "Favoriler");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles error: {ex.Message}");
+                // Keep fallback values that were set in constructor
+            }
+        }
+
+        private string GetLocalizedString(LocalizationResourceManager res, string key, string fallback)
+        {
+            try
+            {
+                var value = res[key];
+                // If the key is returned as-is, it means translation not found
+                if (string.IsNullOrEmpty(value) || value == key)
+                {
+                    return fallback;
+                }
+                return value;
+            }
+            catch
+            {
+                return fallback;
+            }
         }
 
         private async Task StartListeningForMessagesAsync()
