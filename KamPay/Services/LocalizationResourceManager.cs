@@ -126,43 +126,46 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             // Eğer boş veya "tr" ise, neutral culture kullan
             if (string.IsNullOrEmpty(cultureCode) || cultureCode == "tr")
             {
-                // Neutral culture için Culture'ı null yap
+                // ⚠️ ÖNEMLİ: AppResources.Culture'ı null yapıyoruz (neutral = Türkçe)
+                // Ama thread culture'larını değiştirmiyoruz - satellite assembly aramayı önlemek için
                 AppResources.Culture = null;
                 
-                // Thread culture'ları Türkçe yap (sayılar, tarihler için)
-                var turkishCulture = new CultureInfo("tr-TR");
-                CultureInfo.DefaultThreadCurrentCulture = turkishCulture;
-                CultureInfo.DefaultThreadCurrentUICulture = turkishCulture;
-                CultureInfo.CurrentCulture = turkishCulture;
-                CultureInfo.CurrentUICulture = turkishCulture;
-                
                 cultureCode = "tr";
-                System.Diagnostics.Debug.WriteLine("✓ Neutral culture (Türkçe) ayarlandı");
+                System.Diagnostics.Debug.WriteLine("✓ Neutral culture (Türkçe) ayarlandı - satellite assembly'siz");
             }
             else if (cultureCode == "en")
             {
                 // İngilizce için en-US kullan
-                var englishCulture = new CultureInfo("en-US");
-                CultureInfo.DefaultThreadCurrentCulture = englishCulture;
-                CultureInfo.DefaultThreadCurrentUICulture = englishCulture;
-                CultureInfo.CurrentCulture = englishCulture;
-                CultureInfo.CurrentUICulture = englishCulture;
-                
-                // AppResources.en.resx kullanılacak
-                AppResources.Culture = englishCulture;
-                System.Diagnostics.Debug.WriteLine("✓ İngilizce kültür ayarlandı");
+                try
+                {
+                    var englishCulture = new CultureInfo("en");
+                    
+                    // AppResources.en.resx kullanılacak
+                    AppResources.Culture = englishCulture;
+                    System.Diagnostics.Debug.WriteLine("✓ İngilizce kültür ayarlandı");
+                }
+                catch (Exception cultureEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ İngilizce culture ayarlama hatası: {cultureEx.Message}");
+                    // Fallback to neutral
+                    AppResources.Culture = null;
+                }
             }
             else
             {
                 // Diğer diller için
-                var culture = new CultureInfo(cultureCode);
-                CultureInfo.DefaultThreadCurrentCulture = culture;
-                CultureInfo.DefaultThreadCurrentUICulture = culture;
-                CultureInfo.CurrentCulture = culture;
-                CultureInfo.CurrentUICulture = culture;
-                AppResources.Culture = culture;
-                
-                System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarlandı: {culture.Name}");
+                try
+                {
+                    var culture = new CultureInfo(cultureCode);
+                    AppResources.Culture = culture;
+                    
+                    System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarlandı: {culture.Name}");
+                }
+                catch (CultureNotFoundException)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz culture kodu: {cultureCode}, neutral kullanılıyor");
+                    AppResources.Culture = null;
+                }
             }
 
             if (savePreference)
@@ -171,11 +174,33 @@ public class LocalizationResourceManager : INotifyPropertyChanged
             }
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-            WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
+            
+            try
+            {
+                WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(cultureCode));
+            }
+            catch (Exception msgEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Message gönderme hatası: {msgEx.Message}");
+            }
+        }
+        catch (System.Resources.MissingManifestResourceException mmrEx)
+        {
+            System.Diagnostics.Debug.WriteLine($"⚠️ UYARI: Kaynak dosyası bulunamadı: {mmrEx.Message}");
+            System.Diagnostics.Debug.WriteLine($"⚠️ Neutral culture kullanılacak (fallback)");
+            // Hata durumunda neutral culture kullan
+            try
+            {
+                AppResources.Culture = null;
+            }
+            catch
+            {
+                // Son çare - hiçbir şey yapma
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture hatası: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture hatası: {ex.GetType().Name} - {ex.Message}");
             // Hata durumunda neutral culture kullan
             try
             {

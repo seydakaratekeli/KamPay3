@@ -13,41 +13,51 @@ namespace KamPay
             {
                 InitializeComponent();
 
+                // MainPage'i önce ata
+                MainPage = appShell;
+                System.Diagnostics.Debug.WriteLine("✓ MainPage (AppShell) atandı");
+
                 // Localization'ı daha güvenli başlat - hata olsa bile devam et
                 Task.Run(async () =>
                 {
                     try
                     {
-                        // Biraz bekle - runtime'ın hazır olmasını sağla
-                        await Task.Delay(100);
+                        // LocalizationResourceManager'ın başlatılmasını bekle
+                        await Task.Delay(200);
                         
                         // Kaydedilmiş dil tercihini al
                         var savedLanguage = Preferences.Get("AppLanguage", "tr");
                         System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
                         
-                        // Culture ayarla
-                        MainThread.BeginInvokeOnMainThread(() =>
+                        // Culture ayarla - MainThread'de çalıştır
+                        await MainThread.InvokeOnMainThreadAsync(() =>
                         {
                             try
                             {
-                                LocalizationResourceManager.Instance.SetCulture(savedLanguage);
-                                System.Diagnostics.Debug.WriteLine($"✓ Dil ayarlandı: {savedLanguage}");
+                                // LocalizationResourceManager instance'ının hazır olduğundan emin ol
+                                if (LocalizationResourceManager.Instance != null)
+                                {
+                                    LocalizationResourceManager.Instance.SetCulture(savedLanguage);
+                                    System.Diagnostics.Debug.WriteLine($"✓ Dil ayarlandı: {savedLanguage}");
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"⚠️ LocalizationResourceManager instance null");
+                                }
                             }
                             catch (Exception ex)
                             {
                                 System.Diagnostics.Debug.WriteLine($"⚠️ Dil ayarlama hatası (fallback kullanılıyor): {ex.Message}");
+                                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
                             }
                         });
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"⚠️ Localization başlatma hatası: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
                     }
                 });
-
-                // MainPage'i ata
-                MainPage = appShell;
-                System.Diagnostics.Debug.WriteLine("✓ MainPage (AppShell) atandı");
             }
             catch (Exception ex)
             {
