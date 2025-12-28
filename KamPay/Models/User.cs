@@ -37,7 +37,31 @@ namespace KamPay.Models
             DonationPoints = 0;
         }
 
-        public string FullName => $"{FirstName} {LastName}";
+        //  CRITICAL FIX: Boş/null değerleri güvenli şekilde ele al
+        public string FullName
+        {
+            get
+            {
+                var first = string.IsNullOrWhiteSpace(FirstName) ? "" : FirstName.Trim();
+                var last = string.IsNullOrWhiteSpace(LastName) ? "" : LastName.Trim();
+                
+                var fullName = $"{first} {last}".Trim();
+                
+                // Eğer hem ad hem soyad boşsa, username veya email'i kullan
+                if (string.IsNullOrWhiteSpace(fullName))
+                {
+                    if (!string.IsNullOrWhiteSpace(Username))
+                        return Username.Trim();
+                    
+                    if (!string.IsNullOrWhiteSpace(Email))
+                        return Email.Split('@')[0].Trim();
+                    
+                    return "Kullanıcı";
+                }
+                
+                return fullName;
+            }
+        }
     }
 
     // Kayıt için DTO

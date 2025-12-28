@@ -101,6 +101,30 @@
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"/>
 
+                    <!-- ✅ YENİ: Zamanlayıcı Göstergesi -->
+                    <Frame BackgroundColor="#F5F5F5" 
+                           CornerRadius="10" 
+                           Padding="15"
+                           HasShadow="False"
+                           BorderColor="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FF5252|#4CAF50'}">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Kodun Geçerlilik Süresi"
+                                   FontSize="12"
+                                   TextColor="#757575"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="{Binding RemainingTime}"
+                                   FontSize="32"
+                                   FontAttributes="Bold"
+                                   TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FF5252|#6200EA'}"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="{Binding IsCodeExpired, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Kod süresi doldu|Kalan süre'}"
+                                   FontSize="12"
+                                   TextColor="#757575"
+                                   HorizontalOptions="Center"
+                                   IsVisible="True"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
                     <!-- Doğrulama Kodu Entry -->
                     <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[VerificationCode]}"
                            Text="{Binding VerificationCode}"
@@ -110,7 +134,8 @@
                            PlaceholderColor="#757575"
                            HorizontalTextAlignment="Center"
                            FontSize="20"
-                           FontAttributes="Bold"/>
+                           FontAttributes="Bold"
+                           IsEnabled="{Binding IsCodeExpired, Converter={StaticResource InvertedBoolConverter}}"/>
 
                     <!-- Hata Mesajı -->
                     <Label Text="{Binding ErrorMessage}"
@@ -126,7 +151,7 @@
                             FontAttributes="Bold"
                             CornerRadius="10"
                             HeightRequest="50"
-                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
+                            IsEnabled="{Binding IsCodeExpired, Converter={StaticResource InvertedBoolConverter}}"/>
 
                     <!-- Kodu Yeniden Gönder -->
                     <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ResendCode]}"

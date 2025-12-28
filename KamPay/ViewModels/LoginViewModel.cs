@@ -35,16 +35,17 @@ namespace KamPay.ViewModels
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
+        
         public void ClearCredentials()
         {
             Email = string.Empty;
             Password = string.Empty;
             ErrorMessage = string.Empty;
         }
+        
         [RelayCommand]
         private async Task LoginAsync()
         {
-
             // AĞ KONTROLÜ: İşlem başlamadan önce interneti kontrol et
             if (!NetworkHelper.HasInternetConnection())
             {
@@ -85,10 +86,18 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
+                    // ✅ FIX: Tüm hataları detaylı şekilde göster
                     if (result.Errors != null && result.Errors.Any())
-                        ErrorMessage = string.Join("\n", result.Errors);
+                    {
+                        // Hataları madde işareti ile listele
+                        var errorList = new List<string> { result.Message ?? "Giriş bilgilerinde hatalar var:" };
+                        errorList.AddRange(result.Errors.Select(e => $"• {e}"));
+                        ErrorMessage = string.Join("\n", errorList);
+                    }
                     else
+                    {
                         ErrorMessage = result.Message ?? Res["LoginFailed"];
+                    }
                 }
             }
             catch (Exception ex)
@@ -101,11 +110,11 @@ namespace KamPay.ViewModels
             }
         }
 
-[RelayCommand]
-private async Task GoToRegisterAsync()
-{
-    // Yığını sıfırlama
-    await Shell.Current.GoToAsync(nameof(RegisterPage)); 
-}
+        [RelayCommand]
+        private async Task GoToRegisterAsync()
+        {
+            // Yığını sıfırlama
+            await Shell.Current.GoToAsync(nameof(RegisterPage)); 
+        }
     }
 }

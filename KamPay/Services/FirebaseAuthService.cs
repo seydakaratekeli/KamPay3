@@ -65,8 +65,8 @@ namespace KamPay.Services
                 // 3. Kullanıcı nesnesi oluştur
                 var user = new User
                 {
-                    FirstName = request.FirstName.Trim(),
-                    LastName = request.LastName.Trim(),
+                    FirstName = InputSanitizer.SanitizeName(request.FirstName.Trim()),
+                    LastName = InputSanitizer.SanitizeName(request.LastName.Trim()),
                     Email = request.Email.ToLower().Trim(),
                     PasswordHash = HashPassword(request.Password),
                     IsEmailVerified = false,
@@ -279,7 +279,7 @@ namespace KamPay.Services
                 {
                     return ServiceResult<bool>.FailureResult(
                         "Geçersiz doğrulama kodu",
-                        "Lütfen e-postanıza gelen kodu kontrol edin"
+                        "Lütfen e-posta adresinize gelen kodu kontrol edin"
                     );
                 }
 
@@ -297,10 +297,56 @@ namespace KamPay.Services
                 user.VerificationCode = null;
                 user.VerificationCodeExpiry = DateTime.MinValue;
 
+                // Varsayılan profil resmi ayarla (eğer yoksa)
+                if (string.IsNullOrEmpty(user.ProfileImageUrl))
+                {
+                    user.ProfileImageUrl = "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString($"{user.FirstName}+{user.LastName}") + "&size=200&background=random";
+                }
+
+                // User nesnesini güncelle
                 await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user.UserId)
                     .PutAsync(user);
+
+                //  CRITICAL FIX: user_profiles koleksiyonunu da oluştur
+                // E-posta doğrulandıktan sonra profil koleksiyonunu oluştur
+                try
+                {
+                    var profileService = new FirebaseUserProfileService();
+                    var username = $"{user.FirstName} {user.LastName}".Trim();
+                    if (string.IsNullOrWhiteSpace(username))
+                    {
+                        username = user.Email.Split('@')[0];
+                    }
+                    
+                    await profileService.CreateUserProfileAsync(user.UserId, username, user.Email);
+                    
+                    //  user_profiles koleksiyonunu elle güncelle - FirstName ve LastName ekle
+                    var userProfile = new UserProfile
+                    {
+                        UserId = user.UserId,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Username = username,
+                        Email = user.Email,
+                        ProfileImageUrl = user.ProfileImageUrl,
+                        MemberSince = user.CreatedAt
+                    };
+                    
+                    await _firebaseClient
+                        .Child("user_profiles")
+                        .Child(user.UserId)
+                        .PutAsync(userProfile);
+                
+                    Console.WriteLine($"✅ user_profiles oluşturuldu - FirstName: {user.FirstName}, LastName: {user.LastName}");
+                    Console.WriteLine($"✅ Profil resmi URL: {user.ProfileImageUrl}");
+                }
+                catch (Exception profileEx)
+                {
+                    Console.WriteLine($"⚠️ Profil oluşturma hatası: {profileEx.Message}");
+                    // Hata olsa bile e-posta doğrulaması başarılı oldu
+                }
 
                 return ServiceResult<bool>.SuccessResult(
                     true,
@@ -327,14 +373,18 @@ namespace KamPay.Services
             }
             else
             {
-                // Check for dangerous content
-                if (InputSanitizer.ContainsDangerousContent(request.FirstName))
+                // ✅ Türkçe karakter desteği ile yeni validasyon
+                if (!InputSanitizer.IsValidName(request.FirstName))
                 {
                     result.AddError("Ad alanı geçersiz karakterler içeriyor");
                 }
-                else if (request.FirstName.Length < 2)
+                else if (request.FirstName.Trim().Length < 2)
                 {
                     result.AddError("Ad en az 2 karakter olmalıdır");
+                }
+                else if (InputSanitizer.ContainsDangerousContent(request.FirstName))
+                {
+                    result.AddError("Ad alanı güvenli olmayan içerik içeriyor");
                 }
             }
 
@@ -345,14 +395,18 @@ namespace KamPay.Services
             }
             else
             {
-                // Check for dangerous content
-                if (InputSanitizer.ContainsDangerousContent(request.LastName))
+                // ✅ Türkçe karakter desteği ile yeni validasyon
+                if (!InputSanitizer.IsValidName(request.LastName))
                 {
                     result.AddError("Soyad alanı geçersiz karakterler içeriyor");
                 }
-                else if (request.LastName.Length < 2)
+                else if (request.LastName.Trim().Length < 2)
                 {
                     result.AddError("Soyad en az 2 karakter olmalıdır");
+                }
+                else if (InputSanitizer.ContainsDangerousContent(request.LastName))
+                {
+                    result.AddError("Soyad alanı güvenli olmayan içerik içeriyor");
                 }
             }
 
@@ -388,11 +442,13 @@ namespace KamPay.Services
                 if (request.Password.Length > Constants.MaxPasswordLength)
                     result.AddError($"Şifre en fazla {Constants.MaxPasswordLength} karakter olmalıdır");
 
-                // Şifre karmaşıklık kontrolü
-                if (!Regex.IsMatch(request.Password, @"[A-Z]"))
+                // ✅ FIX: Türkçe büyük harfleri de destekleyen şifre karmaşıklık kontrolü
+                // \p{Lu} = Tüm Unicode büyük harfleri (İ, Ğ, Ü, Ş, Ö, Ç dahil)
+                if (!Regex.IsMatch(request.Password, @"\p{Lu}"))
                     result.AddError("Şifre en az bir büyük harf içermelidir");
 
-                if (!Regex.IsMatch(request.Password, @"[a-z]"))
+                // \p{Ll} = Tüm Unicode küçük harfleri (ı, ğ, ü, ş, ö, ç dahil)
+                if (!Regex.IsMatch(request.Password, @"\p{Ll}"))
                     result.AddError("Şifre en az bir küçük harf içermelidir");
 
                 if (!Regex.IsMatch(request.Password, @"[0-9]"))

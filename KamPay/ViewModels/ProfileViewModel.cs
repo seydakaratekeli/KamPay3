@@ -143,7 +143,26 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             }
             else
             {
-                CurrentUser = userResult.Data;
+                //  CRITICAL FIX: Boş string kontrolü ekle
+                var user = userResult.Data;
+                
+                // Eğer FirstName/LastName boşsa, mevcut değerleri koru
+                if (CurrentUser != null)
+                {
+                    user.FirstName = string.IsNullOrWhiteSpace(user.FirstName) 
+                        ? (CurrentUser.FirstName ?? string.Empty) 
+                        : user.FirstName;
+                        
+                    user.LastName = string.IsNullOrWhiteSpace(user.LastName) 
+                        ? (CurrentUser.LastName ?? string.Empty) 
+                        : user.LastName;
+                        
+                    user.ProfileImageUrl = string.IsNullOrWhiteSpace(user.ProfileImageUrl) 
+                        ? (CurrentUser.ProfileImageUrl ?? string.Empty) 
+                        : user.ProfileImageUrl;
+                }
+                
+                CurrentUser = user;
             }
             
             // ✅ Kullanıcı bilgilerini logla

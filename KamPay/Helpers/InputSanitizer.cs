@@ -1,13 +1,13 @@
-using System;
+ï»¿using System;
 using System.Text.RegularExpressions;
 
 namespace KamPay.Helpers
 {
-    //// XSS ve enjeksiyon saldýrýlarýný önlemek için girdi doðrulama ve temizleme iþlemleri için yardýmcý sýnýf
+    //// XSS ve enjeksiyon saldÄ±rÄ±larÄ±nÄ± Ã¶nlemek iÃ§in girdi doÄŸrulama ve temizleme iÅŸlemleri iÃ§in yardÄ±mcÄ± sÄ±nÄ±f
     ///
     public static class InputSanitizer
     {
-        // Potansiyel olarak zararlý HTML/komut dosyasý etiketlerini ve özel karakterleri kaldýrarak metin giriþini temizler
+        // Potansiyel olarak zararlÄ± HTML/komut dosyasÄ± etiketlerini ve Ã¶zel karakterleri kaldÄ±rarak metin giriÅŸini temizler
 
         public static string SanitizeText(string input)
         {
@@ -32,7 +32,7 @@ namespace KamPay.Helpers
             return sanitized;
         }
 
-        // Metnin potansiyel olarak tehlikeli içerik içerip içermediðini doðrular
+        // Metnin potansiyel olarak tehlikeli iÃ§erik iÃ§erip iÃ§ermediÄŸini doÄŸrular
         public static bool ContainsDangerousContent(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -61,7 +61,7 @@ namespace KamPay.Helpers
             return false;
         }
 
-        // E-posta biçimini doðrular
+        // E-posta biÃ§imini doÄŸrular
 
         public static bool IsValidEmail(string email)
         {
@@ -80,7 +80,7 @@ namespace KamPay.Helpers
             }
         }
 
-        // URL biçimini doðrular
+        // URL biÃ§imini doÄŸrular
 
         public static bool IsValidUrl(string url)
         {
@@ -91,7 +91,7 @@ namespace KamPay.Helpers
                    (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
-        // Kullanýcý adýný temizler ve doðrular (yalnýzca alfanümerik karakterler, alt çizgiler ve tireler)
+        // KullanÄ±cÄ± adÄ±nÄ± temizler ve doÄŸrular (yalnÄ±zca alfanÃ¼merik karakterler, alt Ã§izgiler ve tireler)
         public static string SanitizeUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -103,7 +103,40 @@ namespace KamPay.Helpers
             return sanitized.Trim();
         }
 
-        // Metin uzunluðunun kabul edilebilir aralýkta olup olmadýðýný doðrular
+        // âœ… YENÄ°: Ad ve Soyad iÃ§in TÃ¼rkÃ§e karakter desteÄŸi ile doÄŸrulama
+        public static bool IsValidName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            // TÃ¼rkÃ§e karakterler dahil harf, boÅŸluk ve tire karakterlerine izin ver
+            // Unicode kategorisi \p{L} tÃ¼m harfleri kapsar (TÃ¼rkÃ§e dahil)
+            var nameRegex = new Regex(@"^[\p{L}\s\-']+$", RegexOptions.None);
+            
+            return nameRegex.IsMatch(name.Trim());
+        }
+
+        // âœ… YENÄ°: Ad ve Soyad temizleme (TÃ¼rkÃ§e karakterleri korur)
+        public static string SanitizeName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return name;
+
+            // Tehlikeli iÃ§erikleri kontrol et
+            if (ContainsDangerousContent(name))
+                return string.Empty;
+
+            // Sadece harf, boÅŸluk, tire ve kesme iÅŸaretine izin ver
+            // \p{L} tÃ¼m Unicode harflerini kapsar (TÃ¼rkÃ§e karakterler dahil)
+            var sanitized = Regex.Replace(name, @"[^\p{L}\s\-']", string.Empty);
+
+            // Birden fazla boÅŸluÄŸu tek boÅŸluÄŸa indir
+            sanitized = Regex.Replace(sanitized, @"\s+", " ");
+
+            return sanitized.Trim();
+        }
+
+        // Metin uzunluÄŸunun kabul edilebilir aralÄ±kta olup olmadÄ±ÄŸÄ±nÄ± doÄŸrular
         public static bool IsValidLength(string text, int minLength, int maxLength)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -113,7 +146,7 @@ namespace KamPay.Helpers
             return length >= minLength && length <= maxLength;
         }
 
-        // Aþýrý boþluklarý kaldýrýr ve satýr sonlarýný normalleþtirir
+        // AÅŸÄ±rÄ± boÅŸluklarÄ± kaldÄ±rÄ±r ve satÄ±r sonlarÄ±nÄ± normalleÅŸtirir
         public static string NormalizeWhitespace(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -128,7 +161,7 @@ namespace KamPay.Helpers
             return normalized.Trim();
         }
 
-        // Telefon numarasý formatýný doðrular (temel doðrulama)
+        // Telefon numarasÄ± formatÄ±nÄ± doÄŸrular (temel doÄŸrulama)
         public static bool IsValidPhoneNumber(string phoneNumber)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
@@ -141,7 +174,7 @@ namespace KamPay.Helpers
             return Regex.IsMatch(digits, @"^\d{7,15}$");
         }
 
-        // Sayýsal giriþi temizler ve ayrýþtýrýlmýþ deðeri döndürür
+        // SayÄ±sal giriÅŸi temizler ve ayrÄ±ÅŸtÄ±rÄ±lmÄ±ÅŸ deÄŸeri dÃ¶ndÃ¼rÃ¼r
         public static bool TrySanitizeNumeric(string input, out decimal result)
         {
             result = 0;
@@ -155,8 +188,8 @@ namespace KamPay.Helpers
             return decimal.TryParse(sanitized, out result);
         }
 
-        // Tek týrnaklarý kaçýrarak SQL enjeksiyonunu önler
-        //  Not: Mümkün olduðunda parametreli sorgular kullanýn
+        // Tek tÄ±rnaklarÄ± kaÃ§Ä±rarak SQL enjeksiyonunu Ã¶nler
+        //  Not: MÃ¼mkÃ¼n olduÄŸunda parametreli sorgular kullanÄ±n
         public static string EscapeSqlInput(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -165,7 +198,7 @@ namespace KamPay.Helpers
             return input.Replace("'", "''");
         }
 
-        // Giriþin SQL enjeksiyon kalýplarý içermediðini doðrular
+        // GiriÅŸin SQL enjeksiyon kalÄ±plarÄ± iÃ§ermediÄŸini doÄŸrular
         public static bool ContainsSqlInjectionPatterns(string input)
         {
             if (string.IsNullOrWhiteSpace(input))

@@ -31,9 +31,17 @@ namespace KamPay.Services
                 Debug.WriteLine($"To: {toEmail}");
                 Debug.WriteLine($"Kod: {verificationCode}");
                 Debug.WriteLine("--------------------------------------------------");
+                
+                // Console'a da yaz (Android Log için)
+                Console.WriteLine("---------- KamPay Doğrulama Kodu ----------");
+                Console.WriteLine($"To: {toEmail}");
+                Console.WriteLine($"Kod: {verificationCode}");
+                Console.WriteLine("--------------------------------------------");
 
-                // 3) SMTP ile gönderim
-                //Gerçek bir SMTP servisi bağlandığında aşağıdaki kod bloğu kullanılacaktır.
+                // 3)  SİMÜLASYON MODU: SMTP kodunu devre dışı bırak
+                // Gerçek bir SMTP servisi bağlandığında aşağıdaki kod bloğu aktif edilecektir.
+                
+                /*
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
                 {
                     EnableSsl = _settings.UseSsl,
@@ -52,18 +60,26 @@ namespace KamPay.Services
                 message.To.Add(toEmail);
 
                 await client.SendMailAsync(message);
+                */
 
-                Debug.WriteLine($"[KamPay] E-posta başarıyla gönderildi: {toEmail}");
-                return true;
+                //  Simülasyon için kısa bir gecikme ekle (gerçekçi olsun)
+                await Task.Delay(500);
+
+                Debug.WriteLine($"[KamPay] ✅ E-posta simüle edildi: {toEmail}");
+                Console.WriteLine($"✅ Doğrulama kodu başarıyla oluşturuldu!");
+                
+                return true; //  Simülasyonda her zaman başarılı
             }
             catch (SmtpException smtpEx)
             {
                 Debug.WriteLine($"[KamPay] SMTP hatası: {smtpEx.Message}");
+                Console.WriteLine($"⚠️ SMTP hatası: {smtpEx.Message}");
                 return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[KamPay] E-posta gönderim hatası: {ex.Message}");
+                Console.WriteLine($"❌ E-posta hatası: {ex.Message}");
                 return false;
             }
         }
