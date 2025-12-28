@@ -6,6 +6,7 @@ using KamPay.Services;
 using Microsoft.Maui.Controls;
 using System.Threading.Tasks;
 using KamPay.Resources;
+using System.Linq;
 
 namespace KamPay.ViewModels
 {
@@ -20,8 +21,11 @@ namespace KamPay.ViewModels
         [ObservableProperty] private PaymentDto _paymentDetails;
         [ObservableProperty] private bool _isCardSelected;
         [ObservableProperty] private bool _isEftSelected;
+        [ObservableProperty] private string _simulatedOtp; // OTP to display to user for simulation
 
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
+
+        public string PageTitle => "Ödeme";
 
         public PaymentViewModel(ITransactionService transactionService)
         {
@@ -29,7 +33,7 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
-        private async Task StartPaymentAsync(string method) // "cardsim" veya "eft"
+        private async Task StartPaymentAsync(string method) // "cardsim" veya "banktransfersim"
         {
             // 1. Ağ Kontrolü
             if (!NetworkHelper.HasInternetConnection())
@@ -38,11 +42,17 @@ namespace KamPay.ViewModels
                 return;
             }
 
+            // 2. Önceki seçimleri temizle
+            IsCardSelected = false;
+            IsEftSelected = false;
+            SimulatedOtp = null;
+            OtpCode = string.Empty;
+
             try
             {
                 IsLoading = true;
 
-                // 2. Ödemeyi Başlat (Rate Limiting servis içinde kontrol ediliyor)
+                // 3. Ödemeyi Başlat (Rate Limiting servis içinde kontrol ediliyor)
                 var result = await _transactionService.CreatePaymentSimulationAsync(Transaction.TransactionId, method);
 
                 if (result.Success)
@@ -51,10 +61,25 @@ namespace KamPay.ViewModels
                     IsCardSelected = method == "cardsim";
                     IsEftSelected = method == "banktransfersim";
 
-                    if (IsEftSelected)
+                    if (IsCardSelected)
                     {
-                        await Shell.Current.DisplayAlert("EFT Bilgileri",
-                            $"Banka: {PaymentDetails.BankName}\nReferans: {PaymentDetails.BankReference}\nTutar: {PaymentDetails.Amount} {PaymentDetails.Currency}", "Tamam");
+                        // Kart ödemesi için OTP'yi servisden al ve göster (SADECE SİMÜLASYON)
+                        var otpResult = await _transactionService.GetSimulationOtpAsync(PaymentDetails.PaymentId);
+                        
+                        if (otpResult.Success && !string.IsNullOrEmpty(otpResult.Data))
+                        {
+                            SimulatedOtp = otpResult.Data;
+                            await Shell.Current.DisplayAlert("Doğrulama Kodu (Simülasyon)", 
+                                $"Simülasyon için OTP kodunuz:\n\n{SimulatedOtp}\n\nBu kodu aşağıdaki alana girin.", "Tamam");
+                        }
+                    }
+                    else if (IsEftSelected)
+                    {
+                        await Shell.Current.DisplayAlert("EFT/Havale Bilgileri",
+                            $"Banka: {PaymentDetails.BankName}\n" +
+                            $"Referans Kodu: {PaymentDetails.BankReference}\n" +
+                            $"Tutar: {PaymentDetails.Amount:N2} {PaymentDetails.Currency}\n\n" +
+                            $"Ödeme açıklamasına mutlaka bu referans kodunu yazınız.", "Tamam");
                     }
                 }
                 else
@@ -62,17 +87,31 @@ namespace KamPay.ViewModels
                     await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                 }
             }
+            catch (Exception ex)
+            {
+                var error = NetworkHelper.GetUserFriendlyErrorMessage(ex);
+                await Shell.Current.DisplayAlert(Res["Error"], error, Res["Ok"]);
+            }
             finally { IsLoading = false; }
         }
 
         [RelayCommand]
         private async Task ConfirmCardPaymentAsync()
         {
-            // 1. Kart ödemesi seçiliyse OTP zorunluluğunu kontrol et
-            if (IsCardSelected && string.IsNullOrWhiteSpace(OtpCode))
+            // 1. Validasyonlar
+            if (IsCardSelected)
             {
-                await Shell.Current.DisplayAlert(Res["Error"], "Lütfen doğrulama kodunu giriniz.", Res["Ok"]);
-                return;
+                if (string.IsNullOrWhiteSpace(OtpCode))
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], "Lütfen doğrulama kodunu giriniz.", Res["Ok"]);
+                    return;
+                }
+
+                if (OtpCode.Length != 6 || !OtpCode.All(char.IsDigit))
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], "Doğrulama kodu 6 haneli bir sayı olmalıdır.", Res["Ok"]);
+                    return;
+                }
             }
 
             // 2. Girdi Temizleme (Sanitization)
@@ -95,9 +134,13 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Shell.Current.DisplayAlert(Res["Success"], "Ödemeniz başarıyla onaylandı.", Res["Ok"]);
+                    var successMessage = IsCardSelected 
+                        ? "Kredi kartı ödemesi başarıyla onaylandı!" 
+                        : "Havale/EFT ödemesi kaydedildi!";
+                    
+                    await Shell.Current.DisplayAlert(Res["Success"], successMessage, Res["Ok"]);
 
-                    // 3. NAVIGATE BACK MANTIĞI:
+                    // 4. NAVIGATE BACK MANTIĞI:
                     // "//" kullanarak mutlak yönlendirme yaparız; böylece navigasyon yığını temizlenir 
                     // ve kullanıcı doğrudan 'Gelen/Giden Teklifler' (OffersPage) ekranına düşer.
                     await Shell.Current.GoToAsync($"//{nameof(Views.OffersPage)}");
@@ -110,7 +153,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                // 4. Ağ hatası veya beklenmedik hatalarda kullanıcı dostu mesaj ver
+                // 5. Ağ hatası veya beklenmedik hatalarda kullanıcı dostu mesaj ver
                 var error = NetworkHelper.GetUserFriendlyErrorMessage(ex);
                 await Shell.Current.DisplayAlert(Res["Error"], error, Res["Ok"]);
             }
