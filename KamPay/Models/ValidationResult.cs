@@ -8,6 +8,11 @@ namespace KamPay.Models
     {
         public bool IsValid { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
+        public string Message { get; set; } = string.Empty;
+        public ValidationLevel Level { get; set; } = ValidationLevel.Success;
+
+        // Computed property for compatibility
+        public string ErrorMessage => GetErrorMessage();
 
         public ValidationResult()
         {
@@ -25,6 +30,47 @@ namespace KamPay.Models
         {
             return string.Join("\n", Errors);
         }
+
+        // Static factory methods for creating validation results
+        public static ValidationResult Success(string message = "Ýþlem baþarýlý")
+        {
+            return new ValidationResult
+            {
+                IsValid = true,
+                Message = message,
+                Level = ValidationLevel.Success
+            };
+        }
+
+        public static ValidationResult Failure(string message)
+        {
+            return new ValidationResult
+            {
+                IsValid = false,
+                Message = message,
+                Level = ValidationLevel.Error,
+                Errors = new List<string> { message }
+            };
+        }
+
+        public static ValidationResult Warning(string message)
+        {
+            return new ValidationResult
+            {
+                IsValid = true,
+                Message = message,
+                Level = ValidationLevel.Warning,
+                Errors = new List<string>()
+            };
+        }
+    }
+
+    // Validation level enumeration
+    public enum ValidationLevel
+    {
+        Success,
+        Warning,
+        Error
     }
     
     // Generic validation result with data

@@ -481,15 +481,25 @@ namespace KamPay.Services
         {
             try
             {
+                // ✅ CRITICAL FIX: Logout sırasında tüm singleton state'leri temizle
+                Console.WriteLine("🔓 Çıkış işlemi başlatılıyor...");
+                
+                // 1. Auth servisindeki kullanıcıyı temizle
                 _currentUser = null;
+                
+                // 2. Preferences'tan oturum bilgilerini sil
                 await ClearUserSessionAsync();
-
+                
+                // 3. Mesaj gönder (UI'ı güncelle)
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
-
+                
+                Console.WriteLine("✅ Çıkış başarılı - Tüm oturum bilgileri temizlendi");
+                
                 return ServiceResult<bool>.SuccessResult(true, "Çıkış başarılı");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ Çıkış hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Çıkış yapılamadı", ex.Message);
             }
         }

@@ -2,7 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using KamPay.Models;
 using KamPay.Services;
+using KamPay.Views;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
@@ -419,18 +421,6 @@ namespace KamPay.ViewModels
             if (request == null || request.Status != ServiceRequestStatus.Accepted)
                 return;
 
-            decimal price = request.QuotedPrice ?? 0;
-            string priceInfo = price > 0 ? $"Bu hizmetin ücreti {price} ₺ olarak kaydedilmiştir.\n\n" : "";
-
-            var confirm = await Shell.Current.DisplayAlert(
-                "Onay",
-                $"{priceInfo}Hizmeti aldığınızı onaylıyor musunuz? Bu işlem geri alınamaz ve ödeme simülasyonu başlatılacaktır.",
-                "Evet, Onayla",
-                "Hayır"
-            );
-
-            if (!confirm) return;
-
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
@@ -438,40 +428,102 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            try
+            // QuotedPrice varsa onu, yoksa Price'ı kullan
+            decimal price = request.QuotedPrice ?? request.Price;
+
+            // ✅ YENİ AKIŞ: Ücretli hizmet için PaymentPage'e yönlendir
+            if (price > 0)
             {
-                IsLoading = true;
-
-                var result = await _serviceService.SimulatePaymentAndCompleteAsync(
-                    request.RequestId,
-                    currentUser.UserId,
-                    SelectedPaymentMethod
-                );
-
-                if (result.Success)
+                try
                 {
-                    string message = SelectedPaymentMethod switch
+                    IsLoading = true;
+
+                    // ServiceRequest'i Transaction modeline dönüştür
+                    var transaction = new Transaction
                     {
-                        PaymentMethodType.CardSim => $"Kart (Simülasyon) ile {price} ₺ ödeme başarıyla gerçekleştirildi.",
-                        PaymentMethodType.BankTransferSim => $"EFT / Havale (Simülasyon) ile {price} ₺ ödeme başarıyla tamamlandı.",
-                        _ => "Ödeme simülasyonu başarıyla tamamlandı."
+                        TransactionId = $"service_{request.RequestId}",
+                        ProductId = request.ServiceId,
+                        ProductTitle = request.ServiceTitle,
+                        Type = ProductType.Satis, // Hizmet de satış gibi işleniyor
+                        SellerId = request.ProviderId,
+                        SellerName = request.ProviderName,
+                        BuyerId = request.RequesterId,
+                        BuyerName = request.RequesterName,
+                        Price = price,
+                        QuotedPrice = price,
+                        Status = TransactionStatus.Accepted,
+                        PaymentStatus = PaymentStatus.Pending,
+                        CreatedAt = request.RequestedAt,
+                        UpdatedAt = DateTime.UtcNow
                     };
 
-                    await Shell.Current.DisplayAlert("Başarılı", message, "Tamam");
-                    // Real-time listener otomatik güncelleyecek
+                    // ✅ KRİTİK: Transaction'ı Firebase'e kaydet
+                    var firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+                    await firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .Child(transaction.TransactionId)
+                        .PutAsync(transaction);
+
+                    Console.WriteLine($"✅ Hizmet için geçici transaction oluşturuldu: {transaction.TransactionId}");
+
+                    // PaymentPage'e git (Ürün satışı ile aynı akış)
+                    var navigationParameter = new Dictionary<string, object>
+                    {
+                        { "Transaction", transaction }
+                    };
+
+                    await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
                 }
-                else
+                catch (Exception ex)
                 {
-                    await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                    Console.WriteLine($"❌ Transaction oluşturma hatası: {ex.Message}");
+                    await Shell.Current.DisplayAlert("Hata", "Ödeme sayfası açılamadı: " + ex.Message, "Tamam");
+                }
+                finally
+                {
+                    IsLoading = false;
                 }
             }
-            catch (Exception ex)
+            else
             {
-                await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
-            }
-            finally
-            {
-                IsLoading = false;
+                // ✅ Ücretsiz/Zaman Kredisi: Eski akış (değişiklik yok)
+                string priceInfo = request.TimeCreditValue > 0 
+                    ? $"Bu hizmet için {request.TimeCreditValue} saat kredi transfer edilecektir.\n\n" 
+                    : "";
+
+                var confirm = await Shell.Current.DisplayAlert(
+                    "Onay",
+                    $"{priceInfo}Hizmeti aldığınızı onaylıyor musunuz?",
+                    "Evet, Onayla",
+                    "Hayır"
+                );
+
+                if (!confirm) return;
+
+                try
+                {
+                    IsLoading = true;
+
+                    // Kredi transferi yap
+                    var result = await _serviceService.CompleteRequestAsync(request.RequestId, currentUser.UserId);
+
+                    if (result.Success)
+                    {
+                        await Shell.Current.DisplayAlert("Başarılı", "Hizmet başarıyla tamamlandı!", "Tamam");
+                    }
+                    else
+                    {
+                        await Shell.Current.DisplayAlert("Hata", result.Message, "Tamam");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
             }
         }
     

@@ -2,6 +2,7 @@
 
 using KamPay.Views;
 using KamPay.ViewModels;
+using KamPay.Services;
 
 namespace KamPay
 {
@@ -129,29 +130,54 @@ namespace KamPay
             {
                 _isNavigating = true;
 
-                // Kullanıcı ID kontrolü
+                // ✅ CRITICAL FIX: Kullanıcı ID kontrolü - Logout yapılmışsa burada login ekranına yönlendir
                 var userId = Preferences.Get("current_user_id", string.Empty);
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    // Shell nesnesi artık hazır olduğu için yönlendir
-                    // Ama hata oluşursa kapat değil, login'de kal
+                    // ✅ KONTROL: Kullanıcı bilgisi gerçekten geçerli mi?
+                    // Eğer UserStateService'de kullanıcı yoksa, Preferences'ı temizle
                     try
                     {
+                        var userStateService = Application.Current?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
+                        if (userStateService != null)
+                        {
+                            var currentUser = userStateService.CurrentUser;
+                            
+                            // Eğer UserStateService'de kullanıcı yoksa, logout yapılmış demektir
+                            if (currentUser == null)
+                            {
+                                Console.WriteLine("⚠️ Preferences'ta userId var ama UserStateService'de kullanıcı yok - temizleniyor");
+                                Preferences.Remove("current_user_id");
+                                Preferences.Remove("current_user_email");
+                                
+                                // Login sayfasında kal
+                                await GoToAsync("//LoginPage");
+                                return;
+                            }
+                        }
+                        
+                        // Kullanıcı geçerliyse ana ekrana yönlendir
                         await GoToAsync("//MainApp");
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[Navigation Error] Could not navigate to MainApp: {ex.Message}");
-                        // Hata durumunda login sayfasında kal
+                        Console.WriteLine($"⚠️ Kullanıcı doğrulama hatası: {ex.Message}");
+                        // Hata durumunda güvenli taraf: Preferences'ı temizle ve login'de kal
                         Preferences.Remove("current_user_id");
                         Preferences.Remove("current_user_email");
+                        await GoToAsync("//LoginPage");
                     }
+                }
+                else
+                {
+                    // userId yoksa zaten login ekranındayız, hiçbir şey yapma
+                    Console.WriteLine("✅ userId yok, login ekranında kalınıyor");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[AppShell Error] {ex.Message}");
+                Console.WriteLine($"❌ AppShell.OnAppearing hatası: {ex.Message}");
             }
             finally
             {

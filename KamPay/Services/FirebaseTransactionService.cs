@@ -276,8 +276,76 @@ namespace KamPay.Services
                 transaction.PaymentCompletedAt = DateTime.UtcNow;
 
                 // 4. İŞLEM TİPİNE GÖRE TAMAMLAMA
+                
+                // ✅ HİZMET ÖDEMESİ: TransactionId "service_" ile başlıyorsa
+                if (transactionId.StartsWith("service_"))
+                {
+                    System.Diagnostics.Debug.WriteLine($"🛠️ Hizmet ödemesi tespit edildi: {transactionId}");
+                    
+                    // ServiceRequest ID'sini al (service_ prefix'ini kaldır)
+                    var requestId = transactionId.Replace("service_", "");
+                    
+                    try
+                    {
+                        // ServiceRequest'i güncelle
+                        var requestNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
+                        var serviceRequest = await requestNode.OnceSingleAsync<ServiceRequest>();
+                        
+                        if (serviceRequest != null)
+                        {
+                            // ServiceRequest'i tamamla
+                            serviceRequest.Status = ServiceRequestStatus.Completed;
+                            serviceRequest.PaymentStatus = ServicePaymentStatus.Paid;
+                            serviceRequest.UpdatedAt = DateTime.UtcNow;
+                            
+                            await requestNode.PutAsync(serviceRequest);
+                            
+                            System.Diagnostics.Debug.WriteLine($"✅ ServiceRequest tamamlandı: {requestId}");
+                            
+                            // Puanları ver
+                            await _userProfileService.AddPointsForAction(serviceRequest.ProviderId, UserAction.ProvideService);
+                            await _userProfileService.AddPointsForAction(serviceRequest.RequesterId, UserAction.ReceiveService);
+                            
+                            System.Diagnostics.Debug.WriteLine($"✅ Puanlar verildi");
+                            
+                            // Bildirimleri gönder
+                            await _notificationService.CreateNotificationAsync(new Notification
+                            {
+                                UserId = serviceRequest.ProviderId,
+                                Type = NotificationType.ServiceCompleted,
+                                Title = "Hizmet Ücreti Alındı!",
+                                Message = $"{serviceRequest.RequesterName}, '{serviceRequest.ServiceTitle}' hizmeti için ödemeyi tamamladı.",
+                                ActionUrl = nameof(Views.ServiceRequestsPage)
+                            });
+                            
+                            await _notificationService.CreateNotificationAsync(new Notification
+                            {
+                                UserId = serviceRequest.RequesterId,
+                                Type = NotificationType.ServiceCompleted,
+                                Title = "Hizmet Tamamlandı!",
+                                Message = $"'{serviceRequest.ServiceTitle}' hizmeti için ödeme başarıyla tamamlandı.",
+                                ActionUrl = nameof(Views.ServiceRequestsPage)
+                            });
+                            
+                            System.Diagnostics.Debug.WriteLine($"✅ Bildirimler gönderildi");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"⚠️ ServiceRequest bulunamadı: {requestId}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"❌ ServiceRequest güncelleme hatası: {ex.Message}");
+                        // Hata olsa bile ödeme tamamlanmış sayılır
+                    }
+                    
+                    // Transaction'ı da güncelle
+                    await transactionNode.PutAsync(transaction);
+                    System.Diagnostics.Debug.WriteLine($"✅ Hizmet ödemesi tamamlandı");
+                }
                 // SATIŞ: Ürünü kapat, puan ver, bildirim gönder
-                if (transaction.Type == ProductType.Satis)
+                else if (transaction.Type == ProductType.Satis)
                 {
                     var completeResult = await CompleteTransactionInternalAsync(transaction);
                     if (!completeResult.Success)
@@ -285,7 +353,7 @@ namespace KamPay.Services
                     
                     System.Diagnostics.Debug.WriteLine($"✅ Satış işlemi tamamlandı. TransactionId: {transactionId}");
                 }
-                // DİĞER TİPLER (Takas, Bağış, Hizmet): Sadece ödeme durumunu güncelle
+                // DİĞER TİPLER (Takas, Bağış): Sadece ödeme durumunu güncelle
                 else
                 {
                     await transactionNode.PutAsync(transaction);

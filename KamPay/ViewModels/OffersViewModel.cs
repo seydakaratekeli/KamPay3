@@ -488,55 +488,28 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task CompletePaymentAsync(Transaction transaction)
         {
-            if(transaction == null) return;
+            if (transaction == null) return;
 
-            // Sadece onaylanmış ve ödemesi bekleyen satış işlemleri için sayfaya yönlendir
+            // ✅ Sadece navigasyon yap - Ödeme işlemi PaymentPage'de gerçekleşecek
             if (transaction.Type == ProductType.Satis &&
                 transaction.Status == TransactionStatus.Accepted &&
                 transaction.PaymentStatus == PaymentStatus.Pending)
             {
                 var navigationParameter = new Dictionary<string, object>
-        {
-            { "Transaction", transaction }
-        };
+                {
+                    { "Transaction", transaction }
+                };
 
-                // Kullanıcıyı yeni oluşturduğumuz ödeme sayfasına gönderiyoruz
+                // PaymentPage'e yönlendir
                 await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
             }
             else
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem için şu an ödeme yapılamaz.", "Tamam");
-            }
-
-            var confirm = await Application.Current.MainPage.DisplayAlert("Ödeme Simülasyonu",
-                $"'{transaction.ProductTitle}' ürünü için ödemeyi tamamlamak üzeresiniz. Devam etmek istiyor musunuz?",
-                "Evet, Tamamla", "Hayır");
-
-            if (!confirm) return;
-
-            IsLoading = true;
-            try
-            {
-                if (_transactionService is FirebaseTransactionService firebaseService)
-                {
-                    var currentUser = await _authService.GetCurrentUserAsync();
-                    if (currentUser != null)
-                    {
-                        var result = await firebaseService.CompletePaymentAsync(transaction.TransactionId, currentUser.UserId);
-                        if (result.Success) 
-                            await Application.Current.MainPage.DisplayAlert("Başarılı", "Ödeme tamamlandı.", "Tamam");
-                        else 
-                            await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
-                    }
-                }
-            }
-            catch (Exception ex) 
-            { 
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam"); 
-            }
-            finally 
-            { 
-                IsLoading = false; 
+                await Application.Current.MainPage.DisplayAlert(
+                    "Bilgi", 
+                    "Bu işlem için şu an ödeme yapılamaz.", 
+                    "Tamam"
+                );
             }
         }
 
@@ -564,7 +537,7 @@ namespace KamPay.ViewModels
                         var result = await firebaseService.ConfirmDonationAsync(transaction.TransactionId, currentUser.UserId);
                         if (result.Success) 
                             await Application.Current.MainPage.DisplayAlert("Başarılı", "Bağış alındı.", "Tamam");
-                        else 
+                        else
                             await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }

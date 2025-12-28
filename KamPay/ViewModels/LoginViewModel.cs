@@ -79,6 +79,28 @@ namespace KamPay.ViewModels
                 {
                     // Giriş başarılıysa deneme sayacını sıfırla
                     RateLimiters.Login.Reset(Email);
+                    
+                    // ✅ CRITICAL FIX: Yeni kullanıcı girişinde tüm static cache'leri temizle
+                    Console.WriteLine("✅ Yeni kullanıcı girişi - tüm cache'ler temizleniyor...");
+                    
+                    // ChatViewModel cache'ini temizle
+                    ChatViewModel.ClearCache();
+                    Console.WriteLine("✅ ChatViewModel cache temizlendi");
+                    
+                    // ProductCacheService'i temizle
+                    try
+                    {
+                        var productCacheService = Application.Current?.Handler?.MauiContext?.Services.GetService<IProductCacheService>();
+                        if (productCacheService != null)
+                        {
+                            await productCacheService.InvalidateCacheAsync();
+                            Console.WriteLine("✅ ProductCache temizlendi");
+                        }
+                    }
+                    catch (Exception cacheEx)
+                    {
+                        Console.WriteLine($"⚠️ ProductCache temizleme hatası: {cacheEx.Message}");
+                    }
 
                     await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
                     await Shell.Current.GoToAsync("//MainApp");

@@ -7,6 +7,7 @@ using Microsoft.Maui.Controls;
 using System.Threading.Tasks;
 using KamPay.Resources;
 using System.Linq;
+using KamPay.Views;
 
 namespace KamPay.ViewModels
 {
@@ -143,7 +144,7 @@ namespace KamPay.ViewModels
                     // 4. NAVIGATE BACK MANTIĞI:
                     // "//" kullanarak mutlak yönlendirme yaparız; böylece navigasyon yığını temizlenir 
                     // ve kullanıcı doğrudan 'Gelen/Giden Teklifler' (OffersPage) ekranına düşer.
-                    await Shell.Current.GoToAsync($"//{nameof(Views.OffersPage)}");
+                    await Shell.Current.GoToAsync($"//{nameof(OffersPage)}");
                 }
                 else
                 {

@@ -70,6 +70,9 @@ namespace KamPay
         protected override void OnStart()
         {
             base.OnStart();
+            
+            // ✅ CRITICAL FIX: Uygulama her başladığında logout kontrolü yap
+            CheckLogoutStatus();
 
             // Navigasyon sonrası geri butonu davranışı
             Shell.Current.Navigated += (s, e) =>
@@ -107,6 +110,31 @@ namespace KamPay
         {
             base.OnSleep();
             ChatViewModel.ClearOldCache(maxAgeMinutes: 30);
+        }
+        
+        // ✅ CRITICAL FIX: Logout kontrolü
+        private void CheckLogoutStatus()
+        {
+            try
+            {
+                var userId = Preferences.Get("current_user_id", string.Empty);
+                
+                // Eğer userId varsa ama UserStateService'de kullanıcı yoksa, logout yapılmış demektir
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var userStateService = MainPage?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
+                    if (userStateService?.CurrentUser == null)
+                    {
+                        Console.WriteLine("⚠️ Logout tespit edildi - Preferences temizleniyor");
+                        Preferences.Remove("current_user_id");
+                        Preferences.Remove("current_user_email");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ CheckLogoutStatus hatası: {ex.Message}");
+            }
         }
     }
 }

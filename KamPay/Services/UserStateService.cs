@@ -199,6 +199,12 @@ namespace KamPay.Services
         public void ClearUser()
         {
             _currentUser = null;
+            
+            // ✅ CRITICAL FIX: Tüm dinleyicilere null kullanıcı bildirimi gönder
+            // Bu sayede tüm ViewModel'ler (ChatViewModel, ProfileViewModel vs.) temizlenecek
+            UserProfileChanged?.Invoke(this, null);
+            
+            Console.WriteLine("🧹 UserStateService: Kullanıcı oturumu temizlendi ve tüm dinleyiciler bilgilendirildi");
         }
     }
 }

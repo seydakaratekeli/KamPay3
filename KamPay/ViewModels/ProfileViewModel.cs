@@ -426,22 +426,46 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         try
         {
             IsLoading = true; // Yükleniyor göster
+            
+            Console.WriteLine("🔓 ProfileViewModel: Logout başlatılıyor...");
 
             // 1. Önce ViewModel üzerindeki verileri manuel temizle
             ResetViewModelState();
 
-            // 2. Global user state'i temizle
+            // 2. Global user state'i temizle (bu tüm dinleyicilere bildirim gönderir)
             _userStateService.ClearUser();
 
-            // 3. Auth servisinden çıkış yap
+            // 3. Auth servisinden çıkış yap (Preferences temizlenir)
             await _authService.LogoutAsync();
+            
+            // ✅ CRITICAL FIX: Tüm static cache'leri temizle
+            ChatViewModel.ClearCache();
+            Console.WriteLine("✅ ChatViewModel cache temizlendi");
+            
+            // ✅ CRITICAL FIX: ProductCacheService'i de temizle
+            try
+            {
+                var productCacheService = Application.Current?.Handler?.MauiContext?.Services.GetService<IProductCacheService>();
+                if (productCacheService != null)
+                {
+                    await productCacheService.InvalidateCacheAsync();
+                    Console.WriteLine("✅ ProductCache temizlendi");
+                }
+            }
+            catch (Exception cacheEx)
+            {
+                Console.WriteLine($"⚠️ Cache temizleme hatası: {cacheEx.Message}");
+            }
 
             // 4. Login sayfasına yönlendir
             // "///" kullanımı stack'i tamamen sıfırlar
             await Shell.Current.GoToAsync("//LoginPage");
+            
+            Console.WriteLine("✅ Logout tamamlandı, LoginPage'e yönlendirildi");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ Logout hatası: {ex.Message}");
             await Application.Current!.MainPage!.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally
