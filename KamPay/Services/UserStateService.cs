@@ -1,6 +1,7 @@
 using KamPay.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace KamPay.Services
@@ -58,9 +59,21 @@ namespace KamPay.Services
 
                     if (!string.IsNullOrWhiteSpace(profile.FirstName))
                         user.FirstName = profile.FirstName;
+                    else if (!string.IsNullOrWhiteSpace(profile.Username))
+                    {
+                        // ✅ FIX: Eğer FirstName boşsa ama Username doluysa, ayır
+                        var nameParts = profile.Username.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        user.FirstName = nameParts.Length > 0 ? nameParts[0] : profile.Username;
+                    }
 
                     if (!string.IsNullOrWhiteSpace(profile.LastName))
                         user.LastName = profile.LastName;
+                    else if (!string.IsNullOrWhiteSpace(profile.Username) && !string.IsNullOrWhiteSpace(user.FirstName))
+                    {
+                        // ✅ FIX: Eğer LastName boşsa, Username'den çıkar
+                        var nameParts = profile.Username.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        user.LastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
+                    }
 
                     if (!string.IsNullOrWhiteSpace(profile.ProfileImageUrl))
                         user.ProfileImageUrl = profile.ProfileImageUrl;

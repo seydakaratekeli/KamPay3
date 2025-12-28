@@ -27,16 +27,36 @@ namespace KamPay.Services
         {
             try
             {
+                // ✅ FIX: Username'den FirstName ve LastName'i ayır
+                string firstName = "";
+                string lastName = "";
+                
+                if (!string.IsNullOrWhiteSpace(username))
+                {
+                    var nameParts = username.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (nameParts.Length > 0)
+                    {
+                        firstName = nameParts[0];
+                        lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
+                    }
+                }
+
                 // 1. user_profiles koleksiyonuna yaz
                 var userProfile = new UserProfile
                 {
                     UserId = userId,
-                    Username = username,
+                    Username = username, // Tam ad (kullanıcı adı olarak)
+                    FirstName = firstName, // ✅ FIX: İlk isim
+                    LastName = lastName,   // ✅ FIX: Soyisim
                     Email = email,
                     ProfileImageUrl = "", // Varsayılan veya boş profil resmi
                     MemberSince = DateTime.UtcNow
                 };
+                
                 await _firebaseClient.Child("user_profiles").Child(userId).PutAsync(userProfile);
+
+                // ✅ DEBUG: Kaydedilen veriyi logla
+                Console.WriteLine($"✅ user_profiles oluşturuldu - FirstName: {firstName}, LastName: {lastName}");
 
                 // 2. user_stats koleksiyonuna yaz
                 var userStats = new UserStats
@@ -55,6 +75,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ CreateUserProfileAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Profil oluşturulamadı.", ex.Message);
             }
         }
