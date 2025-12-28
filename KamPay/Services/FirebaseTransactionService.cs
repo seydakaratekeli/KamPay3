@@ -143,11 +143,19 @@ namespace KamPay.Services
             // Mevcut CreatePaymentSimulationAsync metodunu çağırarak ödemeyi başlatır
             return await CreatePaymentSimulationAsync(transactionId, method);
         }
-        // --- BU METOTLAR HİZMET MODÜLÜ İÇİN KULLANILIR ---
+        
+        /// <summary>
+        /// Ödeme simülasyonunu başlatır
+        /// Bu metod hem ürün satışları hem de hizmet ödemeleri için kullanılır
+        /// </summary>
+        /// <param name="transactionId">İşlem ID'si</param>
+        /// <param name="method">Ödeme yöntemi: "cardsim" veya "banktransfersim"</param>
+        /// <returns>PaymentDto içeren ServiceResult</returns>
         public async Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string transactionId, string method)
         {
             try
             {
+                // 1. Transaction'ı al ve doğrula
                 var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
                 if (transaction == null) return ServiceResult<PaymentDto>.FailureResult("İşlem bulunamadı.");
@@ -155,9 +163,10 @@ namespace KamPay.Services
                 if (transaction.PaymentStatus != PaymentStatus.Pending)
                     return ServiceResult<PaymentDto>.FailureResult("Bu işlem için ödeme zaten başlatılmış.");
 
-                // Hizmet bedeli veya ürün bedeli (Hizmet için 'Price' kullanılıyor olabilir)
+                // 2. Ödenecek tutarı belirle (Pazarlık varsa QuotedPrice, yoksa Price)
                 var amount = transaction.QuotedPrice > 0 ? transaction.QuotedPrice : (transaction.Price > 0 ? transaction.Price : 0m);
 
+                // 3. Payment DTO'sunu oluştur
                 var payment = new PaymentDto
                 {
                     Amount = amount,
@@ -171,28 +180,32 @@ namespace KamPay.Services
                     }
                 };
 
-                // Kart ödemesi ise OTP oluştur ve Firebase'e kaydet
+                // 4. KART ÖDEMESİ: OTP oluştur ve Firebase'e kaydet (2 dakika geçerli)
                 if (payment.Method == PaymentMethodType.CardSim)
                 {
-                    var otp = GenerateOtp();
+                    var otp = GenerateOtp(); // 6 haneli rastgele sayı
                     await _firebaseClient
                         .Child(Constants.TempOtpsCollection)
                         .Child(payment.PaymentId)
                         .PutAsync(new TempOtpModel
                         {
                             Otp = otp,
-                            ExpiresAt = DateTime.UtcNow.AddMinutes(2)
+                            ExpiresAt = DateTime.UtcNow.AddMinutes(2) // OTP 2 dakika geçerli
                         });
+                    
+                    Console.WriteLine($"✅ Kart ödemesi için OTP oluşturuldu: {otp} (PaymentId: {payment.PaymentId})");
                 }
 
-                // EFT ise banka referansı oluştur
+                // 5. HAVALE/EFT: Banka bilgileri ve referans kodu oluştur
                 if (payment.Method == PaymentMethodType.BankTransferSim)
                 {
                     payment.BankName = "Ziraat Bankası";
-                    payment.BankReference = GenerateBankReference();
+                    payment.BankReference = GenerateBankReference(); // Benzersiz referans kodu
+                    
+                    Console.WriteLine($"✅ Havale/EFT için referans oluşturuldu: {payment.BankReference}");
                 }
 
-                // İşlemi güncelle
+                // 6. Transaction'ı güncelle
                 transaction.PaymentMethod = payment.Method;
                 transaction.PaymentSimulationId = payment.PaymentId;
                 transaction.PaymentStatus = PaymentStatus.Pending;
@@ -202,55 +215,88 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ CreatePaymentSimulationAsync hatası: {ex.Message}");
                 return ServiceResult<PaymentDto>.FailureResult("Simülasyon başlatılırken hata.", ex.Message);
             }
         }
 
-        // --- BU METOTLAR HİZMET MODÜLÜ İÇİN KULLANILIR ---
+        /// <summary>
+        /// Ödeme simülasyonunu onaylar ve işlemi tamamlar
+        /// </summary>
+        /// <param name="transactionId">İşlem ID'si</param>
+        /// <param name="paymentId">Ödeme ID'si</param>
+        /// <param name="otp">OTP kodu (kart ödemeleri için zorunlu)</param>
+        /// <returns>Başarı durumunu içeren ServiceResult</returns>
         public async Task<ServiceResult<bool>> ConfirmPaymentSimulationAsync(string transactionId, string paymentId, string? otp = null)
         {
             try
             {
+                // 1. Transaction'ı al ve doğrula
                 var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
                 if (transaction == null) return ServiceResult<bool>.FailureResult("İşlem bulunamadı.");
 
-                // --- GÜVENLİK: OTP Kontrolü ve Sanitization ---
+                // 2. KART ÖDEMESİ: OTP Doğrulaması (GÜVENLİK)
                 if (transaction.PaymentMethod == PaymentMethodType.CardSim)
                 {
-                    // Kullanıcıdan gelen OTP'yi temizle
+                    // Kullanıcıdan gelen OTP'yi temizle (XSS/Injection saldırılarına karşı)
                     var sanitizedOtp = InputSanitizer.SanitizeText(otp ?? "");
 
+                    // Firebase'den kaydedilmiş OTP'yi al
                     var otpNode = _firebaseClient.Child(Constants.TempOtpsCollection).Child(paymentId);
                     var saved = await otpNode.OnceSingleAsync<TempOtpModel>();
 
-                    if (saved == null) return ServiceResult<bool>.FailureResult("OTP bulunamadı.");
-                    if (DateTime.UtcNow > saved.ExpiresAt) return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
+                    // OTP doğrulama kontrolleri
+                    if (saved == null) 
+                    {
+                        Console.WriteLine($"❌ OTP bulunamadı. PaymentId: {paymentId}");
+                        return ServiceResult<bool>.FailureResult("OTP bulunamadı.");
+                    }
+                    
+                    if (DateTime.UtcNow > saved.ExpiresAt) 
+                    {
+                        Console.WriteLine($"❌ OTP süresi doldu. ExpiresAt: {saved.ExpiresAt}");
+                        return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
+                    }
+                    
                     if (string.IsNullOrWhiteSpace(sanitizedOtp) || saved.Otp != sanitizedOtp)
+                    {
+                        Console.WriteLine($"❌ OTP geçersiz. Beklenen: {saved.Otp}, Girilen: {sanitizedOtp}");
                         return ServiceResult<bool>.FailureResult("OTP geçersiz.");
+                    }
+                    
+                    Console.WriteLine($"✅ OTP doğrulandı! PaymentId: {paymentId}");
+                    
+                    // OTP'yi kullanıldıktan sonra sil (tek kullanımlık)
+                    await otpNode.DeleteAsync();
                 }
 
-                // --- BAŞARILI ÖDEME GÜNCELLEMESİ ---
+                // 3. Ödeme durumunu güncelle
                 transaction.PaymentStatus = PaymentStatus.Paid;
                 transaction.PaymentCompletedAt = DateTime.UtcNow;
 
-                // KRİTİK ENTEGRASYON: 
-                // Eğer bu bir SATIŞ işlemiyse, işlemi burada nihayete erdir (Ürünü kapat, Puan ver, Bildirim gönder)
+                // 4. İŞLEM TİPİNE GÖRE TAMAMLAMA
+                // SATIŞ: Ürünü kapat, puan ver, bildirim gönder
                 if (transaction.Type == ProductType.Satis)
                 {
                     var completeResult = await CompleteTransactionInternalAsync(transaction);
                     if (!completeResult.Success)
                         return ServiceResult<bool>.FailureResult("Ödeme alındı ancak işlem tamamlanırken hata oluştu: " + completeResult.Message);
+                    
+                    Console.WriteLine($"✅ Satış işlemi tamamlandı. TransactionId: {transactionId}");
                 }
+                // DİĞER TİPLER (Takas, Bağış, Hizmet): Sadece ödeme durumunu güncelle
                 else
                 {
                     await transactionNode.PutAsync(transaction);
+                    Console.WriteLine($"✅ Ödeme tamamlandı. TransactionId: {transactionId}, Type: {transaction.Type}");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, "Ödeme onaylandı ve işlem tamamlandı.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ ConfirmPaymentSimulationAsync hatası: {ex.Message}");
                 // Teknik hataları kullanıcı dostu mesajlara dönüştür
                 return ServiceResult<bool>.FailureResult("Ödeme onayında hata.", NetworkHelper.GetUserFriendlyErrorMessage(ex));
             }
