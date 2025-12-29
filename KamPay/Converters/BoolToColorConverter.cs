@@ -16,10 +16,11 @@ namespace KamPay.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
+            // Deðer bool deðilse gri dön (Default Safe State)
             if (value is not bool boolValue)
                 return Colors.Gray;
 
-            // Parameter ile renk belirtilmiþse onu kullan
+            // 1. Parametre (ConverterParameter) kontrolü (Öncelikli)
             if (parameter is string colorPair)
             {
                 var colors = colorPair.Split('|');
@@ -27,28 +28,28 @@ namespace KamPay.Converters
                 {
                     try
                     {
-                        var trueColor = Color.FromArgb(colors[0].Trim());
-                        var falseColor = Color.FromArgb(colors[1].Trim());
-                        
+                        // MAUI'de string -> Color dönüþümü için en doðru yol:
+                        var trueColor = Color.Parse(colors[0].Trim());
+                        var falseColor = Color.Parse(colors[1].Trim());
                         return boolValue ? trueColor : falseColor;
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Parse hatasý varsa property'leri kullan
+                        // Loglama yapýlabilir: Debug.WriteLine(ex.Message);
+                        // Hata durumunda Property'lere veya varsayýlana düþmesi için boþ býrakýlabilir
                     }
                 }
             }
 
-            // Property'ler tanýmlýysa onlarý kullan
+            // 2. XAML içinde tanýmlanan Property'ler kontrolü
             if (TrueColor != null && FalseColor != null)
             {
                 return boolValue ? TrueColor : FalseColor;
             }
 
-            // Varsayýlan renkler
+            // 3. Fallback: Hiçbir þey bulunamazsa uygulama temasýna göre güvenli renkler
             return boolValue ? Colors.Red : Colors.Green;
         }
-
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
