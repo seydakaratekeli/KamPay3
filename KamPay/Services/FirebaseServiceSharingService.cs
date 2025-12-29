@@ -604,34 +604,54 @@ namespace KamPay.Services
 
      
         /// Kullanıcının tüm hizmetlerindeki isim ve profil fotoğrafı bilgilerini günceller
-        
+        /// ✅ OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+        /// </summary>
         public async Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
+                // 1️⃣ Kullanıcının hizmetlerini bul
                 var allServices = await _firebaseClient
                     .Child(Constants.ServiceOffersCollection)
                     .OrderBy("ProviderId")
                     .EqualTo(userId)
                     .OnceAsync<ServiceOffer>();
 
+                if (!allServices.Any())
+                {
+                    return ServiceResult<bool>.SuccessResult(true, "Güncellenecek hizmet yok");
+                }
+
+                // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
+                var updates = new Dictionary<string, object>();
+
                 foreach (var serviceEntry in allServices)
                 {
-                    var service = serviceEntry.Object;
-                    service.ServiceId = serviceEntry.Key;
-                    service.ProviderName = newName ?? string.Empty;
-                    service.ProviderPhotoUrl = newPhotoUrl ?? string.Empty;
+                    var servicePath = $"{Constants.ServiceOffersCollection}/{serviceEntry.Key}";
+                    
+                    if (!string.IsNullOrWhiteSpace(newName))
+                    {
+                        updates[$"{servicePath}/ProviderName"] = newName;
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(newPhotoUrl))
+                    {
+                        updates[$"{servicePath}/ProviderPhotoUrl"] = newPhotoUrl;
+                    }
+                }
 
-                    await _firebaseClient
-                        .Child(Constants.ServiceOffersCollection)
-                        .Child(serviceEntry.Key)
-                        .PutAsync(service);
+                // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
+                if (updates.Any())
+                {
+                    await _firebaseClient.UpdateAsync(updates);
+                    Console.WriteLine($"✅ {allServices.Count()} hizmet atomic update ile güncellendi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, $"{allServices.Count()} hizmet güncellendi");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ UpdateUserInfoInServices hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hizmetler güncellenemedi", ex.Message);
             }
         }

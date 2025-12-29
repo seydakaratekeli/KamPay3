@@ -506,16 +506,24 @@ namespace KamPay.Services
 
         public async Task<User> GetCurrentUserAsync()
         {
+            // ✅ Önce bellekteki kullanıcıyı kontrol et
             if (_currentUser != null)
                 return _currentUser;
 
-            // Preferences'tan kullanıcı bilgisini al
+            // ✅ Preferences'tan kullanıcı bilgisini al
             var userId = Preferences.Get("current_user_id", string.Empty);
             if (string.IsNullOrEmpty(userId))
                 return null;
 
             try
             {
+                // ✅ FIX: Firebase'e gitmeden önce internet kontrolü yap
+                if (!NetworkHelper.HasInternetConnection())
+                {
+                    Console.WriteLine("⚠️ İnternet yok, cached kullanıcı kullanılacak");
+                    return _currentUser; // null dönebilir ama crash etmez
+                }
+
                 var user = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(userId)
@@ -524,9 +532,12 @@ namespace KamPay.Services
                 _currentUser = user;
                 return user;
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine($"❌ GetCurrentUser hatası: {ex.Message}");
+                
+                // ✅ Hata durumunda cached user'ı döndür
+                return _currentUser;
             }
         }
 

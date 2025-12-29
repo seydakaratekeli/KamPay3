@@ -614,30 +614,47 @@ public class FirebaseProductService : IProductService
 
             if (firebaseCategories.Any())
             {
-                // DÜZELTME: Firebase'den gelen 'Key'i, nesnenin 'CategoryId' özelliğine atıyoruz.
                 var categories = firebaseCategories.Select(c =>
                 {
                     var category = c.Object;
-                    category.CategoryId = c.Key; // En önemli satır!
+                    category.CategoryId = c.Key;
                     return category;
                 }).ToList();
 
                 return ServiceResult<List<Category>>.SuccessResult(categories);
             }
 
-            // --- Tohumlama (Seeding) Mantığını  İyileştirelim ---
+            // ✅ FIX: Tohumlama sonrası DOĞRUDAN oku, recursive çağrı yapma
             var defaultCategories = Category.GetDefaultCategories();
             foreach (var category in defaultCategories)
             {
-                // PutAsync yerine PostAsync kullanarak Firebase'in benzersiz ID oluşturmasını sağlayalım.
-                // Bu, yukarıdaki veri çekme mantığıyla %100 uyumlu çalışır.
                 await _firebaseClient
                     .Child(Constants.CategoriesCollection)
                     .PostAsync(category);
             }
 
-            // Veritabanı boşsa ve yeni doldurulduysa, tekrar okuyarak doğru ID'lerle dönelim
-            return await GetCategoriesAsync();
+            // ✅ Tohumlama sonrası tekrar oku (recursive değil)
+            var seededCategories = await _firebaseClient
+                .Child(Constants.CategoriesCollection)
+                .OnceAsync<Category>();
+
+            if (seededCategories.Any())
+            {
+                var categories = seededCategories.Select(c =>
+                {
+                    var category = c.Object;
+                    category.CategoryId = c.Key;
+                    return category;
+                }).ToList();
+
+                return ServiceResult<List<Category>>.SuccessResult(categories);
+            }
+
+            // Son çare: Varsayılan kategorileri döndür
+            return ServiceResult<List<Category>>.SuccessResult(
+                defaultCategories,
+                "Kategoriler yerel olarak yüklendi"
+            );
         }
         catch
         {
@@ -907,34 +924,54 @@ public class FirebaseProductService : IProductService
 
    
     /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
-   
+    /// ✅ OPTIMIZE: Firebase multi-path atomic update kullanarak tek istekle güncelleme
+    /// </summary>
     public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string? newName, string? newPhotoUrl)
     {
         try
         {
+            // 1️⃣ Kullanıcının ürünlerini bul
             var allProducts = await _firebaseClient
                 .Child(Constants.ProductsCollection)
                 .OrderBy("UserId")
                 .EqualTo(userId)
                 .OnceAsync<Product>();
 
+            if (!allProducts.Any())
+            {
+                return ServiceResult<bool>.SuccessResult(true, "Güncellenecek ürün yok");
+            }
+
+            // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
+            var updates = new Dictionary<string, object>();
+
             foreach (var productEntry in allProducts)
             {
-                var product = productEntry.Object;
-                product.ProductId = productEntry.Key;
-                product.UserName = newName ?? string.Empty;
-                product.UserPhotoUrl = newPhotoUrl ?? string.Empty;
+                var productPath = $"{Constants.ProductsCollection}/{productEntry.Key}";
+                
+                if (!string.IsNullOrWhiteSpace(newName))
+                {
+                    updates[$"{productPath}/UserName"] = newName;
+                }
+                
+                if (!string.IsNullOrWhiteSpace(newPhotoUrl))
+                {
+                    updates[$"{productPath}/UserPhotoUrl"] = newPhotoUrl;
+                }
+            }
 
-                await _firebaseClient
-                    .Child(Constants.ProductsCollection)
-                    .Child(productEntry.Key)
-                    .PutAsync(product);
+            // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
+            if (updates.Any())
+            {
+                await _firebaseClient.UpdateAsync(updates);
+                Console.WriteLine($"✅ {allProducts.Count()} ürün atomic update ile güncellendi");
             }
 
             return ServiceResult<bool>.SuccessResult(true, $"{allProducts.Count()} ürün güncellendi");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ UpdateUserInfoInProducts hatası: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Ürünler güncellenemedi", ex.Message);
         }
     }

@@ -185,35 +185,56 @@ public class FirebaseGoodDeedService : IGoodDeedService
     }
 
     
+    /// <summary>
     /// Kullanıcının tüm panolarındaki isim ve profil fotoğrafı bilgilerini günceller
-  
+    /// ✅ OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+    /// </summary>
     public async Task<ServiceResult<bool>> UpdateUserInfoInPostsAsync(string userId, string newName, string newPhotoUrl)
     {
         try
         {
+            // 1️⃣ Kullanıcının gönderilerini bul
             var allPosts = await _firebaseClient
                 .Child(GoodDeedPostsCollection)
                 .OrderBy("UserId")
                 .EqualTo(userId)
                 .OnceAsync<GoodDeedPost>();
 
+            if (!allPosts.Any())
+            {
+                return ServiceResult<bool>.SuccessResult(true, "Güncellenecek pano yok");
+            }
+
+            // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
+            var updates = new Dictionary<string, object>();
+
             foreach (var postEntry in allPosts)
             {
-                var post = postEntry.Object;
-                post.PostId = postEntry.Key;
-                post.UserName = newName;
-                post.UserProfileImageUrl = newPhotoUrl;
+                var postPath = $"{GoodDeedPostsCollection}/{postEntry.Key}";
+                
+                if (!string.IsNullOrWhiteSpace(newName))
+                {
+                    updates[$"{postPath}/UserName"] = newName;
+                }
+                
+                if (!string.IsNullOrWhiteSpace(newPhotoUrl))
+                {
+                    updates[$"{postPath}/UserProfileImageUrl"] = newPhotoUrl;
+                }
+            }
 
-                await _firebaseClient
-                    .Child(GoodDeedPostsCollection)
-                    .Child(postEntry.Key)
-                    .PutAsync(post);
+            // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
+            if (updates.Any())
+            {
+                await _firebaseClient.UpdateAsync(updates);
+                Console.WriteLine($"✅ {allPosts.Count()} pano atomic update ile güncellendi");
             }
 
             return ServiceResult<bool>.SuccessResult(true, $"{allPosts.Count()} pano güncellendi");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ UpdateUserInfoInPosts hatası: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Panolar güncellenemedi", ex.Message);
         }
     }
