@@ -564,7 +564,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                // 1. OPTİMİSTİK GÜNCELLEME:
+                // 1. OPTİMİK GÜNCELLEME:
                 // Servis cevabını beklemeden UI'ı hemen güncelle
                 if (IsFavorite)
                 {
@@ -784,6 +784,26 @@ namespace KamPay.ViewModels
             {
                 CurrentImageIndex = 0;
             }
+        }
+
+        //  Ürün fotoğrafını tam ekran göster
+        [RelayCommand]
+        private async Task ViewProductImageAsync(string imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return;
+            
+            await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
+        }
+
+        //  Mevcut görseli tam ekran göster
+        [RelayCommand]
+        private async Task ViewCurrentImageAsync()
+        {
+            if (ProductImages.Count == 0 || CurrentImageIndex < 0 || CurrentImageIndex >= ProductImages.Count) 
+                return;
+            
+            var currentImageUrl = ProductImages[CurrentImageIndex];
+            await ViewProductImageAsync(currentImageUrl);
         }
 
         [RelayCommand]

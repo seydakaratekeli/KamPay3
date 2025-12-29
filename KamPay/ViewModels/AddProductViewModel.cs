@@ -372,6 +372,20 @@ namespace KamPay.ViewModels
                 ImagePaths.Remove(imagePath);
         }
 
+        //  Seçili görseli tam ekran önizle
+        [RelayCommand]
+        private async Task PreviewImageAsync(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath)) return;
+            
+            // Local file path ise file:// protocol ekle
+            var imageUrl = imagePath.StartsWith("http") 
+                ? imagePath 
+                : $"file://{imagePath}";
+            
+            await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
+        }
+
         [RelayCommand]
         private async Task SaveProductAsync()
         {

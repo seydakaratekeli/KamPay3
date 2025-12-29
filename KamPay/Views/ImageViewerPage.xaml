@@ -1,47 +1,256 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
              x:Class="KamPay.Views.ImageViewerPage"
+             x:Name="ImageViewerPageRoot"
              Title="Fotoğraf"
-             BackgroundColor="Black"
+             BackgroundColor="#0A0F1E"
              Shell.NavBarIsVisible="False">
 
-    <!-- bu sayfa tam ekran fotoğraf görüntüleme içindir  -->
-    <!-- bu sayfa, PhotoUrl, CloseCommand ve DownloadPhotoCommand özelliklerine sahip bir ViewModel'e bağlanmalıdır -->
-    <!-- bu sayfanın kullanımı için NavigationService kullanılarak açılması önerilir -->
-    <!-- bu sayfa kullanıcıya fotoğrafı tam ekran görüntüleme, kapatma ve indirme seçenekleri sunar -->
-   
+    <!-- Modern Tam Ekran Fotoğraf Görüntüleme - Pinch to Zoom -->
+    
     <Grid>
-        <!-- Tam Ekran Görsel -->
-        <Image Source="{Binding PhotoUrl}"
-               Aspect="AspectFit"
-               VerticalOptions="Center"
-               HorizontalOptions="Center" />
+        <!-- Animated Background Gradient -->
+        <BoxView>
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#0A0F1E" Offset="0.0" />
+                    <GradientStop Color="#1A1F3A" Offset="0.5" />
+                    <GradientStop Color="#0A0F1E" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
 
-        <!-- Kapat Butonu -->
-        <Button Text="✕"
-                Command="{Binding CloseCommand}"
-                BackgroundColor="Transparent"
-                TextColor="White"
-                FontSize="24"
-                WidthRequest="50"
-                HeightRequest="50"
-                CornerRadius="25"
-                Margin="20"
-                VerticalOptions="Start"
-                HorizontalOptions="End" />
+        <!-- Rotating Background Circles -->
+        <Grid x:Name="BackgroundCircles" IsVisible="True" Opacity="0.08">
+            <shapes:Ellipse x:Name="Circle1"
+                            Fill="#2196F3"
+                            WidthRequest="300"
+                            HeightRequest="300"
+                            Opacity="0.2"
+                            TranslationX="-100"
+                            TranslationY="-150"
+                            HorizontalOptions="Start"
+                            VerticalOptions="Start" />
+            
+            <shapes:Ellipse x:Name="Circle2"
+                            Fill="#64B5F6"
+                            WidthRequest="250"
+                            HeightRequest="250"
+                            Opacity="0.15"
+                            TranslationX="80"
+                            TranslationY="200"
+                            HorizontalOptions="End"
+                            VerticalOptions="End" />
+        </Grid>
 
-        <!-- İndir Butonu -->
-        <Button Text="⬇"
-                Command="{Binding DownloadPhotoCommand}"
-                BackgroundColor="Transparent"
-                TextColor="White"
-                FontSize="24"
-                WidthRequest="50"
-                HeightRequest="50"
-                CornerRadius="25"
-                Margin="20"
-                VerticalOptions="Start"
-                HorizontalOptions="Start" />
+        <!-- Main Content Container -->
+        <Grid x:Name="MainContainer">
+            <!-- Loading Indicator -->
+            <Grid IsVisible="{Binding IsLoading}"
+                  BackgroundColor="#80000000"
+                  ZIndex="1000">
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="15">
+                    <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                       Color="#2196F3"
+                                       WidthRequest="60"
+                                       HeightRequest="60" />
+                    <Label Text="Yükleniyor..."
+                           FontSize="16"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Zoomable Image Container with Gestures -->
+            <Grid x:Name="ImageContainer"
+                  BackgroundColor="Transparent"
+                  HorizontalOptions="Fill"
+                  VerticalOptions="Fill">
+                
+                <Image x:Name="MainImage"
+                       Source="{Binding PhotoUrl}"
+                       Aspect="AspectFit"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       BackgroundColor="Transparent">
+                    <Image.GestureRecognizers>
+                        <PinchGestureRecognizer PinchUpdated="OnPinchUpdated" />
+                        <PanGestureRecognizer PanUpdated="OnPanUpdated" />
+                        <TapGestureRecognizer Tapped="OnImageTapped" NumberOfTapsRequired="2" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Grid>
+
+            <!-- Top Control Bar -->
+            <Border x:Name="TopBar"
+                    HeightRequest="80"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Fill"
+                    Padding="0"
+                    StrokeThickness="0"
+                    BackgroundColor="Transparent">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#DD000000" Offset="0.0" />
+                        <GradientStop Color="#00000000" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <Grid Padding="15,30,15,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Download Button -->
+                    <Border Grid.Column="0"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            StrokeThickness="2"
+                            Stroke="#2196F3"
+                            BackgroundColor="#CC2196F3">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="25"/>
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="#2196F3"
+                                    Offset="0,4"
+                                    Radius="15"
+                                    Opacity="0.6" />
+                        </Border.Shadow>
+                        <Button Text="⬇"
+                                Command="{Binding DownloadPhotoCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="24"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Fill"
+                                Scale="1">
+                            <Button.Triggers>
+                                <Trigger TargetType="Button" Property="IsPressed" Value="True">
+                                    <Setter Property="Scale" Value="0.9" />
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </Trigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Border>
+
+                    <!-- Title -->
+                    <Label Grid.Column="1"
+                           Text="Teslimat Fotoğrafı"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Opacity="0.9" />
+
+                    <!-- Close Button -->
+                    <Border Grid.Column="2"
+                            WidthRequest="50"
+                            HeightRequest="50"
+                            StrokeThickness="2"
+                            Stroke="#F44336"
+                            BackgroundColor="#CCC62828">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="25"/>
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="#F44336"
+                                    Offset="0,4"
+                                    Radius="15"
+                                    Opacity="0.6" />
+                        </Border.Shadow>
+                        <Button Text="✕"
+                                Command="{Binding CloseCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="26"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Fill"
+                                Scale="1">
+                            <Button.Triggers>
+                                <Trigger TargetType="Button" Property="IsPressed" Value="True">
+                                    <Setter Property="Scale" Value="0.9" />
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </Trigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Bottom Info Bar -->
+            <Border x:Name="BottomBar"
+                    HeightRequest="60"
+                    VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    Padding="0"
+                    StrokeThickness="0"
+                    BackgroundColor="Transparent">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                        <GradientStop Color="#DD000000" Offset="0.0" />
+                        <GradientStop Color="#00000000" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <VerticalStackLayout Spacing="5"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Padding="20,10">
+                    <Label Text="💡 İpucu"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           TextColor="#64B5F6"
+                           HorizontalOptions="Center" />
+                    <Label Text="İki parmakla yakınlaştırıp uzaklaştırabilirsiniz"
+                           FontSize="12"
+                           TextColor="White"
+                           Opacity="0.8"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Zoom Level Indicator -->
+            <Border x:Name="ZoomIndicator"
+                    WidthRequest="90"
+                    HeightRequest="45"
+                    StrokeThickness="0"
+                    BackgroundColor="#DD1565C0"
+                    VerticalOptions="Center"
+                    HorizontalOptions="End"
+                    Margin="20"
+                    Opacity="0"
+                    IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.4" Radius="10" Offset="0,4"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="2"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center">
+                    <Label Text="🔍"
+                           FontSize="16"
+                           HorizontalOptions="Center" />
+                    <Label x:Name="ZoomLabel"
+                           Text="100%"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+        </Grid>
     </Grid>
 </ContentPage>

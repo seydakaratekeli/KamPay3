@@ -6,60 +6,173 @@
                xmlns:models="clr-namespace:KamPay.Models"
                x:Class="KamPay.Views.TradeOfferView"
                x:DataType="vm:TradeOfferViewModel"
-               x:Name="thisPopup">
+               x:Name="thisPopup"
+               Color="#80000000">
 
-    <Frame Margin="15" Padding="20" CornerRadius="15" VerticalOptions="Center">
-        <VerticalStackLayout Spacing="15" WidthRequest="300">
-            <Label Text="Takas için bir ürününü seç" FontSize="20" FontAttributes="Bold"/>
+    <Border BackgroundColor="White"
+            StrokeThickness="0"
+            Padding="0"
+            WidthRequest="340"
+            StrokeShape="RoundRectangle 24"
+            VerticalOptions="Center"
+            HorizontalOptions="Center">
+        <Border.Shadow>
+            <Shadow Brush="Black" Opacity="0.3" Radius="30" Offset="0,10"/>
+        </Border.Shadow>
 
-            <CollectionView ItemsSource="{Binding MyProducts}" 
-                            SelectionMode="Single"
-                            SelectedItem="{Binding SelectedProduct, Mode=TwoWay}"
-                            HeightRequest="250">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Product">
-                        <Grid Padding="10" Margin="0,5">
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup Name="CommonStates">
-                                    <VisualState Name="Normal" />
-                                    <VisualState Name="Selected">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
+        <VerticalStackLayout Spacing="0">
+            <!-- Header with Gradient -->
+            <Grid HeightRequest="80">
+                <BoxView>
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#1E88E5" Offset="0.0" />
+                            <GradientStop Color="#1565C0" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
 
-                            <HorizontalStackLayout Spacing="10">
-                                <Image Source="{Binding ThumbnailUrl}" Aspect="AspectFill" WidthRequest="60" HeightRequest="60" />
-                                <Label Text="{Binding Title}" VerticalOptions="Center">
-                                    <Label.Style>
-                                        <Style TargetType="Label">
-                                            <Setter Property="TextColor" Value="Black" />
-                                            <Style.Triggers>
-                                                <DataTrigger TargetType="Label" Binding="{Binding IsSelected, Source={RelativeSource AncestorType={x:Type Grid}}}" Value="True">
-                                                    <Setter Property="TextColor" Value="White" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Label.Style>
-                                </Label>
-                            </HorizontalStackLayout>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                <VerticalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="Center">
+                    <Label Text="🔄" FontSize="32"/>
+                    <Label Text="Takas Teklifi Gönder" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="White"/>
+                </VerticalStackLayout>
+            </Grid>
 
-            <Editor Placeholder="Teklif notu (isteğe bağlı)..." Text="{Binding OfferMessage}" HeightRequest="80"/>
+            <!-- Content -->
+            <VerticalStackLayout Spacing="20" Padding="20">
+                
+                <!-- Instruction -->
+                <Label Text="Takas için bir ürününü seç" 
+                       FontSize="15" 
+                       TextColor="#757575"
+                       HorizontalOptions="Center"/>
 
-            <Button Text="Teklifi Gönder" 
-                    Command="{Binding SubmitOfferCommand}" 
-                    CommandParameter="{Binding Source={x:Reference thisPopup}}" 
-                    BackgroundColor="{StaticResource Primary}"/>
-            <Button Text="İptal" 
-                    Command="{Binding CancelCommand}" 
-                    CommandParameter="{Binding Source={x:Reference thisPopup}}" 
-                    BackgroundColor="{StaticResource Gray500}"/>
+                <!-- Products List -->
+                <Border StrokeShape="RoundRectangle 16"
+                        Stroke="#E0E0E0"
+                        StrokeThickness="2"
+                        Padding="0"
+                        HeightRequest="280"
+                        BackgroundColor="#F5F9FC">
+                    <CollectionView ItemsSource="{Binding MyProducts}" 
+                                    SelectionMode="Single"
+                                    SelectedItem="{Binding SelectedProduct, Mode=TwoWay}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Product">
+                                <Border Margin="8"
+                                        StrokeShape="RoundRectangle 12"
+                                        StrokeThickness="0"
+                                        BackgroundColor="White"
+                                        Padding="12">
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Opacity="0.05" Radius="8" Offset="0,2"/>
+                                    </Border.Shadow>
+                                    
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" 
+                                                     Binding="{Binding IsSelected, Source={RelativeSource AncestorType={x:Type CollectionView}}}" 
+                                                     Value="True">
+                                            <Setter Property="BackgroundColor" Value="#E3F2FD"/>
+                                            <Setter Property="Stroke" Value="#1E88E5"/>
+                                            <Setter Property="StrokeThickness" Value="3"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <Border Grid.Column="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                Padding="0"
+                                                WidthRequest="60"
+                                                HeightRequest="60"
+                                                StrokeThickness="0">
+                                            <Image Source="{Binding ThumbnailUrl}" 
+                                                   Aspect="AspectFill">
+                                                <Image.Clip>
+                                                    <RoundRectangleGeometry CornerRadius="10" Rect="0,0,60,60"/>
+                                                </Image.Clip>
+                                            </Image>
+                                        </Border>
+                                        
+                                        <VerticalStackLayout Grid.Column="1" 
+                                                             Spacing="4" 
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding Title}" 
+                                                   FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#212121"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="2"/>
+                                            <Label Text="{Binding PriceText}" 
+                                                   FontSize="13"
+                                                   TextColor="#1E88E5"
+                                                   FontAttributes="Bold"/>
+                                        </VerticalStackLayout>
+
+                                        <Label Grid.Column="2"
+                                               Text="✓"
+                                               FontSize="24"
+                                               TextColor="#1E88E5"
+                                               IsVisible="{Binding IsSelected, Source={RelativeSource AncestorType={x:Type CollectionView}}}"
+                                               VerticalOptions="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Border>
+
+                <!-- Message Editor -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Teklif Notu (İsteğe Bağlı)" 
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           TextColor="#757575"/>
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="2"
+                            Padding="12"
+                            BackgroundColor="White">
+                        <Editor Placeholder="Mesajınızı buraya yazın..." 
+                                Text="{Binding OfferMessage}" 
+                                HeightRequest="80"
+                                FontSize="14"
+                                TextColor="#212121"
+                                PlaceholderColor="#BDBDBD"
+                                BackgroundColor="Transparent"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Action Buttons -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,10,0,0">
+                    <Button Grid.Column="0"
+                            Text="İptal" 
+                            Command="{Binding CancelCommand}" 
+                            CommandParameter="{Binding Source={x:Reference thisPopup}}" 
+                            BackgroundColor="#F5F5F5"
+                            TextColor="#757575"
+                            CornerRadius="12"
+                            HeightRequest="50"
+                            FontAttributes="Bold"/>
+                    
+                    <Button Grid.Column="1"
+                            Text="Gönder" 
+                            Command="{Binding SubmitOfferCommand}" 
+                            CommandParameter="{Binding Source={x:Reference thisPopup}}" 
+                            BackgroundColor="#1E88E5"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="50"
+                            FontAttributes="Bold">
+                        <Button.Shadow>
+                            <Shadow Brush="#1E88E5" Opacity="0.4" Radius="10" Offset="0,4"/>
+                        </Button.Shadow>
+                    </Button>
+                </Grid>
+
+            </VerticalStackLayout>
         </VerticalStackLayout>
-    </Frame>
+    </Border>
 </toolkit:Popup>

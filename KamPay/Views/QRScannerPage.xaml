@@ -4,19 +4,157 @@
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.QRScannerPage"
-             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}">
-    <Grid>
-        <zxing:CameraBarcodeReaderView
-            x:Name="barcodeReader"
-            BarcodesDetected="BarcodesDetected"
-            Options="{Binding BarcodeOptions}"
-            IsDetecting="True"/>
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}"
+             Shell.BackgroundColor="#1E88E5"
+             Shell.ForegroundColor="White">
+    
+    <Grid RowDefinitions="*,Auto">
+        <!-- Camera View -->
+        <Grid Grid.Row="0">
+            <zxing:CameraBarcodeReaderView
+                x:Name="barcodeReader"
+                BarcodesDetected="BarcodesDetected"
+                Options="{Binding BarcodeOptions}"
+                IsDetecting="True"/>
 
-        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRInstruction]}"
-               TextColor="White"
-               BackgroundColor="#80000000"
-               Padding="20"
-               VerticalOptions="End"
-               HorizontalTextAlignment="Center"/>
+            <!-- Scan Frame Overlay -->
+            <Grid VerticalOptions="Center" HorizontalOptions="Center">
+                <!-- Animated Scanning Border -->
+                <Border x:Name="ScanFrame"
+                        WidthRequest="280"
+                        HeightRequest="280"
+                        Stroke="{StaticResource Secondary}"
+                        StrokeThickness="4"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="Transparent">
+                    <Border.Shadow>
+                        <Shadow Brush="#2196F3" Opacity="0.6" Radius="20" Offset="0,0"/>
+                    </Border.Shadow>
+                </Border>
+
+                <!-- Corner Indicators -->
+                <Grid WidthRequest="280" HeightRequest="280">
+                    <!-- Top Left Corner -->
+                    <BoxView WidthRequest="40" HeightRequest="4" BackgroundColor="White"
+                             HorizontalOptions="Start" VerticalOptions="Start" Margin="12,12,0,0"/>
+                    <BoxView WidthRequest="4" HeightRequest="40" BackgroundColor="White"
+                             HorizontalOptions="Start" VerticalOptions="Start" Margin="12,12,0,0"/>
+
+                    <!-- Top Right Corner -->
+                    <BoxView WidthRequest="40" HeightRequest="4" BackgroundColor="White"
+                             HorizontalOptions="End" VerticalOptions="Start" Margin="0,12,12,0"/>
+                    <BoxView WidthRequest="4" HeightRequest="40" BackgroundColor="White"
+                             HorizontalOptions="End" VerticalOptions="Start" Margin="0,12,12,0"/>
+
+                    <!-- Bottom Left Corner -->
+                    <BoxView WidthRequest="40" HeightRequest="4" BackgroundColor="White"
+                             HorizontalOptions="Start" VerticalOptions="End" Margin="12,0,0,12"/>
+                    <BoxView WidthRequest="4" HeightRequest="40" BackgroundColor="White"
+                             HorizontalOptions="Start" VerticalOptions="End" Margin="12,0,0,12"/>
+
+                    <!-- Bottom Right Corner -->
+                    <BoxView WidthRequest="40" HeightRequest="4" BackgroundColor="White"
+                             HorizontalOptions="End" VerticalOptions="End" Margin="0,0,12,12"/>
+                    <BoxView WidthRequest="4" HeightRequest="40" BackgroundColor="White"
+                             HorizontalOptions="End" VerticalOptions="End" Margin="0,0,12,12"/>
+                </Grid>
+
+                <!-- Scanning Line Animation -->
+                <BoxView x:Name="ScanLine"
+                         HeightRequest="3"
+                         WidthRequest="250"
+                         BackgroundColor="#2196F3"
+                         VerticalOptions="Center"
+                         HorizontalOptions="Center"
+                         Opacity="0.8">
+                    <BoxView.Shadow>
+                        <Shadow Brush="#2196F3" Opacity="1" Radius="12" Offset="0,0"/>
+                    </BoxView.Shadow>
+                </BoxView>
+            </Grid>
+
+            <!-- Top Overlay with Gradient -->
+            <Grid VerticalOptions="Start" HeightRequest="140">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#CC000000" Offset="0.0" />
+                        <GradientStop Color="Transparent" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Grid.Background>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Instruction Card -->
+        <Border Grid.Row="1"
+                BackgroundColor="White"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 24,24,0,0"
+                Padding="24,30,24,40"
+                Margin="0,-24,0,0">
+            <Border.Shadow>
+                <Shadow Brush="Black" Opacity="0.2" Radius="20" Offset="0,-4"/>
+            </Border.Shadow>
+
+            <VerticalStackLayout Spacing="20">
+                <!-- Icon with animated background -->
+                <Border BackgroundColor="#E3F2FD"
+                        WidthRequest="70"
+                        HeightRequest="70"
+                        HorizontalOptions="Center"
+                        StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="35"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="#2196F3" Opacity="0.3" Radius="15" Offset="0,4"/>
+                    </Border.Shadow>
+                    <Label Text="📷"
+                           FontSize="36"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
+
+                <!-- Title -->
+                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}"
+                       TextColor="#212121"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"/>
+
+                <!-- Instruction Text -->
+                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRInstruction]}"
+                       TextColor="#757575"
+                       FontSize="15"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       LineHeight="1.4"
+                       Margin="0,0,0,10"/>
+
+                <!-- Info Tips -->
+                <Frame BackgroundColor="#FFF3E0"
+                       BorderColor="Transparent"
+                       CornerRadius="12"
+                       Padding="16"
+                       HasShadow="False">
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="10">
+                            <Label Text="💡" FontSize="16" VerticalOptions="Start"/>
+                            <Label Text="QR kodunu tarama alanına yerleştirin"
+                                   TextColor="#E65100"
+                                   FontSize="13"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="10">
+                            <Label Text="✨" FontSize="16" VerticalOptions="Start"/>
+                            <Label Text="İyi aydınlatılmış bir ortamda tarayın"
+                                   TextColor="#E65100"
+                                   FontSize="13"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </Border>
     </Grid>
 </ContentPage>

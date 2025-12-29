@@ -1,118 +1,358 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              x:Class="KamPay.Views.PaymentPage"
-             Title="{Binding Source={RelativeSource Self}, Path=BindingContext.PageTitle}">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+             Title="{Binding Source={RelativeSource Self}, Path=BindingContext.PageTitle}"
+             BackgroundColor="#F5F9FC"
+             Shell.BackgroundColor="#1E88E5"
+             Shell.ForegroundColor="White">
 
-            <Frame BackgroundColor="{StaticResource Gray100}" BorderColor="Transparent" CornerRadius="10">
-                <HorizontalStackLayout Spacing="15">
-                    <Frame Padding="0" CornerRadius="5" IsClippedToBounds="True" HeightRequest="70" WidthRequest="70">
-                        <Image Source="{Binding Transaction.ProductThumbnailUrl}" Aspect="AspectFill" />
-                    </Frame>
-                    <VerticalStackLayout VerticalOptions="Center">
-                        <Label Text="{Binding Transaction.ProductTitle}" FontAttributes="Bold" FontSize="18" />
-                        <Label Text="{Binding Transaction.Price, StringFormat='{0:N2} ₺'}" TextColor="{StaticResource Primary}" FontSize="16" />
-                    </VerticalStackLayout>
-                </HorizontalStackLayout>
-            </Frame>
+    <Grid RowDefinitions="Auto,*">
+        <!-- Top Gradient Header -->
+        <BoxView Grid.Row="0" HeightRequest="180">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1E88E5" Offset="0.0" />
+                    <GradientStop Color="#1565C0" Offset="0.6" />
+                    <GradientStop Color="#0D47A1" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
 
-            <Label Text="Ödeme Yöntemi Seçin" FontAttributes="Bold" Margin="0,10,0,0"/>
+        <!-- Animated Background Circles -->
+        <Grid Grid.Row="0" Opacity="0.1">
+            <Ellipse x:Name="Circle1" 
+                     WidthRequest="250" 
+                     HeightRequest="250"
+                     Fill="White"
+                     HorizontalOptions="Start"
+                     VerticalOptions="Start"
+                     Margin="-125,-125,0,0"/>
+        </Grid>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
-                <Button Grid.Column="0" Text="Kredi Kartı" 
-                        Command="{Binding StartPaymentCommand}" CommandParameter="cardsim"
-                        BackgroundColor="{StaticResource Primary}" 
-                        TextColor="White"
-                        CornerRadius="10"
-                        HeightRequest="50"/>
-                <Button Grid.Column="1" Text="EFT / Havale" 
-                        Command="{Binding StartPaymentCommand}" CommandParameter="banktransfersim"
-                        BackgroundColor="{StaticResource Secondary}" 
-                        TextColor="White"
-                        CornerRadius="10"
-                        HeightRequest="50"/>
-            </Grid>
+        <!-- Main Content -->
+        <ScrollView Grid.Row="0" Grid.RowSpan="2" Margin="0,40,0,0">
+            <VerticalStackLayout Padding="20" Spacing="20" x:Name="MainContent">
 
-            <VerticalStackLayout IsVisible="{Binding IsCardSelected}" Spacing="15" Margin="0,20,0,0">
-                <Label Text="💳 Kredi Kartı Ödemesi" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center"/>
-                
-                <!-- Simülasyon OTP Gösterimi -->
-                <Frame BackgroundColor="#E3F2FD" BorderColor="{StaticResource Primary}" HasShadow="True" Padding="15" CornerRadius="10"
-                       IsVisible="{Binding SimulatedOtp, Converter={StaticResource IsNotNullOrEmptyConverter}}">
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="📱 SİMÜLASYON KODU" FontAttributes="Bold" HorizontalOptions="Center" TextColor="{StaticResource Primary}"/>
-                        <Label Text="{Binding SimulatedOtp}" 
-                               FontSize="32" 
-                               FontAttributes="Bold"
+                <!-- Product Info Card -->
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.1" Radius="15" Offset="0,5"/>
+                    </Border.Shadow>
+                    <HorizontalStackLayout Spacing="15">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Padding="0"
+                                HeightRequest="80"
+                                WidthRequest="80"
+                                StrokeThickness="0">
+                            <Image Source="{Binding Transaction.ProductThumbnailUrl}" 
+                                   Aspect="AspectFill">
+                                <Image.Clip>
+                                    <RoundRectangleGeometry CornerRadius="12" Rect="0,0,80,80"/>
+                                </Image.Clip>
+                            </Image>
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="6">
+                            <Label Text="{Binding Transaction.ProductTitle}" 
+                                   FontAttributes="Bold" 
+                                   FontSize="18"
+                                   TextColor="#212121"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="2"/>
+                            <Label Text="{Binding Transaction.Price, StringFormat='{0:N2} ₺'}" 
+                                   TextColor="#1E88E5" 
+                                   FontSize="22"
+                                   FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Payment Method Title -->
+                <Label Text="Ödeme Yöntemi Seçin" 
+                       FontAttributes="Bold" 
+                       FontSize="20"
+                       TextColor="#212121"
+                       Margin="0,10,0,0"/>
+
+                <!-- Payment Method Buttons -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Border Grid.Column="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="White"
+                            StrokeThickness="0"
+                            HeightRequest="110">
+                        <Border.Shadow>
+                            <Shadow Brush="#1E88E5" Opacity="0.2" Radius="12" Offset="0,4"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding StartPaymentCommand}" CommandParameter="cardsim"/>
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Border BackgroundColor="#E3F2FD"
+                                    WidthRequest="50"
+                                    HeightRequest="50"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 25">
+                                <Label Text="💳" 
+                                       FontSize="28" 
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Kredi Kartı" 
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#1E88E5"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="White"
+                            StrokeThickness="0"
+                            HeightRequest="110">
+                        <Border.Shadow>
+                            <Shadow Brush="#00ACC1" Opacity="0.2" Radius="12" Offset="0,4"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding StartPaymentCommand}" CommandParameter="banktransfersim"/>
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Border BackgroundColor="#E0F7FA"
+                                    WidthRequest="50"
+                                    HeightRequest="50"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 25">
+                                <Label Text="🏦" 
+                                       FontSize="28" 
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="EFT / Havale" 
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#00ACC1"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Credit Card Payment Section -->
+                <Border IsVisible="{Binding IsCardSelected}"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.1" Radius="15" Offset="0,5"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="20">
+                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                            <Label Text="💳" FontSize="28" VerticalOptions="Center"/>
+                            <Label Text="Kredi Kartı Ödemesi" 
+                                   FontAttributes="Bold" 
+                                   FontSize="20"
+                                   TextColor="#212121"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        
+                        <!-- Simulation OTP Display -->
+                        <Border IsVisible="{Binding SimulatedOtp, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                BackgroundColor="#E3F2FD"
+                                StrokeThickness="3"
+                                Stroke="#1E88E5"
+                                Padding="20"
+                                StrokeShape="RoundRectangle 16">
+                            <Border.Shadow>
+                                <Shadow Brush="#1E88E5" Opacity="0.3" Radius="12" Offset="0,4"/>
+                            </Border.Shadow>
+                            <VerticalStackLayout Spacing="10">
+                                <Border BackgroundColor="#1E88E5"
+                                        Padding="8,4"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 8"
+                                        HorizontalOptions="Center">
+                                    <Label Text="📱 SİMÜLASYON KODU" 
+                                           FontAttributes="Bold" 
+                                           TextColor="White"
+                                           FontSize="12"/>
+                                </Border>
+                                <Label Text="{Binding SimulatedOtp}" 
+                                       FontSize="38" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center" 
+                                       TextColor="#1E88E5"
+                                       CharacterSpacing="6"/>
+                                <Label Text="Bu kodu aşağıya girin" 
+                                       FontSize="13" 
+                                       HorizontalOptions="Center" 
+                                       TextColor="#757575"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        
+                        <Label Text="Doğrulama Kodunu Giriniz" 
                                HorizontalOptions="Center" 
-                               TextColor="{StaticResource Primary}"/>
-                        <Label Text="Bu kodu aşağıya girin" 
-                               FontSize="12" 
-                               HorizontalOptions="Center" 
-                               TextColor="Gray"/>
+                               FontAttributes="Bold" 
+                               FontSize="15"
+                               TextColor="#757575"/>
+                        
+                        <Border Stroke="#1E88E5" 
+                                StrokeThickness="2"
+                                Padding="16"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="White">
+                            <Entry Text="{Binding OtpCode}" 
+                                   Keyboard="Numeric" 
+                                   MaxLength="6" 
+                                   Placeholder="123456" 
+                                   HorizontalTextAlignment="Center" 
+                                   FontSize="32" 
+                                   TextColor="#1E88E5"
+                                   FontAttributes="Bold"
+                                   BackgroundColor="Transparent"/>
+                        </Border>
+                        
+                        <Button Text="✓ Ödemeyi Onayla" 
+                                Command="{Binding ConfirmCardPaymentCommand}" 
+                                BackgroundColor="#4CAF50" 
+                                TextColor="White"
+                                CornerRadius="16" 
+                                HeightRequest="56"
+                                FontAttributes="Bold"
+                                FontSize="16">
+                            <Button.Shadow>
+                                <Shadow Brush="#4CAF50" Opacity="0.4" Radius="12" Offset="0,6"/>
+                            </Button.Shadow>
+                        </Button>
                     </VerticalStackLayout>
-                </Frame>
-                
-                <Label Text="Doğrulama Kodunu Giriniz" HorizontalOptions="Center" FontAttributes="Italic" FontSize="14"/>
-                <Frame BorderColor="{StaticResource Primary}" Padding="5" CornerRadius="10" HasShadow="True">
-                    <Entry Text="{Binding OtpCode}" 
-                           Keyboard="Numeric" 
-                           MaxLength="6" 
-                           Placeholder="123456" 
-                           HorizontalTextAlignment="Center" 
-                           FontSize="28" 
-                           TextColor="{StaticResource Primary}" 
-                           BackgroundColor="Transparent"/>
-                </Frame>
-                
-                <Button Text="✓ Ödemeyi Onayla" 
-                        Command="{Binding ConfirmCardPaymentCommand}" 
-                        BackgroundColor="Green" 
-                        TextColor="White"
-                        CornerRadius="10" 
-                        HeightRequest="50"
-                        FontAttributes="Bold"/>
-            </VerticalStackLayout>
+                </Border>
 
-            <VerticalStackLayout IsVisible="{Binding IsEftSelected}" Spacing="15" Margin="0,20,0,0">
-                <Label Text="🏦 Havale / EFT Ödemesi" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center"/>
-                
-                <Frame BackgroundColor="#FFF3E0" BorderColor="{StaticResource Secondary}" HasShadow="True" Padding="15" CornerRadius="10">
-                    <VerticalStackLayout Spacing="10">
-                        <Label Text="Banka Bilgileri" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource Secondary}"/>
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8">
-                            <Label Grid.Row="0" Grid.Column="0" Text="Banka:" FontAttributes="Bold"/>
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding PaymentDetails.BankName}"/>
-                            
-                            <Label Grid.Row="1" Grid.Column="0" Text="Tutar:" FontAttributes="Bold"/>
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaymentDetails.Amount, StringFormat='{0:N2} ₺'}"/>
-                            
-                            <Label Grid.Row="2" Grid.Column="0" Text="Referans:" FontAttributes="Bold"/>
-                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding PaymentDetails.BankReference}" FontAttributes="Bold" TextColor="{StaticResource Secondary}"/>
-                        </Grid>
+                <!-- Bank Transfer Payment Section -->
+                <Border IsVisible="{Binding IsEftSelected}"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 20">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.1" Radius="15" Offset="0,5"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="20">
+                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                            <Label Text="🏦" FontSize="28" VerticalOptions="Center"/>
+                            <Label Text="Havale / EFT Ödemesi" 
+                                   FontAttributes="Bold" 
+                                   FontSize="20"
+                                   TextColor="#212121"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        
+                        <Border BackgroundColor="#FFF3E0"
+                                StrokeThickness="0"
+                                Padding="20"
+                                StrokeShape="RoundRectangle 16">
+                            <VerticalStackLayout Spacing="15">
+                                <Label Text="Banka Bilgileri" 
+                                       FontAttributes="Bold" 
+                                       FontSize="18" 
+                                       TextColor="#F57C00"
+                                       HorizontalOptions="Center"/>
+                                
+                                <BoxView HeightRequest="1" BackgroundColor="#FFE0B2"/>
+                                
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="15" RowSpacing="12">
+                                    <Label Grid.Row="0" Grid.Column="0" 
+                                           Text="Banka:" 
+                                           FontAttributes="Bold"
+                                           TextColor="#757575"
+                                           VerticalOptions="Center"/>
+                                    <Label Grid.Row="0" Grid.Column="1" 
+                                           Text="{Binding PaymentDetails.BankName}"
+                                           TextColor="#212121"
+                                           VerticalOptions="Center"/>
+                                    
+                                    <Label Grid.Row="1" Grid.Column="0" 
+                                           Text="Tutar:" 
+                                           FontAttributes="Bold"
+                                           TextColor="#757575"
+                                           VerticalOptions="Center"/>
+                                    <Label Grid.Row="1" Grid.Column="1" 
+                                           Text="{Binding PaymentDetails.Amount, StringFormat='{0:N2} ₺'}"
+                                           TextColor="#212121"
+                                           FontAttributes="Bold"
+                                           FontSize="18"
+                                           VerticalOptions="Center"/>
+                                    
+                                    <Label Grid.Row="2" Grid.Column="0" 
+                                           Text="Referans:" 
+                                           FontAttributes="Bold"
+                                           TextColor="#757575"
+                                           VerticalOptions="Center"/>
+                                    <Label Grid.Row="2" Grid.Column="1" 
+                                           Text="{Binding PaymentDetails.BankReference}" 
+                                           FontAttributes="Bold" 
+                                           TextColor="#F57C00"
+                                           FontSize="16"
+                                           VerticalOptions="Center"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+                        
+                        <Border BackgroundColor="#FFEBEE"
+                                Stroke="#EF5350"
+                                StrokeThickness="2"
+                                Padding="16"
+                                StrokeShape="RoundRectangle 12">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="⚠️" 
+                                       FontSize="20"
+                                       VerticalOptions="Start"/>
+                                <Label Text="Önemli: Ödeme açıklamasına yukarıdaki referans kodunu mutlaka yazınız. Aksi takdirde ödemeniz onaylanmayabilir." 
+                                       FontSize="13" 
+                                       TextColor="#C62828" 
+                                       LineBreakMode="WordWrap"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+                        
+                        <Button Text="✓ Ödemeyi Tamamladım" 
+                                Command="{Binding ConfirmCardPaymentCommand}" 
+                                BackgroundColor="#4CAF50" 
+                                TextColor="White"
+                                CornerRadius="16" 
+                                HeightRequest="56"
+                                FontAttributes="Bold"
+                                FontSize="16">
+                            <Button.Shadow>
+                                <Shadow Brush="#4CAF50" Opacity="0.4" Radius="12" Offset="0,6"/>
+                            </Button.Shadow>
+                        </Button>
                     </VerticalStackLayout>
-                </Frame>
-                
-                <Frame BorderColor="Red" BackgroundColor="#FFEBEE" Padding="10" CornerRadius="8">
-                    <Label Text="⚠️ Önemli: Ödeme açıklamasına yukarıdaki referans kodunu mutlaka yazınız. Aksi takdirde ödemeniz onaylanmayabilir." 
-                           FontSize="12" 
-                           TextColor="DarkRed" 
-                           HorizontalOptions="Center"
-                           HorizontalTextAlignment="Center"/>
-                </Frame>
-                
-                <Button Text="✓ Ödemeyi Tamamladım" 
-                        Command="{Binding ConfirmCardPaymentCommand}" 
-                        BackgroundColor="Green" 
-                        TextColor="White"
-                        CornerRadius="10" 
-                        HeightRequest="50"
-                        FontAttributes="Bold"/>
-            </VerticalStackLayout>
+                </Border>
 
-            <ActivityIndicator IsRunning="{Binding IsLoading}" HorizontalOptions="Center" Color="{StaticResource Primary}" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <!-- Loading Indicator -->
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 20"
+                        IsVisible="{Binding IsLoading}"
+                        HorizontalOptions="Center">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,5"/>
+                    </Border.Shadow>
+                    <HorizontalStackLayout Spacing="12">
+                        <ActivityIndicator IsRunning="True" 
+                                           Color="#1E88E5" 
+                                           VerticalOptions="Center"/>
+                        <Label Text="İşleniyor..." 
+                               TextColor="#757575" 
+                               FontSize="14"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

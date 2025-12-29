@@ -10,6 +10,17 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string photoUrl = string.Empty;
 
+        [ObservableProperty]
+        private bool isLoading = true;
+
+        partial void OnPhotoUrlChanged(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                IsLoading = false;
+            }
+        }
+
         [RelayCommand]
         private async Task CloseAsync()
         {
@@ -28,6 +39,8 @@ namespace KamPay.ViewModels
                     return;
                 }
 
+                IsLoading = true;
+
                 // Note: HttpClient created per request - acceptable for infrequent user-initiated downloads
                 // For production at scale, consider IHttpClientFactory for connection pooling
                 using var client = new HttpClient();
@@ -42,11 +55,18 @@ namespace KamPay.ViewModels
                     Title = "Teslimat Fotoğrafı",
                     File = new ShareFile(path) 
                 });
+
+                await Application.Current.MainPage.DisplayAlert("Başarılı", 
+                    "Fotoğraf indirildi ve paylaşım menüsü açıldı.", "Tamam");
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Hata", 
                     $"Fotoğraf indirilemedi: {ex.Message}", "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
     }

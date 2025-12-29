@@ -42,28 +42,38 @@
             <VerticalStackLayout Spacing="0" Padding="30" VerticalOptions="Center">
 
                 <!-- Logo & Title Section -->
-                <VerticalStackLayout x:Name="LogoSection" Spacing="10" Margin="0,0,0,50">
-                    <!-- Logo Icon -->
-                    <Border BackgroundColor="White"
-                            StrokeThickness="0"
-                            WidthRequest="80"
-                            HeightRequest="80"
-                            HorizontalOptions="Center">
+                <VerticalStackLayout x:Name="LogoSection" Spacing="15" Margin="0,0,0,50">
+                    <!-- Logo Icon with Shadow -->
+                    <Border WidthRequest="140"
+                            HeightRequest="140"
+                            BackgroundColor="White"
+                            HorizontalOptions="Center" >
+                            
                         <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="20"/>
+                            <RoundRectangle CornerRadius="30"/>
                         </Border.StrokeShape>
-                        <Label Text="💳" 
-                               FontSize="48"
+                        <Border.Shadow>
+                            <Shadow Brush="Black" 
+                                    Opacity="0.2" 
+                                    Radius="15" 
+                                    Offset="0,6"/>
+                        </Border.Shadow>
+
+                        <Image Source="kampay_logo_new.png"
+                               Aspect="AspectFit"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"/>
                     </Border>
 
+                    <!-- App Title -->
                     <Label Text="KamPay" 
-                           FontSize="32"
+                           FontSize="36"
                            FontAttributes="Bold"
                            TextColor="White"
-                           HorizontalOptions="Center"/>
+                           HorizontalOptions="Center"
+                           Margin="0,8,0,0"/>
 
+                    <!-- Welcome Text -->
                     <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[WelcomeBack]}" 
                            FontSize="16"
                            TextColor="White"

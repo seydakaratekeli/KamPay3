@@ -72,7 +72,7 @@ public partial class GoodDeedBoardPage : ContentPage
                 {
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        await Circle1.RotateTo(360, 30000, Easing.Linear);
+                        await Circle1.RotateTo(360, 25000, Easing.Linear);
                         Circle1.Rotation = 0;
                     });
                 }

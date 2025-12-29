@@ -536,6 +536,15 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         await Shell.Current.GoToAsync($"productdetail?productId={product.ProductId}");
     }
 
+    //  Profil fotoğrafını tam ekran göster
+    [RelayCommand]
+    private async Task ViewProfilePhotoAsync()
+    {
+        if (string.IsNullOrEmpty(CurrentUser?.ProfileImageUrl)) return;
+        
+        await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(CurrentUser.ProfileImageUrl)}");
+    }
+
     //  Cache'i manuel sıfırlama metodu (ihtiyaç halinde)
     public void InvalidateCache()
     {
