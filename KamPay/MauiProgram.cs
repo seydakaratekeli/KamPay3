@@ -200,7 +200,7 @@ namespace KamPay
 #if DEBUG
                 builder.Logging.AddDebug();
 #endif
-
+                LocalizationResourceManager.EnsureInitialized();
                 System.Diagnostics.Debug.WriteLine("⚙️ MauiApp build ediliyor...");
                 var app = builder.Build();
                 System.Diagnostics.Debug.WriteLine("✓ MauiApp başarıyla oluşturuldu");

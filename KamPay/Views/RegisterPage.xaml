@@ -3,10 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:services="clr-namespace:KamPay.Services"
+             xmlns:converters="clr-namespace:KamPay.Converters"
              x:DataType="vm:RegisterViewModel"
              x:Class="KamPay.Views.RegisterPage"
              Shell.NavBarIsVisible="False">
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <converters:BoolToTextConverter x:Key="BoolToTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    
     <Grid>
         <!-- Gradient Background -->
         <BoxView>

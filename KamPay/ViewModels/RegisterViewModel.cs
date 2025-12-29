@@ -75,7 +75,7 @@ namespace KamPay.ViewModels
                     // ✅ FIX: Türkçe karakter desteği için SanitizeName kullan
                     FirstName = InputSanitizer.SanitizeName(FirstName),
                     LastName = InputSanitizer.SanitizeName(LastName),
-                    Email = Email.Trim().ToLower(),
+                    Email = (Email ?? string.Empty).Trim().ToLower(),
                     Password = Password,
                     PasswordConfirm = PasswordConfirm
                 };

@@ -35,11 +35,15 @@ namespace KamPay.Services
         {
             try
             {
-                // Ağ işlemi başlamadan önce kontrol edilebilir
+                // 1. Temel Nesne Kontrolü
+                if (request == null)
+                    return ServiceResult<User>.FailureResult("Hata", "Kayıt verileri boş olamaz.");
+
+                // 2. İnternet Bağlantısı Kontrolü
                 if (!NetworkHelper.HasInternetConnection())
                     return ServiceResult<User>.FailureResult("Bağlantı Hatası", "İnternet erişimi bulunamadı.");
 
-                // 1. Validasyon
+                // 3. Validasyon
                 var validation = ValidateRegistration(request);
                 if (!validation.IsValid)
                 {
@@ -49,14 +53,17 @@ namespace KamPay.Services
                     );
                 }
 
-                // 2. E-posta kontrolü (daha önce kayıtlı mı?)
+                // 4. E-posta Kontrolü (Sorgu öncesi Email alanını güvenli hazırla)
+                // null-conditional (?.) ve null-coalescing (??) operatörleri ile çökme önlenir
+                string safeEmail = (request.Email?.Trim() ?? string.Empty).ToLower();
+
                 var existingUsers = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .OrderBy("Email")
-                    .EqualTo(request.Email.ToLower())
+                    .EqualTo(safeEmail)
                     .OnceAsync<User>();
 
-                if (existingUsers.Any())
+                if (existingUsers != null && existingUsers.Any())
                 {
                     return ServiceResult<User>.FailureResult(
                         "Bu e-posta adresi zaten kayıtlı",
@@ -64,28 +71,31 @@ namespace KamPay.Services
                     );
                 }
 
-                // 3. Kullanıcı nesnesi oluştur
+                // 5. Kullanıcı Nesnesi Oluştur (Verileri Sanitize Et)
+                // Trim() çağrılarında null kontrolü eklendi
                 var user = new User
                 {
-                    FirstName = InputSanitizer.SanitizeName(request.FirstName.Trim()),
-                    LastName = InputSanitizer.SanitizeName(request.LastName.Trim()),
-                    Email = request.Email.ToLower().Trim(),
-                    PasswordHash = HashPassword(request.Password),
+                    FirstName = InputSanitizer.SanitizeName(request.FirstName?.Trim() ?? string.Empty),
+                    LastName = InputSanitizer.SanitizeName(request.LastName?.Trim() ?? string.Empty),
+                    Email = safeEmail,
+                    PasswordHash = HashPassword(request.Password ?? string.Empty),
                     IsEmailVerified = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
 
-                // 4. Doğrulama kodu oluştur
+                // 6. Doğrulama Kodu Oluştur
                 user.VerificationCode = GenerateVerificationCode();
-                user.VerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15); // 15 dakika geçerli
+                user.VerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
 
-                // 5. Firebase'e kaydet
+                // 7. Firebase'e Kaydet
                 await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user.UserId)
                     .PutAsync(user);
 
-                // 6. Doğrulama kodu gönder (şimdilik simüle ediyoruz)
+                // 8. Doğrulama Kodunu Gönder
+                // E-posta gönderimi başarısız olsa bile kullanıcıyı kaydettik, tekrar kod isteyebilir
                 await SendVerificationCodeAsync(user.Email);
 
                 return ServiceResult<User>.SuccessResult(
@@ -95,15 +105,11 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                // ESKİ: ex.Message (Teknik hata mesajı)
-                // YENİ: NetworkHelper üzerinden anlamlı mesaj
+                // NetworkHelper üzerinden anlamlı kullanıcı mesajı döndür
                 var userMessage = NetworkHelper.GetUserFriendlyErrorMessage(ex);
                 return ServiceResult<User>.FailureResult("Kayıt sırasında bir hata oluştu", userMessage);
-
-               
             }
         }
-
         public async Task<ServiceResult<User>> LoginAsync(LoginRequest request)
         {
             try
