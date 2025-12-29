@@ -25,6 +25,10 @@ namespace KamPay.ViewModels
         private IDisposable? _listener;
 
         private readonly HashSet<string> _serviceIds = new();
+        
+        // ✅ Sayfalama için yeni alanlar
+        private string? _lastLoadedKey;
+        private bool _isLoadingMore;
 
         // ------------ UI STATE ----------
         [ObservableProperty] private bool isPostFormVisible;
@@ -157,26 +161,35 @@ namespace KamPay.ViewModels
 
                 IsLoading = true;
 
-                var snapshot = await _loader.LoadSnapshotAsync(Constants.ServiceOffersCollection);
+                // ✅ OPTİMİZE: Sayfalama ile ilk yükleme
+                var result = await _serviceService.GetServiceOffersPagedAsync(
+                    pageSize: 20,
+                    lastKey: null,
+                    category: FilterCategory
+                );
 
                 Services.Clear();
                 _serviceIds.Clear();
 
-                foreach (var row in snapshot)
+                if (result.Success && result.Data != null)
                 {
-                    if (row.Value == null) continue;
-
-                    var s = row.Value;
-                    s.ServiceId = row.Key;
-
-                    if (s.IsAvailable)
+                    foreach (var service in result.Data)
                     {
-                        Services.Add(s);
-                        _serviceIds.Add(s.ServiceId);
+                        if (service.IsAvailable)
+                        {
+                            Services.Add(service);
+                            _serviceIds.Add(service.ServiceId);
+                        }
+                    }
+
+                    Services.SortDescending(x => x.CreatedAt);
+                    
+                    // Son yüklenen key'i kaydet
+                    if (result.Data.Any())
+                    {
+                        _lastLoadedKey = result.Data.Last().ServiceId;
                     }
                 }
-
-                Services.SortDescending(x => x.CreatedAt);
 
                 IsLoading = false;
 
@@ -195,6 +208,48 @@ namespace KamPay.ViewModels
             {
                 Console.WriteLine("UltraFastLoadAsync Error: " + ex.Message);
                 IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// ✅ YENİ: Daha fazla hizmet yükle (Sonsuz Kaydırma)
+        /// </summary>
+        [RelayCommand]
+        private async Task LoadMoreServicesAsync()
+        {
+            if (_isLoadingMore || string.IsNullOrEmpty(_lastLoadedKey)) return;
+
+            try
+            {
+                _isLoadingMore = true;
+
+                var result = await _serviceService.GetServiceOffersPagedAsync(
+                    pageSize: 20,
+                    lastKey: _lastLoadedKey,
+                    category: FilterCategory
+                );
+
+                if (result.Success && result.Data != null && result.Data.Any())
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        foreach (var service in result.Data)
+                        {
+                            if (service.IsAvailable && !_serviceIds.Contains(service.ServiceId))
+                            {
+                                Services.Add(service);
+                                _serviceIds.Add(service.ServiceId);
+                            }
+                        }
+                    });
+
+                    _lastLoadedKey = result.Data.Last().ServiceId;
+                    ApplyFilter();
+                }
+            }
+            finally
+            {
+                _isLoadingMore = false;
             }
         }
 

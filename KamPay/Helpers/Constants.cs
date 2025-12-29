@@ -58,4 +58,30 @@ public static class Constants
     public const int PointsForPurchase = 5;
     public const int PointsForSurpriseBox = 20;
     public const int PointsForServiceOffer = 10;
+
+    /// <summary>
+    /// ⚠️ KRİTİK: Bu indeksler Firebase Console'da tanımlanmalıdır!
+    /// 
+    /// Firebase Console → Realtime Database → Rules sekmesi → Aşağıdaki kuralları ekleyin:
+    /// 
+    /// {
+    ///   "rules": {
+    ///     "products": {
+    ///       ".indexOn": ["CategoryId", "CreatedAt", "Type", "Price", "UserId"]
+    ///     },
+    ///     "service_offers": {
+    ///       ".indexOn": ["Category", "CreatedAt", "ProviderId"]
+    ///     },
+    ///     "good_deed_posts": {
+    ///       ".indexOn": ["Type", "CreatedAt", "UserId"]
+    ///     },
+    ///     "transactions": {
+    ///       ".indexOn": ["SellerId", "BuyerId", "Status", "CreatedAt"]
+    ///     }
+    ///   }
+    /// }
+    /// 
+    /// Bu indeksler olmadan sayfalama ve filtreleme ÇALIŞMAZ!
+    /// </summary>
+    public const string FirebaseIndexingNote = "See documentation above for required Firebase indexes";
 }

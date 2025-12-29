@@ -62,6 +62,8 @@ namespace KamPay.Services
         {
             try
             {
+                // ⚠️ UYARI: Bu metod tüm servisleri çekiyor - Performans sorunu!
+                // Sayfalama için GetServiceOffersPaged metodunu kullanın
                 var allOffers = await _firebaseClient
                     .Child(Constants.ServiceOffersCollection)
                     .OnceAsync<ServiceOffer>();
@@ -77,6 +79,109 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 return ServiceResult<List<ServiceOffer>>.FailureResult("Hata", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// ✅ OPTİMİZE EDİLMİŞ: Sayfalama ile hizmet listesi getirir
+        /// </summary>
+        /// <param name="pageSize">Sayfa başına hizmet sayısı (varsayılan: 20)</param>
+        /// <param name="lastKey">Son yüklenen hizmetin ID'si (sonraki sayfa için)</param>
+        /// <param name="category">Kategori filtresi</param>
+        public async Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersPagedAsync(
+            int pageSize = 20,
+            string? lastKey = null,
+            ServiceCategory? category = null)
+        {
+            try
+            {
+                IEnumerable<Firebase.Database.FirebaseObject<ServiceOffer>> items;
+
+                // 🔥 KATEGORİ FİLTRESİ VAR: EqualTo() kullan (LimitToFirst() KULLANILABİLİR!)
+                if (category.HasValue)
+                {
+                    // ⚠️ UYARI: EqualTo() kullanırken StartAt/LimitToFirst ÇALIŞMAZ!
+                    // Çözüm: Tüm kategoriyi çek, bellekte sırala/sayfalama yap
+                    items = await _firebaseClient
+                        .Child(Constants.ServiceOffersCollection)
+                        .OrderBy("Category")
+                        .EqualTo((int)category.Value)
+                        .OnceAsync<ServiceOffer>();
+
+                    // Bellekte sayfalama yap
+                    var allOffers = items
+                        .Select(o =>
+                        {
+                            var offer = o.Object;
+                            offer.ServiceId = o.Key;
+                            return offer;
+                        })
+                        .Where(o => o.IsAvailable)
+                        .OrderByDescending(o => o.CreatedAt)
+                        .ToList();
+
+                    // Sayfalama mantığı
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        var lastIndex = allOffers.FindIndex(o => o.ServiceId == lastKey);
+                        if (lastIndex >= 0)
+                        {
+                            allOffers = allOffers.Skip(lastIndex + 1).Take(pageSize).ToList();
+                        }
+                    }
+                    else
+                    {
+                        allOffers = allOffers.Take(pageSize).ToList();
+                    }
+
+                    return ServiceResult<List<ServiceOffer>>.SuccessResult(allOffers);
+                }
+                // 🚀 KATEGORİ YOK: Gerçek sunucu taraflı sayfalama
+                else
+                {
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        items = await _firebaseClient
+                            .Child(Constants.ServiceOffersCollection)
+                            .OrderBy("CreatedAt")
+                            .StartAt(lastKey)
+                            .LimitToFirst(pageSize + 1)
+                            .OnceAsync<ServiceOffer>();
+                    }
+                    else
+                    {
+                        items = await _firebaseClient
+                            .Child(Constants.ServiceOffersCollection)
+                            .OrderBy("CreatedAt")
+                            .LimitToFirst(pageSize)
+                            .OnceAsync<ServiceOffer>();
+                    }
+
+                    var offers = items.Select(o =>
+                    {
+                        var offer = o.Object;
+                        offer.ServiceId = o.Key;
+                        return offer;
+                    }).ToList();
+
+                    // lastKey'i atla (eğer pagination yapılıyorsa)
+                    if (!string.IsNullOrEmpty(lastKey) && offers.Any() && offers.First().ServiceId == lastKey)
+                    {
+                        offers.RemoveAt(0);
+                    }
+
+                    // Sadece aktif servisleri filtrele (hafif işlem)
+                    offers = offers
+                        .Where(o => o.IsAvailable)
+                        .OrderByDescending(o => o.CreatedAt)
+                        .ToList();
+
+                    return ServiceResult<List<ServiceOffer>>.SuccessResult(offers);
+                }
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<List<ServiceOffer>>.FailureResult("Hizmetler yüklenemedi", ex.Message);
             }
         }
 
@@ -792,7 +897,7 @@ namespace KamPay.Services
         }
 
      
-        /// Hizmet sağlayıcısının karşı teklif göndermesi
+        /// Hizmet sağlaycısının karşı teklif göndermesi
         
         public async Task<ServiceResult<bool>> SendCounterOfferAsync(string requestId, decimal counterOffer, string currentUserId)
         {

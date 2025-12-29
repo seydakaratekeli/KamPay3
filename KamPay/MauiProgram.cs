@@ -86,7 +86,6 @@ namespace KamPay
                 );
 
                 // AppShell'in kendisini ve ViewModel'ini DI container'a kaydediyoruz.
-                builder.Services.AddSingleton<AppShellViewModel>();
                 builder.Services.AddSingleton<AppShell>();
 
                 builder.Services.AddSingleton<IProductService, FirebaseProductService>();

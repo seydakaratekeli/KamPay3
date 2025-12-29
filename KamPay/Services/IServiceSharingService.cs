@@ -9,7 +9,20 @@ namespace KamPay.Services
     public interface IServiceSharingService
     {
         Task<ServiceResult<ServiceOffer>> CreateServiceOfferAsync(ServiceOffer offer);
+        
+        /// <summary>
+        /// ⚠️ UYARI: Tüm servisleri çeker - Performans sorunu!
+        /// Yeni projelerde GetServiceOffersPagedAsync kullanın
+        /// </summary>
         Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersAsync(ServiceCategory? category = null);
+
+        /// <summary>
+        /// ✅ OPTİMİZE EDİLMİŞ: Sayfalama ile hizmet listesi getirir
+        /// </summary>
+        Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersPagedAsync(
+            int pageSize = 20,
+            string? lastKey = null,
+            ServiceCategory? category = null);
 
         Task<ServiceResult<ServiceRequest>> RequestServiceAsync(ServiceOffer offer, User requester, string message);
         Task<ServiceResult<(List<ServiceRequest> Incoming, List<ServiceRequest> Outgoing)>> GetMyServiceRequestsAsync(string userId);

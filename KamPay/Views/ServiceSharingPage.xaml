@@ -139,7 +139,9 @@
 
             <CollectionView ItemsSource="{Binding FilteredServices}"
                             SelectionMode="None"
-                            Margin="15,15,15,15">
+                            Margin="15,15,15,15"
+                            RemainingItemsThreshold="5"
+                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreServicesCommand}">
 
                 <CollectionView.EmptyView>
                     <Grid VerticalOptions="Center" 
