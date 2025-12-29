@@ -84,6 +84,7 @@ namespace KamPay.Services
 
         /// <summary>
         /// ✅ OPTİMİZE EDİLMİŞ: Sayfalama ile hizmet listesi getirir
+        /// Ürün modülündeki GetProductsPagedAsync() ile aynı yaklaşımı kullanır
         /// </summary>
         /// <param name="pageSize">Sayfa başına hizmet sayısı (varsayılan: 20)</param>
         /// <param name="lastKey">Son yüklenen hizmetin ID'si (sonraki sayfa için)</param>
@@ -97,7 +98,7 @@ namespace KamPay.Services
             {
                 IEnumerable<Firebase.Database.FirebaseObject<ServiceOffer>> items;
 
-                // 🔥 KATEGORİ FİLTRESİ VAR: EqualTo() kullan (LimitToFirst() KULLANILABİLİR!)
+                // 🔥 KATEGORİ FİLTRESİ VAR: EqualTo() kullan
                 if (category.HasValue)
                 {
                     // ⚠️ UYARI: EqualTo() kullanırken StartAt/LimitToFirst ÇALIŞMAZ!

@@ -148,25 +148,36 @@ namespace KamPay.ViewModels
         {
             try
             {
-                var snapshot = await _loader.LoadSnapshotAsync(Constants.ProductsCollection);
+                IsSkeletonVisible = true;
+                IsLoading = true;
 
-                if (snapshot.Any())
+                // 🚀 PERFORMANS OPTİMİZASYONU: Optimize edilmiş service metodunu kullan
+                var filter = new ProductFilter
                 {
-                    _allProducts = snapshot
-                        .Select(s =>
-                        {
-                            s.Value.ProductId = s.Key;
-                            return s.Value;
-                        })
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToList();
+                    OnlyActive = true, // Sadece aktif ürünler
+                    SortBy = SelectedSortOption,
+                    CategoryId = SelectedCategory?.CategoryId,
+                    Type = SelectedType,
+                    SearchText = SearchText
+                };
 
+                var result = await _productService.GetAllProductsAsync(filter);
+
+                if (result.Success && result.Data != null && result.Data.Any())
+                {
+                    _allProducts = result.Data;
                     ExecuteFiltering();
-
-                    IsSkeletonVisible = false;
-                    IsLoading = false;
+                }
+                else
+                {
+                    _allProducts.Clear();
+                    Products.Clear();
                 }
 
+                IsSkeletonVisible = false;
+                IsLoading = false;
+
+                // Realtime listener'ı başlat (sadece değişiklikleri dinlemek için)
                 _listener = _loader.Listen(Constants.ProductsCollection, evt =>
                 {
                     MainThread.BeginInvokeOnMainThread(() => ApplyRealtimeEvent(evt));
@@ -246,13 +257,17 @@ namespace KamPay.ViewModels
 
                 System.Diagnostics.Debug.WriteLine($"🔍 ExecuteFiltering başladı. Toplam ürün: {_allProducts.Count}");
 
+                // 🚀 OPTİMİZASYON: Zaten filtrelenmiş verilerle çalışıyoruz
+                // Sadece UI seviyesinde ek filtreler uygulayacağız
                 IEnumerable<Product> filtered = _allProducts.Where(p => p.IsActive && !p.IsSold);
 
+                // Kategori filtresi (eğer değiştirilmişse)
                 if (SelectedCategory != null && !string.IsNullOrEmpty(SelectedCategory.CategoryId))
                 {
                     filtered = filtered.Where(p => p.CategoryId == SelectedCategory.CategoryId);
                 }
 
+                // Arama metni (eğer varsa)
                 if (!string.IsNullOrEmpty(SearchText))
                 {
                     var searchLower = SearchText.ToLowerInvariant();
@@ -261,12 +276,13 @@ namespace KamPay.ViewModels
                         p.Description.ToLowerInvariant().Contains(searchLower));
                 }
 
+                // Tip filtresi (eğer varsa)
                 if (SelectedType.HasValue)
                 {
                     filtered = filtered.Where(p => p.Type == SelectedType.Value);
                 }
 
-                // Sıralama mantığı (Enum üzerinden)
+                // Sıralama
                 filtered = SelectedSortOption switch
                 {
                     ProductSortOption.Oldest => filtered.OrderBy(p => p.CreatedAt),
@@ -344,8 +360,17 @@ namespace KamPay.ViewModels
 
             try
             {
-                await Task.Delay(300, _searchCancellationTokenSource.Token);
-                ExecuteFiltering();
+                await Task.Delay(500, _searchCancellationTokenSource.Token); // 300ms -> 500ms (Daha az API çağrısı)
+                
+                // 🚀 OPTİMİZASYON: Arama için sunucu filtrelemesi kullan
+                if (!string.IsNullOrEmpty(SearchText) && SearchText.Length >= 2)
+                {
+                    await ReloadWithFilterAsync();
+                }
+                else
+                {
+                    ExecuteFiltering(); // Lokal filtreleme
+                }
             }
             catch (TaskCanceledException)
             {
@@ -353,7 +378,11 @@ namespace KamPay.ViewModels
             }
         }
 
-        partial void OnSelectedCategoryChanged(Category? value) => ExecuteFiltering();
+        partial void OnSelectedCategoryChanged(Category? value)
+        {
+            // Kategori değiştiğinde sunucudan yeni veri çek
+            _ = ReloadWithFilterAsync();
+        }
 
         // Seçilen Enum değiştiğinde indeksi de güncelle (Kod tarafından değiştirilirse)
         partial void OnSelectedSortOptionChanged(ProductSortOption value)
@@ -363,10 +392,50 @@ namespace KamPay.ViewModels
             {
                 SelectedSortIndex = index;
             }
-            ExecuteFiltering();
+            ExecuteFiltering(); // Sıralama için lokal filtreleme yeterli
         }
 
-        partial void OnSelectedTypeChanged(ProductType? value) => ExecuteFiltering();
+        partial void OnSelectedTypeChanged(ProductType? value)
+        {
+            // Tip değiştiğinde sunucudan yeni veri çek
+            _ = ReloadWithFilterAsync();
+        }
+
+        // 🆕 YENİ METOD: Filtrelerle yeniden yükleme
+        private async Task ReloadWithFilterAsync()
+        {
+            if (IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var filter = new ProductFilter
+                {
+                    OnlyActive = true,
+                    SortBy = SelectedSortOption,
+                    CategoryId = SelectedCategory?.CategoryId,
+                    Type = SelectedType,
+                    SearchText = SearchText
+                };
+
+                var result = await _productService.GetAllProductsAsync(filter);
+
+                if (result.Success && result.Data != null)
+                {
+                    _allProducts = result.Data;
+                    ExecuteFiltering();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌ ReloadWithFilter hatası: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
 
         #endregion
 

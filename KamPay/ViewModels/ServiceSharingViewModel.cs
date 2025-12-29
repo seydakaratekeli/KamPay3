@@ -385,7 +385,14 @@ namespace KamPay.ViewModels
         }
 
         partial void OnSearchTextChanged(string value) => ApplyFilter();
-        partial void OnFilterCategoryChanged(ServiceCategory? value) => ApplyFilter();
+        partial void OnFilterCategoryChanged(ServiceCategory? value) 
+        {
+            // Kategori değiştiğinde sayfalamayı sıfırla ve yeniden yükle
+            _lastLoadedKey = null;
+            _serviceIds.Clear();
+            Services.Clear();
+            _ = UltraFastLoadAsync();
+        }
 
         partial void OnPriceSortChanged(string? value)
         {

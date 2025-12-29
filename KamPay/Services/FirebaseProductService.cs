@@ -25,62 +25,94 @@ public class FirebaseProductService : IProductService
         {
             List<Product> products;
 
-            // 1. Önce önbelleği kontrol et
-            if (_cacheService.IsCacheValid)
-            {
-                products = await _cacheService.GetCachedProductsAsync();
-                // Veriler önbellekten başarıyla alındı
-            }
-            else
-            {
-                // 2. Önbellek geçersizse Firebase'den çek
-                var allProducts = await _firebaseClient
-                    .Child(Constants.ProductsCollection)
-                    .OnceAsync<Product>();
-
-                products = allProducts.Select(p =>
-                {
-                    var product = p.Object;
-                    product.ProductId = p.Key;
-                    return product;
-                }).ToList();
-
-                // 3. Çekilen veriyi önbelleğe kaydet (5 dakikalık geçerlilik süresi)
-                await _cacheService.SetCacheAsync(products);
-            }
-
-            // Sorgulanabilir hale getiriyoruz (Filtreleme için)
-            var productsQuery = products.AsQueryable();
-
-            // Filtreleme
+            // 🚀 PERFORMANS OPTİMİZASYONU: Sunucu tarafı filtreleme
             if (filter != null)
             {
-                // Sadece aktif ürünler
-                if (filter.OnlyActive)
-                {
-                    productsQuery = productsQuery.Where(p => p.IsActive);
-                }
+                // Firebase Query ile sunucu tarafında filtreleme
+                var query = _firebaseClient.Child(Constants.ProductsCollection);
 
-                // Arama metni
-                if (!string.IsNullOrWhiteSpace(filter.SearchText))
-                {
-                    var searchLower = filter.SearchText.ToLower();
-                    productsQuery = productsQuery.Where(p =>
-                        p.Title.ToLower().Contains(searchLower) ||
-                        p.Description.ToLower().Contains(searchLower)
-                    );
-                }
-
-                // Kategori
+                // Öncelik sırasına göre en etkili filtreyi uygula
                 if (!string.IsNullOrWhiteSpace(filter.CategoryId))
                 {
-                    productsQuery = productsQuery.Where(p => p.CategoryId == filter.CategoryId);
+                    // Kategori filtresi - Sunucu tarafı
+                    var categoryProducts = await query
+                        .OrderBy("CategoryId")
+                        .EqualTo(filter.CategoryId)
+                        .LimitToFirst(100)
+                        .OnceAsync<Product>();
+
+                    products = categoryProducts.Select(p =>
+                    {
+                        var product = p.Object;
+                        product.ProductId = p.Key;
+                        return product;
+                    }).ToList();
+                }
+                else if (filter.Type.HasValue)
+                {
+                    // Tip filtresi - Sunucu tarafı
+                    var typeProducts = await query
+                        .OrderBy("Type")
+                        .EqualTo((int)filter.Type.Value)
+                        .LimitToFirst(100)
+                        .OnceAsync<Product>();
+
+                    products = typeProducts.Select(p =>
+                    {
+                        var product = p.Object;
+                        product.ProductId = p.Key;
+                        return product;
+                    }).ToList();
+                }
+                else if (filter.OnlyActive)
+                {
+                    // Aktif ürünler - Sunucu tarafı
+                    var activeProducts = await query
+                        .OrderBy("IsActive")
+                        .EqualTo(true)
+                        .LimitToFirst(100)
+                        .OnceAsync<Product>();
+
+                    products = activeProducts.Select(p =>
+                    {
+                        var product = p.Object;
+                        product.ProductId = p.Key;
+                        return product;
+                    }).ToList();
+                }
+                else
+                {
+                    // Varsayılan: Son 100 ürün
+                    var defaultProducts = await query
+                        .OrderByKey()
+                        .LimitToLast(100)
+                        .OnceAsync<Product>();
+
+                    products = defaultProducts.Select(p =>
+                    {
+                        var product = p.Object;
+                        product.ProductId = p.Key;
+                        return product;
+                    }).ToList();
                 }
 
-                // Tip
-                if (filter.Type.HasValue)
+                // İstemci tarafı ince ayar filtreleri
+                var productsQuery = products.AsQueryable();
+
+                // Aktif ve satılmamış kontrolü
+                if (filter.OnlyActive)
                 {
-                    productsQuery = productsQuery.Where(p => p.Type == filter.Type.Value);
+                    productsQuery = productsQuery.Where(p => p.IsActive && !p.IsSold);
+                }
+
+                // Arama metni (Firebase'de full-text search yok)
+                if (!string.IsNullOrWhiteSpace(filter.SearchText))
+                {
+                    var searchLower = filter.SearchText.ToLowerInvariant();
+                    productsQuery = productsQuery.Where(p =>
+                        p.Title.ToLowerInvariant().Contains(searchLower) ||
+                        p.Description.ToLowerInvariant().Contains(searchLower)
+                    );
                 }
 
                 // Durum
@@ -102,9 +134,9 @@ public class FirebaseProductService : IProductService
                 // Konum
                 if (!string.IsNullOrWhiteSpace(filter.Location))
                 {
-                    var locationLower = filter.Location.ToLower();
+                    var locationLower = filter.Location.ToLowerInvariant();
                     productsQuery = productsQuery.Where(p =>
-                        p.Location != null && p.Location.ToLower().Contains(locationLower)
+                        p.Location != null && p.Location.ToLowerInvariant().Contains(locationLower)
                     );
                 }
 
@@ -119,14 +151,40 @@ public class FirebaseProductService : IProductService
                     ProductSortOption.MostFavorited => productsQuery.OrderByDescending(p => p.FavoriteCount),
                     _ => productsQuery.OrderByDescending(p => p.CreatedAt)
                 };
+
+                products = productsQuery.ToList();
             }
             else
             {
-                // Filtre yoksa varsayılan sıralama
-                productsQuery = productsQuery.OrderByDescending(p => p.CreatedAt);
+                // Filtre yoksa önbellekten kontrol et
+                if (_cacheService.IsCacheValid)
+                {
+                    products = await _cacheService.GetCachedProductsAsync();
+                }
+                else
+                {
+                    // Son 100 ürünü getir (Tüm ürünler yerine)
+                    var recentProducts = await _firebaseClient
+                        .Child(Constants.ProductsCollection)
+                        .OrderByKey()
+                        .LimitToLast(100)
+                        .OnceAsync<Product>();
+
+                    products = recentProducts.Select(p =>
+                    {
+                        var product = p.Object;
+                        product.ProductId = p.Key;
+                        return product;
+                    })
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToList();
+
+                    // Önbelleğe kaydet
+                    await _cacheService.SetCacheAsync(products);
+                }
             }
 
-            return ServiceResult<List<Product>>.SuccessResult(productsQuery.ToList());
+            return ServiceResult<List<Product>>.SuccessResult(products);
         }
         catch (Exception ex)
         {
