@@ -9,8 +9,6 @@ namespace KamPay.Views
         private double _startScale = 1;
         private double _xOffset = 0;
         private double _yOffset = 0;
-        private double _startX = 0;
-        private double _startY = 0;
         private bool _hasAnimated = false;
 
         public ImageViewerPage(ImageViewerViewModel viewModel)
@@ -117,7 +115,7 @@ namespace KamPay.Views
             });
         }
 
-        // ✅ İYİLEŞTİRİLMİŞ: Pinch to Zoom Gesture (Titreme düzeltildi)
+        // ✅ TAMAMEN DÜZELTİLMİŞ: Pinch to Zoom (Anchor problemi çözüldü)
         private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
         {
             if (sender is not Image image)
@@ -127,14 +125,15 @@ namespace KamPay.Views
             {
                 case GestureStatus.Started:
                     _startScale = _currentScale;
-                    // Anchor noktasını parmağın olduğu yere ayarla
-                    image.AnchorX = e.ScaleOrigin.X;
-                    image.AnchorY = e.ScaleOrigin.Y;
+                    // ✅ Anchor'ı merkeze sabitle - titreme önlenir
+                    image.AnchorX = 0.5;
+                    image.AnchorY = 0.5;
                     break;
 
                 case GestureStatus.Running:
                     // Zoom seviyesini hesapla (1.0 ile 4.0 arasında sınırla)
-                    _currentScale = Math.Max(1, Math.Min(_startScale * e.Scale, 4));
+                    var newScale = _startScale * e.Scale;
+                    _currentScale = Math.Max(1, Math.Min(newScale, 4));
                     
                     // Zoom'u uygula
                     image.Scale = _currentScale;
@@ -145,54 +144,58 @@ namespace KamPay.Views
 
                 case GestureStatus.Completed:
                     // Minimum zoom seviyesinin altındaysa sıfırla
-                    if (_currentScale < 1)
+                    if (_currentScale <= 1)
                     {
                         ResetZoom(image);
-                    }
-                    // Zoom yapıldıysa anchor'ı merkeze al
-                    else if (_currentScale > 1)
-                    {
-                        image.AnchorX = 0.5;
-                        image.AnchorY = 0.5;
                     }
                     break;
             }
         }
 
-        // ✅ İYİLEŞTİRİLMİŞ: Pan Gesture (Titreme düzeltildi)
+        // ✅ TAMAMEN DÜZELTİLMİŞ: Pan Gesture (Titreme tamamen giderildi)
         private void OnPanUpdated(object? sender, PanUpdatedEventArgs e)
         {
             if (sender is not Image image)
                 return;
 
             // Sadece zoom yapıldıysa kaydırmaya izin ver
-            if (_currentScale <= 1)
+            if (_currentScale <= 1.05) // Küçük bir tolerans payı
                 return;
 
             switch (e.StatusType)
             {
                 case GestureStatus.Started:
-                    // Başlangıç pozisyonunu kaydet
-                    _startX = image.TranslationX;
-                    _startY = image.TranslationY;
+                    // Mevcut offset'i kaydet
+                    _xOffset = image.TranslationX;
+                    _yOffset = image.TranslationY;
                     break;
 
                 case GestureStatus.Running:
-                    // ✅ DÜZELTME: TotalX/Y yerine delta kullan
-                    var newX = _startX + e.TotalX;
-                    var newY = _startY + e.TotalY;
+                    // ✅核心 DÜZELTME: Sadece delta (TotalX/Y) kullan, kümülatif toplama
+                    var deltaX = e.TotalX;
+                    var deltaY = e.TotalY;
 
-                    // Kaydırma limitlerini hesapla
-                    var maxOffsetX = (image.Width * (_currentScale - 1)) / 2;
-                    var maxOffsetY = (image.Height * (_currentScale - 1)) / 2;
+                    // Yeni pozisyonu hesapla (başlangıç + delta)
+                    var newX = _xOffset + deltaX;
+                    var newY = _yOffset + deltaY;
 
-                    // Limitleri uygula
+                    // Kaydırma limitlerini hesapla (resmin görüntü alanı dışına çıkmaması için)
+                    var maxOffsetX = Math.Max(0, (image.Width * _currentScale - image.Width) / 2);
+                    var maxOffsetY = Math.Max(0, (image.Height * _currentScale - image.Height) / 2);
+
+                    // Limitleri uygula ve direkt ata (animasyon yok, anında hareket)
                     image.TranslationX = Math.Max(-maxOffsetX, Math.Min(maxOffsetX, newX));
                     image.TranslationY = Math.Max(-maxOffsetY, Math.Min(maxOffsetY, newY));
                     break;
 
                 case GestureStatus.Completed:
-                    // Son pozisyonu kaydet
+                    // Son pozisyonu kaydet (bir sonraki pan için)
+                    _xOffset = image.TranslationX;
+                    _yOffset = image.TranslationY;
+                    break;
+
+                case GestureStatus.Canceled:
+                    // İptal durumunda da pozisyonu kaydet
                     _xOffset = image.TranslationX;
                     _yOffset = image.TranslationY;
                     break;
@@ -205,25 +208,28 @@ namespace KamPay.Views
             if (sender is not Image image)
                 return;
 
-            if (_currentScale > 1)
+            if (_currentScale > 1.05)
             {
                 // Zoomlu ise reset yap
                 ResetZoom(image);
             }
             else
             {
-                // 2x zoom yap (dokunulan noktaya göre)
+                // 2x zoom yap
                 _currentScale = 2;
+                _xOffset = 0;
+                _yOffset = 0;
                 
                 await Task.WhenAll(
-                    image.ScaleTo(_currentScale, 250, Easing.CubicInOut)
+                    image.ScaleTo(_currentScale, 250, Easing.CubicInOut),
+                    image.TranslateTo(0, 0, 250, Easing.CubicInOut)
                 );
             }
 
             await ShowZoomIndicatorAsync(_currentScale);
         }
 
-        // ✅ YENİ: Reset zoom metodu
+        // ✅ Reset zoom metodu
         private async void ResetZoom(Image image)
         {
             _currentScale = 1;
@@ -235,16 +241,13 @@ namespace KamPay.Views
                 image.TranslateTo(0, 0, 250, Easing.CubicInOut)
             );
 
-            image.AnchorX = 0.5;
-            image.AnchorY = 0.5;
-
             await ShowZoomIndicatorAsync(1);
         }
 
-        // ✅ YENİ: Reset butonu için command handler
+        // ✅ Reset butonu için event handler
         private void OnResetZoomTapped(object? sender, EventArgs e)
         {
-            if (MainImage != null)
+            if (MainImage != null && _currentScale > 1)
             {
                 ResetZoom(MainImage);
             }
@@ -254,18 +257,25 @@ namespace KamPay.Views
         {
             if (ZoomIndicator == null || ZoomLabel == null) return;
 
-            ZoomLabel.Text = $"{(int)(zoom * 100)}%";
-            ZoomIndicator.IsVisible = true;
+            try
+            {
+                ZoomLabel.Text = $"{(int)(zoom * 100)}%";
+                ZoomIndicator.IsVisible = true;
 
-            // Fade in
-            await ZoomIndicator.FadeTo(1, 150);
+                // Fade in
+                await ZoomIndicator.FadeTo(1, 150);
 
-            // 1.5 saniye bekle
-            await Task.Delay(1500);
+                // 1.5 saniye bekle
+                await Task.Delay(1500);
 
-            // Fade out
-            await ZoomIndicator.FadeTo(0, 300);
-            ZoomIndicator.IsVisible = false;
+                // Fade out
+                await ZoomIndicator.FadeTo(0, 300);
+                ZoomIndicator.IsVisible = false;
+            }
+            catch
+            {
+                // Animasyon sırasında sayfa kapatılırsa hata vermesin
+            }
         }
     }
 }
