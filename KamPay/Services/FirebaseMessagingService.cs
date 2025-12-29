@@ -123,7 +123,7 @@ namespace KamPay.Services
                     .PutAsync(message);
 
                 // Conversation güncelleme
-                conversation.LastMessage = message.Type == MessageType.Text ? message.Content : "📷 Medya";
+                conversation.LastMessage = message.Type == MessageType.Text ? message.Content : "?? Medya";
                 conversation.LastMessageTime = DateTime.UtcNow;
                 conversation.LastMessageSenderId = sender.UserId;
                 conversation.UpdatedAt = DateTime.UtcNow;
@@ -455,16 +455,16 @@ namespace KamPay.Services
             });
         }
 
-        
+
         /// <summary>
         /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
-        /// ✅ OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
         /// </summary>
         public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
-                // 1️⃣ Kullanıcının dahil olduğu konuşmaları bul
+                // 1?? Kullanıcının dahil olduğu konuşmaları bul
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -479,8 +479,8 @@ namespace KamPay.Services
                     return ServiceResult<bool>.SuccessResult(true, "Güncellenecek mesaj yok");
                 }
 
-                // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
-                var updates = new Dictionary<string, object>();
+                // 2?? Her mesaj için PatchAsync çağrıları oluştur
+                var tasks = new List<Task>();
                 int messageCount = 0;
 
                 foreach (var conversationId in userConversations)
@@ -493,58 +493,66 @@ namespace KamPay.Services
 
                     foreach (var messageEntry in messages)
                     {
-                        var message = messageEntry.Object;
-                        var messagePath = $"{Constants.MessagesCollection}/{conversationId}/{messageEntry.Key}";
+                        var msg = messageEntry.Object;
+                        var perMessageUpdates = new Dictionary<string, object>();
 
                         // Gönderen kişi güncelleniyorsa
-                        if (message.SenderId == userId && !string.IsNullOrWhiteSpace(newName))
+                        if (msg.SenderId == userId && !string.IsNullOrWhiteSpace(newName))
                         {
-                            updates[$"{messagePath}/SenderName"] = newName;
+                            perMessageUpdates["SenderName"] = newName;
                             messageCount++;
                         }
 
                         // Alıcı kişi güncelleniyorsa
-                        if (message.ReceiverId == userId)
+                        if (msg.ReceiverId == userId)
                         {
                             if (!string.IsNullOrWhiteSpace(newName))
-                            {
-                                updates[$"{messagePath}/ReceiverName"] = newName;
-                            }
+                                perMessageUpdates["ReceiverName"] = newName;
                             if (!string.IsNullOrWhiteSpace(newPhotoUrl))
-                            {
-                                updates[$"{messagePath}/ReceiverPhotoUrl"] = newPhotoUrl;
-                            }
-                            messageCount++;
+                                perMessageUpdates["ReceiverPhotoUrl"] = newPhotoUrl;
+
+                            if (perMessageUpdates.Any() && msg.SenderId != userId) // avoid double counting when sender==receiver
+                                messageCount++;
+                        }
+
+                        if (perMessageUpdates.Any())
+                        {
+                            var task = _firebaseClient
+                                .Child(Constants.MessagesCollection)
+                                .Child(conversationId)
+                                .Child(messageEntry.Key)
+                                .PatchAsync(perMessageUpdates);
+
+                            tasks.Add(task);
                         }
                     }
                 }
 
-                // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
-                if (updates.Any())
+                if (tasks.Any())
                 {
-                    await _firebaseClient.UpdateAsync(updates);
-                    Console.WriteLine($"✅ {messageCount} mesaj atomic update ile güncellendi");
+                    await Task.WhenAll(tasks);
+                    Console.WriteLine($"? {messageCount} mesaj PatchAsync ile güncellendi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, $"{messageCount} mesaj güncellendi");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ UpdateUserInfoInMessages hatası: {ex.Message}");
+                Console.WriteLine($"? UpdateUserInfoInMessages hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Mesajlar güncellenemedi", ex.Message);
             }
         }
 
-        
+
         /// <summary>
         /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
-        /// ✅ OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
         /// </summary>
         public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
-                // 1️⃣ Kullanıcının konuşmalarını bul
+                // 1?? Kullanıcının konuşmalarını bul
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -558,53 +566,53 @@ namespace KamPay.Services
                     return ServiceResult<bool>.SuccessResult(true, "Güncellenecek konuşma yok");
                 }
 
-                // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
-                var updates = new Dictionary<string, object>();
+                var tasks = new List<Task>();
 
                 foreach (var conversationEntry in userConversations)
                 {
                     var conversation = conversationEntry.Object;
-                    var conversationPath = $"{Constants.ConversationsCollection}/{conversationEntry.Key}";
+                    var perConvUpdates = new Dictionary<string, object>();
 
                     // User1 güncelleniyorsa
                     if (conversation.User1Id == userId)
                     {
                         if (!string.IsNullOrWhiteSpace(newName))
-                        {
-                            updates[$"{conversationPath}/User1Name"] = newName;
-                        }
+                            perConvUpdates["User1Name"] = newName;
                         if (!string.IsNullOrWhiteSpace(newPhotoUrl))
-                        {
-                            updates[$"{conversationPath}/User1PhotoUrl"] = newPhotoUrl;
-                        }
+                            perConvUpdates["User1PhotoUrl"] = newPhotoUrl;
                     }
 
                     // User2 güncelleniyorsa
                     if (conversation.User2Id == userId)
                     {
                         if (!string.IsNullOrWhiteSpace(newName))
-                        {
-                            updates[$"{conversationPath}/User2Name"] = newName;
-                        }
+                            perConvUpdates["User2Name"] = newName;
                         if (!string.IsNullOrWhiteSpace(newPhotoUrl))
-                        {
-                            updates[$"{conversationPath}/User2PhotoUrl"] = newPhotoUrl;
-                        }
+                            perConvUpdates["User2PhotoUrl"] = newPhotoUrl;
+                    }
+
+                    if (perConvUpdates.Any())
+                    {
+                        var task = _firebaseClient
+                            .Child(Constants.ConversationsCollection)
+                            .Child(conversationEntry.Key)
+                            .PatchAsync(perConvUpdates);
+
+                        tasks.Add(task);
                     }
                 }
 
-                // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
-                if (updates.Any())
+                if (tasks.Any())
                 {
-                    await _firebaseClient.UpdateAsync(updates);
-                    Console.WriteLine($"✅ {userConversations.Count} konuşma atomic update ile güncellendi");
+                    await Task.WhenAll(tasks);
+                    Console.WriteLine($"? {userConversations.Count} konuşma PatchAsync ile güncellendi");
                 }
 
                 return ServiceResult<bool>.SuccessResult(true, $"{userConversations.Count} konuşma güncellendi");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ UpdateUserInfoInConversations hatası: {ex.Message}");
+                Console.WriteLine($"? UpdateUserInfoInConversations hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Konuşmalar güncellenemedi", ex.Message);
             }
         }

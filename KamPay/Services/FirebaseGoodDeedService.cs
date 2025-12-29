@@ -184,16 +184,16 @@ public class FirebaseGoodDeedService : IGoodDeedService
         }
     }
 
-    
+
     /// <summary>
     /// Kullanıcının tüm panolarındaki isim ve profil fotoğrafı bilgilerini günceller
-    /// ✅ OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+    /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
     /// </summary>
     public async Task<ServiceResult<bool>> UpdateUserInfoInPostsAsync(string userId, string newName, string newPhotoUrl)
     {
         try
         {
-            // 1️⃣ Kullanıcının gönderilerini bul
+            // 1?? Kullanıcının gönderilerini bul
             var allPosts = await _firebaseClient
                 .Child(GoodDeedPostsCollection)
                 .OrderBy("UserId")
@@ -205,36 +205,42 @@ public class FirebaseGoodDeedService : IGoodDeedService
                 return ServiceResult<bool>.SuccessResult(true, "Güncellenecek pano yok");
             }
 
-            // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
-            var updates = new Dictionary<string, object>();
+            // 2?? Her post için PatchAsync çağrısı oluştur
+            var tasks = new List<Task>();
 
             foreach (var postEntry in allPosts)
             {
-                var postPath = $"{GoodDeedPostsCollection}/{postEntry.Key}";
-                
+                var updates = new Dictionary<string, object>();
+
                 if (!string.IsNullOrWhiteSpace(newName))
                 {
-                    updates[$"{postPath}/UserName"] = newName;
+                    updates["UserName"] = newName;
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(newPhotoUrl))
                 {
-                    updates[$"{postPath}/UserProfileImageUrl"] = newPhotoUrl;
+                    updates["UserProfileImageUrl"] = newPhotoUrl;
+                }
+
+                if (updates.Any())
+                {
+                    var task = _firebaseClient
+                        .Child(GoodDeedPostsCollection)
+                        .Child(postEntry.Key)
+                        .PatchAsync(updates);
+
+                    tasks.Add(task);
                 }
             }
 
-            // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
-            if (updates.Any())
-            {
-                await _firebaseClient.UpdateAsync(updates);
-                Console.WriteLine($"✅ {allPosts.Count()} pano atomic update ile güncellendi");
-            }
+            await Task.WhenAll(tasks);
 
+            Console.WriteLine($"? {allPosts.Count()} pano PatchAsync ile güncellendi");
             return ServiceResult<bool>.SuccessResult(true, $"{allPosts.Count()} pano güncellendi");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ UpdateUserInfoInPosts hatası: {ex.Message}");
+            Console.WriteLine($"? UpdateUserInfoInPosts hatası: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Panolar güncellenemedi", ex.Message);
         }
     }

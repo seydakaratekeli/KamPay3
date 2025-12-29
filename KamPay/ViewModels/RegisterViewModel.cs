@@ -88,14 +88,37 @@ namespace KamPay.ViewModels
                     IsVerificationStep = true;
                     ShowVerificationSection = true;
                     VerificationCode = string.Empty;
-                    
-                    // ✅ YENİ: Zamanlayıcıyı başlat (15 dakika)
-                    StartCountdownTimer(15);
-                    
+
+                    // ✅ YENİ: Zamanlayıcıyı başlat (15 dakika) - hataları yakala
+                    try
+                    {
+                        StartCountdownTimer(15);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ StartCountdownTimer hatası: {ex.Message}");
+                    }
+
                     // Console'a da log bas
                     Console.WriteLine("✅ Kayıt başarılı! Doğrulama ekranına geçiliyor...");
-                    
-                    await Application.Current!.MainPage!.DisplayAlert("Başarılı", result.Message ?? "Kayıt başarılı. Lütfen e-postanıza gönderilen doğrulama kodunu girin.", "Tamam");
+
+                    // Safe DisplayAlert: Application.Current veya MainPage null olabilir
+                    var page = Application.Current?.MainPage;
+                    if (page != null)
+                    {
+                        try
+                        {
+                            await page.DisplayAlert("Başarılı", result.Message ?? "Kayıt başarılı. Lütfen e-postanıza gönderilen doğrulama kodunu girin.", "Tamam");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ DisplayAlert hatası: {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("⚠️ DisplayAlert atlanıyor: Application.Current.MainPage null");
+                    }
                 }
                 else
                 {
@@ -261,25 +284,58 @@ namespace KamPay.ViewModels
             _countdownTimer = new System.Timers.Timer(1000);
             _countdownTimer.Elapsed += (sender, e) =>
             {
-                var remaining = _codeExpiryTime - DateTime.Now;
+                try
+                {
+                    var remaining = _codeExpiryTime - DateTime.Now;
 
-                if (remaining.TotalSeconds <= 0)
-                {
-                    // Süre doldu
-                    MainThread.BeginInvokeOnMainThread(() =>
+                    if (remaining.TotalSeconds <= 0)
                     {
-                        RemainingTime = "00:00";
-                        IsCodeExpired = true;
-                        StopCountdownTimer();
-                    });
+                        // Süre doldu
+                        if (Application.Current != null)
+                        {
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                try
+                                {
+                                    RemainingTime = "00:00";
+                                    IsCodeExpired = true;
+                                    StopCountdownTimer();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"⚠️ Timer UI update hatası: {ex.Message}");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            // Güvenli mod: direkt durdur
+                            StopCountdownTimer();
+                        }
+                    }
+                    else
+                    {
+                        if (Application.Current != null)
+                        {
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                try
+                                {
+                                    RemainingTime = $"{(int)remaining.TotalMinutes:D2}:{remaining.Seconds:D2}";
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"⚠️ Timer UI update hatası: {ex.Message}");
+                                }
+                            });
+                        }
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Kalan süreyi güncelle
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        RemainingTime = $"{(int)remaining.TotalMinutes:D2}:{remaining.Seconds:D2}";
-                    });
+                    Console.WriteLine($"⚠️ Timer callback hatası: {ex.Message}");
+                    // Hata durumunda timer'ı güvenli şekilde durdur
+                    try { StopCountdownTimer(); } catch { }
                 }
             };
 
@@ -290,9 +346,19 @@ namespace KamPay.ViewModels
         {
             if (_countdownTimer != null)
             {
-                _countdownTimer.Stop();
-                _countdownTimer.Dispose();
-                _countdownTimer = null;
+                try
+                {
+                    _countdownTimer.Stop();
+                    _countdownTimer.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ StopCountdownTimer hatası: {ex.Message}");
+                }
+                finally
+                {
+                    _countdownTimer = null;
+                }
             }
         }
     }

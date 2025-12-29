@@ -25,7 +25,7 @@ public class FirebaseProductService : IProductService
         {
             List<Product> products;
 
-            // 🚀 PERFORMANS OPTİMİZASYONU: Sunucu tarafı filtreleme
+            // ?? PERFORMANS OPTİMİZASYONU: Sunucu tarafı filtreleme
             if (filter != null)
             {
                 // Firebase Query ile sunucu tarafında filtreleme
@@ -466,9 +466,9 @@ public class FirebaseProductService : IProductService
             return ServiceResult<List<Product>>.FailureResult("Kullanıcının ürünleri alınamadı.", ex.Message);
         }
     }
-   
+
     // TAKAS işlemlerinde kullanılır - Ürün anasayfada kalır, "TAKAS YAPILDI" etiketi ile görünür
-  
+
     public async Task<ServiceResult<bool>> MarkAsExchangedAsync(string productId)
     {
         try
@@ -624,7 +624,7 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<List<Category>>.SuccessResult(categories);
             }
 
-            // ✅ FIX: Tohumlama sonrası DOĞRUDAN oku, recursive çağrı yapma
+            // ? FIX: Tohumlama sonrası DOĞRUDAN oku, recursive çağrı yapma
             var defaultCategories = Category.GetDefaultCategories();
             foreach (var category in defaultCategories)
             {
@@ -633,7 +633,7 @@ public class FirebaseProductService : IProductService
                     .PostAsync(category);
             }
 
-            // ✅ Tohumlama sonrası tekrar oku (recursive değil)
+            // ? Tohumlama sonrası tekrar oku (recursive değil)
             var seededCategories = await _firebaseClient
                 .Child(Constants.CategoriesCollection)
                 .OnceAsync<Category>();
@@ -733,9 +733,9 @@ public class FirebaseProductService : IProductService
         return result;
     }
     #endregion
-    
 
-   
+
+
     public async Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null)
     {
         try
@@ -796,19 +796,19 @@ public class FirebaseProductService : IProductService
             stats.TotalProducts++;
             await userStatsRef.PutAsync(stats);
 
-            Console.WriteLine($"✅ Ürün kaydedildi: {product.Title}");
+            Console.WriteLine($"? Ürün kaydedildi: {product.Title}");
             return ServiceResult<Product>.SuccessResult(product, "Ürün başarıyla eklendi!");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ SaveProductDirectly hatası: {ex.Message}");
+            Console.WriteLine($"? SaveProductDirectly hatası: {ex.Message}");
             return ServiceResult<Product>.FailureResult("Ürün kaydedilemedi", ex.Message);
         }
     }
 
-   
+
     /// Sayfalama desteği ile ürünleri getirir (Performans Optimizasyonu)
-   
+
     public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(
         int pageSize = 20,
         string? lastKey = null,
@@ -892,7 +892,7 @@ public class FirebaseProductService : IProductService
     }
 
 
-    
+
     public async Task<ServiceResult<bool>> UpdateProductOwnerAsync(string productId, string newOwnerId, bool markAsSold = true)
     {
         try
@@ -922,15 +922,15 @@ public class FirebaseProductService : IProductService
         }
     }
 
-   
+
     /// Kullanıcının tüm ürünlerindeki isim ve profil fotoğrafı bilgilerini günceller
-    /// ✅ OPTIMIZE: Firebase multi-path atomic update kullanarak tek istekle güncelleme
+    /// ? OPTIMIZE: Firebase PatchAsync ile atomic güncelleme
     /// </summary>
     public async Task<ServiceResult<bool>> UpdateUserInfoInProductsAsync(string userId, string? newName, string? newPhotoUrl)
     {
         try
         {
-            // 1️⃣ Kullanıcının ürünlerini bul
+            // 1?? Kullanıcının ürünlerini bul
             var allProducts = await _firebaseClient
                 .Child(Constants.ProductsCollection)
                 .OrderBy("UserId")
@@ -942,36 +942,45 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<bool>.SuccessResult(true, "Güncellenecek ürün yok");
             }
 
-            // 2️⃣ ✅ FIX: Multi-path atomic update için tüm yolları topla
-            var updates = new Dictionary<string, object>();
+            // 2?? ? FIX: Her ürün için ayrı PatchAsync çağrısı (paralel)
+            var updateTasks = new List<Task>();
 
             foreach (var productEntry in allProducts)
             {
-                var productPath = $"{Constants.ProductsCollection}/{productEntry.Key}";
-                
+                var updates = new Dictionary<string, object>();
+
                 if (!string.IsNullOrWhiteSpace(newName))
                 {
-                    updates[$"{productPath}/UserName"] = newName;
+                    updates["UserName"] = newName;
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(newPhotoUrl))
                 {
-                    updates[$"{productPath}/UserPhotoUrl"] = newPhotoUrl;
+                    updates["UserPhotoUrl"] = newPhotoUrl;
+                }
+
+                if (updates.Any())
+                {
+                    // ? Her ürün için PatchAsync (güvenli atomic update)
+                    var task = _firebaseClient
+                        .Child(Constants.ProductsCollection)
+                        .Child(productEntry.Key)
+                        .PatchAsync(updates);
+
+                    updateTasks.Add(task);
                 }
             }
 
-            // 3️⃣ ✅ TEK BİR İSTEKLE TÜM YOLLARİ GÜNCELLE
-            if (updates.Any())
-            {
-                await _firebaseClient.UpdateAsync(updates);
-                Console.WriteLine($"✅ {allProducts.Count()} ürün atomic update ile güncellendi");
-            }
+            // 3?? ? TÜM GÜNCELLEMELERI PARALEL BEK  LE
+            await Task.WhenAll(updateTasks);
+
+            Console.WriteLine($"? {allProducts.Count()} ürün PatchAsync ile güncellendi");
 
             return ServiceResult<bool>.SuccessResult(true, $"{allProducts.Count()} ürün güncellendi");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ UpdateUserInfoInProducts hatası: {ex.Message}");
+            Console.WriteLine($"? UpdateUserInfoInProducts hatası: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Ürünler güncellenemedi", ex.Message);
         }
     }
