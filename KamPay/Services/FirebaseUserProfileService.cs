@@ -40,6 +40,12 @@ namespace KamPay.Services
                         lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
                     }
                 }
+                
+                // ✅ Eğer firstname/lastname boşsa email'den al
+                if (string.IsNullOrWhiteSpace(firstName))
+                {
+                    firstName = email.Split('@')[0];
+                }
 
                 // 1. user_profiles koleksiyonuna yaz
                 var userProfile = new UserProfile
@@ -49,7 +55,9 @@ namespace KamPay.Services
                     FirstName = firstName, // ✅ FIX: İlk isim
                     LastName = lastName,   // ✅ FIX: Soyisim
                     Email = email,
-                    ProfileImageUrl = "", // Varsayılan veya boş profil resmi
+                    ProfileImageUrl = "https://ui-avatars.com/api/?name=" + 
+                        Uri.EscapeDataString($"{firstName}+{lastName}") + 
+                        "&size=200&background=random", // ✅ Varsayılan profil resmi
                     MemberSince = DateTime.UtcNow
                 };
                 

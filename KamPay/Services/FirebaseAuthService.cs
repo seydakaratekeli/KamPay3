@@ -21,11 +21,13 @@ namespace KamPay.Services
         private User? _currentUser;
 
         private readonly IEmailService _emailService;
+        private readonly IUserProfileService _userProfileService;
 
-        public FirebaseAuthService(IEmailService emailService)
+        public FirebaseAuthService(IEmailService emailService, IUserProfileService userProfileService)
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
             _emailService = emailService;
+            _userProfileService = userProfileService;
         }
 
 
@@ -292,7 +294,7 @@ namespace KamPay.Services
                     );
                 }
 
-                // E-postayı doğrula
+                // E-postayı doğrula ve temizle
                 user.IsEmailVerified = true;
                 user.VerificationCode = null;
                 user.VerificationCodeExpiry = DateTime.MinValue;
@@ -300,47 +302,41 @@ namespace KamPay.Services
                 // Varsayılan profil resmi ayarla (eğer yoksa)
                 if (string.IsNullOrEmpty(user.ProfileImageUrl))
                 {
-                    user.ProfileImageUrl = "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString($"{user.FirstName}+{user.LastName}") + "&size=200&background=random";
+                    user.ProfileImageUrl = "https://ui-avatars.com/api/?name=" + 
+                        Uri.EscapeDataString($"{user.FirstName}+{user.LastName}") + 
+                        "&size=200&background=random";
                 }
 
-                // User nesnesini güncelle
+                // ✅ FIX: User nesnesini güncelle
                 await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user.UserId)
                     .PutAsync(user);
 
-                //  CRITICAL FIX: user_profiles koleksiyonunu da oluştur
-                // E-posta doğrulandıktan sonra profil koleksiyonunu oluştur
+                // ✅ CRITICAL FIX: Profil oluşturmayı TEK bir yerde yap - IUserProfileService ile
                 try
                 {
-                    var profileService = new FirebaseUserProfileService();
                     var username = $"{user.FirstName} {user.LastName}".Trim();
                     if (string.IsNullOrWhiteSpace(username))
                     {
                         username = user.Email.Split('@')[0];
                     }
                     
-                    await profileService.CreateUserProfileAsync(user.UserId, username, user.Email);
+                    // ✅ TEK NOKTA: Profil oluşturma işlemini sadece burada yap
+                    var profileResult = await _userProfileService.CreateUserProfileAsync(
+                        user.UserId, 
+                        username, 
+                        user.Email
+                    );
                     
-                    //  user_profiles koleksiyonunu elle güncelle - FirstName ve LastName ekle
-                    var userProfile = new UserProfile
+                    if (profileResult.Success)
                     {
-                        UserId = user.UserId,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Username = username,
-                        Email = user.Email,
-                        ProfileImageUrl = user.ProfileImageUrl,
-                        MemberSince = user.CreatedAt
-                    };
-                    
-                    await _firebaseClient
-                        .Child("user_profiles")
-                        .Child(user.UserId)
-                        .PutAsync(userProfile);
-                
-                    Console.WriteLine($"✅ user_profiles oluşturuldu - FirstName: {user.FirstName}, LastName: {user.LastName}");
-                    Console.WriteLine($"✅ Profil resmi URL: {user.ProfileImageUrl}");
+                        Console.WriteLine($"✅ Kullanıcı profili başarıyla oluşturuldu - UserId: {user.UserId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Profil oluşturma hatası: {profileResult.Message}");
+                    }
                 }
                 catch (Exception profileEx)
                 {
@@ -481,20 +477,24 @@ namespace KamPay.Services
         {
             try
             {
-                // ✅ CRITICAL FIX: Logout sırasında tüm singleton state'leri temizle
                 Console.WriteLine("🔓 Çıkış işlemi başlatılıyor...");
-                
-                // 1. Auth servisindeki kullanıcıyı temizle
+
+                // 1. Auth servisindeki yerel kullanıcıyı temizle
                 _currentUser = null;
-                
+
                 // 2. Preferences'tan oturum bilgilerini sil
                 await ClearUserSessionAsync();
-                
-                // 3. Mesaj gönder (UI'ı güncelle)
+
+                // 3. EKLEME: UserStateService'i de temizle
+                // Uygulamanın DI konteynerinden servise erişiyoruz
+                var userStateService = Application.Current?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
+                userStateService?.ClearUser(); // içindeki ClearUser metodunu çağırır.
+
+                // 4. Mesaj gönder (UI'ı güncelle)
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
-                
+
                 Console.WriteLine("✅ Çıkış başarılı - Tüm oturum bilgileri temizlendi");
-                
+
                 return ServiceResult<bool>.SuccessResult(true, "Çıkış başarılı");
             }
             catch (Exception ex)

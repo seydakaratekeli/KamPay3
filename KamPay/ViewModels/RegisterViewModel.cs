@@ -145,18 +145,15 @@ namespace KamPay.ViewModels
                     // ✅ Zamanlayıcıyı durdur
                     StopCountdownTimer();
 
+                    // ✅ CRITICAL FIX: Profil oluşturma işlemi artık FirebaseAuthService.VerifyEmailAsync içinde yapılıyor
+                    // Bu yüzden burada tekrar çağırmıyoruz
+                    
                     var loginRequest = new LoginRequest { Email = Email, Password = Password, RememberMe = true };
                     var loginResult = await _authService.LoginAsync(loginRequest);
 
                     if (loginResult.Success)
                     {
-                        var currentUser = await _authService.GetCurrentUserAsync();
-                        if (currentUser != null && !string.IsNullOrEmpty(currentUser.UserId))
-                        {
-                            string fullName = $"{FirstName} {LastName}".Trim();
-                            await _userProfileService.CreateUserProfileAsync(currentUser.UserId, fullName, Email);
-                        }
-
+                        // Profil zaten VerifyEmailAsync içinde oluşturuldu, doğrudan ana sayfaya yönlendir
                         await Shell.Current.GoToAsync("//MainApp");
                     }
                     else

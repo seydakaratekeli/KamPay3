@@ -15,7 +15,6 @@ public static class Constants
 
     // Firebase koleksiyon yollar
     public const string UsersCollection = "users";
-    public const string PendingVerificationsCollection = "pending_verifications";
     public const string ProductsCollection = "products";
     public const string CategoriesCollection = "categories";
     public const string ConversationsCollection = "conversations";
@@ -26,13 +25,15 @@ public static class Constants
     public const string UserBadgesCollection = "user_badges";
     public const string UserStatsCollection = "user_stats";
     public const string DeliveryQRCodesCollection = "delivery_qrcodes";
-    public const string QRCodesCollection = "delivery_qrcodes";
     public const string SurpriseBoxesCollection = "surprise_boxes";
     public const string GoodDeedPostsCollection = "good_deed_posts";
     public const string ServiceOffersCollection = "service_offers";
     public const string ServiceRequestsCollection = "service_requests";
     public const string TransactionsCollection = "transactions";
-    public const string TempOtpsCollection = "TempOtps";
+    
+    // ✅ EKLEME: Ödeme simülasyonu için geçici OTP koleksiyonu
+    // Not: Gerçek üretimde bu kısa ömürlü veriler Redis gibi bir cache'de tutulmalıdır
+    public const string TempOtpsCollection = "temp_otps";
 
     // Firebase Storage yollar
     public const string ProductImagesFolder = "product_images";

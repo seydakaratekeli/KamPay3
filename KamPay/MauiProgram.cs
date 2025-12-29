@@ -74,9 +74,15 @@ namespace KamPay
                 builder.Services.AddSingleton(emailSettings);
                 builder.Services.AddSingleton<IEmailService, EmailService>();
 
+                // ✅ FIX: IUserProfileService'i önce kaydet (FirebaseAuthService bağımlı)
+                builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
 
+                // ✅ FIX: IUserProfileService enjekte edilecek
                 builder.Services.AddSingleton<IAuthenticationService>(sp =>
-                    new FirebaseAuthService(sp.GetRequiredService<IEmailService>())
+                    new FirebaseAuthService(
+                        sp.GetRequiredService<IEmailService>(),
+                        sp.GetRequiredService<IUserProfileService>()
+                    )
                 );
 
                 // AppShell'in kendisini ve ViewModel'ini DI container'a kaydediyoruz.
@@ -92,7 +98,9 @@ namespace KamPay
                 builder.Services.AddSingleton<IMessagingService>(sp =>
           new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
 
-                builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
+                // ✅ Artık yukarıda kaydedildi, tekrar eklenmeyecek
+                // builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
+                
                 builder.Services.AddSingleton<IQRCodeService>(sp =>
                     new FirebaseQRCodeService(
                         sp.GetRequiredService<IUserProfileService>(),
@@ -160,7 +168,6 @@ namespace KamPay
                 builder.Services.AddTransient<GoodDeedBoardViewModel>();
                 builder.Services.AddTransient<ServiceSharingViewModel>();
                 builder.Services.AddTransient<ServiceRequestsViewModel>();
-                builder.Services.AddTransient<SurpriseBoxViewModel>();
                 builder.Services.AddTransient<ImageViewerViewModel>();
                 builder.Services.AddTransient<PaymentViewModel>();
                 // Views
