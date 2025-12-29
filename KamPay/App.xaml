@@ -92,6 +92,8 @@
 
             <!--  Existing Converters -->
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:BoolToMultiColorConverter x:Key="BoolToMultiColorConverter"/>
+
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" TrueColor="White" FalseColor="#E8F5E9"/>

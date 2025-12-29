@@ -273,6 +273,12 @@ namespace KamPay.ViewModels
         // ✅ YENİ: Zamanlayıcı metodları
         private void StartCountdownTimer(int minutes)
         {
+            // ✅ Güvenlik kontrolü ekle
+            if (Application.Current?.Dispatcher == null)
+            {
+                Console.WriteLine("⚠️ Dispatcher null - Timer başlatılamadı");
+                return;
+            }
             // Önceki zamanlayıcıyı durdur
             StopCountdownTimer();
 

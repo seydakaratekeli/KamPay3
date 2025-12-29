@@ -13,6 +13,7 @@
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <converters:BoolToMultiColorConverter x:Key="BoolToMultiColorConverter" />
             <converters:BoolToTextConverter x:Key="BoolToTextConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -66,11 +67,12 @@
                            HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
+                <!-- ✅ FIX: IsVisible binding eklendi -->
                 <Border x:Name="RegisterFormCard" 
                         BackgroundColor="White" 
                         StrokeThickness="0"
                         Padding="24"
-                        IsVisible="True">
+                        IsVisible="{Binding ShowVerificationSection, Converter={StaticResource InvertedBoolConverter}}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="24"/>
                     </Border.StrokeShape>
@@ -249,11 +251,12 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- ✅ FIX: IsVisible binding eklendi -->
                 <Border x:Name="VerificationCard" 
                         BackgroundColor="White" 
                         StrokeThickness="0"
                         Padding="24"
-                        IsVisible="False">
+                        IsVisible="{Binding ShowVerificationSection}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="24"/>
                     </Border.StrokeShape>
@@ -277,17 +280,12 @@
                                Margin="0,0,0,8"/>
 
                         <Border BackgroundColor="#F5F9FC" 
-                                StrokeThickness="2"
-                                Padding="16">
+                                StrokeThickness="3"
+                                Padding="16"
+                                Stroke="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#66BB6A'}">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="16"/>
                             </Border.StrokeShape>
-                            <Border.Stroke>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EF5350|#66BB6A'}" Offset="0.0"/>
-                                    <GradientStop Color="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FF8A80|#81C784'}" Offset="1.0"/>
-                                </LinearGradientBrush>
-                            </Border.Stroke>
 
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="⏱️ Kod Geçerlilik Süresi"
@@ -298,25 +296,23 @@
                                 <Label Text="{Binding RemainingTime}"
                                        FontSize="36"
                                        FontAttributes="Bold"
-                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EF5350|#1E88E5'}"
+                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#1E88E5'}"
                                        HorizontalOptions="Center"/>
                                 <Label Text="{Binding IsCodeExpired, Converter={StaticResource BoolToTextConverter}, ConverterParameter='⚠️ Kod süresi doldu|✓ Kalan süre'}"
                                        FontSize="12"
                                        FontAttributes="Bold"
-                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EF5350|#66BB6A'}"
+                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#66BB6A'}"
                                        HorizontalOptions="Center"/>
                             </VerticalStackLayout>
                         </Border>
 
                         <Border BackgroundColor="#F5F9FC" 
                                 StrokeThickness="2"
+                                Stroke="#1E88E5"
                                 StrokeLineCap="Round">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="16"/>
                             </Border.StrokeShape>
-                            <Border.Stroke>
-                                <SolidColorBrush Color="#1E88E5"/>
-                            </Border.Stroke>
                             <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[VerificationCode]}"
                                    Text="{Binding VerificationCode}"
                                    Keyboard="Numeric"
