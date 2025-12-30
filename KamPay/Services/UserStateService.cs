@@ -14,13 +14,15 @@ namespace KamPay.Services
         private readonly IServiceSharingService _serviceService;
         private readonly IGoodDeedService _goodDeedService;
         private readonly IMessagingService _messagingService;
+
         private User? _currentUser;
         public User? CurrentUser => _currentUser;
 
-        public event EventHandler<User>? UserProfileChanged;
+        // UI'ın ve diğer ViewModel'lerin dinlediği olay
+        public event EventHandler<User?>? UserProfileChanged;
 
         public UserStateService(
-            IAuthenticationService authService, 
+            IAuthenticationService authService,
             IUserProfileService profileService,
             IProductService productService,
             IServiceSharingService serviceService,
@@ -35,176 +37,121 @@ namespace KamPay.Services
             _messagingService = messagingService;
         }
 
+        public async Task<User?> GetCurrentUserAsync()
+        {
+            if (_currentUser == null)
+                await RefreshCurrentUserAsync();
+
+            return _currentUser;
+        }
+
+        public void SetUser(User user)
+        {
+            _currentUser = user;
+            // Olayı tetikle (Bu sayede ProfileViewModel gibi dinleyiciler UI'ı yeniler)
+            UserProfileChanged?.Invoke(this, _currentUser);
+        }
+
         public async Task<ServiceResult<User>> RefreshCurrentUserAsync()
         {
             try
             {
-                // 1. Auth servisinden temel kullanıcıyı al (Bu genellikle doludur)
                 var user = await _authService.GetCurrentUserAsync();
-                if (user == null)
-                {
-                    return ServiceResult<User>.FailureResult("Kullanıcı oturumu bulunamadı");
-                }
+                if (user == null) return ServiceResult<User>.FailureResult("Kullanıcı oturumu bulunamadı");
 
-                // 2. Profil bilgilerini Firebase'den al
                 var profileResult = await _profileService.GetUserProfileAsync(user.UserId);
 
-                // 3. EĞER profil servisi başarılıysa ve veri geldiyse KONTROLLÜ GÜNCELLE
                 if (profileResult.Success && profileResult.Data != null)
                 {
                     var profile = profileResult.Data;
 
-                    //  Doğrudan atama YAPMA.
-                    // Sadece gelen veri doluysa (null veya boş değilse) üzerine yaz.
-
-                    if (!string.IsNullOrWhiteSpace(profile.FirstName))
-                        user.FirstName = profile.FirstName;
-                    else if (!string.IsNullOrWhiteSpace(profile.Username))
-                    {
-                        // ✅ FIX: Eğer FirstName boşsa ama Username doluysa, ayır
-                        var nameParts = profile.Username.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        user.FirstName = nameParts.Length > 0 ? nameParts[0] : profile.Username;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(profile.LastName))
-                        user.LastName = profile.LastName;
-                    else if (!string.IsNullOrWhiteSpace(profile.Username) && !string.IsNullOrWhiteSpace(user.FirstName))
-                    {
-                        // ✅ FIX: Eğer LastName boşsa, Username'den çıkar
-                        var nameParts = profile.Username.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        user.LastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(profile.ProfileImageUrl))
-                        user.ProfileImageUrl = profile.ProfileImageUrl;
-
-                    // Email genellikle Auth'dan gelir ama yine de kontrol edelim
-                    if (!string.IsNullOrWhiteSpace(profile.Email))
-                        user.Email = profile.Email;
-                    
-                    // ✅ Username güncellemesi de kontrollü olsun
-                    if (!string.IsNullOrWhiteSpace(profile.Username))
-                        user.Username = profile.Username;
-                }
-                else
-                {
-                    // ✅ Profil servisi başarısız olsa bile, auth'dan gelen kullanıcı bilgilerini kullan
-                    Console.WriteLine($"⚠️ Profil servisi başarısız oldu, auth verileri kullanılıyor: {profileResult.Message}");
+                    // Verileri yerel modele senkronize et
+                    if (!string.IsNullOrWhiteSpace(profile.FirstName)) user.FirstName = profile.FirstName;
+                    if (!string.IsNullOrWhiteSpace(profile.LastName)) user.LastName = profile.LastName;
+                    if (!string.IsNullOrWhiteSpace(profile.ProfileImageUrl)) user.ProfileImageUrl = profile.ProfileImageUrl;
+                    if (!string.IsNullOrWhiteSpace(profile.Username)) user.Username = profile.Username;
                 }
 
                 _currentUser = user;
+                UserProfileChanged?.Invoke(this, _currentUser);
                 return ServiceResult<User>.SuccessResult(user);
             }
             catch (Exception ex)
             {
-                // ✅ Hata durumunda bile mevcut kullanıcıyı koruyalım
-                Console.WriteLine($"❌ RefreshCurrentUserAsync hatası: {ex.Message}");
-                
-                if (_currentUser != null)
-                {
-                    return ServiceResult<User>.SuccessResult(_currentUser, "Önbellekten yüklendi");
-                }
-                
+                if (_currentUser != null) return ServiceResult<User>.SuccessResult(_currentUser, "Önbellek kullanıldı");
                 return ServiceResult<User>.FailureResult("Kullanıcı bilgileri yüklenemedi", ex.Message);
             }
         }
+
         public async Task<ServiceResult<bool>> UpdateUserProfileAsync(
             string? firstName = null,
             string? lastName = null,
             string? username = null,
             string? profileImageUrl = null)
         {
-            if (CurrentUser == null)
-            {
-                return ServiceResult<bool>.FailureResult("Kullanıcı oturumu bulunamadı");
-            }
+            if (CurrentUser == null) return ServiceResult<bool>.FailureResult("Oturum yok");
 
             try
             {
-                // Firebase'de kullanıcı profilini güncelle
+                // 1. Firebase Ana Güncelleme (users ve user_profiles koleksiyonları)
+                // Not: profileService.UpdateUserProfileAsync içinde FullName hesaplanıp gönderilmelidir.
                 var result = await _profileService.UpdateUserProfileAsync(
-                    CurrentUser.UserId,
-                    firstName,
-                    lastName,
-                    username,
-                    profileImageUrl);
+                    CurrentUser.UserId, firstName, lastName, username, profileImageUrl);
 
-                if (!result.Success)
-                {
-                    return result;
-                }
+                if (!result.Success) return result;
 
-                // Local state'i güncelle
-                if (!string.IsNullOrWhiteSpace(firstName))
-                    CurrentUser.FirstName = firstName;
+                // 2. Yerel Nesneyi Güncelle (ObservableProperty sayesinde UI anında tepki verir)
+                if (!string.IsNullOrWhiteSpace(firstName)) CurrentUser.FirstName = firstName;
+                if (!string.IsNullOrWhiteSpace(lastName)) CurrentUser.LastName = lastName;
+                if (!string.IsNullOrWhiteSpace(username)) CurrentUser.Username = username;
+                if (!string.IsNullOrWhiteSpace(profileImageUrl)) CurrentUser.ProfileImageUrl = profileImageUrl;
 
-                if (!string.IsNullOrWhiteSpace(lastName))
-                    CurrentUser.LastName = lastName;
+                // ✅ 3. Senkronize Edilmiş FullName ile Diğer Tabloları Güncelle
+                // CurrentUser.FullName artık FirstName ve LastName'den otomatik oluşur.
+                string updatedFullName = CurrentUser.FullName;
+                string updatedPhotoUrl = CurrentUser.ProfileImageUrl;
 
-                if (!string.IsNullOrWhiteSpace(username))
-                    CurrentUser.Username = username;
+                // Paralel olarak diğer veritabanı düğümlerini (Ürünler, Mesajlar vb.) güncelle
+                await RunBulkUpdatesAsync(updatedFullName, updatedPhotoUrl);
 
-                if (!string.IsNullOrWhiteSpace(profileImageUrl))
-                    CurrentUser.ProfileImageUrl = profileImageUrl;
+                // 4. Global UI Bildirimi (Diğer ViewModel'leri haberdar et)
+                SetUser(CurrentUser);
 
-                string newFullName = CurrentUser.FullName;
-                string newPhotoUrl = CurrentUser.ProfileImageUrl;
-
-                //  Firebase'deki tüm ilgili verileri paralel olarak güncelle
-                var tasks = new List<Task<ServiceResult<bool>>>
-                {
-                    _productService.UpdateUserInfoInProductsAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
-                    _serviceService.UpdateUserInfoInServicesAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
-                    _goodDeedService.UpdateUserInfoInPostsAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
-                    _messagingService.UpdateUserInfoInMessagesAsync(CurrentUser.UserId, newFullName, newPhotoUrl),
-                    _messagingService.UpdateUserInfoInConversationsAsync(CurrentUser.UserId, newFullName, newPhotoUrl)
-                };
-
-                // Paralel çalıştır ve sonuçları logla
-                try
-                {
-                    await Task.WhenAll(tasks);
-
-                    // Hata olan task'ları logla
-                    foreach (var task in tasks)
-                    {
-                        if (!task.Result.Success)
-                        {
-                            Console.WriteLine($"⚠️ Bulk update uyarısı: {task.Result.Message}");
-                        }
-                    }
-                }
-                catch (Exception taskEx)
-                {
-                    // Task hatalarını logla ama işlemi başarısız olarak işaretleme
-                    // Çünkü kullanıcı profili zaten güncellendi
-                    Console.WriteLine($"⚠️ Bulk update hatası: {taskEx.Message}");
-                }
-
-                // Özellik güncellemelerinden sonra tüm dinleyicileri bilgilendirmek için olayı açıkça tetikleyin.
-
-                // Not: Bu gereksiz DEĞİLDİR - CurrentUser'daki özellikleri değiştirmek (örneğin, CurrentUser.FirstName = x)
-                // CurrentUser ayarlayıcısını tetiklemez, yalnızca tam yeniden atama (CurrentUser = newUser) tetikler.
-
-                UserProfileChanged?.Invoke(this, CurrentUser);
-
-                return ServiceResult<bool>.SuccessResult(true, "Profil güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, "Profil başarıyla güncellendi");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Profil güncellenemedi", ex.Message);
+                return ServiceResult<bool>.FailureResult("Profil güncellenirken hata oluştu", ex.Message);
+            }
+        }
+
+        private async Task RunBulkUpdatesAsync(string fullName, string photoUrl)
+        {
+            // Veritabanındaki tüm ilişkili kayıtlarda isim ve fotoğrafı modernize et
+            var tasks = new List<Task<ServiceResult<bool>>>
+            {
+                _productService.UpdateUserInfoInProductsAsync(CurrentUser.UserId, fullName, photoUrl),
+                _serviceService.UpdateUserInfoInServicesAsync(CurrentUser.UserId, fullName, photoUrl),
+                _goodDeedService.UpdateUserInfoInPostsAsync(CurrentUser.UserId, fullName, photoUrl),
+                _messagingService.UpdateUserInfoInMessagesAsync(CurrentUser.UserId, fullName, photoUrl),
+                _messagingService.UpdateUserInfoInConversationsAsync(CurrentUser.UserId, fullName, photoUrl)
+            };
+
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                // Bulk update hataları kritik değildir, logla ama ana işlemi bozma
+                System.Diagnostics.Debug.WriteLine($"⚠️ Bulk update senkronizasyon hatası: {ex.Message}");
             }
         }
 
         public void ClearUser()
         {
             _currentUser = null;
-            
-            // ✅ CRITICAL FIX: Tüm dinleyicilere null kullanıcı bildirimi gönder
-            // Bu sayede tüm ViewModel'ler (ChatViewModel, ProfileViewModel vs.) temizlenecek
             UserProfileChanged?.Invoke(this, null);
-            
-            Console.WriteLine("🧹 UserStateService: Kullanıcı oturumu temizlendi ve tüm dinleyiciler bilgilendirildi");
         }
     }
 }

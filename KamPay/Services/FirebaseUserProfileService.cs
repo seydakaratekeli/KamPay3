@@ -34,7 +34,7 @@ namespace KamPay.Services
                     UserId = user.UserId,
                     FirstName = user.FirstName, // Artık parçalamaya gerek yok, nesneden geliyor
                     LastName = user.LastName,
-                    Username = string.IsNullOrWhiteSpace(user.Username) ? user.Email.Split('@')[0] : user.Username,
+                    Username = user.Username,
                     Email = user.Email,
                     ProfileImageUrl = string.IsNullOrEmpty(user.ProfileImageUrl)
                         ? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(user.FirstName)}+{Uri.EscapeDataString(user.LastName)}&background=random"
@@ -100,50 +100,48 @@ namespace KamPay.Services
         }
 
         public async Task<ServiceResult<bool>> UpdateUserProfileAsync(
-            string userId,
-            string? firstName = null,
-            string? lastName = null,
-            string? username = null,
-            string? profileImageUrl = null)
+     string userId,
+     string? firstName = null,
+     string? lastName = null,
+     string? username = null,
+     string? profileImageUrl = null)
         {
             try
             {
-                var profile = await _firebaseClient
-                    .Child("user_profiles")
-                    .Child(userId)
-                    .OnceSingleAsync<UserProfile>();
+                // 1. Güncellenecek verileri bir sözlükte topla
+                var updates = new Dictionary<string, object>();
 
-                if (profile == null)
+                if (!string.IsNullOrWhiteSpace(firstName)) updates.Add("FirstName", firstName);
+                if (!string.IsNullOrWhiteSpace(lastName)) updates.Add("LastName", lastName);
+                if (!string.IsNullOrWhiteSpace(username)) updates.Add("Username", username);
+                if (!string.IsNullOrWhiteSpace(profileImageUrl)) updates.Add("ProfileImageUrl", profileImageUrl);
+                if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
                 {
-                    return ServiceResult<bool>.FailureResult("Kullanıcı profili bulunamadı.");
+                    string fName = firstName ?? "";
+                    string lName = lastName ?? "";
+                    updates.Add("FullName", $"{fName} {lName}".Trim());
                 }
+                if (updates.Count == 0) return ServiceResult<bool>.SuccessResult(true);
 
-                if (!string.IsNullOrWhiteSpace(firstName))
-                    profile.FirstName = firstName;
-
-                if (!string.IsNullOrWhiteSpace(lastName))
-                    profile.LastName = lastName;
-
-                if (!string.IsNullOrWhiteSpace(username))
-                    profile.Username = username;
-
-                if (!string.IsNullOrWhiteSpace(profileImageUrl))
-                    profile.ProfileImageUrl = profileImageUrl;
-
+                // 2. user_profiles koleksiyonunu kısmi güncelle (Patch)
                 await _firebaseClient
                     .Child("user_profiles")
                     .Child(userId)
-                    .PutAsync(profile);
+                    .PatchAsync(updates);
 
-                return ServiceResult<bool>.SuccessResult(true, "Profil başarıyla güncellendi.");
+                // 3. users koleksiyonunu güncelle (Senkronizasyon ŞART)
+                await _firebaseClient
+                    .Child("users")
+                    .Child(userId)
+                    .PatchAsync(updates);
+
+                return ServiceResult<bool>.SuccessResult(true, "Profil her iki tabloda da güncellendi.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Profil güncellenemedi", ex.Message);
+                return ServiceResult<bool>.FailureResult("Güncelleme hatası", ex.Message);
             }
         }
-
-        // --- MEVCUT OYUNLAŞTIRMA METOTLARINIZ (GÜNCELLENMİŞ HALİYLE) ---
 
         public async Task<ServiceResult<UserStats>> GetUserStatsAsync(string userId)
         {

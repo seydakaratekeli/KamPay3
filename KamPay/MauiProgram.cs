@@ -169,7 +169,9 @@ namespace KamPay
                 builder.Services.AddTransient<ServiceRequestsViewModel>();
                 builder.Services.AddTransient<ImageViewerViewModel>();
                 builder.Services.AddTransient<PaymentViewModel>();
+                builder.Services.AddTransient<EditProfileViewModel>();
                 // Views
+                builder.Services.AddTransient<EditProfilePage>();
                 builder.Services.AddTransient<SurpriseBoxPage>();
                 builder.Services.AddTransient<RegisterPage>();
                 builder.Services.AddTransient<LoginPage>();

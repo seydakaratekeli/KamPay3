@@ -1,4 +1,8 @@
 ﻿using KamPay.ViewModels;
+using Mapsui.UI.Maui;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 
 namespace KamPay.Views
 {
@@ -6,6 +10,7 @@ namespace KamPay.Views
     {
         private readonly ProfileViewModel _viewModel;
         private bool _hasAnimated = false;
+        private CancellationTokenSource? _animationCts;
 
         public ProfilePage(ProfileViewModel viewModel)
         {
@@ -14,15 +19,17 @@ namespace KamPay.Views
             BindingContext = _viewModel;
         }
 
-        //  Sayfa her göründüğünde SADECE cache kontrolü yap
         protected override async void OnAppearing()
         {
             base.OnAppearing();
 
-            // InitializeAsync cache kontrolü yapar, gerekirse yükler
+            // Verileri yenile
             await _viewModel.InitializeAsync();
 
-            // Animasyonları çalıştır
+            // Arka plan animasyonunu başlat
+            StartBackgroundRotation();
+
+            // İlk açılış animasyonları
             if (!_hasAnimated)
             {
                 _hasAnimated = true;
@@ -45,72 +52,63 @@ namespace KamPay.Views
             ContentSection.Opacity = 0;
             ContentSection.TranslationY = 30;
 
-            // Background animation
-            AnimateBackgroundCircle();
-
-            // Header background animation
+            // Header ve Profil resmi
             await HeaderSection.FadeTo(1, 400, Easing.CubicOut);
-
-            await Task.Delay(100);
-
-            // Profile image scale animation
             await Task.WhenAll(
                 ProfileImageSection.ScaleTo(1, 600, Easing.SpringOut),
                 ProfileImageSection.FadeTo(1, 600, Easing.CubicOut)
             );
 
-            await Task.Delay(150);
-
-            // Name and email animation
+            // Yazılar
             await Task.WhenAll(
                 NameLabel.FadeTo(1, 500, Easing.CubicOut),
                 EmailLabel.FadeTo(1, 500, Easing.CubicOut)
             );
 
-            await Task.Delay(100);
-
-            // Stats section animation
+            // İstatistikler ve İçerik
             await Task.WhenAll(
                 StatsSection.FadeTo(1, 600, Easing.CubicOut),
                 StatsSection.TranslateTo(0, 0, 600, Easing.CubicOut)
             );
-
-            await Task.Delay(150);
-
-            // Content section animation
             await Task.WhenAll(
                 ContentSection.FadeTo(1, 700, Easing.CubicOut),
                 ContentSection.TranslateTo(0, 0, 700, Easing.CubicOut)
             );
         }
 
-        private void AnimateBackgroundCircle()
+        private void StartBackgroundRotation()
         {
+            _animationCts?.Cancel();
+            _animationCts = new CancellationTokenSource();
+            var token = _animationCts.Token;
+
             Task.Run(async () =>
             {
-                while (true)
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {
                         await MainThread.InvokeOnMainThreadAsync(async () =>
                         {
-                            await Circle1.RotateTo(360, 30000, Easing.Linear);
-                            Circle1.Rotation = 0;
+                            if (Circle1 != null)
+                            {
+                                await Circle1.RotateTo(360, 30000, Easing.Linear);
+                                Circle1.Rotation = 0;
+                            }
                         });
                     }
-                    catch
-                    {
-                        break;
-                    }
+                    catch { break; }
                 }
-            });
+            }, token);
         }
 
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // Dispose etme - cache'i koruyalım
-            System.Diagnostics.Debug.WriteLine("⏸️ ProfilePage: Arka plana alındı");
+            // Sayfa kapandığında animasyon döngüsünü durdur
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
+            _animationCts = null;
         }
     }
 }

@@ -1,81 +1,101 @@
-using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace KamPay.Models
 {
-    public class User
+    // ✅ ObservableObject ekleyerek UI bildirim yeteneği kazandırdık
+    public partial class User : ObservableObject
     {
-        public string UserId { get; set; } = "";
-        public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string PasswordHash { get; set; } = "";
-        public bool IsEmailVerified { get; set; }
-        public string VerificationCode { get; set; } = "";
-        public DateTime VerificationCodeExpiry { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? LastLoginAt { get; set; }
-        public bool IsActive { get; set; }
+        [ObservableProperty]
+        private string userId = Guid.NewGuid().ToString();
 
-        // Güven puanı (ilerde kullanılacak)
-        public int TrustScore { get; set; }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FullName))] // FirstName değişince FullName'i de güncelle
+        private string firstName = "";
 
-        // Profil bilgileri
-        public string PhoneNumber { get; set; } = "";
-        public string ProfileImageUrl { get; set; } = "";
-        public string Username { get; set; } = "";
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FullName))] // LastName değişince FullName'i de güncelle
+        private string lastName = "";
 
-        // Bağış puanları (ilerde oyunlaştırma için)
-        public int DonationPoints { get; set; }
+        [ObservableProperty]
+        private string email = "";
 
-        public User()
-        {
-            UserId = Guid.NewGuid().ToString();
-            CreatedAt = DateTime.UtcNow;
-            IsEmailVerified = false;
-            IsActive = true;
-            TrustScore = 100; // Başlangıç puanı
-            DonationPoints = 0;
-        }
+        [ObservableProperty]
+        private string passwordHash = "";
 
-        //  CRITICAL FIX: Boş/null değerleri güvenli şekilde ele al
+        [ObservableProperty]
+        private bool isEmailVerified = false;
+
+        [ObservableProperty]
+        private string verificationCode = "";
+
+        [ObservableProperty]
+        private DateTime verificationCodeExpiry;
+
+        [ObservableProperty]
+        private DateTime createdAt = DateTime.UtcNow;
+
+        [ObservableProperty]
+        private DateTime? lastLoginAt;
+
+        [ObservableProperty]
+        private bool isActive = true;
+
+        [ObservableProperty]
+        private int trustScore = 100;
+
+        [ObservableProperty]
+        private string phoneNumber = "";
+
+        [ObservableProperty]
+        private string profileImageUrl = "";
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FullName))] // Username değişince FullName fallback'i etkilenebilir
+        private string username = "";
+
+        [ObservableProperty]
+        private int donationPoints = 0;
+
+        public User() { }
+
+        // ✅ UI tarafında anlık tetiklenen FullName mantığı
         public string FullName
         {
             get
             {
                 var first = string.IsNullOrWhiteSpace(FirstName) ? "" : FirstName.Trim();
                 var last = string.IsNullOrWhiteSpace(LastName) ? "" : LastName.Trim();
-                
+
                 var fullName = $"{first} {last}".Trim();
-                
-                // Eğer hem ad hem soyad boşsa, username veya email'i kullan
+
                 if (string.IsNullOrWhiteSpace(fullName))
                 {
                     if (!string.IsNullOrWhiteSpace(Username))
                         return Username.Trim();
-                    
+
                     if (!string.IsNullOrWhiteSpace(Email))
                         return Email.Split('@')[0].Trim();
-                    
+
                     return "Kullanıcı";
                 }
-                
+
                 return fullName;
             }
         }
     }
 
-    // Kayıt için DTO
+    // --- DTO'lar (Bunlar genellikle sabit veri taşıdığı için Observable olmasına gerek yoktur) ---
+
     public class RegisterRequest
     {
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
-        public string Username { get; set; } = ""; 
+        public string Username { get; set; } = "";
         public string Email { get; set; } = "";
         public string Password { get; set; } = "";
         public string PasswordConfirm { get; set; } = "";
     }
 
-    // Giriş için DTO
     public class LoginRequest
     {
         public string Email { get; set; } = "";
@@ -83,7 +103,6 @@ namespace KamPay.Models
         public bool RememberMe { get; set; }
     }
 
-    // Doğrulama için DTO
     public class VerificationRequest
     {
         public string Email { get; set; } = "";

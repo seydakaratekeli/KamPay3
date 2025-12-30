@@ -99,6 +99,8 @@ namespace KamPay
         private void RegisterRoutes()
         {
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
+            Routing.RegisterRoute(nameof(EditProfilePage), typeof(EditProfilePage));
+
             Routing.RegisterRoute(nameof(AddProductPage), typeof(AddProductPage));
             Routing.RegisterRoute(nameof(EditProductPage), typeof(EditProductPage));
             Routing.RegisterRoute(nameof(ProductDetailPage), typeof(ProductDetailPage));
@@ -116,6 +118,7 @@ namespace KamPay
             Routing.RegisterRoute(nameof(SurpriseBoxPage), typeof(SurpriseBoxPage));
             Routing.RegisterRoute(nameof(ImageViewerPage), typeof(ImageViewerPage));
             Routing.RegisterRoute("myproducts", typeof(ProductListPage));
+
         }
 
         // Shell ilk göründüğünde giriş kontrolünü yap

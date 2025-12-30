@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             x:Class="KamPay.Views.EditProfilePage"
+             x:DataType="vm:EditProfileViewModel"
+             Title="Profili Düzenle"
+             BackgroundColor="#F5F9FC">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style TargetType="Frame" x:Key="InputFrameStyle">
+                <Setter Property="BorderColor" Value="Transparent" />
+                <Setter Property="HasShadow" Value="False" />
+                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="Padding" Value="15,2" />
+                <Setter Property="CornerRadius" Value="12" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto, *">
+        <BoxView Grid.Row="0" HeightRequest="140">
+            <BoxView.Background>
+                <LinearGradientBrush EndPoint="0,1">
+                    <GradientStop Color="#1E88E5" Offset="0.0" />
+                    <GradientStop Color="#1565C0" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
+
+        <ScrollView Grid.Row="0" Grid.RowSpan="2">
+            <VerticalStackLayout Spacing="20" Padding="25,40,25,25">
+
+                <Grid HorizontalOptions="Center" Margin="0,0,0,10">
+                    <Border HeightRequest="130" WidthRequest="130" 
+                            Stroke="White" StrokeThickness="4" Padding="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="65" />
+                        </Border.StrokeShape>
+                        <Image Source="{Binding TargetProfile.ProfileImageUrl}" 
+                               Aspect="AspectFill" BackgroundColor="#E0E0E0"
+                               HeightRequest="130" WidthRequest="130" />
+                    </Border>
+
+                    <Button Text="&#xE412;" FontFamily="MaterialIcons" FontSize="22"
+                            BackgroundColor="#1E88E5" TextColor="White"
+                            HeightRequest="42" WidthRequest="42" CornerRadius="21"
+                            VerticalOptions="End" HorizontalOptions="End"
+                            Command="{Binding ChangePhotoCommand}" TranslationX="-5" TranslationY="-5" />
+                </Grid>
+
+                <Frame HasShadow="True" BorderColor="Transparent" CornerRadius="20" Padding="15,20">
+                    <VerticalStackLayout Spacing="15">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Kullanıcı Adı" TextColor="#757575" FontSize="12" FontAttributes="Bold" Margin="5,0"/>
+                            <Frame Style="{StaticResource InputFrameStyle}" BackgroundColor="#F5F5F5">
+                                <Entry Text="{Binding TargetProfile.Username}" Placeholder="Kullanıcı adınız" />
+                            </Frame>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Ad" TextColor="#757575" FontSize="12" FontAttributes="Bold" Margin="5,0"/>
+                            <Frame Style="{StaticResource InputFrameStyle}" BackgroundColor="#F5F5F5">
+                                <Entry Text="{Binding TargetProfile.FirstName}" Placeholder="Adınız" />
+                            </Frame>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Soyad" TextColor="#757575" FontSize="12" FontAttributes="Bold" Margin="5,0"/>
+                            <Frame Style="{StaticResource InputFrameStyle}" BackgroundColor="#F5F5F5">
+                                <Entry Text="{Binding TargetProfile.LastName}" Placeholder="Soyadınız" />
+                            </Frame>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <VerticalStackLayout Spacing="12">
+                    <Button Text="Değişiklikleri Kaydet" 
+                            Command="{Binding SaveProfileCommand}"
+                            BackgroundColor="#1E88E5" TextColor="White"
+                            FontAttributes="Bold" CornerRadius="12"
+                            HeightRequest="55" FontSize="16">
+                        <Button.Shadow>
+                            <Shadow Brush="#1E88E5" Offset="0,4" Radius="8" Opacity="0.3"/>
+                        </Button.Shadow>
+                    </Button>
+
+                    <Button Text="Vazgeç" 
+                            Command="{Binding CancelCommand}"
+                            BackgroundColor="Transparent" TextColor="#757575"
+                            HeightRequest="50" FontSize="15" />
+                </VerticalStackLayout>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" Color="#1E88E5" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
