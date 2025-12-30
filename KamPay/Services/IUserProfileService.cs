@@ -24,14 +24,13 @@ namespace KamPay.Services
     {
         // --- Profil Metotları ---
 
-       
-        /// Yeni bir kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
-       
-        Task<ServiceResult<bool>> CreateUserProfileAsync(string userId, string username, string email);
 
-       
+        /// Yeni bir kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
+
+        Task<ServiceResult<bool>> CreateUserProfileAsync(User user); // String yerine direkt nesne al
+
         /// Belirtilen kullanıcının genel profil bilgilerini (isim, resim vb.) getirir.
-       
+
         Task<ServiceResult<UserProfile>> GetUserProfileAsync(string userId);
 
 

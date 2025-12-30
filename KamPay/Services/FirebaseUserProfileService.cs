@@ -18,68 +18,43 @@ namespace KamPay.Services
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
         }
 
-  
 
-       
+
+
         /// Yeni kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
-       
-        public async Task<ServiceResult<bool>> CreateUserProfileAsync(string userId, string username, string email)
+
+        // Services/FirebaseUserProfileService.cs
+        public async Task<ServiceResult<bool>> CreateUserProfileAsync(User user)
         {
             try
             {
-                // ✅ FIX: Username'den FirstName ve LastName'i ayır
-                string firstName = "";
-                string lastName = "";
-                
-                if (!string.IsNullOrWhiteSpace(username))
-                {
-                    var nameParts = username.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (nameParts.Length > 0)
-                    {
-                        firstName = nameParts[0];
-                        lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
-                    }
-                }
-                
-                // ✅ Eğer firstname/lastname boşsa email'den al
-                if (string.IsNullOrWhiteSpace(firstName))
-                {
-                    firstName = email.Split('@')[0];
-                }
-
-                // 1. user_profiles koleksiyonuna yaz
+                // 1. user_profiles koleksiyonunu oluştur
                 var userProfile = new UserProfile
                 {
-                    UserId = userId,
-                    Username = username, // Tam ad (kullanıcı adı olarak)
-                    FirstName = firstName, // ✅ FIX: İlk isim
-                    LastName = lastName,   // ✅ FIX: Soyisim
-                    Email = email,
-                    ProfileImageUrl = "https://ui-avatars.com/api/?name=" + 
-                        Uri.EscapeDataString($"{firstName}+{lastName}") + 
-                        "&size=200&background=random", // ✅ Varsayılan profil resmi
+                    UserId = user.UserId,
+                    FirstName = user.FirstName, // Artık parçalamaya gerek yok, nesneden geliyor
+                    LastName = user.LastName,
+                    Username = string.IsNullOrWhiteSpace(user.Username) ? user.Email.Split('@')[0] : user.Username,
+                    Email = user.Email,
+                    ProfileImageUrl = string.IsNullOrEmpty(user.ProfileImageUrl)
+                        ? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(user.FirstName)}+{Uri.EscapeDataString(user.LastName)}&background=random"
+                        : user.ProfileImageUrl,
                     MemberSince = DateTime.UtcNow
                 };
-                
-                await _firebaseClient.Child("user_profiles").Child(userId).PutAsync(userProfile);
 
-                // ✅ DEBUG: Kaydedilen veriyi logla
-                Console.WriteLine($"✅ user_profiles oluşturuldu - FirstName: {firstName}, LastName: {lastName}");
+                await _firebaseClient.Child("user_profiles").Child(user.UserId).PutAsync(userProfile);
 
-                // 2. user_stats koleksiyonuna yaz
+                // 2. user_stats koleksiyonunu oluştur
                 var userStats = new UserStats
                 {
-                    UserId = userId,
-                    Points = 0, // Başlangıç puanı
-                    CompletedTrades = 0,
-                    DonationsMade = 0,
-                    TimeCredits = 0, // Her yeni kullanıcıya 0 zaman kredisiyle başlat
-                    ItemsShared = 0
-                    // Diğer istatistik alanları varsayılan olarak 0 olacak
+                    UserId = user.UserId,
+                    Points = 0,
+                    TimeCredits = 0,
+                    // Diğer alanlar default 0
                 };
-                await _firebaseClient.Child("user_stats").Child(userId).PutAsync(userStats);
+                await _firebaseClient.Child("user_stats").Child(user.UserId).PutAsync(userStats);
 
-                return ServiceResult<bool>.SuccessResult(true, "Kullanıcı profili başarıyla oluşturuldu.");
+                return ServiceResult<bool>.SuccessResult(true, "Profil ve istatistikler başarıyla oluşturuldu.");
             }
             catch (Exception ex)
             {
@@ -88,13 +63,11 @@ namespace KamPay.Services
             }
         }
 
-        
 
 
 
-       
         /// Belirtilen kullanıcının genel profil bilgilerini getirir.
-       
+
         public async Task<ServiceResult<UserProfile>> GetUserProfileAsync(string userId)
         {
             try

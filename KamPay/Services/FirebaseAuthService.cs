@@ -19,7 +19,6 @@ namespace KamPay.Services
     {
         private readonly FirebaseClient _firebaseClient;
         private User? _currentUser;
-
         private readonly IEmailService _emailService;
         private readonly IUserProfileService _userProfileService;
 
@@ -29,87 +28,57 @@ namespace KamPay.Services
             _emailService = emailService;
             _userProfileService = userProfileService;
         }
+        
 
 
         public async Task<ServiceResult<User>> RegisterAsync(RegisterRequest request)
         {
             try
             {
-                // 1. Temel Nesne Kontrolü
-                if (request == null)
-                    return ServiceResult<User>.FailureResult("Hata", "Kayıt verileri boş olamaz.");
+                if (request == null) return ServiceResult<User>.FailureResult("Hata", "Veriler boş.");
+                if (!NetworkHelper.HasInternetConnection()) return ServiceResult<User>.FailureResult("Bağlantı Hatası", "İnternet yok.");
 
-                // 2. İnternet Bağlantısı Kontrolü
-                if (!NetworkHelper.HasInternetConnection())
-                    return ServiceResult<User>.FailureResult("Bağlantı Hatası", "İnternet erişimi bulunamadı.");
-
-                // 3. Validasyon
                 var validation = ValidateRegistration(request);
-                if (!validation.IsValid)
-                {
-                    return ServiceResult<User>.FailureResult(
-                        "Kayıt bilgileri geçersiz",
-                        validation.Errors.ToArray()
-                    );
-                }
+                if (!validation.IsValid) return ServiceResult<User>.FailureResult("Geçersiz bilgiler", validation.Errors.ToArray());
 
-                // 4. E-posta Kontrolü (Sorgu öncesi Email alanını güvenli hazırla)
-                // null-conditional (?.) ve null-coalescing (??) operatörleri ile çökme önlenir
                 string safeEmail = (request.Email?.Trim() ?? string.Empty).ToLower();
 
-                var existingUsers = await _firebaseClient
-                    .Child(Constants.UsersCollection)
-                    .OrderBy("Email")
-                    .EqualTo(safeEmail)
-                    .OnceAsync<User>();
+                // E-posta kontrolü
+                var existingUsers = await _firebaseClient.Child(Constants.UsersCollection)
+                    .OrderBy("Email").EqualTo(safeEmail).OnceAsync<User>();
 
                 if (existingUsers != null && existingUsers.Any())
-                {
-                    return ServiceResult<User>.FailureResult(
-                        "Bu e-posta adresi zaten kayıtlı",
-                        "Lütfen farklı bir e-posta adresi kullanın veya giriş yapın"
-                    );
-                }
+                    return ServiceResult<User>.FailureResult("Hata", "Bu e-posta zaten kayıtlı.");
 
-                // 5. Kullanıcı Nesnesi Oluştur (Verileri Sanitize Et)
-                // Trim() çağrılarında null kontrolü eklendi
+                // ✅ Username ve PhoneNumber Fix'li User Nesnesi
                 var user = new User
                 {
-                    FirstName = InputSanitizer.SanitizeName(request.FirstName?.Trim() ?? string.Empty),
-                    LastName = InputSanitizer.SanitizeName(request.LastName?.Trim() ?? string.Empty),
+                    FirstName = InputSanitizer.SanitizeName(request.FirstName?.Trim() ?? ""),
+                    LastName = InputSanitizer.SanitizeName(request.LastName?.Trim() ?? ""),
                     Email = safeEmail,
-                    PasswordHash = HashPassword(request.Password ?? string.Empty),
+                    // Kayıt anında otomatik username atıyoruz
+                    Username = $"{request.FirstName.ToLower().Replace(" ", "")}{new Random().Next(100, 999)}",
+                    PhoneNumber = "",
+                    PasswordHash = HashPassword(request.Password ?? ""),
                     IsEmailVerified = false,
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
                 };
 
-                // 6. Doğrulama Kodu Oluştur
                 user.VerificationCode = GenerateVerificationCode();
                 user.VerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
 
-                // 7. Firebase'e Kaydet
-                await _firebaseClient
-                    .Child(Constants.UsersCollection)
-                    .Child(user.UserId)
-                    .PutAsync(user);
-
-                // 8. Doğrulama Kodunu Gönder
-                // E-posta gönderimi başarısız olsa bile kullanıcıyı kaydettik, tekrar kod isteyebilir
+                await _firebaseClient.Child(Constants.UsersCollection).Child(user.UserId).PutAsync(user);
                 await SendVerificationCodeAsync(user.Email);
 
-                return ServiceResult<User>.SuccessResult(
-                    user,
-                    "Kayıt başarılı! E-postanıza gönderilen doğrulama kodunu girin."
-                );
+                return ServiceResult<User>.SuccessResult(user, "Kayıt başarılı! Kod gönderildi.");
             }
             catch (Exception ex)
             {
-                // NetworkHelper üzerinden anlamlı kullanıcı mesajı döndür
-                var userMessage = NetworkHelper.GetUserFriendlyErrorMessage(ex);
-                return ServiceResult<User>.FailureResult("Kayıt sırasında bir hata oluştu", userMessage);
+                return ServiceResult<User>.FailureResult("Kayıt hatası", ex.Message);
             }
         }
+
         public async Task<ServiceResult<User>> LoginAsync(LoginRequest request)
         {
             try
@@ -266,104 +235,43 @@ namespace KamPay.Services
         {
             try
             {
-                var users = await _firebaseClient
-                    .Child(Constants.UsersCollection)
-                    .OrderBy("Email")
-                    .EqualTo(request.Email.ToLower())
-                    .OnceAsync<User>();
+                var users = await _firebaseClient.Child(Constants.UsersCollection)
+                    .OrderBy("Email").EqualTo(request.Email.ToLower()).OnceAsync<User>();
 
                 var userEntry = users.FirstOrDefault();
-                if (userEntry == null)
-                {
-                    return ServiceResult<bool>.FailureResult(
-                        "Kullanıcı bulunamadı"
-                    );
-                }
+                if (userEntry == null) return ServiceResult<bool>.FailureResult("Kullanıcı bulunamadı");
 
                 var user = userEntry.Object;
 
-                // Kod kontrolü
                 if (user.VerificationCode != request.VerificationCode)
-                {
-                    return ServiceResult<bool>.FailureResult(
-                        "Geçersiz doğrulama kodu",
-                        "Lütfen e-posta adresinize gelen kodu kontrol edin"
-                    );
-                }
+                    return ServiceResult<bool>.FailureResult("Geçersiz kod");
 
-                // Süre kontrolü
                 if (DateTime.UtcNow > user.VerificationCodeExpiry)
-                {
-                    return ServiceResult<bool>.FailureResult(
-                        "Doğrulama kodunun süresi dolmuş",
-                        "Lütfen yeni bir kod talep edin"
-                    );
-                }
+                    return ServiceResult<bool>.FailureResult("Kodun süresi dolmuş");
 
-                // E-postayı doğrula ve temizle
+                // Verileri hazırla
                 user.IsEmailVerified = true;
-                user.VerificationCode = null;
+                user.VerificationCode = "VERIFIED";
                 user.VerificationCodeExpiry = DateTime.MinValue;
 
-                // Varsayılan profil resmi ayarla (eğer yoksa)
                 if (string.IsNullOrEmpty(user.ProfileImageUrl))
                 {
-                    user.ProfileImageUrl = "https://ui-avatars.com/api/?name=" + 
-                        Uri.EscapeDataString($"{user.FirstName}+{user.LastName}") + 
-                        "&size=200&background=random";
+                    user.ProfileImageUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(user.FirstName)}+{Uri.EscapeDataString(user.LastName)}&background=random";
                 }
 
-                // ✅ FIX: User nesnesini güncelle
-                await _firebaseClient
-                    .Child(Constants.UsersCollection)
-                    .Child(user.UserId)
-                    .PutAsync(user);
+                // Tek seferde güncelle
+                await _firebaseClient.Child(Constants.UsersCollection).Child(user.UserId).PutAsync(user);
 
-                // ✅ CRITICAL FIX: Profil oluşturmayı TEK bir yerde yap - IUserProfileService ile
-                try
-                {
-                    var username = $"{user.FirstName} {user.LastName}".Trim();
-                    if (string.IsNullOrWhiteSpace(username))
-                    {
-                        username = user.Email.Split('@')[0];
-                    }
-                    
-                    // ✅ TEK NOKTA: Profil oluşturma işlemini sadece burada yap
-                    var profileResult = await _userProfileService.CreateUserProfileAsync(
-                        user.UserId, 
-                        username, 
-                        user.Email
-                    );
-                    
-                    if (profileResult.Success)
-                    {
-                        Console.WriteLine($"✅ Kullanıcı profili başarıyla oluşturuldu - UserId: {user.UserId}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"⚠️ Profil oluşturma hatası: {profileResult.Message}");
-                    }
-                }
-                catch (Exception profileEx)
-                {
-                    Console.WriteLine($"⚠️ Profil oluşturma hatası: {profileEx.Message}");
-                    // Hata olsa bile e-posta doğrulaması başarılı oldu
-                }
+                // Profil ve Stats oluştur
+                var profileResult = await _userProfileService.CreateUserProfileAsync(user);
 
-                return ServiceResult<bool>.SuccessResult(
-                    true,
-                    "E-posta başarıyla doğrulandı!"
-                );
+                return ServiceResult<bool>.SuccessResult(true, "E-posta doğrulandı!");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult(
-                    "Doğrulama sırasında hata oluştu",
-                    ex.Message
-                );
+                return ServiceResult<bool>.FailureResult("Doğrulama hatası", ex.Message);
             }
         }
-
         public ValidationResult ValidateRegistration(RegisterRequest request)
         {
             var result = new ValidationResult();
