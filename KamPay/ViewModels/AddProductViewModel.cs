@@ -64,7 +64,9 @@ namespace KamPay.ViewModels
         [ObservableProperty] private int selectedTypeIndex;
 
 
-        public bool IsDonationTypeSelected => SelectedType == ProductType.Bagis;
+        [ObservableProperty]
+        private bool isDonationTypeSelected;
+
 
         public bool HasLocation => !string.IsNullOrEmpty(Location) &&
                                    Location != Res["GettingLocation"] &&
@@ -159,15 +161,17 @@ namespace KamPay.ViewModels
         {
             ShowPriceField = value == ProductType.Satis;
             ShowExchangeField = value == ProductType.Takas;
-            OnPropertyChanged(nameof(IsDonationTypeSelected));
+
+            IsDonationTypeSelected = value == ProductType.Bagis;
 
             if (value != ProductType.Satis) Price = 0;
             if (value != ProductType.Bagis) IsForSurpriseBox = false;
 
-            // Eğer kod tarafından Enum değiştirilirse (örn: temizle butonuna basınca), indeksi de güncelle
             var index = _typeEnums.IndexOf(value);
-            if (SelectedTypeIndex != index) SelectedTypeIndex = index;
+            if (SelectedTypeIndex != index)
+                SelectedTypeIndex = index;
         }
+
 
         partial void OnSelectedConditionChanged(ProductCondition value)
         {
