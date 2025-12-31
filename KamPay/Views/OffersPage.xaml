@@ -40,7 +40,6 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
 
-        <!-- ✨ GRADIENT HEADER -->
         <Grid Grid.Row="0" x:Name="HeaderSection">
             <BoxView>
                 <BoxView.Background>
@@ -68,7 +67,6 @@
                    HorizontalTextAlignment="Center"/>
         </Grid>
 
-        <!-- ✨ TAB BUTTONS -->
         <Grid Grid.Row="1" 
               ColumnDefinitions="*,*" 
               Padding="15,10" 
@@ -115,7 +113,6 @@
             </Border>
         </Grid>
 
-        <!-- ✨ MAIN CONTENT -->
         <Grid Grid.Row="2">
             <RefreshView Command="{Binding RefreshOffersCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
@@ -123,7 +120,6 @@
                          x:Name="ContentSection">
 
                 <Grid>
-                    <!-- GELEN TEKLİFLER -->
                     <CollectionView ItemsSource="{Binding IncomingOffers}"
                                     IsVisible="{Binding IsIncomingSelected}"
                                     Margin="15,10">
@@ -212,10 +208,10 @@
                                         </Grid>
 
                                         <Border IsVisible="{Binding IsNegotiating}"
-                                               StrokeShape="RoundRectangle 12"
-                                               StrokeThickness="0"
-                                               BackgroundColor="{StaticResource AccentOrange}"
-                                               Padding="12">
+                                                StrokeShape="RoundRectangle 12"
+                                                StrokeThickness="0"
+                                                BackgroundColor="{StaticResource AccentOrange}"
+                                                Padding="12">
                                             <VerticalStackLayout Spacing="5">
                                                 <Label FontAttributes="Bold" TextColor="White" FontSize="13">
                                                     <Label.FormattedText>
@@ -231,64 +227,75 @@
                                             </VerticalStackLayout>
                                         </Border>
 
-                                        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                                            <Button Grid.Column="1"
-                                                    Text="💬"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#E3F2FD"
-                                                    TextColor="{StaticResource Primary}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"/>
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
-                                            <Button Grid.Column="2"
-                                                    Text="💰"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#FFF3E0"
-                                                    TextColor="{StaticResource AccentOrange}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0">
-                                                <Button.IsVisible>
-                                                    <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                        <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
-                                                        <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
-                                                        <Binding Path="SellerId" Converter="{StaticResource IsCurrentUserConverter}"/>
-                                                    </MultiBinding>
-                                                </Button.IsVisible>
-                                            </Button>
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#E3F2FD"
+                                                        TextColor="{StaticResource Primary}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"/>
 
-                                            <Button Grid.Column="3"
-                                                    Text="✓"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentGreen}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                <Button Text="📱"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Primary}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
 
-                                            <Button Grid.Column="4"
-                                                    Text="✕"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentRed}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#FFF3E0"
+                                                        TextColor="{StaticResource AccentOrange}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                            <Binding Path="SellerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
+
+                                                <Button Text="✓"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource AccentGreen}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="20"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+
+                                                <Button Text="✕"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource AccentRed}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="20"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                            </HorizontalStackLayout>
                                         </Grid>
                                     </VerticalStackLayout>
                                 </Border>
@@ -296,7 +303,6 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
-                    <!-- GİDEN TEKLİFLER -->
                     <CollectionView ItemsSource="{Binding OutgoingOffers}"
                                     IsVisible="{Binding IsOutgoingSelected}"
                                     Margin="15,10">
@@ -315,7 +321,7 @@
                                         <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                                     </Border.Shadow>
                                     <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
-										<Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
+                                        <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
                                         <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingOffers]}"
                                                FontSize="16"
                                                TextColor="{StaticResource TextSecondary}"
@@ -385,10 +391,10 @@
                                         </Grid>
 
                                         <Border IsVisible="{Binding IsNegotiating}"
-                                               StrokeShape="RoundRectangle 12"
-                                               StrokeThickness="0"
-                                               BackgroundColor="{StaticResource AccentOrange}"
-                                               Padding="12">
+                                                StrokeShape="RoundRectangle 12"
+                                                StrokeThickness="0"
+                                                BackgroundColor="{StaticResource AccentOrange}"
+                                                Padding="12">
                                             <VerticalStackLayout Spacing="5">
                                                 <Label FontAttributes="Bold" TextColor="White" FontSize="13">
                                                     <Label.FormattedText>
@@ -404,31 +410,44 @@
                                             </VerticalStackLayout>
                                         </Border>
 
-                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                            <Button Grid.Column="1"
-                                                    Text="💬"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#E3F2FD"
-                                                    TextColor="{StaticResource Primary}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"/>
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
-                                            <Button Grid.Column="2"
-                                                    Text="✓"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentGreen}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}"/>
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#E3F2FD"
+                                                        TextColor="{StaticResource Primary}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"/>
+
+                                                <Button Text="📱"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Primary}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+
+                                                <Button Text="✓"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource AccentGreen}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="20"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}"/>
+                                            </HorizontalStackLayout>
                                         </Grid>
                                     </VerticalStackLayout>
                                 </Border>
@@ -438,7 +457,6 @@
                 </Grid>
             </RefreshView>
 
-            <!-- Loading Overlay -->
             <Grid IsVisible="{Binding IsLoading}"
                   BackgroundColor="#F5F9FC"
                   ZIndex="1100"

@@ -196,23 +196,28 @@
 
                         <!-- Surprise Box Toggle -->
                         <Border IsVisible="{Binding IsDonationTypeSelected}"
-                                BackgroundColor="#FFF3E0"
-                                StrokeThickness="0"
-                                Padding="16">
+        BackgroundColor="#FFF3E0"
+        StrokeThickness="0"
+        Padding="16">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="12"/>
                             </Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="12">
-                                <Label Text="🎁" FontSize="24" VerticalOptions="Center"/>
-                                <Label Text="{extensions:Translate DonateToSurpriseBox}"
-                                       VerticalOptions="Center"
-                                       TextColor="#E65100"
-                                       FontSize="14"
-                                       HorizontalOptions="StartAndExpand"/>
-                                <Switch IsToggled="{Binding IsForSurpriseBox}"
-                                        OnColor="#FF9800"
-                                        VerticalOptions="Center"/>
-                            </HorizontalStackLayout>
+
+                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="🎁" FontSize="24" VerticalOptions="Center"/>
+
+                                <Label Grid.Column="1" 
+               Text="{extensions:Translate DonateToSurpriseBox}"
+               VerticalOptions="Center"
+               TextColor="#E65100"
+               FontSize="14"/>
+
+                                <Switch Grid.Column="2" 
+                IsToggled="{Binding IsForSurpriseBox, Mode=TwoWay}"
+                OnColor="#FF9800"
+                VerticalOptions="Center"
+                HorizontalOptions="End"/>
+                            </Grid>
                         </Border>
 
                         <!-- Price Input -->

@@ -399,25 +399,20 @@ namespace KamPay.Services
         {
             if (transaction == null) return;
 
-            // Sadece onaylanmış ve ödemesi bekleyen satış işlemleri için yönlendir
-            if (transaction.Type == ProductType.Satis &&
-                transaction.Status == TransactionStatus.Accepted &&
-                transaction.PaymentStatus == PaymentStatus.Pending)
+            // Satış Yönlendirmesi
+            if (transaction.Type == ProductType.Satis && transaction.Status == TransactionStatus.Accepted)
             {
-                var navigationParameter = new Dictionary<string, object>
-        {
-            { "Transaction", transaction }
-        };
-
-                // Sadece navigasyon yapılır. İşlemin devamı PaymentPage'de gerçekleşir. [cite: 401]
+                var navigationParameter = new Dictionary<string, object> { { "Transaction", transaction } };
                 await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
             }
-            else
+            // ✅ TAKAS VE BAĞIŞ YÖNLENDİRMESİ (EKLENMELİ)
+            else if ((transaction.Type == ProductType.Takas || transaction.Type == ProductType.Bagis) &&
+                      transaction.Status == TransactionStatus.Accepted)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem için şu an ödeme yapılamaz.", "Tamam");
+                // QR Kod Sayfasına Yönlendir
+                await Shell.Current.GoToAsync($"QRCodeDisplayPage?transactionId={transaction.TransactionId}");
             }
         }
-
         // ✅ ITransactionService interface'ini implement et
         public async Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId)
         {

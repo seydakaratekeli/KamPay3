@@ -105,7 +105,7 @@
                 <!-- PIN Display Card -->
                 <Border BackgroundColor="White"
                         StrokeThickness="0"
-                        Padding="24"
+                        Padding="10"
                         StrokeShape="RoundRectangle 20"
                         IsVisible="{Binding MyDelivery.VerificationPin, Converter={StaticResource IsNotNullOrEmptyConverter}}">
                     <Border.Shadow>
@@ -124,7 +124,7 @@
                         </Border>
                         
                         <Label Text="{Binding MyDelivery.VerificationPin}" 
-                               FontSize="42" 
+                               FontSize="25" 
                                FontAttributes="Bold"
                                TextColor="#1E88E5"
                                HorizontalOptions="Center"
