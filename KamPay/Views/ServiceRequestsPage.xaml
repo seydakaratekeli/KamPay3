@@ -124,29 +124,38 @@
                                     Margin="15,10">
 
                         <CollectionView.EmptyView>
-                            <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
-                                <Border BackgroundColor="White"
-                                        StrokeThickness="0"
-                                        Padding="30"
-                                        WidthRequest="280"
-                                        HeightRequest="200">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="20"/>
-                                    </Border.StrokeShape>
-                                    <Border.Shadow>
-                                        <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                                    </Border.Shadow>
-                                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
-                                        <Label Text="📥" FontSize="60" HorizontalTextAlignment="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingRequests]}"
-                                               FontSize="16"
-                                               TextColor="{StaticResource TextSecondary}"
-                                               HorizontalTextAlignment="Center"
-                                               FontAttributes="Bold"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </Grid>
+                            <ContentView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                                <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
+                                    <Border BackgroundColor="White"
+                                    StrokeThickness="0"
+                                    Padding="30"
+                                    WidthRequest="280">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="20"/>
+                                        </Border.StrokeShape>
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                                        </Border.Shadow>
+
+
+
+                                        <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                                            <Label Text="📥" FontSize="60" HorizontalTextAlignment="Center"/>
+                                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingRequests]}"
+                                           FontSize="16"
+                                           TextColor="{StaticResource TextSecondary}"
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                            <Label Text="Henüz size ulaşan bir hizmet talebi bulunmuyor."
+                                           FontSize="13"
+                                           TextColor="#9E9E9E"
+                                           HorizontalTextAlignment="Center"/>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </ContentView>
                         </CollectionView.EmptyView>
+                        
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:ServiceRequest">
@@ -309,30 +318,36 @@
                                     Margin="15,10">
 
                         <CollectionView.EmptyView>
-                            <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
-                                <Border BackgroundColor="White"
-                                        StrokeThickness="0"
-                                        Padding="30"
-                                        WidthRequest="280"
-                                        HeightRequest="200">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="20"/>
-                                    </Border.StrokeShape>
-                                    <Border.Shadow>
-                                        <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                                    </Border.Shadow>
-                                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
-                                        <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingRequests]}"
-                                               FontSize="16"
-                                               TextColor="{StaticResource TextSecondary}"
-                                               HorizontalTextAlignment="Center"
-                                               FontAttributes="Bold"/>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </Grid>
-                        </CollectionView.EmptyView>
+                            <ContentView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                                <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
+                                    <Border BackgroundColor="White"
+                                    StrokeThickness="0"
+                                    Padding="30"
+                                    WidthRequest="280">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="20"/>
+                                        </Border.StrokeShape>
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                                        </Border.Shadow>
 
+                                        <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                                            <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
+                                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingRequests]}"
+                                           FontSize="16"
+                                           TextColor="{StaticResource TextSecondary}"
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                            <Label Text="Henüz kimseye hizmet talebi göndermediniz."
+                                           FontSize="13"
+                                           TextColor="#9E9E9E"
+                                           HorizontalTextAlignment="Center"/>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </ContentView>
+                        </CollectionView.EmptyView>
+                        
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:ServiceRequest">
                                 <Border Margin="0,0,0,12"

@@ -42,6 +42,22 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isOutgoingSelected = false;
 
+        // Zaman aşımı ayarları
+        private CancellationTokenSource? _loadingTimeoutCts;
+        private const int LoadingTimeoutMs = 5000; // 5 saniye
+
+        // Empty View mesajları için kontrol property'leri
+        [ObservableProperty]
+        private bool _hasOutgoingRequests; // HasOutgoingRequests özelliğini üretir
+        [ObservableProperty]
+        private bool _hasIncomingRequests; // HasIncomingRequests özelliğini üretir
+      
+        private void UpdateHasRequests()
+        {
+            // Property isimlerini kullanıyoruz (Source generator tarafından üretilenler)
+            HasIncomingRequests = IncomingRequests.Any();
+            HasOutgoingRequests = OutgoingRequests.Any();
+        }
         public ObservableCollection<ServiceRequest> IncomingRequests { get; } = new();
         public ObservableCollection<ServiceRequest> OutgoingRequests { get; } = new();
         public ObservableCollection<PaymentOption> PaymentMethods { get; }
@@ -117,20 +133,83 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
+        private async Task LoadInitialSnapshotAsync(CancellationToken token)
+        {
+            try
+            {
+                // Sadece bu kullanıcıya gelen veya giden taleplerden biri var mı diye bakmak yeterli
+                var incomingTask = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .OrderBy("ProviderId")
+                    .EqualTo(_currentUserId)
+                    .LimitToFirst(1)
+                    .OnceAsync<ServiceRequest>();
 
-        //  : Real-time listener + batch processing
+                var outgoingTask = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .OrderBy("RequesterId")
+                    .EqualTo(_currentUserId)
+                    .LimitToFirst(1)
+                    .OnceAsync<ServiceRequest>();
+
+                var results = await Task.WhenAll(incomingTask, outgoingTask);
+
+                if (token.IsCancellationRequested) return;
+
+                // Eğer her iki tarafta da hiç kayıt yoksa loading'i kapat
+                bool isEmpty = results.All(r => r == null || !r.Any());
+
+                if (isEmpty)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        if (!_initialLoadComplete)
+                        {
+                            _initialLoadComplete = true;
+                            IsLoading = false;
+                            UpdateHasRequests();
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Snapshot check hatası: {ex.Message}");
+            }
+        }
+
         private void StartListeningForRequests()
         {
             if (_requestsSubscription != null || string.IsNullOrEmpty(_currentUserId)) return;
 
-            Console.WriteLine(" Service requests listener başlatılıyor...");
+            // Timeout mekanizmasını sıfırla
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts = new CancellationTokenSource();
+            var token = _loadingTimeoutCts.Token;
+
+            // 1. Boş veritabanı durumu için hızlı snapshot kontrolü
+            _ = LoadInitialSnapshotAsync(token);
+
+            // 2. Timeout: Belirlenen sürede veri gelmezse loading'i zorla kapat
+            Task.Delay(LoadingTimeoutMs, token).ContinueWith(t =>
+            {
+                if (t.IsCanceled) return;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!_initialLoadComplete)
+                    {
+                        IsLoading = false;
+                        _initialLoadComplete = true;
+                        UpdateHasRequests();
+                    }
+                });
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
             _requestsSubscription = _firebaseClient
                 .Child(Constants.ServiceRequestsCollection)
                 .AsObservable<ServiceRequest>()
                 .Where(e => e.Object != null)
-                .Buffer(TimeSpan.FromMilliseconds(300)) //  300ms batch
-                .Where(batch => batch.Any())
+                .Buffer(TimeSpan.FromMilliseconds(300))
                 .Subscribe(
                     events =>
                     {
@@ -138,30 +217,35 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
+                                // Veri geldiğinde timeout'u iptal et
+                                _loadingTimeoutCts?.Cancel();
+
                                 ProcessRequestBatch(events);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"❌ Request batch hatası: {ex.Message}");
-                            }
-                            finally
-                            {
+
+                                // İlk veri geldiğinde (boş olsa dahi batch içinden geçince) yüklemeyi bitir
                                 if (!_initialLoadComplete)
                                 {
                                     _initialLoadComplete = true;
                                     IsLoading = false;
-                                    Console.WriteLine("✅ Hizmet talepleri yüklendi");
                                 }
+                                UpdateHasRequests();
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"❌ Request batch hatası: {ex.Message}");
                             }
                         });
                     },
                     error =>
                     {
                         Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
-                        MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            IsLoading = false;
+                            UpdateHasRequests();
+                        });
                     });
         }
-
         private void ProcessRequestBatch(IList<FirebaseEvent<ServiceRequest>> events)
         {
             bool hasIncomingChanges = false;
@@ -284,7 +368,7 @@ namespace KamPay.ViewModels
 
             IsLoading = true;
             var result = await _serviceService.ProviderFinishServiceAsync(request.RequestId, currentUser.UserId);
-            if (result.Success) 
+            if (result.Success)
                 await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
@@ -308,7 +392,7 @@ namespace KamPay.ViewModels
 
             IsLoading = true;
             var result = await _serviceService.RequesterConfirmServiceAsync(request.RequestId, currentUser.UserId);
-            if (result.Success) 
+            if (result.Success)
                 await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
@@ -357,7 +441,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
             }
-            
+
             return Task.CompletedTask;
         }
 
@@ -487,8 +571,8 @@ namespace KamPay.ViewModels
             else
             {
                 // ✅ Ücretsiz/Zaman Kredisi: Eski akış (değişiklik yok)
-                string priceInfo = request.TimeCreditValue > 0 
-                    ? $"Bu hizmet için {request.TimeCreditValue} saat kredi transfer edilecektir.\n\n" 
+                string priceInfo = request.TimeCreditValue > 0
+                    ? $"Bu hizmet için {request.TimeCreditValue} saat kredi transfer edilecektir.\n\n"
                     : "";
 
                 var confirm = await Shell.Current.DisplayAlert(
@@ -526,7 +610,7 @@ namespace KamPay.ViewModels
                 }
             }
         }
-    
+
         //  Mesajlaşma Başlatma Komutu
         [RelayCommand]
         private async Task StartConversationAsync(ServiceRequest request)
@@ -545,7 +629,7 @@ namespace KamPay.ViewModels
                 }
 
                 var result = await _serviceService.StartConversationForRequestAsync(request.RequestId, currentUser.UserId);
-                
+
                 if (result.Success)
                 {
                     //  : ChatPage kullanılıyor, MessagingPage değil
@@ -638,10 +722,10 @@ namespace KamPay.ViewModels
 
             try
             {
-                string priceInfo = request.ProposedPriceByRequester.HasValue 
-                    ? $"Talep eden kişinin teklifi: {request.ProposedPriceByRequester} ₺\n" 
+                string priceInfo = request.ProposedPriceByRequester.HasValue
+                    ? $"Talep eden kişinin teklifi: {request.ProposedPriceByRequester} ₺\n"
                     : "";
-                
+
                 string priceInput = await Shell.Current.DisplayPromptAsync(
                     "Karşı Teklif",
                     $"{priceInfo}Karşı teklifinizi girin:\n(Orijinal fiyat: {request.Price} ₺)",
@@ -735,6 +819,11 @@ namespace KamPay.ViewModels
         public void Dispose()
         {
             Console.WriteLine("🧹 ServiceRequestsViewModel dispose ediliyor...");
+
+            // Zaman aşımı işlemini iptal et ve temizle
+            _loadingTimeoutCts?.Cancel();
+            _loadingTimeoutCts?.Dispose();
+
             _requestsSubscription?.Dispose();
             _requestsSubscription = null;
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
