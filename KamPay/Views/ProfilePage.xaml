@@ -39,7 +39,6 @@
                      Margin="0,-80,-80,0"/>
 
             <Grid Padding="20,50,20,30" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
-
                 <Grid Grid.Row="0" HorizontalOptions="Center" x:Name="ProfileImageSection">
                     <Border StrokeThickness="4" Stroke="White" WidthRequest="120" HeightRequest="120">
                         <Border.StrokeShape>
@@ -73,7 +72,6 @@
 
                 <Label x:Name="NameLabel" Grid.Row="1" Text="{Binding CurrentUser.FullName}" 
                        FontSize="24" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="Center"/>
-
                 <Label x:Name="EmailLabel" Grid.Row="2" Text="{Binding CurrentUser.Email}" 
                        FontSize="14" TextColor="White" Opacity="0.8" HorizontalTextAlignment="Center"/>
             </Grid>
@@ -84,18 +82,27 @@
 
                 <Grid x:Name="StatsSection" ColumnDefinitions="*,*,*" ColumnSpacing="10">
                     <Border Grid.Column="0" BackgroundColor="White" Padding="15" StrokeShape="RoundRectangle 12">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.05" Radius="5" Offset="0,2"/>
+                        </Border.Shadow>
                         <VerticalStackLayout HorizontalOptions="Center">
                             <Label Text="{Binding UserStats.TotalProducts}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Primary}" HorizontalTextAlignment="Center"/>
                             <Label Text="Ürün" FontSize="11" TextColor="Gray" HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="1" BackgroundColor="White" Padding="15" StrokeShape="RoundRectangle 12">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.05" Radius="5" Offset="0,2"/>
+                        </Border.Shadow>
                         <VerticalStackLayout HorizontalOptions="Center">
                             <Label Text="{Binding UserStats.Points}" FontSize="20" FontAttributes="Bold" TextColor="Orange" HorizontalTextAlignment="Center"/>
                             <Label Text="Puan" FontSize="11" TextColor="Gray" HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="2" BackgroundColor="White" Padding="15" StrokeShape="RoundRectangle 12">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.05" Radius="5" Offset="0,2"/>
+                        </Border.Shadow>
                         <VerticalStackLayout HorizontalOptions="Center">
                             <Label Text="{Binding MyBadges.Count}" FontSize="20" FontAttributes="Bold" TextColor="Purple" HorizontalTextAlignment="Center"/>
                             <Label Text="Rozet" FontSize="11" TextColor="Gray" HorizontalTextAlignment="Center"/>
@@ -103,24 +110,51 @@
                     </Border>
                 </Grid>
 
-                <VerticalStackLayout Spacing="10">
-                    <Button Text="Profili Düzenle" 
-        Command="{Binding GoToEditProfileCommand}"
-        BackgroundColor="#1E88E5" 
-        TextColor="White"
-        FontAttributes="Bold"
-        CornerRadius="12"
-        HeightRequest="50"
-        Margin="0,10">
+                <Label Text="Rozetlerim" FontAttributes="Bold" FontSize="16" Margin="5,0"/>
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <FlexLayout BindableLayout.ItemsSource="{Binding MyBadges}" Direction="Row" Padding="0,5">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:UserBadge">
+                                <Border Margin="0,0,10,0" Padding="10" StrokeShape="RoundRectangle 10" BackgroundColor="White">
+                                    <Label Text="🏅" FontSize="25"/>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </ScrollView>
+
+                <VerticalStackLayout Spacing="10" Margin="0,5">
+                    <Button Text="Profili Düzenle" Command="{Binding GoToEditProfileCommand}" 
+                            BackgroundColor="#1E88E5" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="50">
                         <Button.Shadow>
                             <Shadow Brush="#1E88E5" Offset="0,4" Radius="8" Opacity="0.3"/>
                         </Button.Shadow>
                     </Button>
-                    <Button Text="Favorilerim" Command="{Binding GoToFavoritesCommand}" BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="50"/>
-                    <Button Text="Bildirimler" Command="{Binding GoToNotificationsCommand}" BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="50"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0" Text="Favorilerim" Command="{Binding GoToFavoritesCommand}" 
+                                BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="45"/>
+                        <Button Grid.Column="1" Text="Bildirimler" Command="{Binding GoToNotificationsCommand}" 
+                                BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="45"/>
+                    </Grid>
+
+                    <Button Text="Tekliflerim" Command="{Binding GoToOffersCommand}" 
+                            BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="45"/>
+
+                    <Button Text="Hizmet Taleplerim" Command="{Binding GoToServiceRequestsCommand}" 
+                            BackgroundColor="White" BorderColor="{StaticResource Primary}" BorderWidth="1" TextColor="{StaticResource Primary}" CornerRadius="12" HeightRequest="45"/>
+
+                    <Button Text="Dil Değiştir" Command="{Binding ChangeLanguageCommand}" 
+                            BackgroundColor="White" BorderColor="Purple" BorderWidth="1" TextColor="Purple" CornerRadius="12" HeightRequest="45"/>
                 </VerticalStackLayout>
 
-                <Button Text="Çıkış Yap" Command="{Binding LogoutCommand}" BackgroundColor="#F44336" TextColor="White" CornerRadius="12" HeightRequest="50" Margin="0,20,0,0"/>
+                <Button Text="Çıkış Yap" Command="{Binding LogoutCommand}" 
+                        BackgroundColor="#F44336" TextColor="White" CornerRadius="12" HeightRequest="50" Margin="0,10,0,0">
+                    <Button.Shadow>
+                        <Shadow Brush="#F44336" Offset="0,4" Radius="8" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
+
             </VerticalStackLayout>
         </ScrollView>
 
