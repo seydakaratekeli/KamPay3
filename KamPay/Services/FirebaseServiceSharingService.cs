@@ -204,13 +204,13 @@ namespace KamPay.Services
                     ServiceId = offer.ServiceId,            // Hizmet kimliği
                     ServiceTitle = offer.Title,
                     ProviderId = offer.ProviderId,
+                    ProviderName = offer.ProviderName, // ✅ KRİTİK EKSİK: Bu satırı ekle
                     RequesterId = requester.UserId,
                     RequesterName = requester.FullName,
                     Message = message,
                     Status = ServiceRequestStatus.Pending,
                     RequestedAt = DateTime.UtcNow,
-
-                    // ?? Otomatik atanacak alanlar:
+                
                     QuotedPrice = offer.Price,              // Hizmetin o anki fiyatı
                     Price = offer.Price,                    // UI veya raporlama için de saklıyoruz
                     TimeCreditValue = offer.TimeCredits,    // Kredi bilgisi (eski sistemle uyumlu)

@@ -434,16 +434,34 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
-        private Task LoadRequestsAsync()
+        private async Task LoadRequestsAsync()
         {
-            // Real-time listener zaten çalışıyor
-            if (!_initialLoadComplete)
+            // Eğer veriler zaten yüklendiyse ve listener aktifse bir şey yapma
+            if (_initialLoadComplete && _requestsSubscription != null)
             {
-                IsLoading = true;
+                return;
             }
 
-            return Task.CompletedTask;
+            try
+            {
+                IsLoading = true;
+
+                // Eğer listener bir şekilde durduysa veya hiç başlamadıysa yeniden başlat
+                if (_requestsSubscription == null)
+                {
+                    StartListeningForRequests();
+                }
+
+                // Verilerin gelmesi için kısa bir süre bekle (opsiyonel)
+                await Task.Delay(500);
+            }
+            finally
+            {
+                // _initialLoadComplete listener içinde false'a çekildiği için 
+                // burada IsLoading'i kapatmaya gerek yok, listener kapatacaktır.
+            }
         }
+
 
         [RelayCommand]
         private async Task AcceptRequestAsync(ServiceRequest request) =>

@@ -196,11 +196,24 @@
                                             </VerticalStackLayout>
 
                                             <Label Grid.Column="2"
-                                                   Text="{Binding Status}"
-                                                   FontSize="11"
-                                                   TextColor="{StaticResource Primary}"
-                                                   FontAttributes="Bold"
-                                                   VerticalOptions="Start"/>
+       Text="{Binding Status}"
+       FontSize="11"
+       TextColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}" 
+       FontAttributes="Bold"
+       VerticalOptions="Start"/>
+
+                                            <Button Text="✅ Hizmeti Alındı / Onayla"
+        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=CompleteRequestCommand}"
+        CommandParameter="{Binding .}"
+        BackgroundColor="{StaticResource AccentGreen}"
+        TextColor="White"
+        HeightRequest="45"
+        CornerRadius="22"
+        FontSize="14"
+        FontAttributes="Bold"
+        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+
+
                                         </Grid>
 
                                         <!-- Message -->
