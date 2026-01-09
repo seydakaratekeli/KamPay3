@@ -28,13 +28,11 @@ namespace KamPay.ViewModels
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private User? _currentUser;
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
-        //  CACHE: Her konuşma için ayrı state
+        
         private static readonly Dictionary<string, ConversationState> _conversationCache = new();
-
-        //  CACHE: Otomatik temizleme için timer
         private System.Timers.Timer? _cacheCleanupTimer;
-        private const int MaxCacheAgeMinutes = 15; // 15 dakikadan eski cache'leri temizle
-        private const int MaxCachedConversations = 10; // Maksimum 10 konuşma cache'le
+        private const int MaxCacheAgeMinutes = 15;
+        private const int MaxCachedConversations = 10;
 
         private IDisposable? _messagesSubscription;
         private bool _isListenerActive = false;
@@ -63,13 +61,18 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string? selectedImagePath;
 
+        // ✅ Observable property olarak değiştirildi
+        [ObservableProperty]
+        private string otherUserPhoto = string.Empty;
+
+        // ✅ Observable property olarak değiştirildi
+        [ObservableProperty]
+        private string otherUserName = string.Empty;
+
         public ObservableCollection<Message> Messages { get; set; } = new();
         public Conversation? Conversation { get; set; }
-        public string OtherUserName { get; set; } = string.Empty;
-        public string OtherUserPhoto { get; set; } = string.Empty;
 
-        // Removed source-generator attributes for online status and added explicit properties
-        private bool _isOtherUserOnline; // backing field
+        private bool _isOtherUserOnline;
         public bool IsOtherUserOnline
         {
             get => _isOtherUserOnline;
@@ -210,13 +213,20 @@ namespace KamPay.ViewModels
 
                     if (Conversation != null)
                     {
+                        // Navigation parametresinden URL-decoded değeri al
+                        var photoFromNav = System.Net.WebUtility.UrlDecode(OtherUserPhoto ?? string.Empty);
+                        
                         OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-                        OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? string.Empty;
-
-                        // / Profil fotoğrafı kontrolü (varsayılan)
-                        if (string.IsNullOrEmpty(OtherUserPhoto))
+                        
+                        // Navigation'dan gelen fotoğraf varsa ve geçerliyse onu kullan
+                        if (!string.IsNullOrEmpty(photoFromNav) && photoFromNav != "person_icon.svg")
                         {
-                            OtherUserPhoto = "person_icon.svg";
+                            OtherUserPhoto = photoFromNav;
+                        }
+                        else
+                        {
+                            // Konuşmadan fotoğraf al
+                            OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
                         }
 
                         Console.WriteLine($"👤 OtherUserName: {OtherUserName}");
@@ -229,7 +239,6 @@ namespace KamPay.ViewModels
                             if (!string.IsNullOrEmpty(otherUserId))
                             {
                                 var otherUser = await _firebaseClient
-                         
                                     .Child(Constants.UsersCollection)
                                     .Child(otherUserId)
                                     .OnceSingleAsync<User>();
@@ -238,14 +247,15 @@ namespace KamPay.ViewModels
                                 {
                                     var last = otherUser.LastLoginAt.Value.ToUniversalTime();
                                     var diff = DateTime.UtcNow - last;
-                                    // Eğer son giriş 2 dakikadan kısa süre önceyse çevrimiçi say
                                     IsOtherUserOnline = diff.TotalMinutes <= 2;
                                     OnlineStatusText = IsOtherUserOnline ? "Çevrimiçi" : $"Son görülme: {last.ToLocalTime():g}";
 
-                                    // Eğer profil fotoğrafı boşsa kullanıcı kaydındaki profile image kullan
-                                    if (string.IsNullOrEmpty(OtherUserPhoto) && !string.IsNullOrEmpty(otherUser.ProfileImageUrl))
+                                    // Profil fotoğrafı boşsa Firebase'den al
+                                    if ((string.IsNullOrEmpty(OtherUserPhoto) || OtherUserPhoto == "person_icon.svg") && 
+                                        !string.IsNullOrEmpty(otherUser.ProfileImageUrl))
                                     {
                                         OtherUserPhoto = otherUser.ProfileImageUrl;
+                                        Console.WriteLine($"📷 Firebase'den fotoğraf alındı: {OtherUserPhoto}");
                                     }
                                 }
                                 else
@@ -267,7 +277,7 @@ namespace KamPay.ViewModels
                             OnlineStatusText = "Çevrimdışı";
                         }
 
-                        // / Diğer kullanıcının profil fotoğrafını yükle (fallback)
+                        // ✅ Fallback: Kullanıcı profil servisi ile fotoğraf yükle
                         await EnsureOtherUserPhotoAsync();
                     }
                     else
@@ -333,7 +343,7 @@ namespace KamPay.ViewModels
                         Messages.Add(message);
                     }
 
-                    Console.WriteLine($"✅ Snapshot ile {loadedMessages.Count} mesaj yüklendi (Sistem mesajları dahil)");
+                    Console.WriteLine($"✅ Snapshot ile {loadedMessages.Count} mesaj yüklendi");
                 }
 
                 // 2️⃣ Loading'i kapat - veri gösterildi
@@ -464,7 +474,7 @@ namespace KamPay.ViewModels
         {
             if (_isListenerActive)
             {
-                Console.WriteLine("⚠️ Listener zatenaktif, yeniden başlatılmadı.");
+                Console.WriteLine("⚠️ Listener zaten aktif, yeniden başlatılmadı.");
                 return;
             }
 
@@ -867,6 +877,7 @@ namespace KamPay.ViewModels
             {
                 return;
             }
+
             // Hız Sınırı Kontrolü
             var limitCheck = RateLimiters.ImageUpload.CheckLimit(_currentUser.UserId);
             if (!limitCheck.IsAllowed)
@@ -940,7 +951,6 @@ namespace KamPay.ViewModels
                     Messages.Remove(tempMessage);
                     await Application.Current!.MainPage!.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gönderilemedi.", "Tamam");
                 }
-                // 4️⃣ Real-time listener mesajı güncelleyecek
             }
             catch (Exception ex)
             {
@@ -986,6 +996,7 @@ namespace KamPay.ViewModels
                 if (profileResult.Success && profileResult.Data != null && !string.IsNullOrEmpty(profileResult.Data.ProfileImageUrl))
                 {
                     OtherUserPhoto = profileResult.Data.ProfileImageUrl;
+                    Console.WriteLine($"✅ Profil servisi fotoğrafını yükledi: {OtherUserPhoto}");
                 }
             }
             catch (Exception ex)
