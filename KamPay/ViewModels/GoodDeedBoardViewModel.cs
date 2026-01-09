@@ -412,7 +412,8 @@ namespace KamPay.ViewModels
             {
                 PostId = post.PostId,
                 UserId = currentUser.UserId,
-                UserName = userProfile?.Data?.Username ?? currentUser.FullName,
+                // ✅ FIX: FullName kullan
+                UserName = userProfile?.Data?.FullName ?? currentUser.FullName,
                 UserProfileImageUrl = userProfile?.Data?.ProfileImageUrl ?? "default_avatar.png",
                 Text = post.DraftComment.Trim(),
                 CommentId = Guid.NewGuid().ToString(),

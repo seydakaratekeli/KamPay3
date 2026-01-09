@@ -239,11 +239,9 @@ namespace KamPay.ViewModels
                             var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
                             if (convo != null)
                             {
+                                // ✅ FIX: FullName kullan, Username değil
                                 convo.OtherUserPhotoUrl = userProfile.Data.ProfileImageUrl ?? "person_icon.svg";
-                                if (!string.IsNullOrEmpty(userProfile.Data.Username))
-                                {
-                                    convo.OtherUserName = userProfile.Data.Username;
-                                }
+                                convo.OtherUserName = userProfile.Data.FullName ?? string.Empty;
                             }
                         });
                     }
@@ -408,10 +406,10 @@ namespace KamPay.ViewModels
                     // Eğer profil varsa resmini al, yoksa varsayılan ikon
                     conversation.OtherUserPhotoUrl = userProfile?.Data?.ProfileImageUrl ?? "person_icon.svg";
 
-                    // İsim güncel değilse onu da güncelle (Opsiyonel)
-                    if (!string.IsNullOrEmpty(userProfile?.Data?.Username))
+                    // ✅ FIX: FullName kullan, Username değil
+                    if (!string.IsNullOrEmpty(userProfile?.Data?.FullName))
                     {
-                        conversation.OtherUserName = userProfile.Data.Username;
+                        conversation.OtherUserName = userProfile.Data.FullName;
                     }
                 }
                 catch (Exception ex)
@@ -466,24 +464,65 @@ namespace KamPay.ViewModels
             }
         }
 
-        private void SortConversationsInPlace()
+        private async Task UpdateConversationsFromRefreshAsync(List<Conversation> freshData)
         {
-            var sorted = Conversations.OrderByDescending(c => c.LastMessageTime).ToList();
+            if (_currentUser == null) return;
 
-            for (int i = 0; i < sorted.Count; i++)
+            for (int i = Conversations.Count - 1; i >= 0; i--)
             {
-                var currentIndex = Conversations.IndexOf(sorted[i]);
-                if (currentIndex != i && currentIndex >= 0)
+                if (!freshData.Any(c => c.ConversationId == Conversations[i].ConversationId))
                 {
-                    Conversations.Move(currentIndex, i);
+                    _conversationIds.Remove(Conversations[i].ConversationId);
+                    Conversations.RemoveAt(i);
                 }
             }
-        }
 
-        private void UpdateUnreadCount()
-        {
-            UnreadCount = Conversations.Sum(c => c.UnreadCount);
-            WeakReferenceMessenger.Default.Send(new UnreadMessageStatusMessage(UnreadCount > 0));
+            foreach (var freshConvo in freshData)
+            {
+                freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
+                freshConvo.UnreadCount = freshConvo.GetUnreadCount(_currentUser.UserId);
+
+                //  ✅ FIX: Profil Resmini ve FullName'i Çek
+                try
+                {
+                    var otherUserId = freshConvo.GetOtherUserId(_currentUser.UserId);
+                    var userProfile = await _userProfileService.GetUserProfileAsync(otherUserId);
+                    
+                    freshConvo.OtherUserPhotoUrl = userProfile?.Data?.ProfileImageUrl ?? "person_icon.svg";
+                    
+                    // FullName'i kullan
+                    if (!string.IsNullOrEmpty(userProfile?.Data?.FullName))
+                    {
+                        freshConvo.OtherUserName = userProfile.Data.FullName;
+                    }
+                }
+                catch
+                {
+                    freshConvo.OtherUserPhotoUrl = "person_icon.svg";
+                }
+
+                var existingIndex = -1;
+                for (int i = 0; i < Conversations.Count; i++)
+                {
+                    if (Conversations[i].ConversationId == freshConvo.ConversationId)
+                    {
+                        existingIndex = i;
+                        break;
+                    }
+                }
+
+                if (existingIndex >= 0)
+                {
+                    Conversations[existingIndex] = freshConvo;
+                }
+                else
+                {
+                    Conversations.Add(freshConvo);
+                    _conversationIds.Add(freshConvo.ConversationId);
+                }
+            }
+
+            SortConversationsInPlace();
         }
 
         [RelayCommand]
@@ -520,61 +559,6 @@ namespace KamPay.ViewModels
             {
                 IsRefreshing = false;
             }
-        }
-
-        //  Refresh metodu da Async yapıldı ve resim çekme eklendi
-        private async Task UpdateConversationsFromRefreshAsync(List<Conversation> freshData)
-        {
-            if (_currentUser == null) return;
-
-            for (int i = Conversations.Count - 1; i >= 0; i--)
-            {
-                if (!freshData.Any(c => c.ConversationId == Conversations[i].ConversationId))
-                {
-                    _conversationIds.Remove(Conversations[i].ConversationId);
-                    Conversations.RemoveAt(i);
-                }
-            }
-
-            foreach (var freshConvo in freshData)
-            {
-                freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-                freshConvo.UnreadCount = freshConvo.GetUnreadCount(_currentUser.UserId);
-
-                //  Profil Resmini Çek
-                try
-                {
-                    var otherUserId = freshConvo.GetOtherUserId(_currentUser.UserId);
-                    var userProfile = await _userProfileService.GetUserProfileAsync(otherUserId);
-                    freshConvo.OtherUserPhotoUrl = userProfile?.Data?.ProfileImageUrl ?? "person_icon.svg";
-                }
-                catch
-                {
-                    freshConvo.OtherUserPhotoUrl = "person_icon.svg";
-                }
-
-                var existingIndex = -1;
-                for (int i = 0; i < Conversations.Count; i++)
-                {
-                    if (Conversations[i].ConversationId == freshConvo.ConversationId)
-                    {
-                        existingIndex = i;
-                        break;
-                    }
-                }
-
-                if (existingIndex >= 0)
-                {
-                    Conversations[existingIndex] = freshConvo;
-                }
-                else
-                {
-                    Conversations.Add(freshConvo);
-                    _conversationIds.Add(freshConvo.ConversationId);
-                }
-            }
-
-            SortConversationsInPlace();
         }
 
         [RelayCommand]
@@ -631,6 +615,28 @@ namespace KamPay.ViewModels
             catch (Exception ex) 
             { 
                 await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam"); 
+            }
+        }
+
+        // ✅ EKLE: Okunmamış mesaj sayısını güncelle
+        private void UpdateUnreadCount()
+        {
+            UnreadCount = Conversations.Sum(c => c.UnreadCount);
+            WeakReferenceMessenger.Default.Send(new UnreadMessageStatusMessage(UnreadCount > 0));
+        }
+
+        // ✅ EKLE: Konuşmaları tarihe göre sırala (en yeni önce)
+        private void SortConversationsInPlace()
+        {
+            var sorted = Conversations.OrderByDescending(c => c.LastMessageTime).ToList();
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                var currentIndex = Conversations.IndexOf(sorted[i]);
+                if (currentIndex != i && currentIndex >= 0)
+                {
+                    Conversations.Move(currentIndex, i);
+                }
             }
         }
 
