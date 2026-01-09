@@ -23,7 +23,7 @@
     <Grid>
         <!-- Background Circle Animation -->
         <Ellipse x:Name="Circle1"
-                 Fill="#1A4CAF50"
+                 Fill="#1A2196F3"
                  WidthRequest="400"
                  HeightRequest="400"
                  HorizontalOptions="End"
@@ -38,7 +38,7 @@
                                  Grid.Row="0" 
                                  Spacing="10" 
                                  Padding="20,50,20,20"
-                                 BackgroundColor="#4CAF50">
+                                 BackgroundColor="#2196F3">
 
                 <Grid ColumnDefinitions="*,Auto">
                     <VerticalStackLayout Grid.Column="0" Spacing="5">
@@ -48,14 +48,14 @@
                                TextColor="White"/>
                         <Label Text="Güncel bildirimleriniz"
                                FontSize="14"
-                               TextColor="#E8F5E9"
+                               TextColor="#E3F2FD"
                                Opacity="0.9"/>
                     </VerticalStackLayout>
 
                     <Border Grid.Column="1"
                             StrokeShape="RoundRectangle 20"
                             StrokeThickness="0"
-                            BackgroundColor="#66BB6A"
+                            BackgroundColor="#42A5F5"
                             Padding="10"
                             VerticalOptions="Center">
                         <Border.GestureRecognizers>
@@ -73,7 +73,7 @@
             <Grid x:Name="ContentSection" Grid.Row="1" BackgroundColor="#F5F5F5">
                 <RefreshView Command="{Binding RefreshNotificationsCommand}"
                              IsRefreshing="{Binding IsRefreshing}"
-                             RefreshColor="#4CAF50">
+                             RefreshColor="#2196F3">
 
                     <CollectionView ItemsSource="{Binding Notifications}"
                                     SelectionMode="None"
@@ -131,7 +131,7 @@
 
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsRead}" Value="False">
-                                                <Setter Property="BackgroundColor" Value="#E8F5E9"/>
+                                                <Setter Property="BackgroundColor" Value="#E3F2FD"/>
                                             </DataTrigger>
                                         </Border.Triggers>
 
@@ -156,6 +156,27 @@
                                                     </DataTrigger>
                                                     <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="SystemNotice">
                                                         <Setter Property="BackgroundColor" Value="#E8F5E9"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="NewOffer">
+                                                        <Setter Property="BackgroundColor" Value="#FFF9C4"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="OfferAccepted">
+                                                        <Setter Property="BackgroundColor" Value="#C8E6C9"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="OfferRejected">
+                                                        <Setter Property="BackgroundColor" Value="#FFCDD2"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="Quote">
+                                                        <Setter Property="BackgroundColor" Value="#E1F5FE"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="ServiceCompleted">
+                                                        <Setter Property="BackgroundColor" Value="#D1C4E9"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="SurpriseBoxWon">
+                                                        <Setter Property="BackgroundColor" Value="#FFECB3"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="DonationClaimed">
+                                                        <Setter Property="BackgroundColor" Value="#FFCCBC"/>
                                                     </DataTrigger>
                                                 </Border.Triggers>
 
@@ -183,6 +204,30 @@
                                                         </DataTrigger>
                                                         <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="PointsEarned">
                                                             <Setter Property="Text" Value="⭐"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ProductViewed">
+                                                            <Setter Property="Text" Value="👁️"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewOffer">
+                                                            <Setter Property="Text" Value="💰"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="OfferAccepted">
+                                                            <Setter Property="Text" Value="✅"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="OfferRejected">
+                                                            <Setter Property="Text" Value="❌"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Quote">
+                                                            <Setter Property="Text" Value="💵"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ServiceCompleted">
+                                                            <Setter Property="Text" Value="✔️"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SurpriseBoxWon">
+                                                            <Setter Property="Text" Value="🎁"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="DonationClaimed">
+                                                            <Setter Property="Text" Value="🤝"/>
                                                         </DataTrigger>
                                                     </Label.Triggers>
                                                 </Label>
@@ -232,6 +277,27 @@
                                                                 <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="BadgeEarned">
                                                                     <Setter Property="Text" Value="Rozet"/>
                                                                 </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="NewOffer">
+                                                                    <Setter Property="Text" Value="Teklif"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="OfferAccepted">
+                                                                    <Setter Property="Text" Value="Kabul"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="OfferRejected">
+                                                                    <Setter Property="Text" Value="Red"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="Quote">
+                                                                    <Setter Property="Text" Value="Fiyat"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="ServiceCompleted">
+                                                                    <Setter Property="Text" Value="Hizmet"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SurpriseBoxWon">
+                                                                    <Setter Property="Text" Value="Kutu"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="DonationClaimed">
+                                                                    <Setter Property="Text" Value="Bağış"/>
+                                                                </DataTrigger>
                                                             </Label.Triggers>
                                                         </Label>
                                                     </Border>
@@ -243,7 +309,7 @@
                                                      HeightRequest="10"
                                                      WidthRequest="10"
                                                      CornerRadius="5"
-                                                     BackgroundColor="#4CAF50"
+                                                     BackgroundColor="#2196F3"
                                                      VerticalOptions="Center"
                                                      IsVisible="{Binding IsRead, Converter={StaticResource InvertedBoolConverter}}"/>
                                         </Grid>
@@ -265,7 +331,7 @@
                                          HorizontalOptions="Center"
                                          Spacing="10">
                         <ActivityIndicator IsRunning="True" 
-                                           Color="#4CAF50" 
+                                           Color="#2196F3" 
                                            WidthRequest="50"
                                            HeightRequest="50"/>
                         <Label Text="Yükleniyor..."
