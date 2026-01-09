@@ -109,6 +109,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = false;
                 IsSkeletonVisible = false;
+                IsRefreshing = false;
                 UpdateHasOffers();
                 Debug.WriteLine("⚠️ Kullanıcı oturum açmamış");
                 return;
@@ -146,6 +147,7 @@ namespace KamPay.ViewModels
                         Debug.WriteLine("⏳ Loading timeout - veri gelmedi.");
                         IsLoading = false;
                         IsSkeletonVisible = false;
+                        IsRefreshing = false;
                         UpdateHasOffers();
                     }
                 });
@@ -176,6 +178,7 @@ namespace KamPay.ViewModels
                                     _initialLoadComplete = true;
                                     IsLoading = false;
                                     IsSkeletonVisible = false;
+                                    IsRefreshing = false;
                                     Debug.WriteLine("✅ İlk gerçek realtime offer geldi — loading kapatıldı.");
                                 }
 
@@ -194,6 +197,7 @@ namespace KamPay.ViewModels
                         {
                             IsLoading = false;
                             IsSkeletonVisible = false;
+                            IsRefreshing = false;
                             UpdateHasOffers();
                         });
                     });
@@ -237,6 +241,7 @@ namespace KamPay.ViewModels
                             _initialLoadComplete = true;
                             IsLoading = false;
                             IsSkeletonVisible = false;
+                            IsRefreshing = false; // ✅ EKLE: IsRefreshing'i de kapat
                             UpdateHasOffers();
                             Debug.WriteLine("✅ Snapshot yüklendi — teklif yok.");
                         }
@@ -271,6 +276,7 @@ namespace KamPay.ViewModels
                         _initialLoadComplete = true;
                         IsLoading = false;
                         IsSkeletonVisible = false;
+                        IsRefreshing = false; // ✅ EKLE: IsRefreshing'i de kapat
                         UpdateHasOffers();
                         Debug.WriteLine($"✅ Snapshot yüklendi — {userOffers.Count} teklif bulundu.");
                     }
@@ -279,6 +285,14 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
+                // ✅ EKLE: Hata durumunda da IsRefreshing'i kapat
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    IsLoading = false;
+                    IsSkeletonVisible = false;
+                    IsRefreshing = false;
+                    UpdateHasOffers();
+                });
             }
         }
         // KamPay/ViewModels/OffersViewModel.cs içine ekleyin
@@ -448,6 +462,7 @@ namespace KamPay.ViewModels
                     StartListeningForOffers(currentUser.UserId);
                 }
 
+                // Listener'ın veri yüklemesi için kısa bir bekleme
                 await Task.Delay(500);
             }
             catch (Exception ex) 
@@ -456,8 +471,13 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                IsRefreshing = false;
-                UpdateHasOffers();
+                // ✅ KRİTİK: IsRefreshing'i mutlaka false yap
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    IsRefreshing = false;
+                    UpdateHasOffers();
+                    Debug.WriteLine("✅ Refresh tamamlandı, IsRefreshing = false");
+                });
             }
         }
 
