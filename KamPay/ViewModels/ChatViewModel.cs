@@ -464,7 +464,7 @@ namespace KamPay.ViewModels
         {
             if (_isListenerActive)
             {
-                Console.WriteLine("⚠️ Listener zaten aktif, yeniden başlatılmadı.");
+                Console.WriteLine("⚠️ Listener zatenaktif, yeniden başlatılmadı.");
                 return;
             }
 
@@ -675,7 +675,6 @@ namespace KamPay.ViewModels
                 {
                     Messages.Remove(tempMessage);
                     await Application.Current!.MainPage!.DisplayAlert("Hata", "Alıcı bilgisi bulunamadı.", "Tamam");
-                    MessageText = messageContent;
                     return;
                 }
 
@@ -689,18 +688,21 @@ namespace KamPay.ViewModels
 
                 var result = await _messagingService.SendMessageAsync(request, _currentUser);
 
-                if (!result.Success)
+                if (result.Success)
+                {
+                    // ✅ Başarılı gönderim sonrası input temizle
+                    MessageText = string.Empty;
+                }
+                else
                 {
                     Messages.Remove(tempMessage);
                     await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message ?? "Mesaj gönderilemedi", "Tamam");
-                    MessageText = messageContent;
                 }
             }
             catch (Exception ex)
             {
                 Messages.Remove(tempMessage);
                 await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
-                MessageText = messageContent;
                 Console.WriteLine($"❌ SendMessage hatası: {ex.Message}");
             }
             finally
