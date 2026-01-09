@@ -124,7 +124,7 @@
                                     Margin="15,10">
 
                         <CollectionView.EmptyView>
-                            <ContentView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                            <ContentView IsVisible="{Binding HasIncomingRequests, Converter={StaticResource InvertedBoolConverter}}">
                                 <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
                                     <Border BackgroundColor="White"
                                     StrokeThickness="0"
@@ -331,7 +331,7 @@
                                     Margin="15,10">
 
                         <CollectionView.EmptyView>
-                            <ContentView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                            <ContentView IsVisible="{Binding HasOutgoingRequests, Converter={StaticResource InvertedBoolConverter}}">
                                 <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
                                     <Border BackgroundColor="White"
                                     StrokeThickness="0"

@@ -126,59 +126,18 @@ namespace KamPay.ViewModels
             if (currentUser != null)
             {
                 _currentUserId = currentUser.UserId;
-                StartListeningForRequests();
+                
+                // ✅ Snapshot + listener'ı başlat, loading indicator hızlı kapansın
+                await StartListeningForRequestsAsync();
             }
             else
             {
                 IsLoading = false;
             }
         }
-        private async Task LoadInitialSnapshotAsync(CancellationToken token)
-        {
-            try
-            {
-                // Sadece bu kullanıcıya gelen veya giden taleplerden biri var mı diye bakmak yeterli
-                var incomingTask = _firebaseClient
-                    .Child(Constants.ServiceRequestsCollection)
-                    .OrderBy("ProviderId")
-                    .EqualTo(_currentUserId)
-                    .LimitToFirst(1)
-                    .OnceAsync<ServiceRequest>();
 
-                var outgoingTask = _firebaseClient
-                    .Child(Constants.ServiceRequestsCollection)
-                    .OrderBy("RequesterId")
-                    .EqualTo(_currentUserId)
-                    .LimitToFirst(1)
-                    .OnceAsync<ServiceRequest>();
-
-                var results = await Task.WhenAll(incomingTask, outgoingTask);
-
-                if (token.IsCancellationRequested) return;
-
-                // Eğer her iki tarafta da hiç kayıt yoksa loading'i kapat
-                bool isEmpty = results.All(r => r == null || !r.Any());
-
-                if (isEmpty)
-                {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        if (!_initialLoadComplete)
-                        {
-                            _initialLoadComplete = true;
-                            IsLoading = false;
-                            UpdateHasRequests();
-                        }
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Snapshot check hatası: {ex.Message}");
-            }
-        }
-
-        private void StartListeningForRequests()
+        // ✅ Snapshot yükleme ve listener başlatma ayrıldı
+        private async Task StartListeningForRequestsAsync()
         {
             if (_requestsSubscription != null || string.IsNullOrEmpty(_currentUserId)) return;
 
@@ -187,24 +146,108 @@ namespace KamPay.ViewModels
             _loadingTimeoutCts = new CancellationTokenSource();
             var token = _loadingTimeoutCts.Token;
 
-            // 1. Boş veritabanı durumu için hızlı snapshot kontrolü
-            _ = LoadInitialSnapshotAsync(token);
-
-            // 2. Timeout: Belirlenen sürede veri gelmezse loading'i zorla kapat
-            Task.Delay(LoadingTimeoutMs, token).ContinueWith(t =>
+            try
             {
-                if (t.IsCanceled) return;
+                // 1️⃣ SNAPSHOT: Hızlı veri yükleme
+                var snapshotTask = LoadInitialSnapshotAsync(token);
+                
+                // 2️⃣ LISTENER: Realtime güncellemeler için
+                StartRealtimeListener();
+                
+                // 3️⃣ Snapshot yüklenene kadar bekle
+                await snapshotTask;
+                
+                // ✅ Loading'i hemen kapat (snapshot yüklendi, liste dolu ya da boş)
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     if (!_initialLoadComplete)
                     {
-                        IsLoading = false;
                         _initialLoadComplete = true;
+                        IsLoading = false;
                         UpdateHasRequests();
+                        Console.WriteLine("✅ Snapshot yüklendi, loading kapatıldı");
                     }
                 });
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ StartListeningForRequestsAsync hatası: {ex.Message}");
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    IsLoading = false;
+                    UpdateHasRequests();
+                });
+            }
+        }
 
+        private async Task LoadInitialSnapshotAsync(CancellationToken token)
+        {
+            try
+            {
+                // Firebase'den snapshot al (iki sorgu: gelen + giden)
+                var incomingTask = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .OrderBy("ProviderId")
+                    .EqualTo(_currentUserId)
+                    .OnceAsync<ServiceRequest>();
+
+                var outgoingTask = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .OrderBy("RequesterId")
+                    .EqualTo(_currentUserId)
+                    .OnceAsync<ServiceRequest>();
+
+                var results = await Task.WhenAll(incomingTask, outgoingTask);
+
+                if (token.IsCancellationRequested) return;
+
+                var incomingData = results[0];
+                var outgoingData = results[1];
+
+                // ✅ Verileri UI'a ekle
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    // Gelen talepler
+                    foreach (var item in incomingData)
+                    {
+                        var request = item.Object;
+                        request.RequestId = item.Key;
+                        
+                        if (!_incomingRequestIds.Contains(request.RequestId))
+                        {
+                            IncomingRequests.Add(request);
+                            _incomingRequestIds.Add(request.RequestId);
+                        }
+                    }
+
+                    // Giden talepler
+                    foreach (var item in outgoingData)
+                    {
+                        var request = item.Object;
+                        request.RequestId = item.Key;
+                        
+                        if (!_outgoingRequestIds.Contains(request.RequestId))
+                        {
+                            OutgoingRequests.Add(request);
+                            _outgoingRequestIds.Add(request.RequestId);
+                        }
+                    }
+
+                    // Sıralama
+                    SortRequestsInPlace(IncomingRequests);
+                    SortRequestsInPlace(OutgoingRequests);
+
+                    Console.WriteLine($"📊 Snapshot yüklendi: {IncomingRequests.Count} gelen, {OutgoingRequests.Count} giden talep");
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Snapshot yükleme hatası: {ex.Message}");
+            }
+        }
+
+        private void StartRealtimeListener()
+        {
             _requestsSubscription = _firebaseClient
                 .Child(Constants.ServiceRequestsCollection)
                 .AsObservable<ServiceRequest>()
@@ -217,17 +260,7 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
-                                // Veri geldiğinde timeout'u iptal et
-                                _loadingTimeoutCts?.Cancel();
-
                                 ProcessRequestBatch(events);
-
-                                // İlk veri geldiğinde (boş olsa dahi batch içinden geçince) yüklemeyi bitir
-                                if (!_initialLoadComplete)
-                                {
-                                    _initialLoadComplete = true;
-                                    IsLoading = false;
-                                }
                                 UpdateHasRequests();
                             }
                             catch (Exception ex)
@@ -246,6 +279,7 @@ namespace KamPay.ViewModels
                         });
                     });
         }
+        
         private void ProcessRequestBatch(IList<FirebaseEvent<ServiceRequest>> events)
         {
             bool hasIncomingChanges = false;
@@ -272,12 +306,6 @@ namespace KamPay.ViewModels
                         hasOutgoingChanges = true;
                     }
                 }
-            }
-
-            //  İLK VERİ GELDİĞİNDE LOADING'İ KAPAT
-            if ((hasIncomingChanges || hasOutgoingChanges) && IsLoading)
-            {
-                IsLoading = false;
             }
 
             //  Sadece değişenler için sıralama
@@ -350,6 +378,7 @@ namespace KamPay.ViewModels
                 }
             }
         }
+
         // SAĞLAYICI İÇİN
         [RelayCommand]
         private async Task FinishServiceAsync(ServiceRequest request)
@@ -418,10 +447,8 @@ namespace KamPay.ViewModels
                 OutgoingRequests.Clear();
                 _initialLoadComplete = false;
 
-                // Listener'ı yeniden başlat
-                StartListeningForRequests();
-
-                await Task.Delay(300);
+                // Listener'ı yeniden başlat (snapshot + realtime)
+                await StartListeningForRequestsAsync();
             }
             catch (Exception ex)
             {
@@ -449,16 +476,13 @@ namespace KamPay.ViewModels
                 // Eğer listener bir şekilde durduysa veya hiç başlamadıysa yeniden başlat
                 if (_requestsSubscription == null)
                 {
-                    StartListeningForRequests();
+                    await StartListeningForRequestsAsync();
                 }
-
-                // Verilerin gelmesi için kısa bir süre bekle (opsiyonel)
-                await Task.Delay(500);
             }
-            finally
+            catch (Exception ex)
             {
-                // _initialLoadComplete listener içinde false'a çekildiği için 
-                // burada IsLoading'i kapatmaya gerek yok, listener kapatacaktır.
+                Console.WriteLine($"❌ LoadRequestsAsync hatası: {ex.Message}");
+                IsLoading = false;
             }
         }
 
