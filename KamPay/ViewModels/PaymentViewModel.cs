@@ -40,7 +40,22 @@ namespace KamPay.ViewModels
             // ✅ Transaction null kontrolü
             if (Transaction == null)
             {
-                await Shell.Current.DisplayAlert(Res["Error"], "İşlem bilgisi yüklenemedi. Lütfen tekrar deneyin.", Res["Ok"]);
+                await Shell.Current.DisplayAlert(
+                    Res["Error"], 
+                    "İşlem bilgisi yüklenemedi. Lütfen geri gidip tekrar deneyin.", 
+                    Res["Ok"]
+                );
+                return;
+            }
+            
+            // ✅ TransactionId null kontrolü
+            if (string.IsNullOrWhiteSpace(Transaction.TransactionId))
+            {
+                await Shell.Current.DisplayAlert(
+                    Res["Error"], 
+                    "İşlem ID'si bulunamadı. Lütfen tekrar deneyin.", 
+                    Res["Ok"]
+                );
                 return;
             }
 
