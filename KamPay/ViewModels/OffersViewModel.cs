@@ -478,6 +478,24 @@ namespace KamPay.ViewModels
             IsOutgoingSelected = true;
         }
 
+        /// <summary>
+        /// Helper method to manually update IncomingOffers collection for instant UI updates
+        /// </summary>
+        private async Task UpdateIncomingOfferInUIAsync(string transactionId, Transaction updatedTransaction)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transactionId);
+                if (incoming != null && updatedTransaction != null)
+                {
+                    var index = IncomingOffers.IndexOf(incoming);
+                    IncomingOffers[index] = updatedTransaction; // Replace with new object
+                    OnPropertyChanged(nameof(IncomingOffers));
+                    UpdateHasOffers();
+                }
+            });
+        }
+
         [RelayCommand]
         private async Task ManageDeliveryAsync(Transaction transaction)
         {
@@ -540,17 +558,7 @@ namespace KamPay.ViewModels
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
 
                         // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (incoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(incoming);
-                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                UpdateHasOffers();
-                            }
-                        });
+                        await UpdateIncomingOfferInUIAsync(transaction.TransactionId, result.Data);
 
                         var successMessage = accept 
                             ? "Satın alma talebi kabul edildi! Alıcı ödeme yapabilir." 
@@ -614,17 +622,7 @@ namespace KamPay.ViewModels
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
 
                         // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (incoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(incoming);
-                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                UpdateHasOffers();
-                            }
-                        });
+                        await UpdateIncomingOfferInUIAsync(transaction.TransactionId, result.Data);
 
                         var successMessage = accept 
                             ? "Pazarlık sonucu onaylandı! Alıcı ödeme yapabilir." 
@@ -672,17 +670,7 @@ namespace KamPay.ViewModels
                         Debug.WriteLine($"✅ TAKAS onaylandı: {transaction.TransactionId}");
 
                         // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (incoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(incoming);
-                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                UpdateHasOffers();
-                            }
-                        });
+                        await UpdateIncomingOfferInUIAsync(transaction.TransactionId, result.Data);
 
                         var successMessage = accept 
                             ? "Takas teklifi kabul edildi! QR kodlar oluşturuldu." 
@@ -724,17 +712,7 @@ namespace KamPay.ViewModels
                         Debug.WriteLine($"✅ BAĞIŞ onaylandı: {transaction.TransactionId}");
 
                         // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (incoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(incoming);
-                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                UpdateHasOffers();
-                            }
-                        });
+                        await UpdateIncomingOfferInUIAsync(transaction.TransactionId, result.Data);
 
                         var successMessage = accept 
                             ? "Bağış talebi kabul edildi!" 
