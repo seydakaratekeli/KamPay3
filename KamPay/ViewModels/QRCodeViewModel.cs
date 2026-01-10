@@ -226,7 +226,7 @@ namespace KamPay.ViewModels
                             {
                                 string promptMessage = pinAttempts == 0
                                     ? "Karşı tarafın size verdiği 6 haneli PIN kodunu girin:"
-                                    : $"Yanlış PIN! Kalan deneme: {MAX_PIN_ATTEMPTS - pinAttempts}\n\nLütfen doğru PIN kodunu girin:";
+                                    : $"Yanlış PIN! Kalan deneme: {MAX_PIN_ATTEMPTS - pinAttempts - 1}\n\nLütfen doğru PIN kodunu girin:";
 
                                 System.Diagnostics.Debug.WriteLine($"[PIN DOĞRULAMA] Deneme: {pinAttempts + 1}/{MAX_PIN_ATTEMPTS}");
 
@@ -266,6 +266,7 @@ namespace KamPay.ViewModels
                                     System.Diagnostics.Debug.WriteLine($"[PIN DOĞRULAMA] ❌ Başarısız - Deneme: {pinAttempts}, Hata: {scanResult.Message}");
                                     
                                     // Eğer backend QR kodu iptal ettiyse (max attempt aşıldı), döngüyü kır
+                                    // Note: Ideally this should use error codes instead of string matching for reliability
                                     if (scanResult.Message.Contains("iptal edildi") || scanResult.Message.Contains("Çok fazla"))
                                     {
                                         await Application.Current.MainPage.DisplayAlert(
@@ -817,10 +818,10 @@ namespace KamPay.ViewModels
                     System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] ✅ Başarılı - URL: {result.Data}");
                     
                     // 1. Backend verilerini yeniden yükle
+                    // Note: LoadTransactionAndQRCodesAsync() internally calls UpdateUIState()
                     await LoadTransactionAndQRCodesAsync();
                     
-                    // 2. UI state'i güncelle (LoadTransactionAndQRCodesAsync içinde UpdateUIState çağrılıyor)
-                    // Ek doğrulama için manuel kontrol
+                    // 2. UI state verification - UpdateUIState() was called by LoadTransactionAndQRCodesAsync()
                     System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] UI Durumu Güncellendi:");
                     System.Diagnostics.Debug.WriteLine($"   PhotoRequired: {PhotoRequired}");
                     System.Diagnostics.Debug.WriteLine($"   IsPhotoUploaded: {IsPhotoUploaded}");
