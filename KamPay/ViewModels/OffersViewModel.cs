@@ -489,7 +489,9 @@ namespace KamPay.ViewModels
                 if (incoming != null && updatedTransaction != null)
                 {
                     var index = IncomingOffers.IndexOf(incoming);
-                    IncomingOffers[index] = updatedTransaction; // Replace with new object
+                    // ✅ Properly trigger collection change notifications
+                    IncomingOffers.RemoveAt(index);
+                    IncomingOffers.Insert(index, updatedTransaction);
                     OnPropertyChanged(nameof(IncomingOffers));
                     UpdateHasOffers();
                 }
