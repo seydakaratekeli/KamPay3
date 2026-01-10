@@ -9,14 +9,14 @@ namespace KamPay.Converters
         {
             if (value is Transaction transaction)
             {
-                // Buton sadece;
+                // ✅ DÜZELTME: PaymentStatus kontrolü kaldırıldı
+                // Buton sadece şu koşullarda görünsün:
                 // 1. İşlem "Bağış" ise
                 // 2. Durumu "Kabul Edilmiş" ise
-                // 3. (Ödeme durumu "Pending" ise - veya Status != Completed da diyebiliriz)
-                //    PaymentStatus'u burada kullanmak Satış ile tutarlılık sağlar.
+                // 3. Henüz tamamlanmamışsa
                 return transaction.Type == ProductType.Bagis &&
                        transaction.Status == TransactionStatus.Accepted &&
-                       transaction.PaymentStatus == PaymentStatus.Pending; // PaymentStatus'u Paid yapmayacağız ama tamamlanmadığını anlamak için Pending durumuna bakabiliriz.
+                       transaction.Status != TransactionStatus.Completed;
             }
             return false;
         }

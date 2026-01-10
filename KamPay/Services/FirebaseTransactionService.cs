@@ -157,6 +157,41 @@ namespace KamPay.Services
                         Console.WriteLine($"⚠️ UYARI: Takas işlemi ama OfferedProductId boş!");
                         Console.WriteLine($"   Muhtemelen CreateTradeOfferAsync'te veri kaydedilmedi.");
                     }
+                    // ✅ YENİ EKLENECEK: BAĞIŞ için QR kod
+                    else if (transaction.Type == ProductType.Bagis)
+                    {
+                        Console.WriteLine($"✅ Bağış kabul edildi. QR kod oluşturuluyor: {transactionId}");
+                        
+                        var qrCode = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
+                            transactionId,
+                            transaction.ProductId,
+                            transaction.ProductTitle,
+                            transaction.SellerId,  // Bağışçı veriyor
+                            transaction.BuyerId,   // Alıcı alıyor
+                            validityMinutes: PaymentConstants.QRCodeValidityMinutes,
+                            meetingPointLatitude: null,
+                            meetingPointLongitude: null,
+                            meetingPointName: null
+                        );
+
+                        if (!qrCode.Success)
+                        {
+                            Console.WriteLine($"❌ Bağış QR kod hatası!");
+                            return ServiceResult<Transaction>.FailureResult("Bağış kabul edildi ancak QR kod oluşturulamadı.");
+                        }
+                        
+                        Console.WriteLine($"✅ Bağış QR kodu başarıyla oluşturuldu!");
+                        
+                        // Alıcıya bildirim gönder
+                        await _notificationService.CreateNotificationAsync(new Notification
+                        {
+                            UserId = transaction.BuyerId,
+                            Type = NotificationType.OfferAccepted,
+                            Title = "🎁 Bağış Onaylandı - QR Kodunuz Hazır",
+                            Message = $"'{transaction.ProductTitle}' bağışı onaylandı. QR kodunuzu göstererek ürünü teslim alabilirsiniz.",
+                            ActionUrl = nameof(Views.OffersPage)
+                        });
+                    }
                     
                     // ✅ SATIŞ için ödeme sayfasına yönlendirme bildirimi
                     if (transaction.Type == ProductType.Satis)
