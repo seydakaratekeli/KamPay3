@@ -775,7 +775,23 @@ namespace KamPay.ViewModels
         public static void ClearCache()
         {
             _conversationCache.Clear();
-            Console.WriteLine("🗑️ Tüm cache temizlendi");
+            Console.WriteLine("✅ ChatViewModel cache temizlendi");
+        }
+        
+        // ✅ YENİ: Belirli bir kullanıcının cache'ini temizle
+        public static void ClearUserCache(string userId)
+        {
+            var keysToRemove = _conversationCache
+                .Where(kvp => kvp.Value.UserId == userId)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in keysToRemove)
+            {
+                _conversationCache.Remove(key);
+            }
+            
+            Console.WriteLine($"✅ {userId} için {keysToRemove.Count} konuşma cache'i temizlendi");
         }
 
         public static void ClearOldCache(int maxAgeMinutes = 30)

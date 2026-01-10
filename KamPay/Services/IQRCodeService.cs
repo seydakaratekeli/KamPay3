@@ -77,6 +77,9 @@ namespace KamPay.Services
         // 📌 Güvenlik sabitleri
         private const int MaxExtensionMinutes = 30;
         private const int ExtendTimeThresholdMinutes = 15;
+        
+        // ✅ YENİ: Eşzamanlı QR tarama için mutex kilidi
+        private static readonly SemaphoreSlim _qrScanLock = new SemaphoreSlim(1, 1);
 
         public FirebaseQRCodeService(IUserProfileService userProfileService, IStorageService storageService)
         {
@@ -193,6 +196,9 @@ namespace KamPay.Services
             double currentLongitude,
             string? verificationPin = null)
         {
+            // ✅ YENİ: Eşzamanlı tarama için kilit
+            await _qrScanLock.WaitAsync();
+            
             try
             {
                 var deliveryNode = _firebaseClient.Child(QRCodesCollection).Child(qrCodeId);
@@ -212,10 +218,10 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("QR kodun süresi dolmuş.");
                 }
 
-                // 3. Zaten kullanılmış mı?
+                // 3. ✅ YENİ: Zaten kullanılmış mı kontrol et
                 if (delivery.IsUsed)
                 {
-                    return ServiceResult<bool>.FailureResult("Bu QR kod daha önce kullanılmış.");
+                    return ServiceResult<bool>.FailureResult("Bu QR kod zaten kullanılmış.");
                 }
 
                 // 4. İptal edilmiş mi?
@@ -324,6 +330,10 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 return ServiceResult<bool>.FailureResult("Teslimat doğrulama hatası", ex.Message);
+            }
+            finally
+            {
+                _qrScanLock.Release();
             }
         }
 

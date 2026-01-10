@@ -121,10 +121,17 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ConfirmCardPaymentAsync()
         {
-            // ✅ Transaction ve PaymentDetails null kontrolü
-            if (Transaction == null || PaymentDetails == null)
+            // ✅ Transaction null kontrolü
+            if (Transaction == null || string.IsNullOrWhiteSpace(Transaction.TransactionId))
             {
-                await Shell.Current.DisplayAlert(Res["Error"], "Ödeme bilgisi bulunamadı. Lütfen önce ödeme yöntemini seçin.", Res["Ok"]);
+                await Shell.Current.DisplayAlert(Res["Error"], "İşlem bilgisi eksik. Lütfen geri gidip tekrar deneyin.", Res["Ok"]);
+                return;
+            }
+            
+            // ✅ PaymentDetails null kontrolü
+            if (PaymentDetails == null || string.IsNullOrWhiteSpace(PaymentDetails.PaymentId))
+            {
+                await Shell.Current.DisplayAlert(Res["Error"], "Ödeme bilgisi yüklenemedi.", Res["Ok"]);
                 return;
             }
 

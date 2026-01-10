@@ -27,16 +27,18 @@ namespace KamPay.Services
                 var body = string.Format(loc["EmailVerificationBody"], verificationCode);
 
                 // 2) Debug'a yaz GELİŞTİRME AŞAMASI İÇİN SİMÜLASYON
-                Debug.WriteLine("---------- KamPay Doğrulama Kodu (Debug) ----------");
+                Debug.WriteLine("---------- KamPay Doğrulama Kodu (SİMÜLASYON MODU) ----------");
                 Debug.WriteLine($"To: {toEmail}");
                 Debug.WriteLine($"Kod: {verificationCode}");
-                Debug.WriteLine("--------------------------------------------------");
+                Debug.WriteLine("GERÇEK E-POSTA GÖNDERİLMEDİ - Kod sadece debug log'da görünüyor");
+                Debug.WriteLine("-------------------------------------------------------------");
                 
                 // Console'a da yaz (Android Log için)
-                Console.WriteLine("---------- KamPay Doğrulama Kodu ----------");
+                Console.WriteLine("---------- KamPay Doğrulama Kodu (SİMÜLASYON) ----------");
                 Console.WriteLine($"To: {toEmail}");
                 Console.WriteLine($"Kod: {verificationCode}");
-                Console.WriteLine("--------------------------------------------");
+                Console.WriteLine("⚠️ SMTP kapalı - Gerçek e-posta gönderilmedi");
+                Console.WriteLine("--------------------------------------------------------");
 
                 // 3)  SİMÜLASYON MODU: SMTP kodunu devre dışı bırak
                 // Gerçek bir SMTP servisi bağlandığında aşağıdaki kod bloğu aktif edilecektir.

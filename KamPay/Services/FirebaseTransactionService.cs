@@ -327,21 +327,12 @@ namespace KamPay.Services
                 {
                     var productTransaction = transaction as Transaction;
                     
-                    // ✅ GÜVENLİK: PaymentStatus kontrolü
-                    if (productTransaction.PaymentStatus != PaymentStatus.Pending)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ PaymentStatus uygun değil: {productTransaction.PaymentStatus}");
-                        return ServiceResult<PaymentDto>.FailureResult(
-                            "Bu işlem için ödeme zaten başlatılmış veya tamamlanmış."
-                        );
-                    }
-                    
                     // ✅ GÜVENLİK: Status kontrolü - Satıcı onayı gerekli
                     if (productTransaction.Status != TransactionStatus.Accepted)
                     {
                         System.Diagnostics.Debug.WriteLine($"❌ Status uygun değil: {productTransaction.Status}");
                         return ServiceResult<PaymentDto>.FailureResult(
-                            "İşlem henüz satıcı tarafından onaylanmamış. Önce onay beklenmeli."
+                            "Ödeme sadece onaylanmış işlemler için yapılabilir."
                         );
                     }
                     
@@ -350,7 +341,25 @@ namespace KamPay.Services
                     {
                         System.Diagnostics.Debug.WriteLine($"❌ Pazarlık devam ediyor!");
                         return ServiceResult<PaymentDto>.FailureResult(
-                            "Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor."
+                            "Pazarlık devam ederken ödeme yapılamaz."
+                        );
+                    }
+                    
+                    // ✅ GÜVENLİK: Duplicate payment kontrolü
+                    if (productTransaction.PaymentStatus == PaymentStatus.Paid)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"❌ Ödeme zaten yapılmış!");
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "Bu işlem için ödeme zaten yapılmış."
+                        );
+                    }
+                    
+                    // ✅ GÜVENLİK: PaymentStatus kontrolü
+                    if (productTransaction.PaymentStatus != PaymentStatus.Pending)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"❌ PaymentStatus uygun değil: {productTransaction.PaymentStatus}");
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "Bu işlem için ödeme zaten başlatılmış."
                         );
                     }
                     

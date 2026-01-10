@@ -110,6 +110,10 @@ namespace KamPay.Models
         // Aktif konuşma var mı?
         
         public bool HasActiveConversation { get; set; } = false;
+        
+        // ✅ YENİ: Orphan transaction kontrolü için
+        public bool IsTemporary { get; set; } = false;
+        public string? CreatedForService { get; set; }
 
         //  Görsel durum metni
         public string StatusText
