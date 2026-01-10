@@ -441,4 +441,77 @@ namespace KamPay.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// PaymentStatus'ü kontrol eder - Pending ise true döner
+    /// </summary>
+    public class PaymentPendingConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value is PaymentStatus status && status == PaymentStatus.Pending;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// PaymentStatus'ü kontrol eder - Paid ise true döner
+    /// </summary>
+    public class PaymentPaidConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value is PaymentStatus status && status == PaymentStatus.Paid;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// ProductType'ı kontrol eder - Bagis ise true döner
+    /// </summary>
+    public class IsDonationConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value is ProductType type && type == ProductType.Bagis;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Birden fazla bool değeri alır, herhangi biri true ise true döner
+    /// </summary>
+    public class AnyTrueConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values == null || values.Length == 0)
+                return false;
+
+            foreach (var value in values)
+            {
+                if (value is bool boolValue && boolValue)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

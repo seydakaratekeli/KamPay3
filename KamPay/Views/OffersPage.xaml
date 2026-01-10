@@ -35,6 +35,15 @@
             <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
             <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
+            <!-- ✅ YENİ CONVERTER'LAR -->
+            <converters:PaymentPendingConverter x:Key="PaymentPendingConverter"/>
+            <converters:PaymentPaidConverter x:Key="PaymentPaidConverter"/>
+            <converters:IsDonationConverter x:Key="IsDonationConverter"/>
+            <converters:AnyTrueConverter x:Key="AnyTrueConverter"/>
+            <!-- ✅ YENİ: Pazarlık durum metni converter'ı -->
+            <converters:NegotiationStatusTextConverter x:Key="NegotiationStatusTextConverter"/>
+            <!-- ✅ YENİ: Pazarlık onaylama converter'ı -->
+            <converters:CanAcceptNegotiationConverter x:Key="CanAcceptNegotiationConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -212,19 +221,11 @@
                                                 StrokeThickness="0"
                                                 BackgroundColor="{StaticResource AccentOrange}"
                                                 Padding="12">
-                                            <VerticalStackLayout Spacing="5">
-                                                <Label FontAttributes="Bold" TextColor="White" FontSize="13">
-                                                    <Label.FormattedText>
-                                                        <FormattedString>
-                                                            <Span Text="{Binding Type, Converter={StaticResource ProductTypeToEmojiConverter}}"/>
-                                                            <Span Text=" Pazarlık Devam Ediyor"/>
-                                                        </FormattedString>
-                                                    </Label.FormattedText>
-                                                </Label>
-                                                <Label Text="{Binding NegotiationStatusText}"
-                                                       TextColor="White"
-                                                       FontSize="12"/>
-                                            </VerticalStackLayout>
+                                            <!-- ✅ Sadece güncel teklif fiyatları göster -->
+                                            <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
+                                                   TextColor="White"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"/>
                                         </Border>
 
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
@@ -241,6 +242,7 @@
                                                         FontSize="18"
                                                         Padding="0"/>
 
+                                                <!-- 📱 QR Teslimat (SADECE TAKAS + Accepted) -->
                                                 <Button Text="📱"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
                                                         CommandParameter="{Binding .}"
@@ -250,9 +252,16 @@
                                                         HeightRequest="45"
                                                         CornerRadius="22"
                                                         FontSize="18"
-                                                        Padding="0"
-                                                        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
 
+                                                <!-- 💰 Karşı Teklif Butonu (SATICI - Satış, Pending VEYA Negotiating) -->
                                                 <Button Text="💰"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
                                                         CommandParameter="{Binding .}"
@@ -266,8 +275,11 @@
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
-                                                            <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
-                                                            <Binding Path="SellerId" Converter="{StaticResource IsCurrentUserConverter}"/>
+                                                            <!-- Pending VEYA Negotiating -->
+                                                            <MultiBinding Converter="{StaticResource AnyTrueConverter}">
+                                                                <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                                <Binding Path="IsNegotiating"/>
+                                                            </MultiBinding>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                 </Button>
@@ -303,6 +315,7 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
+                    <!-- ✅ OUTGOING OFFERS - YENİLENMİŞ BUTTON YAPILANMASI -->
                     <CollectionView ItemsSource="{Binding OutgoingOffers}"
                                     IsVisible="{Binding IsOutgoingSelected}"
                                     Margin="15,10">
@@ -395,24 +408,18 @@
                                                 StrokeThickness="0"
                                                 BackgroundColor="{StaticResource AccentOrange}"
                                                 Padding="12">
-                                            <VerticalStackLayout Spacing="5">
-                                                <Label FontAttributes="Bold" TextColor="White" FontSize="13">
-                                                    <Label.FormattedText>
-                                                        <FormattedString>
-                                                            <Span Text="{Binding Type, Converter={StaticResource ProductTypeToEmojiConverter}}"/>
-                                                            <Span Text=" Pazarlık Devam Ediyor"/>
-                                                        </FormattedString>
-                                                    </Label.FormattedText>
-                                                </Label>
-                                                <Label Text="{Binding NegotiationStatusText}"
-                                                       TextColor="White"
-                                                       FontSize="12"/>
-                                            </VerticalStackLayout>
+                                            <!-- ✅ Sadece güncel teklif fiyatları göster -->
+                                            <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
+                                                   TextColor="White"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"/>
                                         </Border>
 
+                                        <!-- ✅ ALICI İÇİN BUTONLAR (OUTGOING OFFERS) -->
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
+                                                <!-- 💬 Mesajlaşma Butonu (Her zaman) -->
                                                 <Button Text="💬"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
                                                         CommandParameter="{Binding .}"
@@ -424,6 +431,7 @@
                                                         FontSize="18"
                                                         Padding="0"/>
 
+                                                <!-- 📱 QR Teslimat (Takas, Accepted) -->
                                                 <Button Text="📱"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
                                                         CommandParameter="{Binding .}"
@@ -433,10 +441,74 @@
                                                         HeightRequest="45"
                                                         CornerRadius="22"
                                                         FontSize="18"
-                                                        Padding="0"
-                                                        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
 
-                                                <Button Text="✓"
+                                                <!-- 💰 Fiyat Teklifi (SATIŞ - ALICI - Pending VEYA Negotiating) -->
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#FFF3E0"
+                                                        TextColor="{StaticResource AccentOrange}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <MultiBinding Converter="{StaticResource AnyTrueConverter}">
+                                                                <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                                <Binding Path="IsNegotiating"/>
+                                                            </MultiBinding>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
+
+                                                <!-- 💵 Ek Nakit Teklifi (TAKAS - ALICI - Pending VEYA Negotiating) -->
+                                                <Button Text="💵"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposeAdditionalCashCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#E8F5E9"
+                                                        TextColor="{StaticResource AccentGreen}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <MultiBinding Converter="{StaticResource AnyTrueConverter}">
+                                                                <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
+                                                                <Binding Path="IsNegotiating"/>
+                                                            </MultiBinding>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
+
+                                                <!-- ✅ Pazarlık Sonucunu Onayla (Satıcının/Sahip'in karşı teklifi varsa) -->
+                                                <Button Text="✅"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding ., Converter={StaticResource CanAcceptNegotiationConverter}}"/>
+
+                                                <!-- 💳 Ödeme Yap (SATIŞ - Accepted, PaymentPending) -->
+                                                <Button Text="💳"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource AccentGreen}"
@@ -444,9 +516,35 @@
                                                         WidthRequest="45"
                                                         HeightRequest="45"
                                                         CornerRadius="22"
-                                                        FontSize="20"
-                                                        Padding="0"
-                                                        IsVisible="{Binding Path=., Converter={StaticResource SimulatePaymentButtonVisibilityConverter}}"/>
+                                                        FontSize="18"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
+                                                            <Binding Path="PaymentStatus" Converter="{StaticResource PaymentPendingConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
+
+                                                <!-- ✅ Bağış Onayla (BAĞIŞ - Accepted) -->
+                                                <Button Text="✅"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ConfirmDonationCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource AccentGreen}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0">
+                                                    <Button.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                            <Binding Path="Type" Converter="{StaticResource IsDonationConverter}"/>
+                                                            <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.IsVisible>
+                                                </Button>
                                             </HorizontalStackLayout>
                                         </Grid>
                                     </VerticalStackLayout>

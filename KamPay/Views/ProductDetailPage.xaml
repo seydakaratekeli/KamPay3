@@ -31,6 +31,7 @@
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
+            <converters:CanNegotiateConverter x:Key="CanNegotiateConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -254,18 +255,22 @@
                                             CornerRadius="12"
                                             FontSize="18"
                                             HeightRequest="44">
+                                        <Button.IsVisible>
+                                            <MultiBinding Converter="{StaticResource CanNegotiateConverter}">
+                                                <Binding Path="ActiveTransaction.Status" />
+                                                <Binding Path="ActiveTransaction.IsNegotiating" />
+                                            </MultiBinding>
+                                        </Button.IsVisible>
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" 
                                                          Binding="{Binding Product.Type}" 
                                                          Value="{x:Static models:ProductType.Satis}">
                                                 <Setter Property="Command" Value="{Binding ProposePriceCommand}"/>
-                                                <Setter Property="IsVisible" Value="{Binding ActiveTransaction.Status, Converter={StaticResource IsPendingConverter}}"/>
                                             </DataTrigger>
                                             <DataTrigger TargetType="Button" 
                                                          Binding="{Binding Product.Type}" 
                                                          Value="{x:Static models:ProductType.Takas}">
                                                 <Setter Property="Command" Value="{Binding ProposeAdditionalCashCommand}"/>
-                                                <Setter Property="IsVisible" Value="{Binding ActiveTransaction.Status, Converter={StaticResource IsPendingConverter}}"/>
                                             </DataTrigger>
                                         </Button.Triggers>
                                     </Button>

@@ -36,6 +36,13 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task StartPaymentAsync(string method) // "cardsim" veya "banktransfersim"
         {
+            // ✅ Transaction null kontrolü
+            if (Transaction == null)
+            {
+                await Shell.Current.DisplayAlert(Res["Error"], "İşlem bilgisi yüklenemedi. Lütfen tekrar deneyin.", Res["Ok"]);
+                return;
+            }
+
             // 1. Ağ Kontrolü
             if (!NetworkHelper.HasInternetConnection())
             {
@@ -99,6 +106,13 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ConfirmCardPaymentAsync()
         {
+            // ✅ Transaction ve PaymentDetails null kontrolü
+            if (Transaction == null || PaymentDetails == null)
+            {
+                await Shell.Current.DisplayAlert(Res["Error"], "Ödeme bilgisi bulunamadı. Lütfen önce ödeme yöntemini seçin.", Res["Ok"]);
+                return;
+            }
+
             // 1. Validasyonlar
             if (IsCardSelected)
             {

@@ -1,5 +1,4 @@
 ﻿using KamPay.ViewModels;
-using System;
 
 namespace KamPay.Views
 {
@@ -90,7 +89,7 @@ namespace KamPay.Views
             System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
         }
 
-        //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
+        // Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
         ~OffersPage()
         {
             _viewModel?.Dispose();
