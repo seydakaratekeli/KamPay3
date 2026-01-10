@@ -3,6 +3,11 @@ using KamPay.Models;
 
 namespace KamPay.Converters
 {
+    /// <summary>
+    /// NOTE: With auto-approval after negotiation, this converter may not be actively used
+    /// as transactions are automatically set to Accepted when buyer accepts negotiated price.
+    /// This is kept for potential future use or backward compatibility.
+    /// </summary>
     public class CanApproveAfterNegotiationConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

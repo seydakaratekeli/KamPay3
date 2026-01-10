@@ -1459,6 +1459,8 @@ namespace KamPay.Services
                 }
 
                 // ✅ YENİ: Pazarlığı sonlandır ve otomatik olarak Status = Accepted yap
+                // İŞ KURALI: Satıcı zaten karşı teklif yaptı, alıcı kabul edince anlaşma tamamlanır.
+                // Her iki taraf da fiyat üzerinde anlaştığı için satıcının tekrar onayına gerek yoktur.
                 transaction.IsNegotiating = false;
                 
                 // ✅ YENİ: Alıcı kabul edince otomatik olarak Status = Accepted yap
