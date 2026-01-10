@@ -1458,11 +1458,13 @@ namespace KamPay.Services
                     transaction.QuotedPrice = agreedAmount;
                 }
 
-                // ✅ KRİTİK: Pazarlığı sonlandır AMA Status'ü DEĞİŞTİRME
+                // ✅ YENİ: Pazarlığı sonlandır ve otomatik olarak Status = Accepted yap
+                // İŞ KURALI: Satıcı zaten karşı teklif yaptı, alıcı kabul edince anlaşma tamamlanır.
+                // Her iki taraf da fiyat üzerinde anlaştığı için satıcının tekrar onayına gerek yoktur.
                 transaction.IsNegotiating = false;
                 
-                // ✅ Status = Pending KALSIN (Satıcı hala RespondToOfferAsync ile onaylamalı)
-                // transaction.Status = TransactionStatus.Accepted; // ❌ KALDIRILDI
+                // ✅ YENİ: Alıcı kabul edince otomatik olarak Status = Accepted yap
+                transaction.Status = TransactionStatus.Accepted;
                 
                 // NegotiationRules helper'ını kullanarak detaylı özet oluştur
                 var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
@@ -1477,42 +1479,34 @@ namespace KamPay.Services
                     agreedAmount);
                 
                 negotiationSummary += $"👤 Kabul Eden: {acceptedBy}\n";
-                negotiationSummary += $"⏳ Durum: Satıcının son onayı bekleniyor\n";
+                negotiationSummary += $"✅ Durum: Onaylandı - Ödeme yapılabilir\n";
                 
                 transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
-                // ✅ KRİTİK FİX: Firebase'e kaydet!
+                // ✅ Firebase'e kaydet
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
                     .Child(transactionId)
                     .PutAsync(transaction);
 
-                // ✅ Rezervasyon ve QR kodları oluşturma KALDIRILDI
-                // Bu işlemler RespondToOfferAsync içinde yapılacak (satıcı "Onayla" dediğinde)
-
-                // Her iki tarafa da bildirim gönder
-                var notificationMessage = transaction.Type == ProductType.Satis
-                    ? $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatı üzerinde anlaşıldı.\n\n⏳ Satıcı onayı bekleniyor."
-                    : $"'{transaction.ProductTitle}' takası için {agreedAmount:N2}₺ ek ödeme üzerinde anlaşıldı.\n\n⏳ Satıcı onayı bekleniyor.";
-
-                // Alıcıya bildirim
-                await _notificationService.CreateNotificationAsync(new Notification
-                {
-                    UserId = transaction.BuyerId,
-                    Type = NotificationType.NewOffer,
-                    Title = "✅ Fiyat Anlaşması",
-                    Message = notificationMessage,
-                    ActionUrl = nameof(Views.OffersPage)
-                });
-
-                // Satıcıya bildirim
+                // ✅ YENİ: Satıcıya bildirim gönder - Ödeme bekleniyor
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = transaction.SellerId,
-                    Type = NotificationType.NewOffer,
-                    Title = "✅ Fiyat Anlaşması - Onay Bekliyor",
-                    Message = $"{notificationMessage}\n\n👉 Lütfen 'Onayla' butonuna basarak işlemi onaylayın.",
+                    Type = NotificationType.TransactionUpdate,
+                    Title = "💰 Pazarlık Tamamlandı",
+                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ teklifinizi kabul etti. Ödeme bekleniyor.",
+                    ActionUrl = nameof(Views.OffersPage)
+                });
+
+                // ✅ YENİ: Alıcıya da bildirim - Artık ödeme yapabilir
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = transaction.BuyerId,
+                    Type = NotificationType.TransactionUpdate,
+                    Title = "✅ Fiyat Onaylandı",
+                    Message = $"'{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ fiyatında anlaştınız. Artık ödeme yapabilirsiniz.",
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
@@ -1529,12 +1523,11 @@ namespace KamPay.Services
                     await AddSystemMessageAsync(
                         transaction.ConversationId,
                         $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n✅ Fiyat Anlaşması: {agreedAmount:N2} ₺{exchangeInfo}\n\n" +
-                        $"⏳ Satıcının 'Onayla' butonuna basması bekleniyor.\n" +
-                        $"Onaylandıktan sonra {(transaction.Type == ProductType.Satis ? "ödeme yapılabilir" : "teslimat için QR kodları kullanılabilir")}."
+                        $"✅ İşlem onaylandı! {(transaction.Type == ProductType.Satis ? "Ödeme yapılabilir" : "Teslimat için QR kodları kullanılabilir")}."
                     );
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"✅ {agreedAmount:N2}₺ fiyatı üzerinde anlaşıldı!\n\n⏳ Satıcının son onayı bekleniyor.");
+                return ServiceResult<bool>.SuccessResult(true, $"✅ {agreedAmount:N2}₺ fiyatında anlaştınız! Artık ödeme yapabilirsiniz.");
             }
             catch (Exception ex)
             {
