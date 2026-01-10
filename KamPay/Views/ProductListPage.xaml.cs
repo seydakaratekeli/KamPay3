@@ -57,5 +57,18 @@ namespace KamPay.Views
                 }
             });
         }
+        
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            
+            // ✅ Dispose ViewModel to cleanup listeners
+            if (BindingContext is ProductListViewModel vm)
+            {
+                vm.Dispose();
+            }
+            
+            System.Diagnostics.Debug.WriteLine("✅ ProductListPage: Listener cleanup yapıldı");
+        }
     }
 }

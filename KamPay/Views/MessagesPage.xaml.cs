@@ -83,7 +83,14 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // Dispose otomatik çağrılır, ekstra birşey yapma
+            
+            // ✅ Dispose ViewModel to cleanup listeners
+            if (BindingContext is MessagesViewModel vm)
+            {
+                vm.Dispose();
+            }
+            
+            System.Diagnostics.Debug.WriteLine("✅ MessagesPage: Listener cleanup yapıldı");
         }
     }
 }

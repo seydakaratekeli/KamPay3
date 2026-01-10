@@ -89,18 +89,17 @@ public partial class FavoritesPage : ContentPage
         });
     }
 
-    //  : base.OnDisappearing() çağrısı
+    //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
     protected override void OnDisappearing()
     {
-        base.OnDisappearing(); //  DOĞRU METHOD!
-        //  Dispose ETME - Listener çalışmaya devam etsin
-        System.Diagnostics.Debug.WriteLine("⏸️ FavoritesPage: Arka plana alındı (Listener aktif)");
-    }
-
-    //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
-    ~FavoritesPage()
-    {
-        _viewModel?.Dispose();
-        System.Diagnostics.Debug.WriteLine("🗑️ FavoritesPage: Dispose edildi");
+        base.OnDisappearing();
+        
+        // ✅ Dispose ViewModel to cleanup listeners
+        if (BindingContext is FavoritesViewModel vm)
+        {
+            vm.Dispose();
+        }
+        
+        System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: Listener cleanup yapıldı");
     }
 }

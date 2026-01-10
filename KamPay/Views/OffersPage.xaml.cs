@@ -86,14 +86,14 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
-        }
-
-        // Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
-        ~OffersPage()
-        {
-            _viewModel?.Dispose();
-            System.Diagnostics.Debug.WriteLine("🗑️ OffersPage: Bellekten kaldırıldı, ViewModel dispose edildi");
+            
+            // ✅ Dispose ViewModel to cleanup listeners
+            if (BindingContext is OffersViewModel vm)
+            {
+                vm.Dispose();
+            }
+            
+            System.Diagnostics.Debug.WriteLine("✅ OffersPage: Listener cleanup yapıldı");
         }
     }
 }

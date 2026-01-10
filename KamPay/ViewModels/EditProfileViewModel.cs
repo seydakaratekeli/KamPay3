@@ -2,6 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using KamPay.Models;
 using KamPay.Services;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace KamPay.ViewModels
 {
@@ -10,7 +13,11 @@ namespace KamPay.ViewModels
     {
         private readonly IUserProfileService _userProfileService;
         private readonly IStorageService _storageService;
-        private readonly IUserStateService _userStateService; // Servis eklendi
+        private readonly IUserStateService _userStateService;
+        private readonly IProductService _productService;
+        private readonly IMessagingService _messagingService;
+        private readonly IServiceSharingService _serviceSharingService;
+        private readonly IGoodDeedService _goodDeedService;
 
         [ObservableProperty]
         private bool _isBusy;
@@ -18,15 +25,22 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private UserProfile _targetProfile;
 
-        // Constructor'a IUserStateService eklendi
         public EditProfileViewModel(
             IUserProfileService userProfileService,
             IStorageService storageService,
-            IUserStateService userStateService)
+            IUserStateService userStateService,
+            IProductService productService,
+            IMessagingService messagingService,
+            IServiceSharingService serviceSharingService,
+            IGoodDeedService goodDeedService)
         {
             _userProfileService = userProfileService;
             _storageService = storageService;
             _userStateService = userStateService;
+            _productService = productService;
+            _messagingService = messagingService;
+            _serviceSharingService = serviceSharingService;
+            _goodDeedService = goodDeedService;
         }
 
         [RelayCommand]
@@ -98,6 +112,30 @@ namespace KamPay.ViewModels
 
                         // Bu çağrı ProfileViewModel'deki event'i tetikler ve tüm UI'ı yeniler
                         _userStateService.SetUser(currentUser);
+                    }
+                    
+                    // ✅ YENİ: Cascade update - Tüm koleksiyonlardaki kullanıcı bilgilerini güncelle
+                    var fullName = TargetProfile.GetFullName();
+                    var updateTasks = new List<Task<ServiceResult<bool>>>
+                    {
+                        _productService.UpdateUserInfoInProductsAsync(TargetProfile.UserId, fullName, TargetProfile.ProfileImageUrl),
+                        _messagingService.UpdateUserInfoInMessagesAsync(TargetProfile.UserId, fullName, TargetProfile.ProfileImageUrl),
+                        _messagingService.UpdateUserInfoInConversationsAsync(TargetProfile.UserId, fullName, TargetProfile.ProfileImageUrl),
+                        _serviceSharingService.UpdateUserInfoInServicesAsync(TargetProfile.UserId, fullName, TargetProfile.ProfileImageUrl),
+                        _goodDeedService.UpdateUserInfoInPostsAsync(TargetProfile.UserId, fullName, TargetProfile.ProfileImageUrl)
+                    };
+
+                    var updateResults = await Task.WhenAll(updateTasks);
+                    var failedUpdates = updateResults.Where(r => !r.Success).ToList();
+
+                    if (failedUpdates.Any())
+                    {
+                        Console.WriteLine($"⚠️ Bazı koleksiyonlar güncellenemedi: {failedUpdates.Count}");
+                        // Yine de devam et, kritik değil
+                    }
+                    else
+                    {
+                        Console.WriteLine("✅ Tüm koleksiyonlarda kullanıcı bilgileri güncellendi");
                     }
 
                     await Shell.Current.DisplayAlert("Başarılı", "Profiliniz güncellendi.", "Tamam");
