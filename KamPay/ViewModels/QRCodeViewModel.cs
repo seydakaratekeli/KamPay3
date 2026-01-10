@@ -155,24 +155,28 @@ namespace KamPay.ViewModels
                 System.Diagnostics.Debug.WriteLine($"   İlk Teslimat: {isFirstDelivery}");
                 System.Diagnostics.Debug.WriteLine($"   İkinci Teslimat: {isSecondDelivery}");
 
-                // 3️⃣ ✅ KURAL: Eğer ben henüz kendi ürünümü teslim etmedimse, karşı tarafın QR'ını taratamazsın
-                if (!myDeliveryCompleted && Application.Current?.MainPage != null)
+                // 3️⃣ ✅ ROL BELİRLEME
+                bool isSeller = CurrentTransaction?.SellerId == MyDelivery?.SellerId;
+                System.Diagnostics.Debug.WriteLine($"   Ben Satıcıyım: {isSeller}");
+
+                // 4️⃣ ✅ SADECE ALICI İÇİN KONTROL: Satıcı henüz almadıysa ALICI taratamaz
+                if (!isSeller && !myDeliveryCompleted && Application.Current?.MainPage != null)
                 {
                     await Application.Current.MainPage.DisplayAlert(
-                        "⚠️ Önce Kendi Ürününüzü Teslim Edin", 
-                        "Takas sürecinde önce kendi ürününüzü karşı tarafa teslim etmelisiniz.\n\n" +
-                        "👉 Karşı tarafa kendi QR kodunuzu okutun.\n" +
-                        "👉 PIN kodunu ve teslimat fotoğrafını verin.\n" +
-                        "👉 Sonra karşı tarafın QR kodunu taratabilirsiniz.",
+                        "⚠️ Satıcı Henüz Teslim Almadı", 
+                        "Takas sürecinde önce satıcı sizin ürününüzü almalıdır.\n\n" +
+                        "👉 Satıcıya kendi QR kodunuzu gösterin ve okutun.\n" +
+                        "👉 Satıcı PIN girip teslim aldıktan sonra,\n" +
+                        "👉 Siz de satıcının QR kodunu taratabilirsiniz.",
                         "Anladım");
                     IsLoading = false;
                     return;
                 }
 
-                // 4️⃣ İLK TESLİMAT: Konum + PIN + Fotoğraf Gerekli
+                // 5️⃣ İLK TESLİMAT: Konum + PIN + Fotoğraf Gerekli (SATICI TARAR)
                 if (isFirstDelivery)
                 {
-                    System.Diagnostics.Debug.WriteLine("✅ İLK TESLİMAT: PIN ve konum doğrulaması ile tarama");
+                    System.Diagnostics.Debug.WriteLine("✅ İLK TESLİMAT: PIN ve konum doğrulaması ile tarama (SATICI)");
 
                     // Konum al
                     try
@@ -580,22 +584,24 @@ namespace KamPay.ViewModels
                 if (isSeller)
                 {
                     // SATICI: İlk başta QR tarayabilir
-                    PageTitle = "📦 Takas Başlasın";
-                    InstructionText = $"Takas sürecini başlatmak için:\n\n" +
-                                     $"1️⃣ Karşı tarafın '{OtherUserDelivery?.ProductTitle}' ürününün QR kodunu taratın\n" +
-                                     $"2️⃣ PIN kodunu girin ve teslimat fotoğrafı çekin\n" +
-                                     $"3️⃣ Sonra karşı tarafa kendi QR kodunuzu okutun";
-                    ScanButtonText = "📸 QR Kodunu Tarat";
+                    PageTitle = "📦 Takası Başlat (Satıcı)";
+                    InstructionText = $"Siz SATICI olarak takası başlatıyorsunuz:\n\n" +
+                                     $"1️⃣ Alıcının '{OtherUserDelivery?.ProductTitle}' ürününün QR kodunu taratın\n" +
+                                     $"2️⃣ Alıcıdan PIN kodunu alın ve girin\n" +
+                                     $"3️⃣ Teslimat fotoğrafı çekin\n" +
+                                     $"4️⃣ Sonra alıcıya kendi QR kodunuzu gösterin";
+                    ScanButtonText = "📸 Alıcının QR Kodunu Tarat";
                 }
                 else
                 {
                     // ALICI: Önce satıcının taramasını beklemeli
-                    PageTitle = "📦 Önce Kendi Ürününüzü Teslim Edin";
-                    InstructionText = $"Takas sürecinde önce kendi ürününüzü teslim etmelisiniz:\n\n" +
-                                     $"1️⃣ Karşı tarafa kendi QR kodunuzu ({MyDelivery?.ProductTitle}) okutun\n" +
-                                     $"2️⃣ PIN kodunu ve teslimat fotoğrafını verin\n" +
-                                     $"3️⃣ Sonra karşı tarafın ({OtherUserDelivery?.ProductTitle}) QR kodunu taratın";
-                    ScanButtonText = "⏳ Henüz Taratılamaz (Önce Teslim Edin)";
+                    PageTitle = "📦 Satıcının Teslim Almasını Bekleyin";
+                    InstructionText = $"Siz ALICI olarak önce satıcıya teslim edin:\n\n" +
+                                     $"1️⃣ Satıcıya kendi QR kodunuzu ({MyDelivery?.ProductTitle}) gösterin\n" +
+                                     $"2️⃣ Satıcıya PIN kodunuzu söyleyin\n" +
+                                     $"3️⃣ Satıcı teslim aldıktan sonra,\n" +
+                                     $"4️⃣ Satıcının '{OtherUserDelivery?.ProductTitle}' QR kodunu taratın";
+                    ScanButtonText = "⏳ Henüz Taratılamaz (Satıcı Almadı)";
                 }
             }
             else
