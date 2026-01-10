@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Services;
@@ -22,7 +23,7 @@ namespace KamPay.ViewModels
         [ObservableProperty] private PaymentDto _paymentDetails;
         [ObservableProperty] private bool _isCardSelected;
         [ObservableProperty] private bool _isEftSelected;
-        [ObservableProperty] private string _simulatedOtp; // OTP to display to user for simulation
+        [ObservableProperty] private string _simulatedOtp;
 
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
 
@@ -34,7 +35,7 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
-        private async Task StartPaymentAsync(string method) // "cardsim" veya "banktransfersim"
+        private async Task StartPaymentAsync(string method)
         {
             // ✅ Transaction null kontrolü
             if (Transaction == null)
@@ -60,7 +61,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                // 3. Ödemeyi Başlat (Rate Limiting servis içinde kontrol ediliyor)
+                // 3. Ödemeyi Başlat
                 var result = await _transactionService.CreatePaymentSimulationAsync(Transaction.TransactionId, method);
 
                 if (result.Success)
@@ -71,7 +72,6 @@ namespace KamPay.ViewModels
 
                     if (IsCardSelected)
                     {
-                        // Kart ödemesi için OTP'yi servisden al ve göster (SADECE SİMÜLASYON)
                         var otpResult = await _transactionService.GetSimulationOtpAsync(PaymentDetails.PaymentId);
                         
                         if (otpResult.Success && !string.IsNullOrEmpty(otpResult.Data))
@@ -129,19 +129,14 @@ namespace KamPay.ViewModels
                 }
             }
 
-            // 2. Girdi Temizleme (Sanitization)
-            // EFT/Havale durumunda OtpCode boş gelebilir, SanitizeText buna göre güvenli çalışır.
+            // 2. Girdi Temizleme
             var sanitizedOtp = string.IsNullOrWhiteSpace(OtpCode) ? null : InputSanitizer.SanitizeText(OtpCode);
 
             try
             {
                 IsLoading = true;
 
-                // 3. Ödeme Onayı ve Otomatik İşlem Tamamlama
-                // Bu servis metodu (FirebaseTransactionService içinde):
-                // - Kart ise OTP doğrulaması yapar.
-                // - Ürün satışı ise ürünü 'Satıldı' olarak işaretleyip işlemi bitirir.
-                // - Hizmet ise sadece ödeme durumunu 'Paid' yapar.
+                // 3. Ödeme Onayı
                 var result = await _transactionService.ConfirmPaymentSimulationAsync(
                     Transaction.TransactionId,
                     PaymentDetails.PaymentId,
@@ -150,25 +145,24 @@ namespace KamPay.ViewModels
                 if (result.Success)
                 {
                     var successMessage = IsCardSelected 
-                        ? "Kredi kartı ödemesi başarıyla onaylandı!" 
-                        : "Havale/EFT ödemesi kaydedildi!";
+                        ? "✅ Kredi kartı ödemesi başarıyla onaylandı!" 
+                        : "✅ Havale/EFT ödemesi kaydedildi!\n\nSatıcı ödemenizi kontrol edecek.";
                     
-                    await Shell.Current.DisplayAlert(Res["Success"], successMessage, Res["Ok"]);
+                    await Shell.Current.DisplayAlert("Başarılı", successMessage, "Tekliflerime Dön");
 
-                    // 4. NAVIGATE BACK MANTIĞI:
-                    // "//" kullanarak mutlak yönlendirme yaparız; böylece navigasyon yığını temizlenir 
-                    // ve kullanıcı doğrudan 'Gelen/Giden Teklifler' (OffersPage) ekranına düşer.
-                    await Shell.Current.GoToAsync($"//{nameof(OffersPage)}");
+                    // ✅ FIX: MessagingCenter ile OffersViewModel'e bildirim gönder
+                    WeakReferenceMessenger.Default.Send(new PaymentCompletedMessage());
+
+                    // ✅ FIX: Relative navigation - geri dön
+                    await Shell.Current.GoToAsync("..");
                 }
                 else
                 {
-                    // Servis tarafından dönen özel hata mesajlarını (örn: "OTP Geçersiz") göster
                     await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
-                // 5. Ağ hatası veya beklenmedik hatalarda kullanıcı dostu mesaj ver
                 var error = NetworkHelper.GetUserFriendlyErrorMessage(ex);
                 await Shell.Current.DisplayAlert(Res["Error"], error, Res["Ok"]);
             }
@@ -178,4 +172,7 @@ namespace KamPay.ViewModels
             }
         }
     }
-    }
+
+    // ✅ Mesaj sınıfı
+    public class PaymentCompletedMessage { }
+}

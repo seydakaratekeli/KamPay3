@@ -1,5 +1,4 @@
-﻿// KamPay/Models/Transaction.cs
-using KamPay.Models;
+﻿using KamPay.Models;
 using System;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
@@ -52,6 +51,7 @@ namespace KamPay.Models
         //  Takas'a özel alanlar
         public string? OfferedProductId { get; set; }
         public string? OfferedProductTitle { get; set; }
+        public string? OfferedProductThumbnailUrl { get; set; } // ✅ EKLENDI: Takas edilen ürünün görseli
         public string? OfferMessage { get; set; }
 
         //  Pazarlık Özellikleri
