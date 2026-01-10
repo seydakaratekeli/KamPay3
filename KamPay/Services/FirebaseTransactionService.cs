@@ -261,10 +261,29 @@ namespace KamPay.Services
                 else
                 {
                     var productTransaction = transaction as Transaction;
+                    
+                    // ✅ GÜVENLİK: PaymentStatus kontrolü
                     if (productTransaction.PaymentStatus != PaymentStatus.Pending)
                     {
                         return ServiceResult<PaymentDto>.FailureResult("Bu işlem için ödeme zaten başlatılmış.");
                     }
+                    
+                    // ✅ GÜVENLİK: Status kontrolü - Satıcı onayı gerekli
+                    if (productTransaction.Status != TransactionStatus.Accepted)
+                    {
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "İşlem henüz satıcı tarafından onaylanmamış. Önce onay beklenmeli."
+                        );
+                    }
+                    
+                    // ✅ GÜVENLİK: Pazarlık kontrolü - Fiyat üzerinde anlaşma gerekli
+                    if (productTransaction.IsNegotiating)
+                    {
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor."
+                        );
+                    }
+                    
                     amount = productTransaction.QuotedPrice > 0 ? productTransaction.QuotedPrice : productTransaction.Price;
                     paymentStatus = PaymentStatus.Pending;
                 }

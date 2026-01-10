@@ -418,6 +418,11 @@ namespace KamPay.ViewModels
                 IsRefreshing = true;
                 Debug.WriteLine("🔄 RefreshOffersAsync başladı — IsRefreshing = true");
                 
+                // Cancel any ongoing loading timeout
+                _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts?.Dispose();
+                _loadingTimeoutCts = null;
+                
                 _allOffersSubscription?.Dispose();
                 _allOffersSubscription = null;
                 
@@ -434,9 +439,24 @@ namespace KamPay.ViewModels
                 {
                     _currentUserId = currentUser.UserId;
                     StartListeningForOffers(currentUser.UserId);
+                    
+                    // ✅ FIX: Wait for initial load with max 5 second timeout
+                    var maxWaitTime = 5000;
+                    var waitedTime = 0;
+                    var checkInterval = 200;
+                    
+                    while (!_initialLoadComplete && waitedTime < maxWaitTime)
+                    {
+                        await Task.Delay(checkInterval);
+                        waitedTime += checkInterval;
+                    }
+                    
+                    Debug.WriteLine($"✅ Refresh beklemesi tamamlandı: {waitedTime}ms, InitialLoadComplete: {_initialLoadComplete}");
                 }
-
-                await Task.Delay(1000);
+                else
+                {
+                    Debug.WriteLine("⚠️ Refresh: Kullanıcı bulunamadı");
+                }
             }
             catch (Exception ex) 
             { 
@@ -444,7 +464,7 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                MainThread.InvokeOnMainThreadAsync(() =>
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsRefreshing = false;
                     UpdateHasOffers();
@@ -527,6 +547,20 @@ namespace KamPay.ViewModels
                     if (result.Success)
                     {
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+                        
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (existingIncoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(existingIncoming);
+                                IncomingOffers.RemoveAt(index);
+                                IncomingOffers.Insert(index, result.Data);
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
+                            }
+                        });
 
                         var successMessage = accept 
                             ? "Satın alma talebi kabul edildi! Alıcı ödeme yapabilir." 
@@ -588,6 +622,20 @@ namespace KamPay.ViewModels
                     if (result.Success)
                     {
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+                        
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (existingIncoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(existingIncoming);
+                                IncomingOffers.RemoveAt(index);
+                                IncomingOffers.Insert(index, result.Data);
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
+                            }
+                        });
 
                         var successMessage = accept 
                             ? "Pazarlık sonucu onaylandı! Alıcı ödeme yapabilir." 
@@ -633,6 +681,20 @@ namespace KamPay.ViewModels
                     if (result.Success)
                     {
                         Debug.WriteLine($"✅ TAKAS onaylandı: {transaction.TransactionId}");
+                        
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (existingIncoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(existingIncoming);
+                                IncomingOffers.RemoveAt(index);
+                                IncomingOffers.Insert(index, result.Data);
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
+                            }
+                        });
 
                         var successMessage = accept 
                             ? "Takas teklifi kabul edildi! QR kodlar oluşturuldu." 
@@ -672,6 +734,20 @@ namespace KamPay.ViewModels
                     if (result.Success)
                     {
                         Debug.WriteLine($"✅ BAĞIŞ onaylandı: {transaction.TransactionId}");
+                        
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (existingIncoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(existingIncoming);
+                                IncomingOffers.RemoveAt(index);
+                                IncomingOffers.Insert(index, result.Data);
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
+                            }
+                        });
 
                         var successMessage = accept 
                             ? "Bağış talebi kabul edildi!" 
