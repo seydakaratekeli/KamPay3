@@ -349,15 +349,16 @@
                 <!-- Action Buttons -->
                 <VerticalStackLayout Spacing="12">
                     <!-- Scan QR Button -->
-                    <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanOtherCode]}" 
+                    <Button Text="{Binding ScanButtonText}" 
                             Command="{Binding ScanQRCodeCommand}" 
-                            BackgroundColor="#1E88E5"
+                            BackgroundColor="{Binding CanScanOtherQR, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|#9E9E9E'}"
                             TextColor="White"
                             CornerRadius="16"
                             HeightRequest="56"
                             FontSize="16"
                             FontAttributes="Bold"
-                            IsEnabled="{Binding OtherUserDelivery.IsUsed, Converter={StaticResource InvertedBoolConverter}}">
+                            IsEnabled="{Binding CanScanOtherQR}"
+                            IsVisible="{Binding CanReceive}">
                         <Button.Shadow>
                             <Shadow Brush="#1E88E5" Opacity="0.4" Radius="12" Offset="0,6"/>
                         </Button.Shadow>

@@ -75,6 +75,13 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isPhotoUploaded;
 
+        // ✅ YENİ: Sıralı teslimat kontrolü
+        [ObservableProperty]
+        private bool canScanOtherQR = true; // QR tarama butonunun aktif olup olmadığını belirler
+
+        [ObservableProperty]
+        private string scanButtonText = "QR Kodunu Tarat"; // Buton metni
+
         private IDispatcherTimer? _expirationTimer;
 
         public QRCodeViewModel(
@@ -108,14 +115,17 @@ namespace KamPay.ViewModels
         }
 
        
+        /// <summary>
         /// Güvenli tarama ile QR kodu işler (konum ve PIN doğrulaması dahil)
-       
+        /// TAKAS AKIŞI: Sıralı teslimat sistemi (ilk PIN+fotoğraf, ikinci sadece onay)
+        /// </summary>
         public async Task ProcessScannedQRCodeAsync(string qrCodeData)
         {
             IsLoading = true;
 
             try
             {
+                // 1️⃣ QR Kod Doğrulama
                 if (OtherUserDelivery == null || qrCodeData != OtherUserDelivery.QRCodeData)
                 {
                     if (Application.Current?.MainPage != null)
@@ -132,61 +142,88 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                // 1. Konum al
-                try
-                {
-                    var location = await Geolocation.GetLocationAsync(new GeolocationRequest
-                    {
-                        DesiredAccuracy = GeolocationAccuracy.Best,
-                        Timeout = TimeSpan.FromSeconds(10)
-                    });
+                // 2️⃣ ✅ KRİTİK: SIRAYLA TESLİMAT KONTROLÜ
+                bool myDeliveryCompleted = MyDelivery?.IsUsed ?? false;
+                bool otherDeliveryCompleted = OtherUserDelivery?.IsUsed ?? false;
+                
+                bool isFirstDelivery = !myDeliveryCompleted && !otherDeliveryCompleted;
+                bool isSecondDelivery = myDeliveryCompleted && !otherDeliveryCompleted;
 
-                    if (location != null)
+                System.Diagnostics.Debug.WriteLine($"🔍 Teslimat Durumu:");
+                System.Diagnostics.Debug.WriteLine($"   MyDelivery.IsUsed: {myDeliveryCompleted}");
+                System.Diagnostics.Debug.WriteLine($"   OtherDelivery.IsUsed: {otherDeliveryCompleted}");
+                System.Diagnostics.Debug.WriteLine($"   İlk Teslimat: {isFirstDelivery}");
+                System.Diagnostics.Debug.WriteLine($"   İkinci Teslimat: {isSecondDelivery}");
+
+                // 3️⃣ ✅ KURAL: Eğer ben henüz kendi ürünümü teslim etmedimse, karşı tarafın QR'ını taratamazsın
+                if (!myDeliveryCompleted && Application.Current?.MainPage != null)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "⚠️ Önce Kendi Ürününüzü Teslim Edin", 
+                        "Takas sürecinde önce kendi ürününüzü karşı tarafa teslim etmelisiniz.\n\n" +
+                        "👉 Karşı tarafa kendi QR kodunuzu okutun.\n" +
+                        "👉 PIN kodunu ve teslimat fotoğrafını verin.\n" +
+                        "👉 Sonra karşı tarafın QR kodunu taratabilirsiniz.",
+                        "Anladım");
+                    IsLoading = false;
+                    return;
+                }
+
+                // 4️⃣ İLK TESLİMAT: Konum + PIN + Fotoğraf Gerekli
+                if (isFirstDelivery)
+                {
+                    System.Diagnostics.Debug.WriteLine("✅ İLK TESLİMAT: PIN ve konum doğrulaması ile tarama");
+
+                    // Konum al
+                    try
                     {
-                        CurrentLatitude = location.Latitude;
-                        CurrentLongitude = location.Longitude;
+                        var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+                        {
+                            DesiredAccuracy = GeolocationAccuracy.Best,
+                            Timeout = TimeSpan.FromSeconds(10)
+                        });
+
+                        if (location != null)
+                        {
+                            CurrentLatitude = location.Latitude;
+                            CurrentLongitude = location.Longitude;
+                        }
+                        else
+                        {
+                            CurrentLatitude = 0;
+                            CurrentLongitude = 0;
+                        }
                     }
-                    else
+                    catch (Exception)
                     {
-                        // Konum alınamadıysa kullanıcıyı uyar ama devam et (backward compatibility)
                         CurrentLatitude = 0;
                         CurrentLongitude = 0;
                     }
-                }
-                catch (Exception)
-                {
-                    // Konum izni yoksa veya hata varsa, 0,0 kullan (backward compatibility)
-                    CurrentLatitude = 0;
-                    CurrentLongitude = 0;
-                }
 
-                // 2. PIN iste (eğer QR kodda PIN varsa)
-                if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin) && string.IsNullOrEmpty(VerificationPin))
-                {
-                    if (Application.Current?.MainPage != null)
+                    // PIN iste
+                    if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin) && string.IsNullOrEmpty(VerificationPin))
                     {
-                        VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
-                            LocalizationResourceManager.Instance["PINVerification"],
-                            LocalizationResourceManager.Instance["Enter6DigitPIN"],
-                            maxLength: 6,
-                            keyboard: Keyboard.Numeric);
-                        
-                        if (string.IsNullOrEmpty(VerificationPin))
+                        if (Application.Current?.MainPage != null)
                         {
-                            await Application.Current.MainPage.DisplayAlert(
-                                LocalizationResourceManager.Instance["Error"], 
-                                LocalizationResourceManager.Instance["PINRequired"], 
-                                LocalizationResourceManager.Instance["Ok"]);
-                            IsLoading = false;
-                            return;
+                            VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
+                                "🔐 PIN Doğrulama (İlk Teslimat)",
+                                "Karşı tarafın size verdiği 6 haneli PIN kodunu girin:",
+                                maxLength: 6,
+                                keyboard: Keyboard.Numeric);
+                        
+                            if (string.IsNullOrEmpty(VerificationPin))
+                            {
+                                await Application.Current.MainPage.DisplayAlert(
+                                    "Hata", 
+                                    "PIN kodu gereklidir. İlk teslimat için karşı tarafın PIN'ini almanız gerekir.", 
+                                    "Tamam");
+                                IsLoading = false;
+                                return;
+                            }
                         }
                     }
-                }
 
-                // 3. Güvenli tarama yap veya eski yöntemle devam et
-                if (!string.IsNullOrEmpty(OtherUserDelivery.VerificationPin))
-                {
-                    // Yeni güvenli QR kod
+                    // Güvenli tarama yap
                     var result = await _qrCodeService.ScanQRCodeWithLocationAsync(
                         OtherUserDelivery.QRCodeId,
                         CurrentLatitude,
@@ -195,28 +232,29 @@ namespace KamPay.ViewModels
 
                     if (result.Success)
                     {
-                        // Takas tamamlandıysa ürünleri işaretle
                         await CheckAndMarkExchangeComplete();
                         
                         if (Application.Current?.MainPage != null)
                             await Application.Current.MainPage.DisplayAlert(
-                                LocalizationResourceManager.Instance["Success"], 
-                                result.Message, 
-                                LocalizationResourceManager.Instance["Ok"]);
+                                "✅ İlk Teslimat Tamam", 
+                                $"'{OtherUserDelivery.ProductTitle}' ürününü teslim aldınız!\n\n" +
+                                "👉 Şimdi sıra karşı tarafta.\n" +
+                                "👉 Karşı tarafa kendi QR kodunuzu okutun.", 
+                                "Tamam");
+                        
                         await LoadTransactionAndQRCodesAsync();
                     }
                     else
                     {
                         if (Application.Current?.MainPage != null)
-                            await Application.Current.MainPage.DisplayAlert(
-                                LocalizationResourceManager.Instance["Error"], 
-                                result.Message, 
-                                LocalizationResourceManager.Instance["Ok"]);
+                            await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }
-                else
+                // 5️⃣ İKİNCİ TESLİMAT: PIN ve Fotoğraf Olmadan Direkt Onay
+                else if (isSecondDelivery)
                 {
-                    // Eski QR kod (backward compatibility)
+                    System.Diagnostics.Debug.WriteLine("✅ İKİNCİ TESLİMAT: PIN ve fotoğraf gerektirmeden onaylama");
+                    
                     var result = await _qrCodeService.CompleteDeliveryAsync(OtherUserDelivery.QRCodeId);
                     if (result.Success)
                     {
@@ -224,24 +262,32 @@ namespace KamPay.ViewModels
 
                         if (Application.Current?.MainPage != null)
                             await Application.Current.MainPage.DisplayAlert(
-                                LocalizationResourceManager.Instance["Success"],
-                                $"'{OtherUserDelivery.ProductTitle}' {LocalizationResourceManager.Instance["ProductDeliveryConfirmed"]}", 
-                                LocalizationResourceManager.Instance["Great"]);
+                                "✅ Takas Tamamlandı!",
+                                $"'{OtherUserDelivery.ProductTitle}' teslimatı onaylandı!\n\n" +
+                                "🎉 Takas başarıyla tamamlandı. Puanlarınız eklendi.", 
+                                "Harika!");
 
                         await LoadTransactionAndQRCodesAsync();
+                        
+                        // 3 saniye sonra geri dön
+                        await Task.Delay(3000);
+                        await Shell.Current.GoToAsync("..");
                     }
                     else
                     {
                         if (Application.Current?.MainPage != null)
-                            await Application.Current.MainPage.DisplayAlert(
-                                LocalizationResourceManager.Instance["Error"], 
-                                result.Message, 
-                                LocalizationResourceManager.Instance["Ok"]);
+                            await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
                     }
                 }
 
                 // PIN'i temizle
                 VerificationPin = null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ QR tarama hatası: {ex.Message}");
+                if (Application.Current?.MainPage != null)
+                    await Application.Current.MainPage.DisplayAlert("Hata", $"QR kod işlenirken hata oluştu: {ex.Message}", "Tamam");
             }
             finally
             {
@@ -334,7 +380,7 @@ namespace KamPay.ViewModels
             // Önceki timer'ı durdur
             StopExpirationTimer();
 
-            // Yeni timer oluştur
+            // Yeni timer oluştur - .NET MAUI için doğru kullanım
             _expirationTimer = Application.Current?.Dispatcher?.CreateTimer();
             if (_expirationTimer == null) return;
 
@@ -474,37 +520,99 @@ namespace KamPay.ViewModels
             bool myDeliveryCompleted = MyDelivery?.IsUsed ?? false;
             bool otherDeliveryCompleted = OtherUserDelivery?.IsUsed ?? false;
 
-            if (myDeliveryCompleted && (OtherUserDelivery == null || otherDeliveryCompleted))
-            {
-                PageTitle = "İşlem Tamamlandı!";
-                InstructionText = "Puanlarınız eklendi! 3 saniye içinde yönlendirileceksiniz...";
+            // ✅ KİM SATICI, KİM ALICI?
+            // CurrentTransaction.SellerId = Ürünü satan kişi (ilk QR'ı taratan)
+            // CurrentTransaction.BuyerId = Teklif yapan kişi (ikinci QR'ı taratan)
+            bool isSeller = CurrentTransaction?.SellerId == MyDelivery?.SellerId;
+            
+            // ✅ SIRAYLA TESLİMAT KONTROLÜ
+            bool isFirstDelivery = !myDeliveryCompleted && !otherDeliveryCompleted;
+            bool myTurnToDeliver = !myDeliveryCompleted; // Benim teslim sıram var mı?
+            bool canReceive = myDeliveryCompleted && !otherDeliveryCompleted; // Karşı taraftan alabilir miyim?
+            bool bothCompleted = myDeliveryCompleted && otherDeliveryCompleted;
 
-                Task.Run(async () => {
-                    await Task.Delay(3000);
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
-                        await Shell.Current.GoToAsync("..")
-                    );
-                });
-            }
-            else if (otherDeliveryCompleted)
+            System.Diagnostics.Debug.WriteLine($"🔄 UI Durumu:");
+            System.Diagnostics.Debug.WriteLine($"   Ben Satıcıyım: {isSeller}");
+            System.Diagnostics.Debug.WriteLine($"   MyDelivery: {myDeliveryCompleted}");
+            System.Diagnostics.Debug.WriteLine($"   OtherDelivery: {otherDeliveryCompleted}");
+            System.Diagnostics.Debug.WriteLine($"   Benim Sıram: {myTurnToDeliver}");
+            System.Diagnostics.Debug.WriteLine($"   Alabilirim: {canReceive}");
+            System.Diagnostics.Debug.WriteLine($"   Her İkisi Tamamlandı: {bothCompleted}");
+            
+            // ✅ YENİ: MyDelivery ve OtherUserDelivery bilgilerini de logla
+            System.Diagnostics.Debug.WriteLine($"   MyDelivery.ProductId: {MyDelivery?.ProductId ?? "NULL"}");
+            System.Diagnostics.Debug.WriteLine($"   MyDelivery.ProductTitle: {MyDelivery?.ProductTitle ?? "NULL"}");
+            System.Diagnostics.Debug.WriteLine($"   OtherDelivery.ProductId: {OtherUserDelivery?.ProductId ?? "NULL"}");
+            System.Diagnostics.Debug.WriteLine($"   OtherDelivery.ProductTitle: {OtherUserDelivery?.ProductTitle ?? "NULL"}");
+
+            // ✅ KRİTİK FİX: QR tarama butonu kontrolü
+            // SATICI: İlk başta tarayabilir (isFirstDelivery && isSeller)
+            // ALICI: Sadece satıcı teslim ettikten sonra tarayabilir (canReceive && !isSeller)
+            if (isSeller)
             {
-                PageTitle = "Şimdi Sıra Sizde";
-                InstructionText = "Karşı tarafın ürününü teslim aldınız. Şimdi takası tamamlamak için kendi QR kodunuzu diğer kullanıcıya okutun.";
-            }
-            else if (myDeliveryCompleted)
-            {
-                PageTitle = "Onay Bekleniyor";
-                InstructionText = "Kendi ürününüzü teslim ettiniz. Şimdi karşı tarafın ürününü teslim almak için onun QR kodunu okutun.";
+                // SATICI: İlk teslimat aşamasında veya karşı taraftan alma aşamasında tarayabilir
+                CanScanOtherQR = isFirstDelivery || canReceive;
             }
             else
             {
-                PageTitle = "Teslimat Onayı";
-                InstructionText = "Takası başlatmak için QR kodunuzu diğer kullanıcıya okutun veya onun kodunu tarayın.";
+                // ALICI: Sadece satıcı teslim ettikten sonra tarayabilir
+                CanScanOtherQR = canReceive;
             }
+            
+            System.Diagnostics.Debug.WriteLine($"   ✅ CanScanOtherQR SET EDİLDİ: {CanScanOtherQR}");
 
-            // : Fotoğraf durumunu güncelle
+            if (bothCompleted)
+            {
+                PageTitle = "🎉 Takas Tamamlandı!";
+                InstructionText = "Her iki ürün de teslim edildi. Puanlarınız eklendi!";
+                ScanButtonText = "✅ Takas Tamamlandı";
+                CanScanOtherQR = false;
+            }
+            else if (canReceive)
+            {
+                PageTitle = "✅ Şimdi Sıra Karşı Tarafta";
+                InstructionText = $"Kendi ürününüzü ({MyDelivery?.ProductTitle}) teslim ettiniz!\n\n" +
+                                 $"👉 Karşı taraftan '{OtherUserDelivery?.ProductTitle}' ürününü almak için onun QR kodunu taratın.";
+                ScanButtonText = "📸 Karşı Tarafın QR Kodunu Tarat";
+            }
+            else if (myTurnToDeliver)
+            {
+                if (isSeller)
+                {
+                    // SATICI: İlk başta QR tarayabilir
+                    PageTitle = "📦 Takas Başlasın";
+                    InstructionText = $"Takas sürecini başlatmak için:\n\n" +
+                                     $"1️⃣ Karşı tarafın '{OtherUserDelivery?.ProductTitle}' ürününün QR kodunu taratın\n" +
+                                     $"2️⃣ PIN kodunu girin ve teslimat fotoğrafı çekin\n" +
+                                     $"3️⃣ Sonra karşı tarafa kendi QR kodunuzu okutun";
+                    ScanButtonText = "📸 QR Kodunu Tarat";
+                }
+                else
+                {
+                    // ALICI: Önce satıcının taramasını beklemeli
+                    PageTitle = "📦 Önce Kendi Ürününüzü Teslim Edin";
+                    InstructionText = $"Takas sürecinde önce kendi ürününüzü teslim etmelisiniz:\n\n" +
+                                     $"1️⃣ Karşı tarafa kendi QR kodunuzu ({MyDelivery?.ProductTitle}) okutun\n" +
+                                     $"2️⃣ PIN kodunu ve teslimat fotoğrafını verin\n" +
+                                     $"3️⃣ Sonra karşı tarafın ({OtherUserDelivery?.ProductTitle}) QR kodunu taratın";
+                    ScanButtonText = "⏳ Henüz Taratılamaz (Önce Teslim Edin)";
+                }
+            }
+            else
+            {
+                PageTitle = "⏳ Teslimat Süreci";
+                InstructionText = "Lütfen bekleyin...";
+                ScanButtonText = "📸 QR Kodunu Tarat";
+                CanScanOtherQR = false;
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"   📋 SON DURUM:");
+            System.Diagnostics.Debug.WriteLine($"      PageTitle: {PageTitle}");
+            System.Diagnostics.Debug.WriteLine($"      ScanButtonText: {ScanButtonText}");
+            System.Diagnostics.Debug.WriteLine($"      CanScanOtherQR: {CanScanOtherQR}");
+
+            // Fotoğraf durumunu güncelle
             PhotoRequired = MyDelivery?.PhotoRequired ?? false;
-            // Photo is considered uploaded if main URL exists (thumbnail is for display only)
             IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoUrl);
             if (!string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl))
             {
