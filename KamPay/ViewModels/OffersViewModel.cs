@@ -956,7 +956,7 @@ namespace KamPay.ViewModels
                 {
                     Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
 
-                    await Application.Current.Main.Page.DisplayAlert(
+                    await Application.Current.MainPage.DisplayAlert(
                         "✅ Başarılı",
                         transaction.Type == ProductType.Satis 
                             ? "Fiyat üzerinde anlaştınız! Satıcı son onayını verecek." 
