@@ -265,6 +265,22 @@ namespace KamPay.Services
                     {
                         return ServiceResult<PaymentDto>.FailureResult("Bu işlem için ödeme zaten başlatılmış.");
                     }
+
+                    // ✅ YENİ: Ürün satışı için Status ve IsNegotiating kontrolü
+                    if (productTransaction.Status != TransactionStatus.Accepted)
+                    {
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "İşlem henüz satıcı tarafından onaylanmamış. Önce onay beklenmeli."
+                        );
+                    }
+
+                    if (productTransaction.IsNegotiating)
+                    {
+                        return ServiceResult<PaymentDto>.FailureResult(
+                            "Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor."
+                        );
+                    }
+
                     amount = productTransaction.QuotedPrice > 0 ? productTransaction.QuotedPrice : productTransaction.Price;
                     paymentStatus = PaymentStatus.Pending;
                 }

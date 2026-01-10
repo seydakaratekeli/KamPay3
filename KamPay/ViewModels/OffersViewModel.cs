@@ -436,7 +436,18 @@ namespace KamPay.ViewModels
                     StartListeningForOffers(currentUser.UserId);
                 }
 
-                await Task.Delay(1000);
+                // ✅ YENİ: İlk veri gelene veya timeout olana kadar bekle
+                var timeoutTask = Task.Delay(LoadingTimeoutMs);
+                var completionTask = Task.Run(async () =>
+                {
+                    while (!_initialLoadComplete && !timeoutTask.IsCompleted)
+                    {
+                        await Task.Delay(100);
+                    }
+                });
+
+                await Task.WhenAny(completionTask, timeoutTask);
+                Debug.WriteLine($"✅ Refresh bekleme tamamlandı. InitialLoadComplete: {_initialLoadComplete}");
             }
             catch (Exception ex) 
             { 
@@ -444,7 +455,7 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                MainThread.InvokeOnMainThreadAsync(() =>
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsRefreshing = false;
                     UpdateHasOffers();
@@ -528,6 +539,19 @@ namespace KamPay.ViewModels
                     {
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
 
+                        // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (incoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(incoming);
+                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                UpdateHasOffers();
+                            }
+                        });
+
                         var successMessage = accept 
                             ? "Satın alma talebi kabul edildi! Alıcı ödeme yapabilir." 
                             : "Satın alma talebi reddedildi.";
@@ -589,6 +613,19 @@ namespace KamPay.ViewModels
                     {
                         Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
 
+                        // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (incoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(incoming);
+                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                UpdateHasOffers();
+                            }
+                        });
+
                         var successMessage = accept 
                             ? "Pazarlık sonucu onaylandı! Alıcı ödeme yapabilir." 
                             : "Teklif reddedildi.";
@@ -634,6 +671,19 @@ namespace KamPay.ViewModels
                     {
                         Debug.WriteLine($"✅ TAKAS onaylandı: {transaction.TransactionId}");
 
+                        // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (incoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(incoming);
+                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                UpdateHasOffers();
+                            }
+                        });
+
                         var successMessage = accept 
                             ? "Takas teklifi kabul edildi! QR kodlar oluşturuldu." 
                             : "Takas teklifi reddedildi.";
@@ -672,6 +722,19 @@ namespace KamPay.ViewModels
                     if (result.Success)
                     {
                         Debug.WriteLine($"✅ BAĞIŞ onaylandı: {transaction.TransactionId}");
+
+                        // ✅ YENİ: Collection'ı manuel güncelle (UI anlık güncelleme için)
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            var incoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                            if (incoming != null && result.Data != null)
+                            {
+                                var index = IncomingOffers.IndexOf(incoming);
+                                IncomingOffers[index] = result.Data; // Yeni nesne ile değiştir
+                                OnPropertyChanged(nameof(IncomingOffers));
+                                UpdateHasOffers();
+                            }
+                        });
 
                         var successMessage = accept 
                             ? "Bağış talebi kabul edildi!" 
