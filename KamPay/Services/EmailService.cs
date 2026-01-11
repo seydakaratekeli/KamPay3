@@ -22,21 +22,25 @@ namespace KamPay.Services
             {
                 var loc = LocalizationResourceManager.Instance;
                 
-                // 1) E-posta gövdesi (HTML veya plain)
+                // ✅ EKLEME: Simülasyon uyarısı
                 var subject = loc["EmailVerificationSubject"];
-                var body = string.Format(loc["EmailVerificationBody"], verificationCode);
+                var body = $"⚠️ SİMÜLASYON MODU ⚠️\n\n" +
+                           $"Bu e-posta gerçek SMTP sunucusu olmadığı için gönderilmedi.\n" +
+                           $"Doğrulama kodunuz konsol çıktısında görüntülenmektedir.\n\n" +
+                           string.Format(loc["EmailVerificationBody"], verificationCode);
 
-                // 2) Debug'a yaz GELİŞTİRME AŞAMASI İÇİN SİMÜLASYON
-                Debug.WriteLine("---------- KamPay Doğrulama Kodu (Debug) ----------");
+                // ✅ EKLEME: Detaylı simülasyon uyarısı
+                Debug.WriteLine("========== KamPay Doğrulama Kodu (SİMÜLASYON) ==========");
+                Debug.WriteLine($"⚠️ UYARI: Gerçek e-posta gönderimi devre dışı!");
                 Debug.WriteLine($"To: {toEmail}");
                 Debug.WriteLine($"Kod: {verificationCode}");
-                Debug.WriteLine("--------------------------------------------------");
+                Debug.WriteLine("=======================================================");
                 
-                // Console'a da yaz (Android Log için)
-                Console.WriteLine("---------- KamPay Doğrulama Kodu ----------");
+                Console.WriteLine("========== KamPay Doğrulama Kodu (SİMÜLASYON) ==========");
+                Console.WriteLine($"⚠️ Bu kod sadece geliştirme ortamında geçerlidir");
                 Console.WriteLine($"To: {toEmail}");
                 Console.WriteLine($"Kod: {verificationCode}");
-                Console.WriteLine("--------------------------------------------");
+                Console.WriteLine("=========================================================");
 
                 // 3)  SİMÜLASYON MODU: SMTP kodunu devre dışı bırak
                 // Gerçek bir SMTP servisi bağlandığında aşağıdaki kod bloğu aktif edilecektir.
@@ -70,16 +74,10 @@ namespace KamPay.Services
                 
                 return true; //  Simülasyonda her zaman başarılı
             }
-            catch (SmtpException smtpEx)
-            {
-                Debug.WriteLine($"[KamPay] SMTP hatası: {smtpEx.Message}");
-                Console.WriteLine($"⚠️ SMTP hatası: {smtpEx.Message}");
-                return false;
-            }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[KamPay] E-posta gönderim hatası: {ex.Message}");
-                Console.WriteLine($"❌ E-posta hatası: {ex.Message}");
+                Debug.WriteLine($"[KamPay] E-posta simülasyon hatası: {ex.Message}");
+                Console.WriteLine($"❌ E-posta simülasyon hatası: {ex.Message}");
                 return false;
             }
         }

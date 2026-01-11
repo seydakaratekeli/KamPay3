@@ -895,22 +895,49 @@ namespace KamPay.ViewModels
             }
         }
 
+        private bool _disposed = false;
+        
         public void Dispose()
         {
-            Debug.WriteLine("🧹 OffersViewModel dispose ediliyor...");
-            _loadingTimeoutCts?.Cancel();
-            _loadingTimeoutCts?.Dispose();
-            _allOffersSubscription?.Dispose();
-            _allOffersSubscription = null;
-            _userStateService.UserProfileChanged -= OnUserProfileChanged;
-            
-            // ✅ PaymentCompleted mesajını unregister et
-            WeakReferenceMessenger.Default.Unregister<PaymentCompletedMessage>(this);
-            
-            _incomingIds.Clear();
-            _outgoingIds.Clear();
-            _initialLoadComplete = false;
-            _isInitialized = false;
+            if (_disposed) return;
+
+            try
+            {
+                Debug.WriteLine("🧹 OffersViewModel dispose ediliyor...");
+                
+                // ✅ EKLEME: Listener temizliği
+                _allOffersSubscription?.Dispose();
+                _allOffersSubscription = null;
+                
+                // ✅ EKLEME: Messenger unregister
+                WeakReferenceMessenger.Default.Unregister<PaymentCompletedMessage>(this);
+                
+                // Timer temizliği
+                _loadingTimeoutCts?.Cancel();
+                _loadingTimeoutCts?.Dispose();
+                
+                // Event temizliği
+                _userStateService.UserProfileChanged -= OnUserProfileChanged;
+                
+                // ✅ EKLEME: Collection temizliği
+                IncomingOffers.Clear();
+                OutgoingOffers.Clear();
+                _incomingIds.Clear();
+                _outgoingIds.Clear();
+                
+                _initialLoadComplete = false;
+                _isInitialized = false;
+                
+                Console.WriteLine("✅ OffersViewModel resources disposed");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ OffersViewModel dispose hatası: {ex.Message}");
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
 
         #region 💰 PAZARLIK KOMUTLARI

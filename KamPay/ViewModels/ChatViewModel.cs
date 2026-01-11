@@ -749,33 +749,52 @@ namespace KamPay.ViewModels
             }
         }
 
+        private bool _disposed = false;
+        
         public void Dispose()
         {
-            Console.WriteLine("🧹 ChatViewModel dispose ediliyor...");
+            if (_disposed) return;
 
-            // Event subscription'ı temizle
-            _userStateService.UserProfileChanged -= OnUserProfileChanged;
-
-            if (!string.IsNullOrEmpty(_activeConversationId))
+            try
             {
-                SaveToCache(_activeConversationId);
+                Console.WriteLine("🧹 ChatViewModel dispose ediliyor...");
+
+                // Event subscription'ı temizle
+                _userStateService.UserProfileChanged -= OnUserProfileChanged;
+
+                if (!string.IsNullOrEmpty(_activeConversationId))
+                {
+                    SaveToCache(_activeConversationId);
+                }
+
+                // ✅ EKLEME: Listener temizliği
+                _messagesSubscription?.Dispose();
+                _messagesSubscription = null;
+                _isListenerActive = false;
+                _initialLoadComplete = false;
+
+                // ✅ EKLEME: Timer temizliği
+                _cacheCleanupTimer?.Stop();
+                _cacheCleanupTimer?.Dispose();
+                _cacheCleanupTimer = null;
+                
+                Console.WriteLine("✅ ChatViewModel resources disposed");
             }
-
-            _messagesSubscription?.Dispose();
-            _messagesSubscription = null;
-            _isListenerActive = false;
-            _initialLoadComplete = false;
-
-            _cacheCleanupTimer?.Stop();
-            _cacheCleanupTimer?.Dispose();
-            _cacheCleanupTimer = null;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ ChatViewModel dispose hatası: {ex.Message}");
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
 
         // Public helper metodlar
         public static void ClearCache()
         {
             _conversationCache.Clear();
-            Console.WriteLine("🗑️ Tüm cache temizlendi");
+            Console.WriteLine("✅ Tüm chat cache temizlendi");
         }
 
         public static void ClearOldCache(int maxAgeMinutes = 30)
@@ -791,9 +810,27 @@ namespace KamPay.ViewModels
                 _conversationCache.Remove(key);
             }
 
-            if (oldKeys.Any())
+            // ✅ EKLEME: Boyut limiti kontrolü
+            int removedOldestCount = 0;
+            if (_conversationCache.Count > MaxCachedConversations)
             {
-                Console.WriteLine($"🗑️ {oldKeys.Count} eski cache temizlendi");
+                var oldestItems = _conversationCache
+                    .OrderBy(kvp => kvp.Value.CachedAt)
+                    .Take(_conversationCache.Count - MaxCachedConversations)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+
+                foreach (var key in oldestItems)
+                {
+                    _conversationCache.Remove(key);
+                }
+
+                removedOldestCount = oldestItems.Count;
+            }
+
+            if (oldKeys.Any() || removedOldestCount > 0)
+            {
+                Console.WriteLine($"✅ Cache temizlendi: {oldKeys.Count} eski, {removedOldestCount} fazla öğe silindi");
             }
         }
 

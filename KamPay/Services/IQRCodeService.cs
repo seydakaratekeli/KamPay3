@@ -5,6 +5,7 @@ using KamPay.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KamPay.Services
@@ -77,6 +78,15 @@ namespace KamPay.Services
         // 📌 Güvenlik sabitleri
         private const int MaxExtensionMinutes = 30;
         private const int ExtendTimeThresholdMinutes = 15;
+        
+        // ✅ EKLEME: QR kod tarama için SemaphoreSlim (race condition önleme)
+        // Note: Static field with application lifetime scope - not disposed individually.
+        // Disposal is not needed as:
+        // 1. SemaphoreSlim is shared across all service instances
+        // 2. Lives for entire application lifetime (registered as singleton in DI)
+        // 3. Disposing would break concurrent operations in multi-instance scenarios
+        // 4. OS will reclaim resources on application shutdown
+        private static readonly SemaphoreSlim _qrScanLock = new SemaphoreSlim(1, 1);
 
         public FirebaseQRCodeService(IUserProfileService userProfileService, IStorageService storageService)
         {
@@ -193,6 +203,8 @@ namespace KamPay.Services
             double currentLongitude,
             string? verificationPin = null)
         {
+            // ✅ EKLEME: Mutex kilidi (race condition önleme)
+            await _qrScanLock.WaitAsync();
             try
             {
                 var deliveryNode = _firebaseClient.Child(QRCodesCollection).Child(qrCodeId);
@@ -212,7 +224,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("QR kodun süresi dolmuş.");
                 }
 
-                // 3. Zaten kullanılmış mı?
+                // 3. ✅ EKLEME: Double-check - Zaten kullanılmış mı? (race condition double-check)
                 if (delivery.IsUsed)
                 {
                     return ServiceResult<bool>.FailureResult("Bu QR kod daha önce kullanılmış.");
@@ -324,6 +336,11 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 return ServiceResult<bool>.FailureResult("Teslimat doğrulama hatası", ex.Message);
+            }
+            finally
+            {
+                // ✅ EKLEME: Mutex kilidini serbest bırak
+                _qrScanLock.Release();
             }
         }
 
