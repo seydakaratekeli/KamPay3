@@ -811,6 +811,7 @@ namespace KamPay.ViewModels
             }
 
             // ✅ EKLEME: Boyut limiti kontrolü
+            int removedOldestCount = 0;
             if (_conversationCache.Count > MaxCachedConversations)
             {
                 var oldestItems = _conversationCache
@@ -824,11 +825,12 @@ namespace KamPay.ViewModels
                     _conversationCache.Remove(key);
                 }
 
-                Console.WriteLine($"✅ Cache temizlendi: {oldKeys.Count} eski, {oldestItems.Count} fazla öğe silindi");
+                removedOldestCount = oldestItems.Count;
             }
-            else if (oldKeys.Any())
+
+            if (oldKeys.Any() || removedOldestCount > 0)
             {
-                Console.WriteLine($"🗑️ {oldKeys.Count} eski cache temizlendi");
+                Console.WriteLine($"✅ Cache temizlendi: {oldKeys.Count} eski, {removedOldestCount} fazla öğe silindi");
             }
         }
 

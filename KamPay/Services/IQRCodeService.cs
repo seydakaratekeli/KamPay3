@@ -80,6 +80,8 @@ namespace KamPay.Services
         private const int ExtendTimeThresholdMinutes = 15;
         
         // ✅ EKLEME: QR kod tarama için SemaphoreSlim (race condition önleme)
+        // Note: Static field intentionally not disposed as it's shared across all service instances
+        // and should live for the application lifetime. Disposing would break concurrent operations.
         private static readonly SemaphoreSlim _qrScanLock = new SemaphoreSlim(1, 1);
 
         public FirebaseQRCodeService(IUserProfileService userProfileService, IStorageService storageService)

@@ -911,7 +911,6 @@ namespace KamPay.ViewModels
                 
                 // ✅ EKLEME: Messenger unregister
                 WeakReferenceMessenger.Default.Unregister<PaymentCompletedMessage>(this);
-                WeakReferenceMessenger.Default.Unregister<UserSessionChangedMessage>(this);
                 
                 // Timer temizliği
                 _loadingTimeoutCts?.Cancel();
