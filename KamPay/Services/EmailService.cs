@@ -77,6 +77,7 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[KamPay] E-posta simülasyon hatası: {ex.Message}");
+                Console.WriteLine($"❌ E-posta simülasyon hatası: {ex.Message}");
                 return false;
             }
         }
