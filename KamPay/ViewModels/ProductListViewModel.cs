@@ -169,19 +169,7 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null && result.Data.Any())
                 {
                     _allProducts = result.Data;
-                    
-                    // ✅ YENİ: Max cache limiti kontrolü
-                    if (_allProducts.Count > MAX_CACHED_PRODUCTS)
-                    {
-                        // Eski ürünleri temizle (FIFO)
-                        var toRemove = _allProducts.Take(_allProducts.Count - MAX_CACHED_PRODUCTS).ToList();
-                        foreach (var old in toRemove)
-                        {
-                            _allProducts.Remove(old);
-                        }
-                        Console.WriteLine($"⚠️ Cache limit aşıldı, {toRemove.Count} eski ürün temizlendi");
-                    }
-                    
+                    CleanupCacheIfNeeded();
                     ExecuteFiltering();
                 }
                 else
@@ -234,6 +222,17 @@ namespace KamPay.ViewModels
 
             ExecuteFiltering();
         }
+        
+        // ✅ YENİ: Cache cleanup helper method
+        private void CleanupCacheIfNeeded()
+        {
+            if (_allProducts.Count > MAX_CACHED_PRODUCTS)
+            {
+                // Eski ürünleri temizle (FIFO) - More efficient approach
+                _allProducts = _allProducts.Skip(_allProducts.Count - MAX_CACHED_PRODUCTS).ToList();
+                Console.WriteLine($"⚠️ Cache limit aşıldı, fazla ürünler temizlendi. Yeni boyut: {_allProducts.Count}");
+            }
+        }
 
         #region Veri Yükleme ve Filtreleme Mantığı
 
@@ -250,19 +249,7 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null)
                 {
                     _allProducts = result.Data;
-                    
-                    // ✅ YENİ: Max cache limiti kontrolü
-                    if (_allProducts.Count > MAX_CACHED_PRODUCTS)
-                    {
-                        // Eski ürünleri temizle (FIFO)
-                        var toRemove = _allProducts.Take(_allProducts.Count - MAX_CACHED_PRODUCTS).ToList();
-                        foreach (var old in toRemove)
-                        {
-                            _allProducts.Remove(old);
-                        }
-                        Console.WriteLine($"⚠️ Cache limit aşıldı, {toRemove.Count} eski ürün temizlendi");
-                    }
-                    
+                    CleanupCacheIfNeeded();
                     ExecuteFiltering();
                 }
                 IsLoading = false;
@@ -453,19 +440,7 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null)
                 {
                     _allProducts = result.Data;
-                    
-                    // ✅ YENİ: Max cache limiti kontrolü
-                    if (_allProducts.Count > MAX_CACHED_PRODUCTS)
-                    {
-                        // Eski ürünleri temizle (FIFO)
-                        var toRemove = _allProducts.Take(_allProducts.Count - MAX_CACHED_PRODUCTS).ToList();
-                        foreach (var old in toRemove)
-                        {
-                            _allProducts.Remove(old);
-                        }
-                        Console.WriteLine($"⚠️ Cache limit aşıldı, {toRemove.Count} eski ürün temizlendi");
-                    }
-                    
+                    CleanupCacheIfNeeded();
                     ExecuteFiltering();
                 }
             }
