@@ -11,6 +11,8 @@ using SkiaSharp.Views.Maui.Controls.Hosting;
 using System.Globalization;
 using System.Text;
 using KamPay.Resources.Languages; // Encoding desteği için eklendi
+using Firebase.Database; // Bu namespace'i eklemeyi unutmayın
+using KamPay.Helpers;
 
 namespace KamPay
 {
@@ -73,6 +75,8 @@ namespace KamPay
                 // Servislerin DI kaydı
                 builder.Services.AddSingleton(emailSettings);
                 builder.Services.AddSingleton<IEmailService, EmailService>();
+                builder.Services.AddSingleton<FirebaseClient>(sp =>
+        new FirebaseClient(Constants.FirebaseRealtimeDbUrl));
 
                 // ✅ FIX: IUserProfileService'i önce kaydet (FirebaseAuthService bağımlı)
                 builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
@@ -128,12 +132,14 @@ namespace KamPay
                 builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
 
                 builder.Services.AddSingleton<ITransactionService>(sp =>
-               new FirebaseTransactionService(
-              sp.GetRequiredService<INotificationService>(),
-              sp.GetRequiredService<IProductService>(),
-              sp.GetRequiredService<IQRCodeService>(),
-                sp.GetRequiredService<IUserProfileService>())
-      );
+    new FirebaseTransactionService(
+       sp.GetRequiredService<INotificationService>(),
+       sp.GetRequiredService<IProductService>(),
+       sp.GetRequiredService<IQRCodeService>(),
+       sp.GetRequiredService<IUserProfileService>(),
+       sp.GetRequiredService<FirebaseClient>() // Eksik parametre eklendi
+    )
+ );
 
                 // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
                 //  Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor

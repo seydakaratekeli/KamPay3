@@ -35,6 +35,8 @@ namespace KamPay.Models
         public decimal Price { get; set; } // Ürünün orijinal liste fiyatı
         public decimal QuotedPrice { get; set; } // Satış anındaki kilitli fiyat (pazarlık vb.)
         public string Currency { get; set; } = "TRY";
+
+        
         public DateTime? PaymentCompletedAt { get; set; }
 
         public string? Message { get; set; }
@@ -51,14 +53,18 @@ namespace KamPay.Models
         //  Takas'a özel alanlar
         public string? OfferedProductId { get; set; }
         public string? OfferedProductTitle { get; set; }
-        public string? OfferedProductThumbnailUrl { get; set; } // ✅ EKLENDI: Takas edilen ürünün görseli
+        public string? OfferedProductThumbnailUrl { get; set; } //  Takas edilen ürünün görseli
         public string? OfferMessage { get; set; }
 
         //  Pazarlık Özellikleri
-        
-       
+        [JsonIgnore]
+        public decimal FinalPrice => QuotedPrice > 0 ? QuotedPrice : Price;
+
+        [JsonIgnore]
+        public bool HasDiscount => QuotedPrice > 0 && QuotedPrice < Price;
+
         // Alıcının teklif ettiği fiyat (Satış için)
-       
+
         public decimal? ProposedPriceByBuyer { get; set; }
         
         

@@ -11,7 +11,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <!-- ✅ Eksik converter tanımı eklendi -->
+
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -71,10 +71,18 @@
                                    TextColor="#212121"
                                    LineBreakMode="TailTruncation"
                                    MaxLines="2"/>
-                            <Label Text="{Binding Transaction.Price, StringFormat='{0:N2} ₺'}" 
-                                   TextColor="#1E88E5" 
-                                   FontSize="22"
-                                   FontAttributes="Bold"/>
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="0">
+                                <Label Text="{Binding Transaction.Price, StringFormat='{0:N2} ₺'}"
+           TextColor="#9E9E9E"
+           FontSize="14"
+           TextDecorations="Strikethrough"
+           IsVisible="{Binding Transaction.HasDiscount}" />
+
+                                <Label Text="{Binding Transaction.FinalPrice, StringFormat='{0:N2} ₺'}" 
+           TextColor="#1E88E5" 
+           FontSize="22"
+           FontAttributes="Bold"/>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
                 </Border>

@@ -21,6 +21,40 @@ namespace KamPay.Services
         private readonly IQRCodeService _qrCodeService;
         private readonly IUserProfileService _userProfileService;
 
+        // ✅ YARDIMCI METOT: QR Kod nesnesini bellekte oluşturur (DB'ye yazmaz)
+        private DeliveryQRCode CreateDeliveryQRCodeModel(
+            string transactionId,
+            string productId,
+            string productTitle,
+            string giverId,
+            string receiverId,
+            int validityMinutes)
+        {
+            // Güvenli rastgele kod üretimi
+            using var rng = RandomNumberGenerator.Create();
+            var bytes = new byte[8];
+            rng.GetBytes(bytes);
+            // Base64 string'i temizle ve kısalt
+            var secureCode = Convert.ToBase64String(bytes)
+                .Replace("+", "").Replace("/", "").Replace("=", "")
+                .Substring(0, 8).ToUpper();
+
+            return new DeliveryQRCode
+            {
+                QRCodeId = Guid.NewGuid().ToString(),
+                TransactionId = transactionId,
+                ProductId = productId,
+                ProductTitle = productTitle,
+                QRCodeData = $"DELIVERY|{transactionId}|{productId}|{secureCode}", // QR içeriği formatı
+                VerificationPin = new Random().Next(100000, 999999).ToString(), // 6 haneli PIN
+                SellerId = giverId,   // Teslim eden
+                BuyerId = receiverId, // Teslim alan
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(validityMinutes),
+                IsUsed = false,
+                DeliveryStatus = DeliveryStatus.Pending
+            };
+        }
         // ✅ KRİTİK SABIT DEĞERLER
         private static class PaymentConstants
         {
@@ -55,9 +89,10 @@ namespace KamPay.Services
           INotificationService notificationService,
           IProductService productService,
           IQRCodeService qrCodeService,
-          IUserProfileService userProfileService) // UserProfileService eklendi
+          IUserProfileService userProfileService,
+      FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient;
             _notificationService = notificationService;
             _productService = productService;
             _qrCodeService = qrCodeService;
@@ -69,152 +104,131 @@ namespace KamPay.Services
         {
             try
             {
+                // Transaction verisini çek
                 var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                 var transaction = await transactionNode.OnceSingleAsync<Transaction>();
 
-                if (transaction == null) return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
-                
-                // ✅ DEBUG: Transaction bilgilerini logla
-                Console.WriteLine($"🔍 DEBUG - RespondToOfferAsync:");
-                Console.WriteLine($"   TransactionId: {transactionId}");
-                Console.WriteLine($"   Type: {transaction.Type}");
-                Console.WriteLine($"   Status: {transaction.Status}");
-                Console.WriteLine($"   OfferedProductId: {transaction.OfferedProductId ?? "NULL"}");
-                Console.WriteLine($"   OfferedProductTitle: {transaction.OfferedProductTitle ?? "NULL"}");
-                Console.WriteLine($"   Accept: {accept}");
-                
+                if (transaction == null)
+                    return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
+
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<Transaction>.SuccessResult(transaction, "Bu teklif zaten yanıtlanmış.");
 
+                // 1. Transaction nesnesini güncelle (HENÜZ KAYDETME!)
                 transaction.Status = accept ? TransactionStatus.Accepted : TransactionStatus.Rejected;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
-                await transactionNode.PutAsync(transaction);
+                // 2. REDDEDİLDİYSE: Tekli güncelleme yeterli (QR kod yok)
+                if (!accept)
+                {
+                    await transactionNode.PutAsync(transaction);
 
-                // Alıcıya bildirim gönder
+                    // Bildirim gönder (Kritik olmayan işlem, await ile beklenebilir veya fire-and-forget yapılabilir)
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = transaction.BuyerId,
+                        Type = NotificationType.OfferRejected,
+                        Title = "Teklifin Reddedildi",
+                        Message = $"'{transaction.SellerName}', teklifini reddetti.",
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+
+                    return ServiceResult<Transaction>.SuccessResult(transaction, "Teklif reddedildi.");
+                }
+
+                // 3. KABUL EDİLDİYSE: ATOMİK İŞLEM HAZIRLA
+                // Firebase'e gönderilecek tüm güncellemeleri tutacak sözlük
+                var atomicUpdates = new Dictionary<string, object>();
+
+                // a) Transaction güncellemesini ekle
+                atomicUpdates[$"{Constants.TransactionsCollection}/{transactionId}"] = transaction;
+
+                // b) Ürünleri rezerve et (Bu kısım ProductService içinde olduğu için atomik yapıya dahil etmek zordur,
+                // ancak Transaction Status 'Accepted' olduktan sonra UI zaten rezerve gösterebilir.
+                // Tam atomiklik için ProductService mantığını buraya taşımanız gerekir ama şimdilik QR riskini çözüyoruz.)
+                await _productService.MarkAsReservedAsync(transaction.ProductId, true);
+
+                // c) TAKAS İÇİN QR KODLARI OLUŞTUR
+                if (transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductId))
+                {
+                    Console.WriteLine($"✅ Takas için Atomik QR kodlar hazırlanıyor...");
+
+                    // QR 1: Satıcı -> Alıcı
+                    var qr1 = CreateDeliveryQRCodeModel(
+                        transactionId,
+                        transaction.ProductId,
+                        transaction.ProductTitle,
+                        transaction.SellerId,
+                        transaction.BuyerId,
+                        PaymentConstants.QRCodeValidityMinutes
+                    );
+
+                    // QR 2: Alıcı -> Satıcı
+                    var qr2 = CreateDeliveryQRCodeModel(
+                        transactionId,
+                        transaction.OfferedProductId,
+                        transaction.OfferedProductTitle,
+                        transaction.BuyerId,
+                        transaction.SellerId,
+                        PaymentConstants.QRCodeValidityMinutes
+                    );
+
+                    atomicUpdates[$"{Constants.DeliveryQRCodesCollection}/{qr1.QRCodeId}"] = qr1;
+                    atomicUpdates[$"{Constants.DeliveryQRCodesCollection}/{qr2.QRCodeId}"] = qr2;
+                }
+                // d) BAĞIŞ İÇİN QR KOD OLUŞTUR
+                else if (transaction.Type == ProductType.Bagis)
+                {
+                    var qr = CreateDeliveryQRCodeModel(
+                        transactionId,
+                        transaction.ProductId,
+                        transaction.ProductTitle,
+                        transaction.SellerId,
+                        transaction.BuyerId,
+                        PaymentConstants.QRCodeValidityMinutes
+                    );
+
+                    // ✅ DOĞRU KOD:
+                    atomicUpdates[$"{Constants.DeliveryQRCodesCollection}/{qr.QRCodeId}"] = qr;
+                }
+
+                // 4. 🔥 KRİTİK NOKTA: TÜM VERİYİ TEK SEFERDE GÖNDER (PATCH)
+                // Root dizine Patch atarak farklı path'leri aynı anda güncelleriz.
+                await _firebaseClient.Child("/").PatchAsync(atomicUpdates);
+
+                Console.WriteLine("✅ Atomik işlem başarıyla tamamlandı (Transaction + QR Kodlar).");
+
+                // 5. Bildirimleri gönder (Veri tutarlılığını etkilemediği için işlemden sonra yapılabilir)
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = transaction.BuyerId,
-                    Type = accept ? NotificationType.OfferAccepted : NotificationType.OfferRejected,
-                    Title = accept ? "Teklifin Kabul Edildi!" : "Teklifin Reddedildi",
-                    Message = $"'{transaction.SellerName}', '{transaction.ProductTitle}' ürünü için yaptığın teklifi {(accept ? "kabul etti." : "reddetti.")}",
+                    Type = NotificationType.OfferAccepted,
+                    Title = "Teklifin Kabul Edildi!",
+                    Message = $"'{transaction.SellerName}', teklifini kabul etti.",
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
-                if (accept)
+                if (transaction.Type == ProductType.Satis)
                 {
-                    // ✅ Ürünü rezerve et (TÜM TİPLER için)
-                    await _productService.MarkAsReservedAsync(transaction.ProductId, true);
-
-                    // ✅ SADECE TAKAS için güvenli QR kodları oluştur
-                    if (transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductId))
+                    await _notificationService.CreateNotificationAsync(new Notification
                     {
-                        Console.WriteLine($"✅ Takas kabul edildi. Güvenli QR kodlar oluşturuluyor: {transactionId}");
-
-                        // ✅ QR KOD 1: Satıcının ürünü (SellerId → BuyerId)
-                        // Satıcı VERIR (giverUserId = SellerId)
-                        // Alıcı ALIR (receiverUserId = BuyerId)
-                        var qrCode1 = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
-                            transactionId,
-                            transaction.ProductId,
-                            transaction.ProductTitle,
-                            transaction.SellerId,  // ✅ DOĞRU: Satıcı veren
-                            transaction.BuyerId,   // ✅ DOĞRU: Alıcı alan
-                            validityMinutes: PaymentConstants.QRCodeValidityMinutes, // ✅ SABIT KULLAN
-                            meetingPointLatitude: null,
-                            meetingPointLongitude: null,
-                            meetingPointName: null
-                        );
-
-                        // ✅ QR KOD 2: Alıcının ürünü (BuyerId → SellerId)
-                        // Alıcı VERIR (giverUserId = BuyerId)
-                        // Satıcı ALIR (receiverUserId = SellerId)
-                        var qrCode2 = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
-                            transactionId,
-                            transaction.OfferedProductId,
-                            transaction.OfferedProductTitle,
-                            transaction.BuyerId,   // ✅ DOĞRU: Alıcı veren
-                            transaction.SellerId,  // ✅ DOĞRU: Satıcı alan
-                            validityMinutes: PaymentConstants.QRCodeValidityMinutes, // ✅ SABIT KULLAN
-                            meetingPointLatitude: null,
-                            meetingPointLongitude: null,
-                            meetingPointName: null
-                        );
-
-                        if (!qrCode1.Success || !qrCode2.Success)
-                        {
-                            Console.WriteLine($"❌ QR kod oluşturma hatası!");
-                            return ServiceResult<Transaction>.FailureResult($"Takas kabul edildi ancak QR kodlar oluşturulamadı.");
-                        }
-
-                        Console.WriteLine($"✅ Güvenli QR kodlar başarıyla oluşturuldu!");
-                        Console.WriteLine($"   QR1: {transaction.ProductTitle} (Satıcı → Alıcı)");
-                        Console.WriteLine($"   QR2: {transaction.OfferedProductTitle} (Alıcı → Satıcı)");
-                    }
-                    else if (transaction.Type == ProductType.Takas)
-                    {
-                        // ✅ DEBUG: Takas ama OfferedProductId boş!
-                        Console.WriteLine($"⚠️ UYARI: Takas işlemi ama OfferedProductId boş!");
-                        Console.WriteLine($"   Muhtemelen CreateTradeOfferAsync'te veri kaydedilmedi.");
-                    }
-                    // ✅ YENİ EKLENECEK: BAĞIŞ için QR kod
-                    else if (transaction.Type == ProductType.Bagis)
-                    {
-                        Console.WriteLine($"✅ Bağış kabul edildi. QR kod oluşturuluyor: {transactionId}");
-                        
-                        var qrCode = await _qrCodeService.GenerateSecureDeliveryQRCodeAsync(
-                            transactionId,
-                            transaction.ProductId,
-                            transaction.ProductTitle,
-                            transaction.SellerId,  // Bağışçı veriyor
-                            transaction.BuyerId,   // Alıcı alıyor
-                            validityMinutes: PaymentConstants.QRCodeValidityMinutes,
-                            meetingPointLatitude: null,
-                            meetingPointLongitude: null,
-                            meetingPointName: null
-                        );
-
-                        if (!qrCode.Success)
-                        {
-                            Console.WriteLine($"❌ Bağış QR kod hatası!");
-                            return ServiceResult<Transaction>.FailureResult("Bağış kabul edildi ancak QR kod oluşturulamadı.");
-                        }
-                        
-                        Console.WriteLine($"✅ Bağış QR kodu başarıyla oluşturuldu!");
-                        
-                        // Alıcıya bildirim gönder
-                        await _notificationService.CreateNotificationAsync(new Notification
-                        {
-                            UserId = transaction.BuyerId,
-                            Type = NotificationType.OfferAccepted,
-                            Title = "🎁 Bağış Onaylandı - QR Kodunuz Hazır",
-                            Message = $"'{transaction.ProductTitle}' bağışı onaylandı. QR kodunuzu göstererek ürünü teslim alabilirsiniz.",
-                            ActionUrl = nameof(Views.OffersPage)
-                        });
-                    }
-                    
-                    // ✅ SATIŞ için ödeme sayfasına yönlendirme bildirimi
-                    if (transaction.Type == ProductType.Satis)
-                    {
-                        await _notificationService.CreateNotificationAsync(new Notification
-                        {
-                            UserId = transaction.BuyerId,
-                            Type = NotificationType.OfferAccepted,
-                            Title = "Teklif Kabul Edildi - Ödeme Yapın",
-                            Message = $"'{transaction.ProductTitle}' için {(transaction.QuotedPrice > 0 ? transaction.QuotedPrice : transaction.Price)}₺ ödeme yapabilirsiniz.",
-                            ActionUrl = nameof(Views.PaymentPage)
-                        });
-                    }
+                        UserId = transaction.BuyerId,
+                        Type = NotificationType.OfferAccepted,
+                        Title = "Ödeme Yapın",
+                        Message = $"'{transaction.ProductTitle}' için ödeme yapabilirsiniz.",
+                        ActionUrl = nameof(Views.PaymentPage)
+                    });
                 }
 
-                return ServiceResult<Transaction>.SuccessResult(transaction, "İşlem başarılı.");
+                return ServiceResult<Transaction>.SuccessResult(transaction, "İşlem başarıyla onaylandı.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ RespondToOfferAsync hatası: {ex.Message}");
-                return ServiceResult<Transaction>.FailureResult("Hata", ex.Message);
+                Console.WriteLine($"❌ RespondToOfferAsync Atomik Hata: {ex.Message}");
+                return ServiceResult<Transaction>.FailureResult("İşlem sırasında hata oluştu.", ex.Message);
             }
         }
+
         // Satış işlemi için simülasyonlu ödeme başlatma
         public async Task<ServiceResult<PaymentDto>> StartSalePaymentAsync(string transactionId, string method)
         {

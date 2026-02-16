@@ -7,6 +7,7 @@ using KamPay.Services;
 using KamPay.Models.Messages;
 using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Database; // Gerekli
 
 namespace KamPay.ViewModels
 {
@@ -92,22 +93,35 @@ namespace KamPay.ViewModels
             IQRCodeService qrCodeService,
             IAuthenticationService authService,
             IProductService productService,
-            IStorageService storageService)
+            IStorageService storageService,
+            FirebaseClient firebaseClient) 
         {
             _qrCodeService = qrCodeService;
             _authService = authService;
             _productService = productService;
             _storageService = storageService;
-            _firebaseClient = new Firebase.Database.FirebaseClient(Helpers.Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient;
 
             WeakReferenceMessenger.Default.Register<QRCodeScannedMessage>(this);
         }
 
-        // Bu metot, WeakReferenceMessenger tarafından bir mesaj geldiğinde OTOMATİK olarak çağrılır
+        // ✅ GÜVENLİ HALE GETİRİLMİŞ METOT
         public async void Receive(QRCodeScannedMessage message)
         {
-            // Gelen mesajın içindeki QR kod verisini al ve işle
-            await ProcessScannedQRCodeAsync(message.Value);
+            try
+            {
+                // Gelen mesajın içindeki QR kod verisini al ve işle
+                await ProcessScannedQRCodeAsync(message.Value);
+            }
+            catch (Exception ex)
+            {
+                // Hata oluşursa logla ve uygulamanın çökmesini engelle
+                System.Diagnostics.Debug.WriteLine($"❌ Receive Metodunda Hata: {ex.Message}");
+
+                // İsteğe bağlı: Kullanıcıya hata mesajı gösterilebilir
+                if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Hata", "QR kod işlenirken bir sorun oluştu.", "Tamam");
+            }
         }
 
         async partial void OnTransactionIdChanged(string? value)
