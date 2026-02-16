@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             x:Class="KamPay.Views.CustomerRequestDetailsPage"
+             x:DataType="vm:CustomerRequestDetailsViewModel"
+             Title="Talep Detayi">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Label Text="{Binding CustomerRequest.Title}" 
+                   FontSize="22" 
+                   FontAttributes="Bold"/>
+
+            <Label Text="{Binding CustomerRequest.Description}"/>
+
+            <Label Text="{Binding CustomerRequest.Location}"/>
+
+            <Label Text="{Binding CustomerRequest.BudgetText}"/>
+
+            <Frame IsVisible="{Binding CanSendProposal}">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Teklif Gonder" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+
+                    <Entry Placeholder="Teklif Fiyatiniz" 
+                           Text="{Binding ProposalPrice}"
+                           Keyboard="Numeric"/>
+
+                    <Editor Placeholder="Teklif mesajiniz" 
+                            Text="{Binding ProposalMessage}"
+                            HeightRequest="100"/>
+
+                    <Entry Text="{Binding EstimatedDays}" 
+                           Placeholder="Tahmini gun"
+                           Keyboard="Numeric"/>
+
+                    <Button Text="Gonder" 
+                            Command="{Binding SendProposalCommand}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <CollectionView ItemsSource="{Binding Proposals}"
+                            IsVisible="{Binding IsCurrentUserCustomer}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ProviderProposal">
+                        <Frame Padding="15" Margin="5">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="{Binding ProviderName}" 
+                                       FontAttributes="Bold"/>
+                                <Label Text="{Binding PriceText}"/>
+                                <Label Text="{Binding Message}"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <Button Grid.Column="0"
+                                            Text="Reddet" 
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CustomerRequestDetailsViewModel}}, Path=RejectProposalCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    <Button Grid.Column="1"
+                                            Text="Kabul Et" 
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CustomerRequestDetailsViewModel}}, Path=AcceptProposalCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

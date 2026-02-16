@@ -1288,5 +1288,780 @@ namespace KamPay.Services
                 return null;
             }
         }
+
+        // 🎯 ARMUT MODELİ - YENİ METODLAR
+
+        #region Müşteri Talep Yönetimi
+
+        /// <summary>
+        /// Müşteri yeni bir hizmet talebi oluşturur
+        /// </summary>
+        public async Task<ServiceResult<CustomerServiceRequest>> CreateCustomerRequestAsync(CustomerServiceRequest request)
+        {
+            try
+            {
+                // Talep numarası oluştur
+                if (string.IsNullOrWhiteSpace(request.RequestNumber))
+                {
+                    request.RequestNumber = $"CSR{DateTime.UtcNow:yyyyMMddHHmmss}";
+                }
+
+                request.CreatedAt = DateTime.UtcNow;
+                request.UpdatedAt = DateTime.UtcNow;
+                request.Status = CustomerRequestStatus.Open;
+                request.IsActive = true;
+
+                await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(request.RequestId)
+                    .PutAsync(request);
+
+                Console.WriteLine($"✅ Müşteri talebi oluşturuldu: {request.RequestId}");
+                return ServiceResult<CustomerServiceRequest>.SuccessResult(request, "Talep başarıyla oluşturuldu!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ CreateCustomerRequestAsync hatası: {ex.Message}");
+                return ServiceResult<CustomerServiceRequest>.FailureResult("Talep oluşturulamadı", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Tüm aktif müşteri taleplerini getirir
+        /// </summary>
+        public async Task<ServiceResult<List<CustomerServiceRequest>>> GetCustomerRequestsAsync(
+            ServiceCategory? category = null,
+            string? location = null)
+        {
+            try
+            {
+                var allRequests = await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .OnceAsync<CustomerServiceRequest>();
+
+                var requests = allRequests
+                    .Select(r => {
+                        var req = r.Object;
+                        req.RequestId = r.Key;
+                        return req;
+                    })
+                    .Where(r => r.IsActive && r.Status == CustomerRequestStatus.Open)
+                    .ToList();
+
+                // Kategori filtresi
+                if (category.HasValue)
+                {
+                    requests = requests.Where(r => r.Category == category.Value).ToList();
+                }
+
+                // Konum filtresi (basit string match)
+                if (!string.IsNullOrWhiteSpace(location))
+                {
+                    requests = requests.Where(r => 
+                        r.Location.Contains(location, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                requests = requests.OrderByDescending(r => r.CreatedAt).ToList();
+
+                Console.WriteLine($"📋 {requests.Count} aktif talep getirildi");
+                return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(requests);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetCustomerRequestsAsync hatası: {ex.Message}");
+                return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler getirilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Sayfalama ile müşteri taleplerini getirir
+        /// </summary>
+        public async Task<ServiceResult<List<CustomerServiceRequest>>> GetCustomerRequestsPagedAsync(
+            int pageSize = 20,
+            string? lastKey = null,
+            ServiceCategory? category = null)
+        {
+            try
+            {
+                IEnumerable<Firebase.Database.FirebaseObject<CustomerServiceRequest>> items;
+
+                if (category.HasValue)
+                {
+                    items = await _firebaseClient
+                        .Child(Constants.CustomerServiceRequestsCollection)
+                        .OrderBy("Category")
+                        .EqualTo((int)category.Value)
+                        .OnceAsync<CustomerServiceRequest>();
+
+                    var allRequests = items
+                        .Select(r => {
+                            var req = r.Object;
+                            req.RequestId = r.Key;
+                            return req;
+                        })
+                        .Where(r => r.IsActive && r.Status == CustomerRequestStatus.Open)
+                        .OrderByDescending(r => r.CreatedAt)
+                        .ToList();
+
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        var lastIndex = allRequests.FindIndex(r => r.RequestId == lastKey);
+                        if (lastIndex >= 0)
+                        {
+                            allRequests = allRequests.Skip(lastIndex + 1).Take(pageSize).ToList();
+                        }
+                    }
+                    else
+                    {
+                        allRequests = allRequests.Take(pageSize).ToList();
+                    }
+
+                    return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(allRequests);
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        items = await _firebaseClient
+                            .Child(Constants.CustomerServiceRequestsCollection)
+                            .OrderBy("CreatedAt")
+                            .StartAt(lastKey)
+                            .LimitToFirst(pageSize + 1)
+                            .OnceAsync<CustomerServiceRequest>();
+                    }
+                    else
+                    {
+                        items = await _firebaseClient
+                            .Child(Constants.CustomerServiceRequestsCollection)
+                            .OrderBy("CreatedAt")
+                            .LimitToFirst(pageSize)
+                            .OnceAsync<CustomerServiceRequest>();
+                    }
+
+                    var requests = items.Select(r => {
+                        var req = r.Object;
+                        req.RequestId = r.Key;
+                        return req;
+                    }).ToList();
+
+                    if (!string.IsNullOrEmpty(lastKey) && requests.Any() && requests.First().RequestId == lastKey)
+                    {
+                        requests.RemoveAt(0);
+                    }
+
+                    requests = requests
+                        .Where(r => r.IsActive && r.Status == CustomerRequestStatus.Open)
+                        .OrderByDescending(r => r.CreatedAt)
+                        .ToList();
+
+                    return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(requests);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetCustomerRequestsPagedAsync hatası: {ex.Message}");
+                return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler yüklenemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Belirli bir müşteri talebini ID ile getirir
+        /// </summary>
+        public async Task<ServiceResult<CustomerServiceRequest>> GetCustomerRequestByIdAsync(string requestId)
+        {
+            try
+            {
+                var request = await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(requestId)
+                    .OnceSingleAsync<CustomerServiceRequest>();
+
+                if (request == null)
+                {
+                    return ServiceResult<CustomerServiceRequest>.FailureResult("Talep bulunamadı");
+                }
+
+                request.RequestId = requestId;
+                return ServiceResult<CustomerServiceRequest>.SuccessResult(request);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetCustomerRequestByIdAsync hatası: {ex.Message}");
+                return ServiceResult<CustomerServiceRequest>.FailureResult("Talep getirilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Müşterinin kendi oluşturduğu talepleri getirir
+        /// </summary>
+        public async Task<ServiceResult<List<CustomerServiceRequest>>> GetMyCustomerRequestsAsync(string customerId)
+        {
+            try
+            {
+                var allRequests = await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .OrderBy("CustomerId")
+                    .EqualTo(customerId)
+                    .OnceAsync<CustomerServiceRequest>();
+
+                var requests = allRequests
+                    .Select(r => {
+                        var req = r.Object;
+                        req.RequestId = r.Key;
+                        return req;
+                    })
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
+
+                Console.WriteLine($"📋 {requests.Count} talep getirildi (Müşteri: {customerId})");
+                return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(requests);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetMyCustomerRequestsAsync hatası: {ex.Message}");
+                return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler getirilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Müşteri talebini günceller
+        /// </summary>
+        public async Task<ServiceResult<bool>> UpdateCustomerRequestAsync(CustomerServiceRequest request)
+        {
+            try
+            {
+                request.UpdatedAt = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(request.RequestId)
+                    .PutAsync(request);
+
+                Console.WriteLine($"✅ Talep güncellendi: {request.RequestId}");
+                return ServiceResult<bool>.SuccessResult(true, "Talep güncellendi");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ UpdateCustomerRequestAsync hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Talep güncellenemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Müşteri talebini iptal eder
+        /// </summary>
+        public async Task<ServiceResult<bool>> CancelCustomerRequestAsync(string requestId, string customerId)
+        {
+            try
+            {
+                var requestNode = _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(requestId);
+
+                var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
+
+                if (request == null)
+                {
+                    return ServiceResult<bool>.FailureResult("Talep bulunamadı");
+                }
+
+                if (request.CustomerId != customerId)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu işlemi yapmaya yetkiniz yok");
+                }
+
+                request.Status = CustomerRequestStatus.Cancelled;
+                request.IsActive = false;
+                request.UpdatedAt = DateTime.UtcNow;
+
+                await requestNode.PutAsync(request);
+
+                // Bekleyen teklifleri bilgilendir
+                var proposals = await GetProposalsForRequestAsync(requestId);
+                if (proposals.Success && proposals.Data != null)
+                {
+                    foreach (var proposal in proposals.Data.Where(p => p.Status == ProposalStatus.Pending))
+                    {
+                        await _notificationService.CreateNotificationAsync(new Notification
+                        {
+                            UserId = proposal.ProviderId,
+                            Title = "Talep İptal Edildi",
+                            Message = $"'{request.Title}' talebi müşteri tarafından iptal edildi.",
+                            Type = NotificationType.ServiceCompleted
+                        });
+                    }
+                }
+
+                Console.WriteLine($"✅ Talep iptal edildi: {requestId}");
+                return ServiceResult<bool>.SuccessResult(true, "Talep iptal edildi");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ CancelCustomerRequestAsync hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Talep iptal edilemedi", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Profesyonel Teklif Yönetimi
+
+        /// <summary>
+        /// Profesyonel bir müşteri talebine teklif gönderir
+        /// </summary>
+        public async Task<ServiceResult<ProviderProposal>> SendProposalAsync(ProviderProposal proposal)
+        {
+            try
+            {
+                // Teklif numarası oluştur
+                if (string.IsNullOrWhiteSpace(proposal.ProposalNumber))
+                {
+                    proposal.ProposalNumber = $"PP{DateTime.UtcNow:yyyyMMddHHmmss}";
+                }
+
+                proposal.CreatedAt = DateTime.UtcNow;
+                proposal.UpdatedAt = DateTime.UtcNow;
+                proposal.Status = ProposalStatus.Pending;
+
+                // Teklif geçerlilik süresi (varsayılan 7 gün)
+                if (!proposal.ExpiresAt.HasValue)
+                {
+                    proposal.ExpiresAt = DateTime.UtcNow.AddDays(7);
+                }
+
+                // Firebase'e kaydet
+                await _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposal.ProposalId)
+                    .PutAsync(proposal);
+
+                // Talepteki teklif sayısını artır
+                var requestNode = _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(proposal.CustomerRequestId);
+
+                var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
+                if (request != null)
+                {
+                    request.ProposalCount++;
+                    request.UpdatedAt = DateTime.UtcNow;
+                    await requestNode.PutAsync(request);
+                }
+
+                // Müşteriye bildirim gönder
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = proposal.CustomerId,
+                    Title = "🎉 Yeni Teklif Geldi!",
+                    Message = $"{proposal.ProviderName}, '{proposal.RequestTitle}' talebiniz için {proposal.Price:N2}₺ teklif gönderdi.",
+                    Type = NotificationType.NewOffer
+                });
+
+                Console.WriteLine($"✅ Teklif gönderildi: {proposal.ProposalId}");
+                return ServiceResult<ProviderProposal>.SuccessResult(proposal, "Teklif başarıyla gönderildi!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SendProposalAsync hatası: {ex.Message}");
+                return ServiceResult<ProviderProposal>.FailureResult("Teklif gönderilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Belirli bir talebe gönderilen tüm teklifleri getirir
+        /// </summary>
+        public async Task<ServiceResult<List<ProviderProposal>>> GetProposalsForRequestAsync(string customerRequestId)
+        {
+            try
+            {
+                var allProposals = await _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .OrderBy("CustomerRequestId")
+                    .EqualTo(customerRequestId)
+                    .OnceAsync<ProviderProposal>();
+
+                var proposals = allProposals
+                    .Select(p => {
+                        var prop = p.Object;
+                        prop.ProposalId = p.Key;
+                        return prop;
+                    })
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToList();
+
+                Console.WriteLine($"📋 {proposals.Count} teklif getirildi (Talep: {customerRequestId})");
+                return ServiceResult<List<ProviderProposal>>.SuccessResult(proposals);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetProposalsForRequestAsync hatası: {ex.Message}");
+                return ServiceResult<List<ProviderProposal>>.FailureResult("Teklifler getirilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Profesyonelin gönderdiği tüm teklifleri getirir
+        /// </summary>
+        public async Task<ServiceResult<List<ProviderProposal>>> GetMyProposalsAsync(string providerId)
+        {
+            try
+            {
+                var allProposals = await _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .OrderBy("ProviderId")
+                    .EqualTo(providerId)
+                    .OnceAsync<ProviderProposal>();
+
+                var proposals = allProposals
+                    .Select(p => {
+                        var prop = p.Object;
+                        prop.ProposalId = p.Key;
+                        return prop;
+                    })
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToList();
+
+                Console.WriteLine($"📋 {proposals.Count} teklif getirildi (Profesyonel: {providerId})");
+                return ServiceResult<List<ProviderProposal>>.SuccessResult(proposals);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ GetMyProposalsAsync hatası: {ex.Message}");
+                return ServiceResult<List<ProviderProposal>>.FailureResult("Teklifler getirilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Müşteri bir teklifi kabul eder
+        /// </summary>
+        public async Task<ServiceResult<bool>> AcceptProposalAsync(string proposalId, string customerId)
+        {
+            try
+            {
+                var proposalNode = _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposalId);
+
+                var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
+
+                if (proposal == null)
+                {
+                    return ServiceResult<bool>.FailureResult("Teklif bulunamadı");
+                }
+
+                if (proposal.CustomerId != customerId)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu işlemi yapmaya yetkiniz yok");
+                }
+
+                if (proposal.Status != ProposalStatus.Pending)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu teklif zaten yanıtlanmış");
+                }
+
+                // Teklifi kabul et
+                proposal.Status = ProposalStatus.Accepted;
+                proposal.RespondedAt = DateTime.UtcNow;
+                proposal.UpdatedAt = DateTime.UtcNow;
+                await proposalNode.PutAsync(proposal);
+
+                // Talebi güncelle
+                var requestNode = _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(proposal.CustomerRequestId);
+
+                var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
+                if (request != null)
+                {
+                    request.Status = CustomerRequestStatus.ProviderSelected;
+                    request.SelectedProposalId = proposalId;
+                    request.UpdatedAt = DateTime.UtcNow;
+                    await requestNode.PutAsync(request);
+                }
+
+                // Diğer bekleyen teklifleri reddet
+                var otherProposals = await GetProposalsForRequestAsync(proposal.CustomerRequestId);
+                if (otherProposals.Success && otherProposals.Data != null)
+                {
+                    foreach (var other in otherProposals.Data.Where(p => 
+                        p.ProposalId != proposalId && 
+                        p.Status == ProposalStatus.Pending))
+                    {
+                        var otherNode = _firebaseClient
+                            .Child(Constants.ProviderProposalsCollection)
+                            .Child(other.ProposalId);
+
+                        other.Status = ProposalStatus.Rejected;
+                        other.RejectionReason = "Müşteri başka bir teklifi kabul etti";
+                        other.RespondedAt = DateTime.UtcNow;
+                        other.UpdatedAt = DateTime.UtcNow;
+                        await otherNode.PutAsync(other);
+
+                        // Bildirim gönder
+                        await _notificationService.CreateNotificationAsync(new Notification
+                        {
+                            UserId = other.ProviderId,
+                            Title = "Teklif Sonucu",
+                            Message = $"'{proposal.RequestTitle}' talebi için teklifiniz kabul edilmedi. Müşteri başka bir profesyoneli seçti.",
+                            Type = NotificationType.OfferRejected
+                        });
+                    }
+                }
+
+                // Kazanan profesyonele bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = proposal.ProviderId,
+                    Title = "🎉 Tebrikler! Teklifiniz Kabul Edildi",
+                    Message = $"'{proposal.RequestTitle}' talebi için {proposal.Price:N2}₺ teklifiniz müşteri tarafından kabul edildi. İş başlayabilir!",
+                    Type = NotificationType.OfferAccepted
+                });
+
+                Console.WriteLine($"✅ Teklif kabul edildi: {proposalId}");
+                return ServiceResult<bool>.SuccessResult(true, "Teklif kabul edildi! Profesyonel bilgilendirildi.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ AcceptProposalAsync hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif kabul edilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Müşteri bir teklifi reddeder
+        /// </summary>
+        public async Task<ServiceResult<bool>> RejectProposalAsync(string proposalId, string customerId, string? reason = null)
+        {
+            try
+            {
+                var proposalNode = _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposalId);
+
+                var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
+
+                if (proposal == null)
+                {
+                    return ServiceResult<bool>.FailureResult("Teklif bulunamadı");
+                }
+
+                if (proposal.CustomerId != customerId)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu işlemi yapmaya yetkiniz yok");
+                }
+
+                if (proposal.Status != ProposalStatus.Pending)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu teklif zaten yanıtlanmış");
+                }
+
+                proposal.Status = ProposalStatus.Rejected;
+                proposal.RejectionReason = reason ?? "Müşteri tarafından reddedildi";
+                proposal.RespondedAt = DateTime.UtcNow;
+                proposal.UpdatedAt = DateTime.UtcNow;
+                await proposalNode.PutAsync(proposal);
+
+                // Profesyonele bildirim
+                await _notificationService.CreateNotificationAsync(new Notification
+                {
+                    UserId = proposal.ProviderId,
+                    Title = "Teklif Reddedildi",
+                    Message = $"'{proposal.RequestTitle}' talebi için teklifiniz müşteri tarafından reddedildi.",
+                    Type = NotificationType.OfferRejected
+                });
+
+                Console.WriteLine($"✅ Teklif reddedildi: {proposalId}");
+                return ServiceResult<bool>.SuccessResult(true, "Teklif reddedildi");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ RejectProposalAsync hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif reddedilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Profesyonel kendi teklifini geri çeker
+        /// </summary>
+        public async Task<ServiceResult<bool>> WithdrawProposalAsync(string proposalId, string providerId)
+        {
+            try
+            {
+                var proposalNode = _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposalId);
+
+                var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
+
+                if (proposal == null)
+                {
+                    return ServiceResult<bool>.FailureResult("Teklif bulunamadı");
+                }
+
+                if (proposal.ProviderId != providerId)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu işlemi yapmaya yetkiniz yok");
+                }
+
+                if (proposal.Status != ProposalStatus.Pending)
+                {
+                    return ServiceResult<bool>.FailureResult("Bu teklif zaten yanıtlanmış veya kabul edilmiş");
+                }
+
+                proposal.Status = ProposalStatus.Withdrawn;
+                proposal.UpdatedAt = DateTime.UtcNow;
+                await proposalNode.PutAsync(proposal);
+
+                // Talepteki teklif sayısını azalt
+                var requestNode = _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(proposal.CustomerRequestId);
+
+                var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
+                if (request != null && request.ProposalCount > 0)
+                {
+                    request.ProposalCount--;
+                    request.UpdatedAt = DateTime.UtcNow;
+                    await requestNode.PutAsync(request);
+                }
+
+                Console.WriteLine($"✅ Teklif geri çekildi: {proposalId}");
+                return ServiceResult<bool>.SuccessResult(true, "Teklif geri çekildi");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ WithdrawProposalAsync hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Teklif geri çekilemedi", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Teklif kabul edildikten sonra iş sözleşmesi oluşturur
+        /// </summary>
+        public async Task<ServiceResult<ServiceRequest>> CreateServiceContractFromProposalAsync(string proposalId)
+        {
+            try
+            {
+                var proposal = await _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposalId)
+                    .OnceSingleAsync<ProviderProposal>();
+
+                if (proposal == null)
+                {
+                    return ServiceResult<ServiceRequest>.FailureResult("Teklif bulunamadı");
+                }
+
+                if (proposal.Status != ProposalStatus.Accepted)
+                {
+                    return ServiceResult<ServiceRequest>.FailureResult("Bu teklif kabul edilmemiş");
+                }
+
+                if (proposal.IsContractCreated)
+                {
+                    return ServiceResult<ServiceRequest>.FailureResult("Sözleşme zaten oluşturulmuş");
+                }
+
+                // ServiceRequest (iş sözleşmesi) oluştur
+                var contract = new ServiceRequest
+                {
+                    RequestId = Guid.NewGuid().ToString(),
+                    ServiceId = proposal.CustomerRequestId,
+                    ServiceTitle = proposal.RequestTitle,
+                    ProviderId = proposal.ProviderId,
+                    ProviderName = proposal.ProviderName,
+                    RequesterId = proposal.CustomerId,
+                    RequesterName = proposal.CustomerName,
+                    Price = proposal.Price,
+                    QuotedPrice = proposal.Price,
+                    Currency = proposal.Currency,
+                    TimeCreditValue = 0,
+                    Message = proposal.Message,
+                    Status = ServiceRequestStatus.Accepted,
+                    PaymentStatus = ServicePaymentStatus.None,
+                    RequestedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                // Sözleşmeyi kaydet
+                await _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .Child(contract.RequestId)
+                    .PutAsync(contract);
+
+                // Teklifi güncelle
+                proposal.IsContractCreated = true;
+                proposal.ServiceContractId = contract.RequestId;
+                proposal.UpdatedAt = DateTime.UtcNow;
+
+                await _firebaseClient
+                    .Child(Constants.ProviderProposalsCollection)
+                    .Child(proposalId)
+                    .PutAsync(proposal);
+
+                // Talebi güncelle
+                var request = await _firebaseClient
+                    .Child(Constants.CustomerServiceRequestsCollection)
+                    .Child(proposal.CustomerRequestId)
+                    .OnceSingleAsync<CustomerServiceRequest>();
+
+                if (request != null)
+                {
+                    request.Status = CustomerRequestStatus.InProgress;
+                    request.UpdatedAt = DateTime.UtcNow;
+                    await _firebaseClient
+                        .Child(Constants.CustomerServiceRequestsCollection)
+                        .Child(proposal.CustomerRequestId)
+                        .PutAsync(request);
+                }
+
+                Console.WriteLine($"✅ İş sözleşmesi oluşturuldu: {contract.RequestId}");
+                return ServiceResult<ServiceRequest>.SuccessResult(contract, "İş sözleşmesi oluşturuldu");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ CreateServiceContractFromProposalAsync hatası: {ex.Message}");
+                return ServiceResult<ServiceRequest>.FailureResult("Sözleşme oluşturulamadı", ex.Message);
+            }
+        }
+
+        #endregion
+
+        // 🔧 INTERFACE UYUMLULUK: Basit imzalı wrapper metod
+        /// <summary>
+        /// Interface uyumluluğu için basit imzalı wrapper metod
+        /// İçeride 4 parametreli versiyonu çağırır
+        /// </summary>
+        public async Task<ServiceResult<bool>> SimulatePaymentAndCompleteAsync(string requestId)
+        {
+            try
+            {
+                // Request'i al ve requester ID'sini çıkar
+                var requestNode = _firebaseClient
+                    .Child(Constants.ServiceRequestsCollection)
+                    .Child(requestId);
+
+                var request = await requestNode.OnceSingleAsync<ServiceRequest>();
+
+                if (request == null)
+                {
+                    return ServiceResult<bool>.FailureResult("İstek bulunamadı");
+                }
+
+                // 4 parametreli versiyonu çağır (varsayılan değerlerle)
+                return await SimulatePaymentAndCompleteAsync(
+                    requestId,
+                    request.RequesterId,
+                    PaymentMethodType.CardSim,
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SimulatePaymentAndCompleteAsync (wrapper) hatası: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Ödeme işlemi başarısız", ex.Message);
+            }
+        }
     }
 }

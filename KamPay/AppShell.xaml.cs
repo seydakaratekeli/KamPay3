@@ -119,6 +119,10 @@ namespace KamPay
             Routing.RegisterRoute(nameof(ImageViewerPage), typeof(ImageViewerPage));
             Routing.RegisterRoute("myproducts", typeof(ProductListPage));
 
+            // 🎯 ARMUT MODELİ: Yeni Rotalar
+            Routing.RegisterRoute(nameof(CreateCustomerRequestPage), typeof(CreateCustomerRequestPage));
+            Routing.RegisterRoute(nameof(CustomerRequestsListPage), typeof(CustomerRequestsListPage));
+            Routing.RegisterRoute("CustomerRequestDetailsPage", typeof(CustomerRequestDetailsPage));
         }
 
         // Shell ilk göründüğünde giriş kontrolünü yap

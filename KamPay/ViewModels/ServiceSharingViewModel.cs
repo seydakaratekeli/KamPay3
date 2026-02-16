@@ -26,48 +26,46 @@ namespace KamPay.ViewModels
 
         private readonly HashSet<string> _serviceIds = new();
         
-        // ✅ Sayfalama için yeni alanlar
         private string? _lastLoadedKey;
         private bool _isLoadingMore;
 
-        // ------------ UI STATE ----------
+        // UI STATE
         [ObservableProperty] private bool isPostFormVisible;
+        [ObservableProperty] private bool isCustomerRequestFormVisible;
         [ObservableProperty] private bool isLoading;
         [ObservableProperty] private bool isPosting;
         [ObservableProperty] private bool isRefreshing;
 
-        // ------------ FORM FIELDS ----------
+        // FORM FIELDS (Service Offer)
         [ObservableProperty] private string serviceTitle = "";
         [ObservableProperty] private string serviceDescription = "";
         [ObservableProperty] private ServiceCategory selectedCategory;
         [ObservableProperty] private decimal servicePrice;
         [ObservableProperty] private int timeCredits = 1;
 
-        // ------------ FILTERS ------------
+        // FORM FIELDS (Customer Request)
+        [ObservableProperty] private string customerRequestTitle = "";
+        [ObservableProperty] private string customerRequestDescription = "";
+        [ObservableProperty] private ServiceCategory customerRequestCategory;
+        [ObservableProperty] private string customerRequestLocation = "";
+        [ObservableProperty] private decimal customerRequestBudgetMin;
+        [ObservableProperty] private decimal customerRequestBudgetMax;
+        [ObservableProperty] private DateTime customerRequestPreferredDate = DateTime.Now.AddDays(1);
+
+        // FILTERS
         [ObservableProperty] private string searchText = "";
-
-        // null -> Hepsi
         [ObservableProperty] private ServiceCategory? filterCategory = null;
-
-        // Seçilen sıralama metni (Örn: "Artan", "Ascending" vb.)
         [ObservableProperty] private string? priceSort = null;
 
-        // ------------ DATA COLLECTIONS --------
+        // DATA COLLECTIONS
         public ObservableCollection<ServiceOffer> Services { get; } = new();
         public ObservableCollection<ServiceOffer> FilteredServices { get; } = new();
 
-        /// <summary>
-        /// Kategori listesi (null = "Hepsi" seçeneği dahil)
-        /// </summary>
         public List<ServiceCategory?> Categories { get; } =
             new List<ServiceCategory?> { null }
             .Concat(Enum.GetValues(typeof(ServiceCategory)).Cast<ServiceCategory?>())
             .ToList();
 
-        /// <summary>
-        /// Dinamik Sıralama Seçenekleri
-        /// Dil değiştiğinde bu liste otomatik olarak yeni dildeki karşılıklarını döndürür.
-        /// </summary>
         public List<string> PriceSortOptions
         {
             get
@@ -75,14 +73,13 @@ namespace KamPay.ViewModels
                 var loc = LocalizationResourceManager.Instance;
                 return new List<string>
                 {
-                    loc["PriceAll"],       // Hepsi / All
-                    loc["PriceAscending"], // Artan / Ascending
-                    loc["PriceDescending"] // Azalan / Descending
+                    loc["PriceAll"],
+                    loc["PriceAscending"],
+                    loc["PriceDescending"]
                 };
             }
         }
 
-        // ------------ CONSTRUCTOR ------------
         public ServiceSharingViewModel(
             IServiceSharingService serviceService,
             IAuthenticationService authService,
@@ -100,11 +97,9 @@ namespace KamPay.ViewModels
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
-            // Dil değiştiğinde sıralama listesini (Picker) güncelle
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
                 OnPropertyChanged(nameof(PriceSortOptions));
-                // Dil değişince filtreyi tekrar uygula (gerekirse sıralamayı varsayılana çekebiliriz)
                 ApplyFilter();
             };
 
@@ -117,10 +112,8 @@ namespace KamPay.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                //  DÜZELTME: Hem Services hem de FilteredServices'teki öğeleri güncelle
                 bool hasChanges = false;
 
-                // 1. Services koleksiyonunu güncelle
                 foreach (var s in Services.Where(x => x.ProviderId == u.UserId))
                 {
                     s.ProviderName = u.FullName;
@@ -128,14 +121,12 @@ namespace KamPay.ViewModels
                     hasChanges = true;
                 }
 
-                // 2. FilteredServices koleksiyonunu da güncelle (UI'da görünen liste)
                 foreach (var s in FilteredServices.Where(x => x.ProviderId == u.UserId))
                 {
                     s.ProviderName = u.FullName;
                     s.ProviderPhotoUrl = u.ProfileImageUrl;
                 }
 
-                // 3. Eğer değişiklik varsa, filtreyi yeniden uygula (listeyi yenile)
                 if (hasChanges)
                 {
                     ApplyFilter();
@@ -149,9 +140,6 @@ namespace KamPay.ViewModels
             await UltraFastLoadAsync();
         }
 
-        /// <summary>
-        /// ULTRA FAST LOADING (Snapshot + Realtime)
-        /// </summary>
         public async Task UltraFastLoadAsync()
         {
             try
@@ -161,7 +149,6 @@ namespace KamPay.ViewModels
 
                 IsLoading = true;
 
-                // ✅ OPTİMİZE: Sayfalama ile ilk yükleme
                 var result = await _serviceService.GetServiceOffersPagedAsync(
                     pageSize: 20,
                     lastKey: null,
@@ -184,7 +171,6 @@ namespace KamPay.ViewModels
 
                     Services.SortDescending(x => x.CreatedAt);
                     
-                    // Son yüklenen key'i kaydet
                     if (result.Data.Any())
                     {
                         _lastLoadedKey = result.Data.Last().ServiceId;
@@ -195,7 +181,6 @@ namespace KamPay.ViewModels
 
                 ApplyFilter();
 
-                //  REALTIME LISTENER
                 _listener = _loader.Listen(Constants.ServiceOffersCollection, evt =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
@@ -211,9 +196,6 @@ namespace KamPay.ViewModels
             }
         }
 
-        /// <summary>
-        /// ✅ YENİ: Daha fazla hizmet yükle (Sonsuz Kaydırma)
-        /// </summary>
         [RelayCommand]
         private async Task LoadMoreServicesAsync()
         {
@@ -260,9 +242,6 @@ namespace KamPay.ViewModels
             ApplyFilter();
         }
 
-        /// <summary>
-        /// REALTIME UPDATE HANDLER
-        /// </summary>
         private void ApplyRealtimeEvent(FirebaseEvent<ServiceOffer> e)
         {
             var s = e.Object;
@@ -339,13 +318,10 @@ namespace KamPay.ViewModels
             Services.Add(s);
         }
 
-        ///  FILTERING
-       
         private void FilterServices()
         {
             var q = Services.AsEnumerable();
 
-            // Search
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var t = SearchText.ToLower();
@@ -356,23 +332,20 @@ namespace KamPay.ViewModels
                 );
             }
 
-            // Category
             if (FilterCategory != null)
             {
                 q = q.Where(s => s.Category == FilterCategory.Value);
             }
 
-            // Price sort (Dil bağımsız kontrol)
             var loc = LocalizationResourceManager.Instance;
 
-            if (PriceSort == loc["PriceAscending"]) // "Artan" veya "Ascending" kontrolü
+            if (PriceSort == loc["PriceAscending"])
                 q = q.OrderBy(s => s.Price);
-            else if (PriceSort == loc["PriceDescending"]) // "Azalan" veya "Descending" kontrolü
+            else if (PriceSort == loc["PriceDescending"])
                 q = q.OrderByDescending(s => s.Price);
             else
-                q = q.OrderByDescending(s => s.CreatedAt); // "Hepsi" veya null durumu
+                q = q.OrderByDescending(s => s.CreatedAt);
 
-            // Update Filtered list
             FilteredServices.Clear();
             foreach (var s in q)
                 FilteredServices.Add(s);
@@ -385,9 +358,9 @@ namespace KamPay.ViewModels
         }
 
         partial void OnSearchTextChanged(string value) => ApplyFilter();
+        
         partial void OnFilterCategoryChanged(ServiceCategory? value) 
         {
-            // Kategori değiştiğinde sayfalamayı sıfırla ve yeniden yükle
             _lastLoadedKey = null;
             _serviceIds.Clear();
             Services.Clear();
@@ -396,13 +369,9 @@ namespace KamPay.ViewModels
 
         partial void OnPriceSortChanged(string? value)
         {
-            // Seçim değiştiğinde filtreyi uygula
             ApplyFilter();
         }
 
-       
-        ///  REFRESH
-       
         [RelayCommand]
         private async Task RefreshServicesAsync()
         {
@@ -427,17 +396,18 @@ namespace KamPay.ViewModels
             }
         }
 
-/// <summary>
-/// FORM OPEN/CLOSE
-/// </summary>
-[RelayCommand]
-private void OpenPostForm() => IsPostFormVisible = true;
+        [RelayCommand]
+        private void OpenPostForm() => IsPostFormVisible = true;
 
-        [RelayCommand] private void ClosePostForm() => IsPostFormVisible = false;
+        [RelayCommand]
+        private void ClosePostForm() => IsPostFormVisible = false;
 
-       
-        ///  CREATE SERVICE
-       
+        [RelayCommand]
+        private void OpenCustomerRequestForm() => IsCustomerRequestFormVisible = true;
+
+        [RelayCommand]
+        private void CloseCustomerRequestForm() => IsCustomerRequestFormVisible = false;
+
         [RelayCommand]
         private async Task CreateServiceAsync()
         {
@@ -523,9 +493,103 @@ private void OpenPostForm() => IsPostFormVisible = true;
             }
         }
 
-       
-        // REQUEST SERVICE
-       
+        [RelayCommand]
+        private async Task CreateCustomerRequestAsync()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(CustomerRequestTitle))
+                {
+                    await DisplayAsync("Uyarı", "Başlık gerekli.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(CustomerRequestDescription))
+                {
+                    await DisplayAsync("Uyarı", "Açıklama gerekli.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(CustomerRequestLocation))
+                {
+                    await DisplayAsync("Uyarı", "Konum gerekli.");
+                    return;
+                }
+
+                if (CustomerRequestBudgetMin < 0 || CustomerRequestBudgetMax < 0)
+                {
+                    await DisplayAsync("Uyarı", "Bütçe 0 veya daha büyük olmalıdır.");
+                    return;
+                }
+
+                if (CustomerRequestBudgetMin > CustomerRequestBudgetMax)
+                {
+                    await DisplayAsync("Uyarı", "Minimum bütçe, maksimum bütçeden büyük olamaz.");
+                    return;
+                }
+
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    await DisplayAsync("Hata", "Giriş yapılmamış.");
+                    return;
+                }
+
+                var profile = await _userProfileService.GetUserProfileAsync(user.UserId);
+                var img = profile?.Data?.ProfileImageUrl ?? "person_icon.svg";
+
+                IsPosting = true;
+
+                var customerRequest = new CustomerServiceRequest
+                {
+                    RequestId = Guid.NewGuid().ToString(),
+                    CustomerId = user.UserId,
+                    CustomerName = user.FullName,
+                    CustomerPhotoUrl = img,
+                    Title = CustomerRequestTitle,
+                    Description = CustomerRequestDescription,
+                    Category = CustomerRequestCategory,
+                    Location = CustomerRequestLocation,
+                    BudgetMin = CustomerRequestBudgetMin,
+                    BudgetMax = CustomerRequestBudgetMax,
+                    PreferredDate = CustomerRequestPreferredDate,
+                    Status = CustomerRequestStatus.Open,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    ProposalCount = 0
+                };
+
+                var result = await _serviceService.CreateCustomerRequestAsync(customerRequest);
+
+                if (result.Success)
+                {
+                    CustomerRequestTitle = "";
+                    CustomerRequestDescription = "";
+                    CustomerRequestLocation = "";
+                    CustomerRequestBudgetMin = 0;
+                    CustomerRequestBudgetMax = 0;
+                    CustomerRequestCategory = 0;
+                    CustomerRequestPreferredDate = DateTime.Now.AddDays(1);
+
+                    IsCustomerRequestFormVisible = false;
+
+                    await DisplayAsync("Başarılı", "Hizmet talebiniz oluşturuldu! Profesyonellerden teklifler almaya başlayacaksınız.");
+                }
+                else
+                {
+                    await DisplayAsync("Hata", result.Message ?? "Hata oluştu.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAsync("Hata", ex.Message);
+            }
+            finally
+            {
+                IsPosting = false;
+            }
+        }
+
         [RelayCommand]
         private async Task RequestServiceAsync(ServiceOffer offer)
         {
@@ -575,9 +639,6 @@ private void OpenPostForm() => IsPostFormVisible = true;
             }
         }
 
-       
-        ///  MESSAGE PROVIDER
-       
         [RelayCommand]
         private async Task MessageProviderAsync(ServiceOffer offer)
         {
@@ -624,9 +685,6 @@ private void OpenPostForm() => IsPostFormVisible = true;
             }
         }
 
-       
-        // TIME CREDITS (+ / -)
-       
         [RelayCommand]
         private void IncrementTimeCredits()
         {
@@ -646,9 +704,6 @@ private void OpenPostForm() => IsPostFormVisible = true;
             return Application.Current!.MainPage!.DisplayAlert(title, message, "Tamam");
         }
 
-       
-        // DISPOSE
-       
         public void Dispose()
         {
             _listener?.Dispose();
@@ -662,9 +717,6 @@ private void OpenPostForm() => IsPostFormVisible = true;
         }
     }
 
-   
-    ///  SMALL EXTENSION FOR SORTING
-   
     public static class ListSortExtensions
     {
         public static void SortDescending<T, K>(this ObservableCollection<T> list, Func<T, K> key)

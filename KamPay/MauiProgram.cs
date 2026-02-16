@@ -35,7 +35,7 @@ namespace KamPay
                     // Invariant culture ile başla, sonra LocalizationResourceManager ayarlayacak
                     CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
                     CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
-                    System.Diagnostics.Debug.WriteLine("✓ Invariant culture ayarlandı (geçici)");
+                    System.Diagnostics.Debug.WriteLine("✓ Invariant culture ayarlandi (geçici)");
                 }
                 catch (Exception ex)
                 {
@@ -43,7 +43,7 @@ namespace KamPay
                 }
 
                 var builder = MauiApp.CreateBuilder();
-                System.Diagnostics.Debug.WriteLine("✓ MauiApp builder oluşturuldu");
+                System.Diagnostics.Debug.WriteLine("✓ MauiApp builder oluştu");
 
                 builder
                     .UseMauiApp<App>()
@@ -176,31 +176,42 @@ namespace KamPay
                 builder.Services.AddTransient<ImageViewerViewModel>();
                 builder.Services.AddTransient<PaymentViewModel>();
                 builder.Services.AddTransient<EditProfileViewModel>();
-                // Views
-                builder.Services.AddTransient<EditProfilePage>();
-                builder.Services.AddTransient<SurpriseBoxPage>();
-                builder.Services.AddTransient<RegisterPage>();
+                builder.Services.AddTransient<OffersViewModel>();
+
+                // 🎯 ARMUT MODELİ: Yeni ViewModels
+                builder.Services.AddTransient<CreateCustomerRequestViewModel>();
+                builder.Services.AddTransient<CustomerRequestsListViewModel>();
+                builder.Services.AddTransient<CustomerRequestDetailsViewModel>();
+                
+                // ✅ Pages - Tüm parametreli constructor'a sahip sayfalar
                 builder.Services.AddTransient<LoginPage>();
+                builder.Services.AddTransient<RegisterPage>();
                 builder.Services.AddTransient<MainPage>();
-                builder.Services.AddTransient<EditProductPage>();
+                builder.Services.AddTransient<NotificationsPage>();
                 builder.Services.AddTransient<AddProductPage>();
+                builder.Services.AddTransient<EditProductPage>();
                 builder.Services.AddTransient<ProductListPage>();
                 builder.Services.AddTransient<ProductDetailPage>();
-                builder.Services.AddTransient<MessagesPage>();
                 builder.Services.AddTransient<ChatPage>();
+                builder.Services.AddTransient<MessagesPage>();
                 builder.Services.AddTransient<FavoritesPage>();
                 builder.Services.AddTransient<ProfilePage>();
-                builder.Services.AddTransient<NotificationsPage>();
-                builder.Services.AddTransient<PaymentPage>();
-                builder.Services.AddSingleton<OffersViewModel>();
-                builder.Services.AddSingleton<OffersPage>();
-                builder.Services.AddTransient<TradeOfferView>();
+                builder.Services.AddTransient<EditProfilePage>();
                 builder.Services.AddTransient<GoodDeedBoardPage>();
-                builder.Services.AddTransient<ServiceSharingPage>();
+                builder.Services.AddTransient<ImageViewerPage>();
+                builder.Services.AddTransient<OffersPage>();
+                builder.Services.AddTransient<PaymentPage>();
                 builder.Services.AddTransient<QRCodeDisplayPage>();
                 builder.Services.AddTransient<QRScannerPage>();
                 builder.Services.AddTransient<ServiceRequestsPage>();
-                builder.Services.AddTransient<ImageViewerPage>();
+                builder.Services.AddTransient<ServiceSharingPage>();
+                builder.Services.AddTransient<SurpriseBoxPage>();
+                builder.Services.AddTransient<TradeOfferView>();
+
+                // 🎯 ARMUT MODELİ: Yeni Pages
+                builder.Services.AddTransient<CreateCustomerRequestPage>();
+                builder.Services.AddTransient<CustomerRequestsListPage>();
+                builder.Services.AddTransient<CustomerRequestDetailsPage>();
 
                 //  Singleton yaptık: Sayfa ve ViewModel bir kere oluşturulur ve hafızada kalır.
                 builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();

@@ -35,6 +35,10 @@ public static class Constants
     // Not: Gerçek üretimde bu kısa ömürlü veriler Redis gibi bir cache'de tutulmalıdır
     public const string TempOtpsCollection = "temp_otps";
 
+    // 🎯 ARMUT MODELİ: Yeni Koleksiyonlar
+    public const string CustomerServiceRequestsCollection = "customer_service_requests"; // Müşteri talepleri
+    public const string ProviderProposalsCollection = "provider_proposals"; // Profesyonel teklifleri
+
     // Firebase Storage yollar
     public const string ProductImagesFolder = "product_images";
     public const string ProfileImagesFolder = "profile_images";
@@ -47,7 +51,7 @@ public static class Constants
     public const int MaxProductDescriptionLength = 1000;
     public const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB
 
-    // Mesajla�ma kurallar
+    // Mesajlaşma kurallar
     public const int MaxMessageLength = 500;
     public const int MessagesPageSize = 50;
 
@@ -71,6 +75,12 @@ public static class Constants
     ///     },
     ///     "service_offers": {
     ///       ".indexOn": ["Category", "CreatedAt", "ProviderId"]
+    ///     },
+    ///     "customer_service_requests": {
+    ///       ".indexOn": ["Category", "CreatedAt", "CustomerId", "Status"]
+    ///     },
+    ///     "provider_proposals": {
+    ///       ".indexOn": ["CustomerRequestId", "ProviderId", "Status", "CreatedAt"]
     ///     },
     ///     "good_deed_posts": {
     ///       ".indexOn": ["Type", "CreatedAt", "UserId"]

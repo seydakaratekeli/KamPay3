@@ -96,6 +96,15 @@
 		<MauiXaml Update="Views\ChatPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Views\CreateCustomerRequestPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\CustomerRequestDetailsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\CustomerRequestsListPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Views\EditProductPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

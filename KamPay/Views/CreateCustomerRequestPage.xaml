@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             x:Class="KamPay.Views.CreateCustomerRequestPage"
+             x:DataType="vm:CreateCustomerRequestViewModel"
+             Title="Hizmet Talebi Olustur">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <Label Text="Hizmet Talebi Olustur" 
+                   FontSize="24" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"/>
+
+            <Entry Placeholder="Baslik" 
+                   Text="{Binding Title}"/>
+
+            <Editor Placeholder="Aciklama" 
+                    Text="{Binding Description}"
+                    HeightRequest="100"/>
+
+            <Picker ItemsSource="{Binding Categories}" 
+                    SelectedItem="{Binding SelectedCategory}"
+                    Title="Kategori Secin"/>
+
+            <Entry Placeholder="Konum" 
+                   Text="{Binding Location}"/>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Entry Grid.Column="0"
+                       Placeholder="Min Butce" 
+                       Text="{Binding BudgetMin}"
+                       Keyboard="Numeric"/>
+                <Entry Grid.Column="1"
+                       Placeholder="Max Butce" 
+                       Text="{Binding BudgetMax}"
+                       Keyboard="Numeric"/>
+            </Grid>
+
+            <DatePicker Date="{Binding PreferredDate}"/>
+
+            <Button Text="Fotograf Ekle" 
+                    Command="{Binding AddPhotoCommand}"/>
+
+            <CollectionView ItemsSource="{Binding ImageUrls}">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10"/>
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Image Source="{Binding .}" 
+                               HeightRequest="100" 
+                               WidthRequest="100"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                <Button Grid.Column="0"
+                        Text="Iptal" 
+                        Command="{Binding CancelCommand}"/>
+                <Button Grid.Column="1"
+                        Text="Talep Olustur" 
+                        Command="{Binding CreateRequestCommand}"/>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
