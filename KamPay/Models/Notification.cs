@@ -65,5 +65,6 @@ public enum NotificationType
     OfferAccepted = 9,   // Teklifin kabul edildi
     OfferRejected = 10,  // Teklifin reddedildi
     Quote = 11,          // Fiyat teklifi bildirimi
-    ServiceCompleted = 12 // ✅ Hizmet tamamlandı bildirimi
+    ServiceCompleted = 12, // ✅ Hizmet tamamlandı bildirimi
+    TransactionUpdate = 13 // İşlem güncellemesi (Pazarlık vb.)
 }

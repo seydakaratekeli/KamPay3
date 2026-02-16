@@ -10,6 +10,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
+		<!-- EOL workload uyarısını kapat -->
+		<CheckEolWorkloads>false</CheckEolWorkloads>
+
 		<ApplicationTitle>KamPay</ApplicationTitle>
 		<ApplicationId>com.companyname.kampay</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

@@ -81,6 +81,9 @@ namespace KamPay.ViewModels
         private bool canScanOtherQR = true; // QR tarama butonunun aktif olup olmadığını belirler
 
         [ObservableProperty]
+        private bool canReceive;
+
+        [ObservableProperty]
         private string scanButtonText = "QR Kodunu Tarat"; // Buton metni
 
         private IDispatcherTimer? _expirationTimer;
@@ -622,8 +625,10 @@ namespace KamPay.ViewModels
             // ✅ SIRAYLA TESLİMAT KONTROLÜ
             bool isFirstDelivery = !myDeliveryCompleted && !otherDeliveryCompleted;
             bool myTurnToDeliver = !myDeliveryCompleted; // Benim teslim sıram var mı?
-            bool canReceive = myDeliveryCompleted && !otherDeliveryCompleted; // Karşı taraftan alabilir miyim?
+            // bool canReceive = myDeliveryCompleted && !otherDeliveryCompleted; // Karşı taraftan alabilir miyim?
             bool bothCompleted = myDeliveryCompleted && otherDeliveryCompleted;
+            // ✅ YENİ SATIR (Property'ye atama yapın):
+            CanReceive = myDeliveryCompleted && !otherDeliveryCompleted;
 
             System.Diagnostics.Debug.WriteLine($"🔄 [UI STATE UPDATE] Durum Analizi:");
             System.Diagnostics.Debug.WriteLine($"   Rol: {myRole}");
