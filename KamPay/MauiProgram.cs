@@ -10,8 +10,10 @@ using ZXing.Net.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using System.Globalization;
 using System.Text;
-using KamPay.Resources.Languages; // Encoding desteği için eklendi
-using Firebase.Database; // Bu namespace'i eklemeyi unutmayın
+using System.Reflection;
+using System.Text.Json;
+using KamPay.Resources.Languages;
+using Firebase.Database; 
 using KamPay.Helpers;
 
 namespace KamPay
@@ -59,31 +61,32 @@ namespace KamPay
                     });
 
 
-                //  E-posta Ayarları
-                // Gerçek değerler IT'den alınmalı (örnek olarak gösteriliyor)
-                var emailSettings = new EmailSettings
-                {
-                    SmtpHost = "smtp.bartin.edu.tr",
-                    SmtpPort = 587,          // IT'den gelen bilgiye göre 465 de olabilir
-                    UseSsl = true,
-                    FromEmail = "kampay@bartin.edu.tr",
-                    FromName = "KamPay Doğrulama",
-                    Username = "kampay@bartin.edu.tr",
-                    Password = "SMTP_PAROLASI_BURAYA" // ⚠️ Gerçek uygulamada güvenli kaynakta sakla
-                };
+                // ✅ E-posta Ayarları - appsettings.json'dan yükleniyor
+                var emailSettings = LoadEmailSettings();
+                System.Diagnostics.Debug.WriteLine($"✓ Email ayarları yüklendi: {emailSettings.SmtpHost}");
+
+                // 🔥 Firebase Configuration - appsettings.json'dan yükleniyor
+                var firebaseConfig = LoadFirebaseConfig();
+                System.Diagnostics.Debug.WriteLine($"✓ Firebase config yüklendi: {firebaseConfig.ProjectId}");
+
+                // 🧪 TEST: Email ayarlarını logla ve test modu uyarısı göster
+                EmailTestHelper.LogEmailSettings(emailSettings);
+                EmailTestHelper.ShowTestModeWarning(emailSettings);
 
                 // Servislerin DI kaydı
                 builder.Services.AddSingleton(emailSettings);
+                builder.Services.AddSingleton(firebaseConfig);
                 builder.Services.AddSingleton<IEmailService, EmailService>();
                 builder.Services.AddSingleton<FirebaseClient>(sp =>
-        new FirebaseClient(Constants.FirebaseRealtimeDbUrl));
+                    new FirebaseClient(Constants.FirebaseRealtimeDbUrl));
 
                 // ✅ FIX: IUserProfileService'i önce kaydet (FirebaseAuthService bağımlı)
                 builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
 
-                // ✅ FIX: IUserProfileService enjekte edilecek
+                // 🔥 YENİ: Firebase Authentication Service
                 builder.Services.AddSingleton<IAuthenticationService>(sp =>
-                    new FirebaseAuthService(
+                    new Services.FirebaseAuthService(
+                        firebaseConfig.ApiKey,
                         sp.GetRequiredService<IEmailService>(),
                         sp.GetRequiredService<IUserProfileService>()
                     )
@@ -120,7 +123,8 @@ namespace KamPay
                         sp.GetRequiredService<IProductService>(),
                         sp.GetRequiredService<INotificationService>()
                     )
-                ); builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
+                ); 
+                builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
                 builder.Services.AddSingleton<IServiceSharingService>(sp =>
         new FirebaseServiceSharingService(
@@ -233,5 +237,148 @@ namespace KamPay
                 throw; // Kritik hatalar yeniden fırlatılmalı
             }
         }
+
+        /// <summary>
+        /// appsettings.json dosyasından EmailSettings yükler
+        /// </summary>
+        private static EmailSettings LoadEmailSettings()
+        {
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "KamPay.appsettings.json";
+                
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                
+                if (stream == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ {resourceName} bulunamadı, varsayılan ayarlar kullanılıyor");
+                    return GetDefaultEmailSettings();
+                }
+
+                using var reader = new StreamReader(stream);
+                var json = reader.ReadToEnd();
+                
+                var options = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                };
+                
+                var config = JsonSerializer.Deserialize<AppConfig>(json, options);
+                
+                if (config?.EmailSettings == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("⚠️ EmailSettings null, varsayılan ayarlar kullanılıyor");
+                    return GetDefaultEmailSettings();
+                }
+
+                System.Diagnostics.Debug.WriteLine($"✅ appsettings.json'dan email ayarları yüklendi");
+                return config.EmailSettings;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ appsettings.json okunamadı: {ex.Message}");
+                return GetDefaultEmailSettings();
+            }
+        }
+
+        /// <summary>
+        /// appsettings.json'dan Firebase Config yükler
+        /// </summary>
+        private static FirebaseConfigSettings LoadFirebaseConfig()
+        {
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "KamPay.appsettings.json";
+                
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                
+                if (stream == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Firebase config bulunamadı");
+                    return GetDefaultFirebaseConfig();
+                }
+
+                using var reader = new StreamReader(stream);
+                var json = reader.ReadToEnd();
+                
+                var options = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                };
+                
+                var config = JsonSerializer.Deserialize<AppConfig>(json, options);
+                
+                if (config?.FirebaseConfig == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("⚠️ FirebaseConfig null, varsayılan ayarlar kullanılıyor");
+                    return GetDefaultFirebaseConfig();
+                }
+
+                System.Diagnostics.Debug.WriteLine($"✅ Firebase config yüklendi");
+                return config.FirebaseConfig;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Firebase config okunamadı: {ex.Message}");
+                return GetDefaultFirebaseConfig();
+            }
+        }
+
+        /// <summary>
+        /// Varsayılan email ayarları (appsettings.json okunamazsa)
+        /// </summary>
+        private static EmailSettings GetDefaultEmailSettings()
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ Varsayılan SMTP ayarları kullanılıyor (PLACEHOLDER)");
+            return new EmailSettings
+            {
+                SmtpHost = "smtp.bartin.edu.tr",
+                SmtpPort = 587,
+                UseSsl = true,
+                FromEmail = "kampay@bartin.edu.tr",
+                FromName = "KamPay Doğrulama",
+                Username = "kampay@bartin.edu.tr",
+                Password = "SMTP_PAROLASI_BURAYA" // ⚠️ appsettings.json'da gerçek şifre olmalı
+            };
+        }
+
+        /// <summary>
+        /// Varsayılan Firebase config
+        /// </summary>
+        private static FirebaseConfigSettings GetDefaultFirebaseConfig()
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ Varsayılan Firebase config kullanılıyor");
+            return new FirebaseConfigSettings
+            {
+                ApiKey = "YOUR_API_KEY_HERE",
+                AuthDomain = "kampay-b006d.firebaseapp.com",
+                DatabaseURL = "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app",
+                ProjectId = "kampay-b006d",
+                StorageBucket = "kampay-b006d.appspot.com"
+            };
+        }
+
+        /// <summary>
+        /// appsettings.json deserializasyon için model
+        /// </summary>
+        private class AppConfig
+        {
+            public EmailSettings? EmailSettings { get; set; }
+            public FirebaseConfigSettings? FirebaseConfig { get; set; }
+        }
+    }
+
+    /// <summary>
+    /// Firebase Configuration Settings Model
+    /// </summary>
+    public class FirebaseConfigSettings
+    {
+        public string ApiKey { get; set; } = string.Empty;
+        public string AuthDomain { get; set; } = string.Empty;
+        public string DatabaseURL { get; set; } = string.Empty;
+        public string ProjectId { get; set; } = string.Empty;
+        public string StorageBucket { get; set; } = string.Empty;
     }
 }

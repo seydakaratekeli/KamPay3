@@ -138,5 +138,65 @@ namespace KamPay.ViewModels
             // Yığını sıfırlama
             await Shell.Current.GoToAsync(nameof(RegisterPage)); 
         }
+
+        [RelayCommand]
+        private async Task ForgotPasswordAsync()
+        {
+            try
+            {
+                // E-posta adresi sor
+                var email = await Application.Current.MainPage.DisplayPromptAsync(
+                    "Şifremi Unuttum",
+                    "E-posta adresinizi girin:",
+                    "Gönder",
+                    "İptal",
+                    placeholder: "ornek@bartin.edu.tr",
+                    keyboard: Keyboard.Email
+                );
+
+                if (string.IsNullOrWhiteSpace(email))
+                    return;
+
+                IsLoading = true;
+                ErrorMessage = string.Empty;
+
+                // 🔥 Firebase native şifre sıfırlama linki gönder
+                var result = await _authService.SendPasswordResetEmailAsync(email);
+
+                if (result.Success)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Başarılı! 📧",
+                        "Şifre sıfırlama linki e-postanıza gönderildi.\n\n" +
+                        "Lütfen e-postanızı kontrol edin ve linke tıklayarak yeni şifrenizi belirleyin.\n\n" +
+                        "Link 1 saat geçerlidir.",
+                        "Tamam"
+                    );
+
+                    // E-posta alanını doldur (kullanıcı sıfırladıktan sonra giriş yapabilsin)
+                    Email = email;
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Hata",
+                        result.Message ?? "Şifre sıfırlama linki gönderilemedi.",
+                        "Tamam"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    "Hata",
+                    $"Bir hata oluştu: {ex.Message}",
+                    "Tamam"
+                );
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
     }
 }

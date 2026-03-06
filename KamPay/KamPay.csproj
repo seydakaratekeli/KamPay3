@@ -39,7 +39,12 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	
+	<!-- ✅ appsettings.json'u Embedded Resource olarak ekle -->
+	<ItemGroup>
+		<EmbeddedResource Include="appsettings.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
 
 	<ItemGroup>
 		<MauiImage Remove="Resources\Images\default_avatar.png" />
@@ -76,6 +81,8 @@
 		<PackageReference Include="FFImageLoading.Maui" Version="1.2.4" />
 		<PackageReference Include="FirebaseDatabase.net" Version="4.2.0" />
 		<PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
+		<!-- 🔥 Firebase Authentication -->
+		<PackageReference Include="FirebaseAuthentication.net" Version="3.7.2" />
 		<PackageReference Include="Mapsui.Maui" Version="4.1.9" />
 
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />

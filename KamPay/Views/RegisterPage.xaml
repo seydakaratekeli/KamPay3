@@ -67,12 +67,11 @@
                            HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
-                <!-- ✅ FIX: IsVisible binding eklendi -->
+                <!-- ✅ Kayıt formu - Artık her zaman görünür -->
                 <Border x:Name="RegisterFormCard" 
                         BackgroundColor="White" 
                         StrokeThickness="0"
-                        Padding="24"
-                        IsVisible="{Binding ShowVerificationSection, Converter={StaticResource InvertedBoolConverter}}">
+                        Padding="24">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="24"/>
                     </Border.StrokeShape>
@@ -247,132 +246,6 @@
                                 </Label.GestureRecognizers>
                             </Label>
                         </HorizontalStackLayout>
-
-                    </VerticalStackLayout>
-                </Border>
-
-                <!-- ✅ FIX: IsVisible binding eklendi -->
-                <Border x:Name="VerificationCard" 
-                        BackgroundColor="White" 
-                        StrokeThickness="0"
-                        Padding="24"
-                        IsVisible="{Binding ShowVerificationSection}">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="24"/>
-                    </Border.StrokeShape>
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Opacity="0.15" Radius="20" Offset="0,8"/>
-                    </Border.Shadow>
-
-                    <VerticalStackLayout Spacing="16">
-
-                        <Label Text="📬" 
-                               FontSize="50"
-                               HorizontalOptions="Center"
-                               Margin="0,0,0,8"/>
-
-                        <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[EnterVerificationCode]}"
-                               FontSize="16"
-                               TextColor="#212121"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center"
-                               HorizontalTextAlignment="Center"
-                               Margin="0,0,0,8"/>
-
-                        <Border BackgroundColor="#F5F9FC" 
-                                StrokeThickness="3"
-                                Padding="16"
-                                Stroke="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#66BB6A'}">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16"/>
-                            </Border.StrokeShape>
-
-                            <VerticalStackLayout Spacing="6">
-                                <Label Text="⏱️ Kod Geçerlilik Süresi"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       FontAttributes="Bold"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="{Binding RemainingTime}"
-                                       FontSize="36"
-                                       FontAttributes="Bold"
-                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#1E88E5'}"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="{Binding IsCodeExpired, Converter={StaticResource BoolToTextConverter}, ConverterParameter='⚠️ Kod süresi doldu|✓ Kalan süre'}"
-                                       FontSize="12"
-                                       FontAttributes="Bold"
-                                       TextColor="{Binding IsCodeExpired, Converter={StaticResource BoolToMultiColorConverter}, ConverterParameter='#EF5350|#66BB6A'}"
-                                       HorizontalOptions="Center"/>
-                            </VerticalStackLayout>
-                        </Border>
-
-                        <Border BackgroundColor="#F5F9FC" 
-                                StrokeThickness="2"
-                                Stroke="#1E88E5"
-                                StrokeLineCap="Round">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16"/>
-                            </Border.StrokeShape>
-                            <Entry Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[VerificationCode]}"
-                                   Text="{Binding VerificationCode}"
-                                   Keyboard="Numeric"
-                                   MaxLength="6"
-                                   TextColor="#1E88E5"
-                                   PlaceholderColor="#9E9E9E"
-                                   HorizontalTextAlignment="Center"
-                                   FontSize="24"
-                                   FontAttributes="Bold"
-                                   BackgroundColor="Transparent"
-                                   HeightRequest="56"
-                                   IsEnabled="{Binding IsCodeExpired, Converter={StaticResource InvertedBoolConverter}}"/>
-                        </Border>
-
-                        <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                BackgroundColor="#FFEBEE"
-                                StrokeThickness="0"
-                                Padding="12">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8"/>
-                            </Border.StrokeShape>
-                            <Label Text="{Binding ErrorMessage}"
-                                   TextColor="#EF5350"
-                                   FontSize="12"
-                                   FontAttributes="Bold"/>
-                        </Border>
-
-                        <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Verify]}"
-                                Command="{Binding VerifyEmailCommand}"
-                                BackgroundColor="#66BB6A"
-                                TextColor="White"
-                                FontAttributes="Bold"
-                                FontSize="16"
-                                CornerRadius="28"
-                                HeightRequest="54"
-                                IsEnabled="{Binding IsCodeExpired, Converter={StaticResource InvertedBoolConverter}}">
-                            <Button.Shadow>
-                                <Shadow Brush="#66BB6A" Opacity="0.3" Radius="10" Offset="0,4"/>
-                            </Button.Shadow>
-                        </Button>
-
-                        <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ResendCode]}"
-                                Command="{Binding ResendVerificationCommand}"
-                                BackgroundColor="Transparent"
-                                TextColor="#1E88E5"
-                                FontAttributes="Bold"
-                                FontSize="15"
-                                BorderColor="#1E88E5"
-                                BorderWidth="2"
-                                CornerRadius="28"
-                                HeightRequest="50"
-                                IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
-
-                        <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Cancel]}"
-                                Command="{Binding CancelVerificationCommand}"
-                                BackgroundColor="Transparent"
-                                TextColor="#757575"
-                                FontSize="14"
-                                CornerRadius="28"
-                                HeightRequest="44"/>
 
                     </VerticalStackLayout>
                 </Border>

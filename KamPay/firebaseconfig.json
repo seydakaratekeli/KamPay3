@@ -1,0 +1,11 @@
+{
+  "FirebaseConfig": {
+    "ApiKey": "YOUR_FIREBASE_API_KEY",
+    "AuthDomain": "kampay-b006d.firebaseapp.com",
+    "DatabaseURL": "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app",
+    "ProjectId": "kampay-b006d",
+    "StorageBucket": "kampay-b006d.appspot.com",
+    "MessagingSenderId": "YOUR_SENDER_ID",
+    "AppId": "YOUR_APP_ID"
+  }
+}

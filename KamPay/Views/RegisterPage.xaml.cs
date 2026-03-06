@@ -13,23 +13,7 @@ namespace KamPay.Views
             InitializeComponent();
             BindingContext = vm;
 
-            // ViewModel deðiþikliklerini güvenli bir þekilde dinle
-            vm.PropertyChanged += OnViewModelPropertyChanged;
-        }
-
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (sender is RegisterViewModel vm && e.PropertyName == nameof(vm.ShowVerificationSection))
-            {
-                // UI güncellemelerini ana iþ parçacýðýnda yap
-                MainThread.BeginInvokeOnMainThread(async () =>
-                {
-                    if (vm.ShowVerificationSection)
-                    {
-                        await AnimateVerificationCardAsync();
-                    }
-                });
-            }
+            // ?? Artýk manuel doðrulama yok, PropertyChanged dinlemeye gerek yok
         }
 
         protected override async void OnAppearing()
@@ -39,7 +23,6 @@ namespace KamPay.Views
             if (!_hasAnimated)
             {
                 _hasAnimated = true;
-                // Sayfa yüklendikten hemen sonra animasyonu baþlat
                 await Task.Delay(100);
                 await AnimatePageAsync();
             }
@@ -55,7 +38,7 @@ namespace KamPay.Views
                 RegisterFormCard.Opacity = 0;
                 RegisterFormCard.TranslationY = 50;
 
-                // Arka plan animasyonunu baþlat (Artýk thread kilitlemez)
+                // Arka plan animasyonunu baþlat
                 StartBackgroundAnimations();
 
                 // Header animasyonu
@@ -78,48 +61,8 @@ namespace KamPay.Views
             }
         }
 
-        private async Task AnimateVerificationCardAsync()
-        {
-            if (RegisterFormCard == null || VerificationCard == null) return;
-
-            try
-            {
-                // 1. Kayýt formunu fade-out ile gizle
-                await RegisterFormCard.FadeTo(0, 250, Easing.CubicIn);
-                RegisterFormCard.IsVisible = false; // XAML binding'i sildiðimiz için manuel yönetiyoruz
-
-                // 2. Doðrulama kartýný hazýrla
-                VerificationCard.Opacity = 0;
-                VerificationCard.TranslationY = 40;
-                VerificationCard.Scale = 0.95;
-                VerificationCard.IsVisible = true;
-
-                // 3. Doðrulama kartýný içeri al
-                await Task.WhenAll(
-                    VerificationCard.FadeTo(1, 500, Easing.CubicOut),
-                    VerificationCard.TranslateTo(0, 0, 500, Easing.CubicOut),
-                    VerificationCard.ScaleTo(1, 500, Easing.CubicOut)
-                );
-
-                // Küçük bir onay "pop" efekti
-                await VerificationCard.ScaleTo(1.03, 100, Easing.BounceOut);
-                await VerificationCard.ScaleTo(1.0, 100, Easing.BounceIn);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Transition Animation Error: {ex.Message}");
-                // Hata olsa bile kartlarý göster ki kullanýcý bloke olmasýn
-                RegisterFormCard.IsVisible = false;
-                VerificationCard.IsVisible = true;
-                VerificationCard.Opacity = 1;
-            }
-        }
-
         private void StartBackgroundAnimations()
         {
-            // Eski 'while(true)' mantýðý yerine MAUI'nin yerleþik Animation sistemini kullanýyoruz.
-            // Bu yöntem çok daha az CPU harcar ve MainThread'i kilitlemez.
-
             // Circle 1: Saat yönünde sürekli dönüþ
             var animation1 = new Animation(v => Circle1.Rotation = v, 0, 360);
             animation1.Commit(this, "Circle1Rotation", 16, 25000, Easing.Linear, repeat: () => true);
@@ -132,7 +75,7 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // Sayfadan çýkýldýðýnda animasyonlarý durdur (Memory leak önleme)
+            // Sayfadan çýkýldýðýnda animasyonlarý durdur
             this.AbortAnimation("Circle1Rotation");
             this.AbortAnimation("Circle2Rotation");
         }

@@ -25,6 +25,8 @@ namespace KamPay.Models
         [ObservableProperty]
         private bool isEmailVerified = false;
 
+        // 🔥 Firebase native kullanıldığı için artık manuel kod alanları gerekmiyor
+        // Sadece backward compatibility için tutuyoruz (eski kayıtlar için)
         [ObservableProperty]
         private string verificationCode = "";
 

@@ -166,6 +166,18 @@
                                    VerticalOptions="Center"/>
                         </HorizontalStackLayout>
 
+                        <!-- Şifremi Unuttum Link -->
+                        <Label Text="Şifremi Unuttum"
+                               TextColor="#1E88E5"
+                               FontSize="13"
+                               FontAttributes="Bold"
+                               HorizontalOptions="End"
+                               Margin="4,0">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ForgotPasswordCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+
                         <!-- Error Message -->
                         <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                 BackgroundColor="#FFEBEE"

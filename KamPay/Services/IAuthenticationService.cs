@@ -31,5 +31,32 @@ namespace KamPay.Services
 
         /// Kullanýcýnýn giriþ yapýp yapmadýðýný kontrol eder
         bool IsUserLoggedIn();
+
+        // ?? YENÝ: Firebase Authentication Özellikleri
+
+        /// <summary>
+        /// Þifre sýfýrlama e-postasý gönderir
+        /// </summary>
+        Task<ServiceResult<bool>> SendPasswordResetEmailAsync(string email);
+
+        /// <summary>
+        /// Þifre sýfýrlama kodunu doðrular ve yeni þifre belirler
+        /// </summary>
+        Task<ServiceResult<bool>> ResetPasswordAsync(string email, string verificationCode, string newPassword);
+
+        /// <summary>
+        /// Kullanýcýnýn e-posta adresini deðiþtirir (doðrulama kodu ile)
+        /// </summary>
+        Task<ServiceResult<bool>> ChangeEmailAsync(string currentEmail, string newEmail, string password);
+
+        /// <summary>
+        /// Yeni e-posta adresini doðrular
+        /// </summary>
+        Task<ServiceResult<bool>> VerifyNewEmailAsync(string newEmail, string verificationCode);
+
+        /// <summary>
+        /// Kullanýcýnýn þifresini deðiþtirir
+        /// </summary>
+        Task<ServiceResult<bool>> ChangePasswordAsync(string email, string currentPassword, string newPassword);
     }
 }
