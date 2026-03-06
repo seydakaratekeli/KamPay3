@@ -125,7 +125,8 @@ namespace KamPay
             Routing.RegisterRoute("CustomerRequestDetailsPage", typeof(CustomerRequestDetailsPage));
         }
 
-        // Shell ilk göründüğünde giriş kontrolünü yap
+        // ✅ GÜNCELLEME: Shell ilk göründüğünde giriş kontrolünü yap
+        // NOT: Otomatik giriş App.xaml.cs'de yapılıyor, burada sadece route kontrolü yapılıyor
         protected override async void OnAppearing()
         {
             base.OnAppearing();
@@ -138,13 +139,14 @@ namespace KamPay
             {
                 _isNavigating = true;
 
-                // ✅ CRITICAL FIX: Kullanıcı ID kontrolü - Logout yapılmışsa burada login ekranına yönlendir
+                // ✅ NOT: Otomatik giriş App.OnStart içinde yapıldı
+                // Burada sadece mevcut durumu kontrol ediyoruz
+                
                 var userId = Preferences.Get("current_user_id", string.Empty);
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    // ✅ KONTROL: Kullanıcı bilgisi gerçekten geçerli mi?
-                    // Eğer UserStateService'de kullanıcı yoksa, Preferences'ı temizle
+                    // Kullanıcı bilgisi varsa UserStateService'i kontrol et
                     try
                     {
                         var userStateService = Application.Current?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
@@ -155,32 +157,39 @@ namespace KamPay
                             // Eğer UserStateService'de kullanıcı yoksa, logout yapılmış demektir
                             if (currentUser == null)
                             {
-                                Console.WriteLine("⚠️ Preferences'ta userId var ama UserStateService'de kullanıcı yok - temizleniyor");
+                                Console.WriteLine("⚠️ UserStateService'de kullanıcı yok - login ekranına yönlendiriliyor");
                                 Preferences.Remove("current_user_id");
                                 Preferences.Remove("current_user_email");
+                                Preferences.Remove("firebase_token");
+                                Preferences.Remove("remember_me");
+                                Preferences.Remove("token_expiry");
                                 
                                 // Login sayfasında kal
                                 await GoToAsync("//LoginPage");
                                 return;
                             }
+                            else
+                            {
+                                // Kullanıcı geçerli - ana ekrana yönlendir (eğer login sayfasındaysa)
+                                if (CurrentState?.Location?.ToString().Contains("LoginPage") == true)
+                                {
+                                    Console.WriteLine("✅ Geçerli kullanıcı var - ana ekrana yönlendiriliyor");
+                                    await GoToAsync("//MainApp");
+                                }
+                            }
                         }
-                        
-                        // Kullanıcı geçerliyse ana ekrana yönlendir
-                        await GoToAsync("//MainApp");
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"⚠️ Kullanıcı doğrulama hatası: {ex.Message}");
-                        // Hata durumunda güvenli taraf: Preferences'ı temizle ve login'de kal
-                        Preferences.Remove("current_user_id");
-                        Preferences.Remove("current_user_email");
+                        // Hata durumunda güvenli taraf: Login ekranında kal
                         await GoToAsync("//LoginPage");
                     }
                 }
                 else
                 {
-                    // userId yoksa zaten login ekranındayız, hiçbir şey yapma
-                    Console.WriteLine("✅ userId yok, login ekranında kalınıyor");
+                    // userId yoksa login ekranında kal
+                    Console.WriteLine("⏭️ userId yok, login ekranında kalınıyor");
                 }
             }
             catch (Exception ex)

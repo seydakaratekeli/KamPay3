@@ -58,5 +58,11 @@ namespace KamPay.Services
         /// Kullanýcýnýn þifresini deðiþtirir
         /// </summary>
         Task<ServiceResult<bool>> ChangePasswordAsync(string email, string currentPassword, string newPassword);
+
+        /// <summary>
+        /// ? YENÝ: Uygulama baþlangýcýnda otomatik giriþ kontrolü (Remember Me)
+        /// "Beni Hatýrla" iþaretliyse ve token geçerliyse otomatik giriþ yapar
+        /// </summary>
+        Task<ServiceResult<User>> TryAutoLoginAsync();
     }
 }

@@ -15,6 +15,7 @@ namespace KamPay.Services
     /// <summary>
     /// ?? Firebase Authentication kullanan authentication servisi
     /// Manuel þifre hash'leme yerine Firebase'in güvenli authentication sistemini kullanýr
+    /// ? "Beni Hatýrla" özelliði ile otomatik giriþ desteði
     /// </summary>
     public class FirebaseAuthService : IAuthenticationService
     {
@@ -200,10 +201,9 @@ namespace KamPay.Services
 
                 // 7?? Oturum bilgisini sakla
                 _currentUser = user;
-                if (request.RememberMe)
-                {
-                    await SaveUserSessionAsync(user, _authLink.FirebaseToken);
-                }
+                
+                // ? YENÝ: Session'ý her zaman kaydet, ancak RememberMe durumunu iþaretle
+                await SaveUserSessionAsync(user, _authLink.FirebaseToken, request.RememberMe);
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
 
@@ -213,6 +213,191 @@ namespace KamPay.Services
             {
                 System.Diagnostics.Debug.WriteLine($"? LoginAsync hatasý: {ex.Message}");
                 return ServiceResult<AppUser>.FailureResult("Giriþ sýrasýnda hata", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Auto Login (Remember Me)
+
+        /// <summary>
+        /// ? YENÝ: Uygulama baþlangýcýnda otomatik giriþ kontrolü
+        /// "Beni Hatýrla" iþaretliyse ve token geçerliyse otomatik giriþ yapar
+        /// Android Debug modunda da çalýþmasý için SecureStorage fallback'i var
+        /// </summary>
+        public async Task<ServiceResult<AppUser>> TryAutoLoginAsync()
+        {
+            try
+            {
+                Console.WriteLine("?? Otomatik giriþ kontrolü baþlatýlýyor...");
+
+                // 1?? "Beni Hatýrla" kontrolü - Önce Preferences, sonra SecureStorage
+                var rememberMe = Preferences.Get("remember_me", false);
+                
+                if (!rememberMe)
+                {
+                    // Fallback: SecureStorage'dan kontrol et
+                    try
+                    {
+                        var secureRememberMe = await SecureStorage.GetAsync("secure_remember_me");
+                        if (!string.IsNullOrEmpty(secureRememberMe) && bool.TryParse(secureRememberMe, out var parsed))
+                        {
+                            rememberMe = parsed;
+                            Console.WriteLine($"? SecureStorage'dan RememberMe alýndý: {rememberMe}");
+                        }
+                    }
+                    catch (Exception secEx)
+                    {
+                        Console.WriteLine($"?? SecureStorage okuma hatasý: {secEx.Message}");
+                    }
+                }
+                
+                if (!rememberMe)
+                {
+                    Console.WriteLine("?? Beni Hatýrla iþaretli deðil, otomatik giriþ yapýlmayacak");
+                    return ServiceResult<AppUser>.FailureResult("Otomatik giriþ yok", "Kullanýcý beni hatýrla seçeneðini iþaretlememiþ");
+                }
+
+                // 2?? Session bilgilerini al - Önce Preferences, sonra SecureStorage
+                var userId = Preferences.Get("current_user_id", string.Empty);
+                var firebaseToken = Preferences.Get("firebase_token", string.Empty);
+                var tokenExpiryStr = Preferences.Get("token_expiry", string.Empty);
+
+                // Fallback: SecureStorage'dan al
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
+                {
+                    Console.WriteLine("?? Preferences boþ, SecureStorage'dan deneniyor...");
+                    
+                    try
+                    {
+                        userId = await SecureStorage.GetAsync("secure_user_id") ?? string.Empty;
+                        firebaseToken = await SecureStorage.GetAsync("secure_firebase_token") ?? string.Empty;
+                        tokenExpiryStr = await SecureStorage.GetAsync("secure_token_expiry") ?? string.Empty;
+                        
+                        if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(firebaseToken))
+                        {
+                            Console.WriteLine($"? SecureStorage'dan session bilgileri alýndý");
+                            
+                            // Preferences'a geri yükle (sonraki eriþimler için)
+                            Preferences.Set("current_user_id", userId);
+                            Preferences.Set("firebase_token", firebaseToken);
+                            if (!string.IsNullOrEmpty(tokenExpiryStr))
+                                Preferences.Set("token_expiry", tokenExpiryStr);
+                        }
+                    }
+                    catch (Exception secEx)
+                    {
+                        Console.WriteLine($"?? SecureStorage okuma hatasý: {secEx.Message}");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
+                {
+                    Console.WriteLine("?? Session bilgileri eksik");
+                    return ServiceResult<AppUser>.FailureResult("Session yok", "Kaydedilmiþ oturum bulunamadý");
+                }
+
+                // 3?? Token süresini kontrol et
+                if (!string.IsNullOrEmpty(tokenExpiryStr) && DateTime.TryParse(tokenExpiryStr, out var tokenExpiry))
+                {
+                    if (DateTime.UtcNow >= tokenExpiry)
+                    {
+                        Console.WriteLine("?? Token süresi dolmuþ, yenileniyor...");
+                        
+                        // Token yenileme
+                        try
+                        {
+                            var refreshedAuth = await _authProvider.RefreshAuthAsync(new FirebaseAuthLink(_authProvider, new Firebase.Auth.FirebaseAuth
+                            {
+                                FirebaseToken = firebaseToken,
+                                User = new Firebase.Auth.User { LocalId = userId }
+                            }));
+
+                            // Yenilenen token'ý kaydet
+                            _authLink = refreshedAuth;
+                            await SaveUserSessionAsync(null, refreshedAuth.FirebaseToken, true, refreshedAuth.ExpiresIn);
+                            
+                            Console.WriteLine("? Token baþarýyla yenilendi");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"? Token yenileme hatasý: {ex.Message}");
+                            await ClearUserSessionAsync();
+                            return ServiceResult<AppUser>.FailureResult("Token yenilenemedi", "Lütfen tekrar giriþ yapýn");
+                        }
+                    }
+                }
+
+                // 4?? Ýnternet kontrolü
+                if (!NetworkHelper.HasInternetConnection())
+                {
+                    Console.WriteLine("?? Ýnternet baðlantýsý yok, cache'den kullanýcý yükleniyor");
+                    
+                    // Cache'den kullanýcý bilgilerini al (offline destek)
+                    var cachedEmail = Preferences.Get("current_user_email", string.Empty);
+                    
+                    if (string.IsNullOrEmpty(cachedEmail))
+                    {
+                        try
+                        {
+                            cachedEmail = await SecureStorage.GetAsync("secure_user_email") ?? string.Empty;
+                        }
+                        catch { /* Ignore */ }
+                    }
+                    
+                    if (!string.IsNullOrEmpty(cachedEmail))
+                    {
+                        _currentUser = new AppUser
+                        {
+                            UserId = userId,
+                            Email = cachedEmail,
+                            // Diðer bilgiler online olunca güncellenecek
+                        };
+                        return ServiceResult<AppUser>.SuccessResult(_currentUser, "Offline modda giriþ yapýldý");
+                    }
+                }
+
+                // 5?? Kullanýcý bilgilerini Firebase'den al
+                var user = await _firebaseClient
+                    .Child(Constants.UsersCollection)
+                    .Child(userId)
+                    .OnceSingleAsync<AppUser>();
+
+                if (user == null)
+                {
+                    Console.WriteLine("? Kullanýcý bulunamadý");
+                    await ClearUserSessionAsync();
+                    return ServiceResult<AppUser>.FailureResult("Kullanýcý bulunamadý", "Hesap silinmiþ veya devre dýþý býrakýlmýþ olabilir");
+                }
+
+                // 6?? Hesap aktiflik kontrolü
+                if (!user.IsActive)
+                {
+                    Console.WriteLine("? Hesap devre dýþý");
+                    await ClearUserSessionAsync();
+                    return ServiceResult<AppUser>.FailureResult("Hesap devre dýþý", "Hesabýnýz yönetici tarafýndan devre dýþý býrakýlmýþ");
+                }
+
+                // 7?? Son giriþ zamanýný güncelle
+                user.LastLoginAt = DateTime.UtcNow;
+                await _firebaseClient
+                    .Child(Constants.UsersCollection)
+                    .Child(user.UserId)
+                    .PutAsync(user);
+
+                // 8?? Current user'ý ayarla
+                _currentUser = user;
+
+                Console.WriteLine($"? Otomatik giriþ baþarýlý: {user.Email}");
+                WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
+
+                return ServiceResult<AppUser>.SuccessResult(user, "Otomatik giriþ baþarýlý");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"? TryAutoLoginAsync hatasý: {ex.Message}");
+                await ClearUserSessionAsync();
+                return ServiceResult<AppUser>.FailureResult("Otomatik giriþ hatasý", ex.Message);
             }
         }
 
@@ -285,7 +470,7 @@ namespace KamPay.Services
                 {
                     return ServiceResult<bool>.FailureResult(
                         "E-posta henüz doðrulanmadý",
-                        "Lütfen e-postanýzdaki linke týklayýn."
+                        "Lütfen e-posta????ýzdaki linke týklayýn."
                     );
                 }
 
@@ -480,7 +665,7 @@ namespace KamPay.Services
             
             return ServiceResult<bool>.FailureResult(
                 "Bu özellik artýk kullanýlmýyor",
-                "Lütfen e-postaunuza gönderilen Firebase linkine týklayarak yeni e-postanýzý doðrulayýn."
+                "Lütfen e-postaunuza gönderilen Firebase linkine týklayýp yeni e-postanýzý doðrulayýn."
             );
         }
 
@@ -637,20 +822,118 @@ namespace KamPay.Services
 
         #region Helper Methods
 
-        private async Task SaveUserSessionAsync(AppUser user, string firebaseToken)
+        /// <summary>
+        /// ? GÜNCELLEME: Session bilgilerini kaydeder ve "Beni Hatýrla" durumunu iþaretler
+        /// Android Debug modunda da çalýþmasý için hem Preferences hem de SecureStorage kullanýlýr
+        /// </summary>
+        private async Task SaveUserSessionAsync(AppUser? user, string firebaseToken, bool rememberMe, int? expiresIn = null)
         {
-            Preferences.Set("current_user_id", user.UserId);
-            Preferences.Set("current_user_email", user.Email);
-            Preferences.Set("firebase_token", firebaseToken);
-            await Task.CompletedTask;
+            try
+            {
+                // User ID ve Email'i kaydet
+                if (user != null)
+                {
+                    // ? Normal Preferences
+                    Preferences.Set("current_user_id", user.UserId);
+                    Preferences.Set("current_user_email", user.Email);
+                    
+                    // ? SecureStorage (Debug modunda bile kalýcý)
+                    try
+                    {
+                        await SecureStorage.SetAsync("secure_user_id", user.UserId);
+                        await SecureStorage.SetAsync("secure_user_email", user.Email);
+                        Console.WriteLine($"?? SecureStorage'a da kaydedildi");
+                    }
+                    catch (Exception secEx)
+                    {
+                        Console.WriteLine($"?? SecureStorage hatasý (devam ediliyor): {secEx.Message}");
+                    }
+                    
+                    Console.WriteLine($"?? User bilgileri kaydedildi: {user.Email}");
+                }
+
+                // Firebase token'ý kaydet
+                Preferences.Set("firebase_token", firebaseToken);
+                
+                try
+                {
+                    await SecureStorage.SetAsync("secure_firebase_token", firebaseToken);
+                }
+                catch { /* SecureStorage optional */ }
+
+                // "Beni Hatýrla" durumunu kaydet
+                Preferences.Set("remember_me", rememberMe);
+                
+                try
+                {
+                    await SecureStorage.SetAsync("secure_remember_me", rememberMe.ToString());
+                }
+                catch { /* SecureStorage optional */ }
+
+                // Token expiry time'ý kaydet (varsayýlan 1 saat)
+                var expiryTime = DateTime.UtcNow.AddSeconds(expiresIn ?? 3600);
+                Preferences.Set("token_expiry", expiryTime.ToString("O")); // ISO 8601 format
+                
+                try
+                {
+                    await SecureStorage.SetAsync("secure_token_expiry", expiryTime.ToString("O"));
+                }
+                catch { /* SecureStorage optional */ }
+
+                Console.WriteLine($"? Session kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
+                
+                // ? EKLEME: Preferences'ýn gerçekten kaydedildiðini doðrula
+                var savedRememberMe = Preferences.Get("remember_me", false);
+                var savedUserId = Preferences.Get("current_user_id", string.Empty);
+                Console.WriteLine($"? Doðrulama - SavedRememberMe: {savedRememberMe}, SavedUserId: {savedUserId}");
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"? SaveUserSessionAsync hatasý: {ex.Message}");
+            }
         }
 
         private async Task ClearUserSessionAsync()
         {
-            Preferences.Remove("current_user_id");
-            Preferences.Remove("current_user_email");
-            Preferences.Remove("firebase_token");
-            await Task.CompletedTask;
+            try
+            {
+                // Preferences temizle
+                Preferences.Remove("current_user_id");
+                Preferences.Remove("current_user_email");
+                Preferences.Remove("firebase_token");
+                Preferences.Remove("remember_me");
+                Preferences.Remove("token_expiry");
+                
+                // SecureStorage temizle
+                try
+                {
+                    SecureStorage.Remove("secure_user_id");
+                    SecureStorage.Remove("secure_user_email");
+                    SecureStorage.Remove("secure_firebase_token");
+                    SecureStorage.Remove("secure_remember_me");
+                    SecureStorage.Remove("secure_token_expiry");
+                    Console.WriteLine("??? SecureStorage temizlendi");
+                }
+                catch (Exception secEx)
+                {
+                    Console.WriteLine($"?? SecureStorage temizleme hatasý: {secEx.Message}");
+                }
+                
+                Console.WriteLine("??? Session temizlendi");
+                
+                // ? EKLEME: Temizliðin gerçekten yapýldýðýný doðrula
+                var checkRememberMe = Preferences.Get("remember_me", false);
+                var checkUserId = Preferences.Get("current_user_id", string.Empty);
+                Console.WriteLine($"? Temizlik doðrulama - RememberMe: {checkRememberMe}, UserId: {checkUserId}");
+                
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"? ClearUserSessionAsync hatasý: {ex.Message}");
+            }
         }
 
         private string GetFriendlyErrorMessage(FirebaseAuthException ex)
