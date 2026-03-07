@@ -17,19 +17,22 @@ namespace KamPay.Services
         private readonly IUserProfileService _userProfileService;
         private readonly IMessagingService _messagingService;
 
-        // ? Constructor DI ile FirebaseClient alıyor
+        private readonly ICustomerRequestManager _customerRequestManager; // ✅ EKLE (satır 17)
+
         public FirebaseServiceSharingService(
             FirebaseClient firebaseClient,
             INotificationService notificationService,
             IUserProfileService userProfileService,
-            IMessagingService messagingService)
+            IMessagingService messagingService,
+            ICustomerRequestManager customerRequestManager) // ✅ YENİ PARAMETRE
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _messagingService = messagingService ?? throw new ArgumentNullException(nameof(messagingService));
+            _customerRequestManager = customerRequestManager ?? throw new ArgumentNullException(nameof(customerRequestManager)); // ✅ EKLE
 
-            System.Diagnostics.Debug.WriteLine("? FirebaseServiceSharingService oluşturuldu (DI ile)");
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseServiceSharingService oluşturuldu (Koordinatör pattern ile)");
         }
 
         // Basit OTP modeli (geçici koleksiyon için)
@@ -45,13 +48,7 @@ namespace KamPay.Services
 
         // Constructor to inject all required services
         
-        public FirebaseServiceSharingService(INotificationService notificationService, IUserProfileService userProfileService, IMessagingService messagingService)
-        {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _notificationService = notificationService;
-            _userProfileService = userProfileService;
-            _messagingService = messagingService;
-        }
+        
 
         // ... CreateServiceOfferAsync ve GetServiceOffersAsync metotları aynı kalacak ...
         public async Task<ServiceResult<ServiceOffer>> CreateServiceOfferAsync(ServiceOffer offer)

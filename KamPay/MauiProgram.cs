@@ -124,6 +124,10 @@ namespace KamPay
                 builder.Services.AddSingleton<IProductService, FirebaseProductService>();
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 
+                // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
+                builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
+                builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
+                
                 // IMessagingService (INotificationService'e bağımlı)
                 builder.Services.AddSingleton<IMessagingService>(sp =>
                     new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
@@ -153,7 +157,15 @@ namespace KamPay
                 builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
                 // IServiceSharingService (tüm bağımlılıkları hazır)
-                builder.Services.AddSingleton<IServiceSharingService, FirebaseServiceSharingService>();
+                builder.Services.AddSingleton<IServiceSharingService>(sp =>
+                    new FirebaseServiceSharingService(
+                        sp.GetRequiredService<FirebaseClient>(),
+                        sp.GetRequiredService<INotificationService>(),
+                        sp.GetRequiredService<IUserProfileService>(),
+                        sp.GetRequiredService<IMessagingService>(),
+                        sp.GetRequiredService<ICustomerRequestManager>() // ✅ YENİ
+                    )
+                );
 
                 // ITransactionService (tüm bağımlılıkları hazır)
                 builder.Services.AddSingleton<ITransactionService>(sp =>
