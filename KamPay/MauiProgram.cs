@@ -174,6 +174,9 @@ namespace KamPay
                         sp.GetRequiredService<IMessagingService>())
                 );
 
+                // Security Audit Service kaydı
+                builder.Services.AddSingleton<ISecurityAuditService, FirebaseSecurityAuditService>(); 
+
                 // ViewModels
                 builder.Services.AddSingleton<AppShellViewModel>(); // Singleton olarak ekliyoruz
                 builder.Services.AddTransient<RegisterViewModel>();

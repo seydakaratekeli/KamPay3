@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -13,11 +13,11 @@ using AppUser = KamPay.Models.User;
 namespace KamPay.Services
 {
     /// <summary>
-    /// ?? Firebase Authentication kullanan authentication servisi
-    /// Manuel şifre hash'leme yerine Firebase'in güvenli authentication sistemini kullanır
-    /// ? "Beni Hatırla" özelliği ile otomatik giriş desteği
-    /// ? DI ile FirebaseAuthProvider ve FirebaseClient kullanımı
-    /// ?? GÜVENLIK: Tüm hassas bilgiler SecureStorage'da saklanır
+    /// ğŸ”¥ Firebase Authentication kullanan authentication servisi
+    /// Manuel ÅŸifre hash'leme yerine Firebase'in gÃ¼venli authentication sistemini kullanÄ±r
+    /// âœ… "Beni HatÄ±rla" Ã¶zelliÄŸi ile otomatik giriÅŸ desteÄŸi
+    /// âœ… DI ile FirebaseAuthProvider ve FirebaseClient kullanÄ±mÄ±
+    /// ğŸ”’ GÃœVENLIK: TÃ¼m hassas bilgiler SecureStorage'da saklanÄ±r
     /// </summary>
     public class FirebaseAuthService : IAuthenticationService
     {
@@ -25,29 +25,32 @@ namespace KamPay.Services
         private readonly FirebaseClient _firebaseClient;
         private readonly IEmailService _emailService;
         private readonly IUserProfileService _userProfileService;
+        private readonly ISecurityAuditService _securityAudit; // âœ… Ekle
         private AppUser? _currentUser;
         private FirebaseAuthLink? _authLink;
 
-        // ?? SecureStorage anahtarları
+        // ğŸ”’ SecureStorage anahtarlarÄ±
         private const string KEY_USER_ID = "secure_user_id";
         private const string KEY_USER_EMAIL = "secure_user_email";
         private const string KEY_FIREBASE_TOKEN = "secure_firebase_token";
         private const string KEY_REMEMBER_ME = "secure_remember_me";
         private const string KEY_TOKEN_EXPIRY = "secure_token_expiry";
 
-        // ? YENİ: Constructor artık tüm bağımlılıkları DI'den alıyor
+        // âœ… YENÄ°: Constructor artÄ±k tÃ¼m baÄŸÄ±mlÄ±lÄ±klarÄ± DI'den alÄ±yor
         public FirebaseAuthService(
             FirebaseAuthProvider authProvider,
             FirebaseClient firebaseClient,
             IEmailService emailService,
-            IUserProfileService userProfileService)
+            IUserProfileService userProfileService,
+            ISecurityAuditService securityAudit) // âœ… Ekle
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
+            _securityAudit = securityAudit; // âœ… Ekle
             
-            System.Diagnostics.Debug.WriteLine("? FirebaseAuthService oluşturuldu (DI ile)");
+            System.Diagnostics.Debug.WriteLine("âœ… FirebaseAuthService oluÅŸturuldu (DI ile)");
         }
 
         #region Registration
@@ -57,18 +60,18 @@ namespace KamPay.Services
             try
             {
                 if (request == null)
-                    return ServiceResult<AppUser>.FailureResult("Hata", "Veriler boş.");
+                    return ServiceResult<AppUser>.FailureResult("Hata", "Veriler boÅŸ.");
 
                 if (!NetworkHelper.HasInternetConnection())
-                    return ServiceResult<AppUser>.FailureResult("Bağlantı Hatası", "İnternet yok.");
+                    return ServiceResult<AppUser>.FailureResult("BaÄŸlantÄ± HatasÄ±", "Ä°nternet yok.");
 
                 var validation = ValidateRegistration(request);
                 if (!validation.IsValid)
-                    return ServiceResult<AppUser>.FailureResult("Geçersiz bilgiler", validation.Errors.ToArray());
+                    return ServiceResult<AppUser>.FailureResult("GeÃ§ersiz bilgiler", validation.Errors.ToArray());
 
                 string safeEmail = request.Email?.Trim().ToLower() ?? string.Empty;
 
-                // 1?? Firebase Authentication ile kullanıcı oluştur
+                // 1ï¸âƒ£ Firebase Authentication ile kullanÄ±cÄ± oluÅŸtur
                 FirebaseAuthLink authResult;
                 try
                 {
@@ -80,10 +83,10 @@ namespace KamPay.Services
                 }
                 catch (FirebaseAuthException ex)
                 {
-                    return ServiceResult<AppUser>.FailureResult("Kayıt hatası", GetFriendlyErrorMessage(ex));
+                    return ServiceResult<AppUser>.FailureResult("KayÄ±t hatasÄ±", GetFriendlyErrorMessage(ex));
                 }
 
-                // 2?? Kullanıcı bilgilerini Realtime Database'e kaydet
+                // 2ï¸âƒ£ KullanÄ±cÄ± bilgilerini Realtime Database'e kaydet
                 var user = new AppUser
                 {
                     UserId = authResult.User.LocalId, // Firebase UID kullan
@@ -92,7 +95,7 @@ namespace KamPay.Services
                     Email = safeEmail,
                     Username = $"{request.FirstName.ToLower().Replace(" ", "")}{new Random().Next(100, 999)}",
                     PhoneNumber = "",
-                    PasswordHash = "", // Artık Firebase yönetiyor
+                    PasswordHash = "", // ArtÄ±k Firebase yÃ¶netiyor
                     IsEmailVerified = false,
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -100,26 +103,26 @@ namespace KamPay.Services
 
                 await _firebaseClient.Child(Constants.UsersCollection).Child(user.UserId).PutAsync(user);
 
-                // 3?? Firebase Email Verification gönder (SADECE BU!)
+                // 3ï¸âƒ£ Firebase Email Verification gÃ¶nder (SADECE BU!)
                 try
                 {
                     await _authProvider.SendEmailVerificationAsync(authResult.FirebaseToken);
                     
-                    System.Diagnostics.Debug.WriteLine($"? Firebase email verification gönderildi: {user.Email}");
-                    System.Diagnostics.Debug.WriteLine($"?? Kullanıcı e-postasındaki linke tıklayarak doğrulayacak");
+                    System.Diagnostics.Debug.WriteLine($"âœ… Firebase email verification gÃ¶nderildi: {user.Email}");
+                    System.Diagnostics.Debug.WriteLine($"ğŸ“§ KullanÄ±cÄ± e-postasÄ±ndaki linke tÄ±klayarak doÄŸrulayacak");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"?? Firebase email verification gönderilemedi: {ex.Message}");
-                    return ServiceResult<AppUser>.FailureResult("E-posta doğrulama hatası", "Doğrulama e-postası gönderilemedi");
+                    System.Diagnostics.Debug.WriteLine($"âš ï¸ Firebase email verification gÃ¶nderilemedi: {ex.Message}");
+                    return ServiceResult<AppUser>.FailureResult("E-posta doÄŸrulama hatasÄ±", "DoÄŸrulama e-postasÄ± gÃ¶nderilemedi");
                 }
 
-                return ServiceResult<AppUser>.SuccessResult(user, "Kayıt başarılı! E-postanıza gönderilen linke tıklayarak hesabınızı doğrulayın.");
+                return ServiceResult<AppUser>.SuccessResult(user, "KayÄ±t baÅŸarÄ±lÄ±! E-postanÄ±za gÃ¶nderilen linke tÄ±klayarak hesabÄ±nÄ±zÄ± doÄŸrulayÄ±n.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? RegisterAsync hatası: {ex.Message}");
-                return ServiceResult<AppUser>.FailureResult("Kayıt hatası", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"âŒ RegisterAsync hatasÄ±: {ex.Message}");
+                return ServiceResult<AppUser>.FailureResult("KayÄ±t hatasÄ±", ex.Message);
             }
         }
 
@@ -133,9 +136,9 @@ namespace KamPay.Services
             {
                 var validation = ValidateLogin(request);
                 if (!validation.IsValid)
-                    return ServiceResult<AppUser>.FailureResult("Giriş bilgileri geçersiz", validation.Errors.ToArray());
+                    return ServiceResult<AppUser>.FailureResult("GiriÅŸ bilgileri geÃ§ersiz", validation.Errors.ToArray());
 
-                // 1?? Firebase Authentication ile giriş yap
+                // 1ï¸âƒ£ Firebase Authentication ile giriÅŸ yap
                 try
                 {
                     _authLink = await _authProvider.SignInWithEmailAndPasswordAsync(
@@ -145,43 +148,43 @@ namespace KamPay.Services
                 }
                 catch (FirebaseAuthException ex)
                 {
-                    return ServiceResult<AppUser>.FailureResult("Giriş başarısız", GetFriendlyErrorMessage(ex));
+                    return ServiceResult<AppUser>.FailureResult("GiriÅŸ baÅŸarÄ±sÄ±z", GetFriendlyErrorMessage(ex));
                 }
 
-                // 2?? Firebase'den e-posta doğrulama durumunu kontrol et
+                // 2ï¸âƒ£ Firebase'den e-posta doÄŸrulama durumunu kontrol et
                 if (!_authLink.User.IsEmailVerified)
                 {
-                    // Kullanıcı doğrulama e-postaasını almamışsa tekrar gönder
+                    // KullanÄ±cÄ± doÄŸrulama e-postaasÄ±nÄ± almamÄ±ÅŸsa tekrar gÃ¶nder
                     try
                     {
                         await _authProvider.SendEmailVerificationAsync(_authLink.FirebaseToken);
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"?? Yeniden doğrulama e-postası gönderilemedi: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"âš ï¸ Yeniden doÄŸrulama e-postasÄ± gÃ¶nderilemedi: {ex.Message}");
                     }
 
                     return ServiceResult<AppUser>.FailureResult(
-                        "E-posta doğrulanmamış",
-                        "Lütfen e-postanıza gönderilen linke tıklayarak hesabınızı doğrulayın. Yeni bir doğrulama linki gönderildi."
+                        "E-posta doÄŸrulanmamÄ±ÅŸ",
+                        "LÃ¼tfen e-postanÄ±za gÃ¶nderilen linke tÄ±klayarak hesabÄ±nÄ±zÄ± doÄŸrulayÄ±n. Yeni bir doÄŸrulama linki gÃ¶nderildi."
                     );
                 }
 
-                // 3?? Kullanıcı bilgilerini Realtime Database'den al
+                // 3ï¸âƒ£ KullanÄ±cÄ± bilgilerini Realtime Database'den al
                 var user = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(_authLink.User.LocalId)
                     .OnceSingleAsync<AppUser>();
 
                 if (user == null)
-                    return ServiceResult<AppUser>.FailureResult("Kullanıcı bulunamadı", "Hesap bilgileri eksik.");
+                    return ServiceResult<AppUser>.FailureResult("KullanÄ±cÄ± bulunamadÄ±", "Hesap bilgileri eksik.");
 
-                // 4?? Realtime Database'deki doğrulama durumunu güncelle
+                // 4ï¸âƒ£ Realtime Database'deki doÄŸrulama durumunu gÃ¼ncelle
                 if (!user.IsEmailVerified)
                 {
                     user.IsEmailVerified = true;
                     
-                    // İlk doğrulamada profil resmi oluştur
+                    // Ä°lk doÄŸrulamada profil resmi oluÅŸtur
                     if (string.IsNullOrEmpty(user.ProfileImageUrl))
                     {
                         user.ProfileImageUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(user.FirstName)}+{Uri.EscapeDataString(user.LastName)}&background=random";
@@ -192,40 +195,40 @@ namespace KamPay.Services
                         .Child(user.UserId)
                         .PutAsync(user);
 
-                    // İlk giriş: Profil oluştur
+                    // Ä°lk giriÅŸ: Profil oluÅŸtur
                     await _userProfileService.CreateUserProfileAsync(user);
                 }
 
-                // 5?? Aktif kullanıcı kontrolü
+                // 5ï¸âƒ£ Aktif kullanÄ±cÄ± kontrolÃ¼
                 if (!user.IsActive)
                 {
                     return ServiceResult<AppUser>.FailureResult(
-                        "Hesap devre dışı",
-                        "Hesabınız yönetici tarafından devre dışı bırakılmış"
+                        "Hesap devre dÄ±ÅŸÄ±",
+                        "HesabÄ±nÄ±z yÃ¶netici tarafÄ±ndan devre dÄ±ÅŸÄ± bÄ±rakÄ±lmÄ±ÅŸ"
                     );
                 }
 
-                // 6?? Son giriş zamanını güncelle
+                // 6ï¸âƒ£ Son giriÅŸ zamanÄ±nÄ± gÃ¼ncelle
                 user.LastLoginAt = DateTime.UtcNow;
                 await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user.UserId)
                     .PutAsync(user);
 
-                // 7?? Oturum bilgisini sakla
+                // 7ï¸âƒ£ Oturum bilgisini sakla
                 _currentUser = user;
                 
-                // ?? GÜVENLIK: Hassas bilgileri SecureStorage'da sakla
+                // ğŸ”’ GÃœVENLIK: Hassas bilgileri SecureStorage'da sakla
                 await SaveUserSessionAsync(user, _authLink.FirebaseToken, request.RememberMe);
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
 
-                return ServiceResult<AppUser>.SuccessResult(user, "Giriş başarılı!");
+                return ServiceResult<AppUser>.SuccessResult(user, "GiriÅŸ baÅŸarÄ±lÄ±!");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? LoginAsync hatası: {ex.Message}");
-                return ServiceResult<AppUser>.FailureResult("Giriş sırasında hata", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"âŒ LoginAsync hatasÄ±: {ex.Message}");
+                return ServiceResult<AppUser>.FailureResult("GiriÅŸ sÄ±rasÄ±nda hata", ex.Message);
             }
         }
 
@@ -234,44 +237,44 @@ namespace KamPay.Services
         #region Auto Login (Remember Me)
 
         /// <summary>
-        /// ?? GÜVENLIK: Uygulama başlangıcında otomatik giriş kontrolü (SecureStorage)
-        /// "Beni Hatırla" işaretliyse ve token geçerliyse otomatik giriş yapar
+        /// ğŸ”’ GÃœVENLIK: Uygulama baÅŸlangÄ±cÄ±nda otomatik giriÅŸ kontrolÃ¼ (SecureStorage)
+        /// "Beni HatÄ±rla" iÅŸaretliyse ve token geÃ§erliyse otomatik giriÅŸ yapar
         /// </summary>
         public async Task<ServiceResult<AppUser>> TryAutoLoginAsync()
         {
             try
             {
-                Console.WriteLine("?? Otomatik giriş kontrolü başlatılıyor...");
+                Console.WriteLine("ğŸ” Otomatik giriÅŸ kontrolÃ¼ baÅŸlatÄ±lÄ±yor...");
 
-                // 1?? "Beni Hatırla" kontrolü - SecureStorage'dan al
+                // 1ï¸âƒ£ "Beni HatÄ±rla" kontrolÃ¼ - SecureStorage'dan al
                 var rememberMeStr = await SecureStorage.GetAsync(KEY_REMEMBER_ME);
                 var rememberMe = !string.IsNullOrEmpty(rememberMeStr) && bool.Parse(rememberMeStr);
                 
                 if (!rememberMe)
                 {
-                    Console.WriteLine("?? Beni Hatırla işaretli değil, otomatik giriş yapılmayacak");
-                    return ServiceResult<AppUser>.FailureResult("Otomatik giriş yok", "Kullanıcı beni hatırla seçeneğini işaretlememiş");
+                    Console.WriteLine("â­ï¸ Beni HatÄ±rla iÅŸaretli deÄŸil, otomatik giriÅŸ yapÄ±lmayacak");
+                    return ServiceResult<AppUser>.FailureResult("Otomatik giriÅŸ yok", "KullanÄ±cÄ± beni hatÄ±rla seÃ§eneÄŸini iÅŸaretlememiÅŸ");
                 }
 
-                // 2?? Session bilgilerini al - SecureStorage'dan
+                // 2ï¸âƒ£ Session bilgilerini al - SecureStorage'dan
                 var userId = await SecureStorage.GetAsync(KEY_USER_ID);
                 var firebaseToken = await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
                 var tokenExpiryStr = await SecureStorage.GetAsync(KEY_TOKEN_EXPIRY);
 
                 if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
                 {
-                    Console.WriteLine("?? Session bilgileri eksik");
-                    return ServiceResult<AppUser>.FailureResult("Session yok", "Kaydedilmiş oturum bulunamadı");
+                    Console.WriteLine("âš ï¸ Session bilgileri eksik");
+                    return ServiceResult<AppUser>.FailureResult("Session yok", "KaydedilmiÅŸ oturum bulunamadÄ±");
                 }
 
-                Console.WriteLine($"? SecureStorage'dan session bilgileri alındı: UserId={userId.Substring(0, Math.Min(8, userId.Length))}...");
+                Console.WriteLine($"âœ… SecureStorage'dan session bilgileri alÄ±ndÄ±: UserId={userId.Substring(0, Math.Min(8, userId.Length))}...");
 
-                // 3?? Token süresini kontrol et
+                // 3ï¸âƒ£ Token sÃ¼resini kontrol et
                 if (!string.IsNullOrEmpty(tokenExpiryStr) && DateTime.TryParse(tokenExpiryStr, out var tokenExpiry))
                 {
                     if (DateTime.UtcNow >= tokenExpiry)
                     {
-                        Console.WriteLine("?? Token süresi dolmuş, yenileniyor...");
+                        Console.WriteLine("ğŸ”„ Token sÃ¼resi dolmuÅŸ, yenileniyor...");
                         
                         // Token yenileme
                         try
@@ -282,27 +285,27 @@ namespace KamPay.Services
                                 User = new Firebase.Auth.User { LocalId = userId }
                             }));
 
-                            // Yenilenen token'ı kaydet
+                            // Yenilenen token'Ä± kaydet
                             _authLink = refreshedAuth;
                             await SaveUserSessionAsync(null, refreshedAuth.FirebaseToken, true, refreshedAuth.ExpiresIn);
                             
-                            Console.WriteLine("? Token başarıyla yenilendi");
+                            Console.WriteLine("âœ… Token baÅŸarÄ±yla yenilendi");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"? Token yenileme hatası: {ex.Message}");
+                            Console.WriteLine($"âŒ Token yenileme hatasÄ±: {ex.Message}");
                             await ClearUserSessionAsync();
-                            return ServiceResult<AppUser>.FailureResult("Token yenilenemedi", "Lütfen tekrar giriş yapın");
+                            return ServiceResult<AppUser>.FailureResult("Token yenilenemedi", "LÃ¼tfen tekrar giriÅŸ yapÄ±n");
                         }
                     }
                 }
 
-                // 4?? İnternet kontrolü
+                // 4ï¸âƒ£ Ä°nternet kontrolÃ¼
                 if (!NetworkHelper.HasInternetConnection())
                 {
-                    Console.WriteLine("?? İnternet bağlantısı yok, cache'den kullanıcı yükleniyor");
+                    Console.WriteLine("âš ï¸ Ä°nternet baÄŸlantÄ±sÄ± yok, cache'den kullanÄ±cÄ± yÃ¼kleniyor");
                     
-                    // Cache'den kullanıcı bilgilerini al (offline destek)
+                    // Cache'den kullanÄ±cÄ± bilgilerini al (offline destek)
                     var cachedEmail = await SecureStorage.GetAsync(KEY_USER_EMAIL);
                     
                     if (!string.IsNullOrEmpty(cachedEmail))
@@ -311,13 +314,13 @@ namespace KamPay.Services
                         {
                             UserId = userId,
                             Email = cachedEmail,
-                            // Diğer bilgiler online olunca güncellenecek
+                            // DiÄŸer bilgiler online olunca gÃ¼ncellenecek
                         };
-                        return ServiceResult<AppUser>.SuccessResult(_currentUser, "Offline modda giriş yapıldı");
+                        return ServiceResult<AppUser>.SuccessResult(_currentUser, "Offline modda giriÅŸ yapÄ±ldÄ±");
                     }
                 }
 
-                // 5?? Kullanıcı bilgilerini Firebase'den al
+                // 5ï¸âƒ£ KullanÄ±cÄ± bilgilerini Firebase'den al
                 var user = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(userId)
@@ -325,39 +328,39 @@ namespace KamPay.Services
 
                 if (user == null)
                 {
-                    Console.WriteLine("? Kullanıcı bulunamadı");
+                    Console.WriteLine("âŒ KullanÄ±cÄ± bulunamadÄ±");
                     await ClearUserSessionAsync();
-                    return ServiceResult<AppUser>.FailureResult("Kullanıcı bulunamadı", "Hesap silinmiş veya devre dışı bırakılmış olabilir");
+                    return ServiceResult<AppUser>.FailureResult("KullanÄ±cÄ± bulunamadÄ±", "Hesap silinmiÅŸ veya devre dÄ±ÅŸÄ± bÄ±rakÄ±lmÄ±ÅŸ olabilir");
                 }
 
-                // 6?? Hesap aktiflik kontrolü
+                // 6ï¸âƒ£ Hesap aktiflik kontrolÃ¼
                 if (!user.IsActive)
                 {
-                    Console.WriteLine("? Hesap devre dışı");
+                    Console.WriteLine("âŒ Hesap devre dÄ±ÅŸÄ±");
                     await ClearUserSessionAsync();
-                    return ServiceResult<AppUser>.FailureResult("Hesap devre dışı", "Hesabınız yönetici tarafından devre dışı bırakılmış");
+                    return ServiceResult<AppUser>.FailureResult("Hesap devre dÄ±ÅŸÄ±", "HesabÄ±nÄ±z yÃ¶netici tarafÄ±ndan devre dÄ±ÅŸÄ± bÄ±rakÄ±lmÄ±ÅŸ");
                 }
 
-                // 7?? Son giriş zamanını güncelle
+                // 7ï¸âƒ£ Son giriÅŸ zamanÄ±nÄ± gÃ¼ncelle
                 user.LastLoginAt = DateTime.UtcNow;
                 await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user.UserId)
                     .PutAsync(user);
 
-                // 8?? Current user'ı ayarla
+                // 8ï¸âƒ£ Current user'Ä± ayarla
                 _currentUser = user;
 
-                Console.WriteLine($"? Otomatik giriş başarılı: {user.Email}");
+                Console.WriteLine($"âœ… Otomatik giriÅŸ baÅŸarÄ±lÄ±: {user.Email}");
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
 
-                return ServiceResult<AppUser>.SuccessResult(user, "Otomatik giriş başarılı");
+                return ServiceResult<AppUser>.SuccessResult(user, "Otomatik giriÅŸ baÅŸarÄ±lÄ±");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? TryAutoLoginAsync hatası: {ex.Message}");
+                Console.WriteLine($"âŒ TryAutoLoginAsync hatasÄ±: {ex.Message}");
                 await ClearUserSessionAsync();
-                return ServiceResult<AppUser>.FailureResult("Otomatik giriş hatası", ex.Message);
+                return ServiceResult<AppUser>.FailureResult("Otomatik giriÅŸ hatasÄ±", ex.Message);
             }
         }
 
@@ -366,81 +369,81 @@ namespace KamPay.Services
         #region Email Verification
 
         /// <summary>
-        /// Doğrulama e-postasını yeniden gönderir (Firebase native)
+        /// DoÄŸrulama e-postasÄ±nÄ± yeniden gÃ¶nderir (Firebase native)
         /// </summary>
         public async Task<ServiceResult<bool>> SendVerificationCodeAsync(string email)
         {
             try
             {
-                // Firebase'de oturum açmış kullanıcıya yeniden doğrulama linki gönder
+                // Firebase'de oturum aÃ§mÄ±ÅŸ kullanÄ±cÄ±ya yeniden doÄŸrulama linki gÃ¶nder
                 if (_authLink == null)
                 {
-                    // Eğer oturum yoksa, e-posta ile kullanıcıyı bul ve bilgilendir
+                    // EÄŸer oturum yoksa, e-posta ile kullanÄ±cÄ±yÄ± bul ve bilgilendir
                     return ServiceResult<bool>.SuccessResult(
                         true,
-                        "Lütfen giriş yaparak doğrulama linkini alın."
+                        "LÃ¼tfen giriÅŸ yaparak doÄŸrulama linkini alÄ±n."
                     );
                 }
 
                 await _authProvider.SendEmailVerificationAsync(_authLink.FirebaseToken);
 
-                System.Diagnostics.Debug.WriteLine($"? Firebase doğrulama linki yeniden gönderildi: {email}");
+                System.Diagnostics.Debug.WriteLine($"âœ… Firebase doÄŸrulama linki yeniden gÃ¶nderildi: {email}");
 
                 return ServiceResult<bool>.SuccessResult(
                     true,
-                    "Doğrulama linki e-postanıza gönderildi. Lütfen e-postanızdaki linke tıklayın."
+                    "DoÄŸrulama linki e-postanÄ±za gÃ¶nderildi. LÃ¼tfen e-postanÄ±zdaki linke tÄ±klayÄ±n."
                 );
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? SendVerificationCodeAsync hatası: {ex.Message}");
-                return ServiceResult<bool>.FailureResult("Doğrulama linki gönderilemedi", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"âŒ SendVerificationCodeAsync hatasÄ±: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("DoÄŸrulama linki gÃ¶nderilemedi", ex.Message);
             }
         }
 
         /// <summary>
-        /// Firebase'den e-posta doğrulama durumunu kontrol eder ve günceller
+        /// Firebase'den e-posta doÄŸrulama durumunu kontrol eder ve gÃ¼nceller
         /// </summary>
         public async Task<ServiceResult<bool>> VerifyEmailAsync(Models.VerificationRequest request)
         {
             try
             {
-                // Firebase Authentication'da kullanıcı giriş yap
+                // Firebase Authentication'da kullanÄ±cÄ± giriÅŸ yap
                 FirebaseAuthLink authLink;
                 try
                 {
                     authLink = await _authProvider.SignInWithEmailAndPasswordAsync(
                         request.Email.ToLower(),
-                        "DUMMY_PASSWORD" // Şifre gerekmiyor, sadece token yenilemek için
+                        "DUMMY_PASSWORD" // Åifre gerekmiyor, sadece token yenilemek iÃ§in
                     );
                 }
                 catch
                 {
-                    // Kullanıcı şifresiz kontrol edemeyiz, manuel refresh gerekiyor
+                    // KullanÄ±cÄ± ÅŸifresiz kontrol edemeyiz, manuel refresh gerekiyor
                     return ServiceResult<bool>.FailureResult(
-                        "Doğrulama kontrol edilemedi",
-                        "Lütfen e-postaınızdaki linke tıklayın ve ardından giriş yapın."
+                        "DoÄŸrulama kontrol edilemedi",
+                        "LÃ¼tfen e-postaÄ±nÄ±zdaki linke tÄ±klayÄ±n ve ardÄ±ndan giriÅŸ yapÄ±n."
                     );
                 }
 
-                // Token'ı refresh et ve doğrulama durumunu kontrol et
+                // Token'Ä± refresh et ve doÄŸrulama durumunu kontrol et
                 var refreshedAuth = await _authProvider.RefreshAuthAsync(authLink);
                 
                 if (!refreshedAuth.User.IsEmailVerified)
                 {
                     return ServiceResult<bool>.FailureResult(
-                        "E-posta henüz doğrulanmadı",
-                        "Lütfen e-postaalanızdaki linke tıklayın."
+                        "E-posta henÃ¼z doÄŸrulanmadÄ±",
+                        "LÃ¼tfen e-postaalÄ±anÄ±zdaki linke tÄ±klayÄ±n."
                     );
                 }
 
-                // Realtime Database'i güncelle
+                // Realtime Database'i gÃ¼ncelle
                 var users = await _firebaseClient.Child(Constants.UsersCollection)
                     .OrderBy("Email").EqualTo(request.Email.ToLower()).OnceAsync<AppUser>();
 
                 var userEntry = users.FirstOrDefault();
                 if (userEntry == null)
-                    return ServiceResult<bool>.FailureResult("Kullanıcı bulunamadı");
+                    return ServiceResult<bool>.FailureResult("KullanÄ±cÄ± bulunamadÄ±");
 
                 var user = userEntry.Object;
                 user.IsEmailVerified = true;
@@ -452,15 +455,15 @@ namespace KamPay.Services
 
                 await _firebaseClient.Child(Constants.UsersCollection).Child(user.UserId).PutAsync(user);
 
-                // Profil oluştur
+                // Profil oluÅŸtur
                 await _userProfileService.CreateUserProfileAsync(user);
 
-                return ServiceResult<bool>.SuccessResult(true, "E-posta doğrulandı! Şimdi giriş yapabilirsiniz.");
+                return ServiceResult<bool>.SuccessResult(true, "E-posta doÄŸrulandÄ±! Åimdi giriÅŸ yapabilirsiniz.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? VerifyEmailAsync hatası: {ex.Message}");
-                return ServiceResult<bool>.FailureResult("Doğrulama hatası", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"âŒ VerifyEmailAsync hatasÄ±: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("DoÄŸrulama hatasÄ±", ex.Message);
             }
         }
 
@@ -469,7 +472,7 @@ namespace KamPay.Services
         #region Password Reset
 
         /// <summary>
-        /// Firebase'in native şifre sıfırlama e-postasını gönderir
+        /// Firebase'in native ÅŸifre sÄ±fÄ±rlama e-postasÄ±nÄ± gÃ¶nderir
         /// </summary>
         public async Task<ServiceResult<bool>> SendPasswordResetEmailAsync(string email)
         {
@@ -479,50 +482,50 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("Hata", "E-posta adresi gerekli");
 
                 if (!NetworkHelper.HasInternetConnection())
-                    return ServiceResult<bool>.FailureResult("Bağlantı Hatası", "İnternet yok");
+                    return ServiceResult<bool>.FailureResult("BaÄŸlantÄ± HatasÄ±", "Ä°nternet yok");
 
                 // Rate limiting
                 var limitCheck = RateLimiters.PasswordReset.CheckLimit(email);
                 if (!limitCheck.IsAllowed)
-                    return ServiceResult<bool>.FailureResult("Çok fazla deneme", limitCheck.Message);
+                    return ServiceResult<bool>.FailureResult("Ã‡ok fazla deneme", limitCheck.Message);
 
-                // ?? SADECE Firebase'in native şifre sıfırlama sistemini kullan
+                // ğŸ”¥ SADECE Firebase'in native ÅŸifre sÄ±fÄ±rlama sistemini kullan
                 try
                 {
                     await _authProvider.SendPasswordResetEmailAsync(email.ToLower());
                     
-                    System.Diagnostics.Debug.WriteLine($"? Firebase şifre sıfırlama linki gönderildi: {email}");
+                    System.Diagnostics.Debug.WriteLine($"âœ… Firebase ÅŸifre sÄ±fÄ±rlama linki gÃ¶nderildi: {email}");
                 }
                 catch (FirebaseAuthException ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"? Firebase password reset hatası: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"âŒ Firebase password reset hatasÄ±: {ex.Message}");
                     return ServiceResult<bool>.FailureResult("Hata", GetFriendlyErrorMessage(ex));
                 }
 
                 return ServiceResult<bool>.SuccessResult(
                     true,
-                    "Eğer bu e-posta kayıtlıysa, şifre sıfırlama linki gönderildi. Lütfen e-postanızı kontrol edin."
+                    "EÄŸer bu e-posta kayÄ±tlÄ±ysa, ÅŸifre sÄ±fÄ±rlama linki gÃ¶nderildi. LÃ¼tfen e-postanÄ±zÄ± kontrol edin."
                 );
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? SendPasswordResetEmailAsync hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"âŒ SendPasswordResetEmailAsync hatasÄ±: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
 
         /// <summary>
-        /// Firebase native şifre sıfırlama kullanıldığı için bu metod kullanılmıyor.
-        /// Kullanıcı e-postaadaki linke tıklayıp Firebase sayfasında şifresini sıfırlıyor.
+        /// Firebase native ÅŸifre sÄ±fÄ±rlama kullanÄ±ldÄ±ÄŸÄ± iÃ§in bu metod kullanÄ±lmÄ±yor.
+        /// KullanÄ±cÄ± e-postaadaki linke tÄ±klayÄ±p Firebase sayfasÄ±nda ÅŸifresini sÄ±fÄ±rlÄ±yor.
         /// </summary>
         public async Task<ServiceResult<bool>> ResetPasswordAsync(string email, string verificationCode, string newPassword)
         {
-            // ?? Firebase native kullanıldığı için bu metod deprecated
+            // ğŸ”¥ Firebase native kullanÄ±ldÄ±ÄŸÄ± iÃ§in bu metod deprecated
             await Task.CompletedTask;
             
             return ServiceResult<bool>.FailureResult(
-                "Bu özellik artık kullanılmıyor",
-                "Lütfen e-postaunuza gönderilen Firebase linkini kullanarak şifrenizi sıfırlayın."
+                "Bu Ã¶zellik artÄ±k kullanÄ±lmÄ±yor",
+                "LÃ¼tfen e-postaunuza gÃ¶nderilen Firebase linkini kullanarak ÅŸifrenizi sÄ±fÄ±rlayÄ±n."
             );
         }
 
@@ -531,22 +534,22 @@ namespace KamPay.Services
         #region Email Change
 
         /// <summary>
-        /// Firebase'de e-posta değiştirir ve otomatik doğrulama linki gönderir
+        /// Firebase'de e-posta deÄŸiÅŸtirir ve otomatik doÄŸrulama linki gÃ¶nderir
         /// </summary>
         public async Task<ServiceResult<bool>> ChangeEmailAsync(string currentEmail, string newEmail, string password)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(currentEmail) || string.IsNullOrWhiteSpace(newEmail) || string.IsNullOrWhiteSpace(password))
-                    return ServiceResult<bool>.FailureResult("Hata", "Tüm alanlar gerekli");
+                    return ServiceResult<bool>.FailureResult("Hata", "TÃ¼m alanlar gerekli");
 
                 if (!InputSanitizer.IsValidEmail(newEmail))
-                    return ServiceResult<bool>.FailureResult("Hata", "Geçersiz e-posta formatı");
+                    return ServiceResult<bool>.FailureResult("Hata", "GeÃ§ersiz e-posta formatÄ±");
 
                 if (!newEmail.ToLower().EndsWith(Constants.UniversityEmailDomain))
-                    return ServiceResult<bool>.FailureResult("Hata", $"Sadece {Constants.UniversityEmailDomain} uzantılı e-postalar kabul edilir");
+                    return ServiceResult<bool>.FailureResult("Hata", $"Sadece {Constants.UniversityEmailDomain} uzantÄ±lÄ± e-postalar kabul edilir");
 
-                // 1?? Firebase ile tekrar giriş yap (güvenlik)
+                // 1ï¸âƒ£ Firebase ile tekrar giriÅŸ yap (gÃ¼venlik)
                 FirebaseAuthLink authLink;
                 try
                 {
@@ -557,7 +560,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("Hata", GetFriendlyErrorMessage(ex));
                 }
 
-                // 2?? Firebase'de e-posta değiştir (otomatik doğrulama linki gönderir)
+                // 2ï¸âƒ£ Firebase'de e-posta deÄŸiÅŸtir (otomatik doÄŸrulama linki gÃ¶nderir)
                 try
                 {
                     await _authProvider.ChangeUserEmail(authLink.FirebaseToken, newEmail.ToLower());
@@ -567,7 +570,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("Hata", GetFriendlyErrorMessage(ex));
                 }
 
-                // 3?? Realtime Database'i güncelle
+                // 3ï¸âƒ£ Realtime Database'i gÃ¼ncelle
                 var users = await _firebaseClient
                     .Child(Constants.UsersCollection)
                     .OrderBy("Email")
@@ -579,53 +582,53 @@ namespace KamPay.Services
                 {
                     var user = userEntry.Object;
                     user.Email = newEmail.ToLower();
-                    user.IsEmailVerified = false; // Yeni e-posta doğrulanmalı
+                    user.IsEmailVerified = false; // Yeni e-posta doÄŸrulanmalÄ±
 
                     await _firebaseClient
                         .Child(Constants.UsersCollection)
                         .Child(user.UserId)
                         .PutAsync(user);
 
-                    System.Diagnostics.Debug.WriteLine($"? E-posta değiştirildi: {currentEmail} ? {newEmail}");
+                    System.Diagnostics.Debug.WriteLine($"âœ… E-posta deÄŸiÅŸtirildi: {currentEmail} â†’ {newEmail}");
                 }
 
-                // 4?? Yeni e-postaya doğrulama linki gönder
+                // 4ï¸âƒ£ Yeni e-postaya doÄŸrulama linki gÃ¶nder
                 try
                 {
                     var refreshedAuth = await _authProvider.RefreshAuthAsync(authLink);
                     await _authProvider.SendEmailVerificationAsync(refreshedAuth.FirebaseToken);
                     
-                    System.Diagnostics.Debug.WriteLine($"?? Yeni e-postaya doğrulama linki gönderildi: {newEmail}");
+                    System.Diagnostics.Debug.WriteLine($"ğŸ“§ Yeni e-postaya doÄŸrulama linki gÃ¶nderildi: {newEmail}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"?? Doğrulama linki gönderilemedi: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"âš ï¸ DoÄŸrulama linki gÃ¶nderilemedi: {ex.Message}");
                 }
 
                 return ServiceResult<bool>.SuccessResult(
                     true,
-                    $"E-posta adresiniz {newEmail} olarak değiştirildi. Lütfen yeni e-postanıza gönderilen doğrulama linkine tıklayın."
+                    $"E-posta adresiniz {newEmail} olarak deÄŸiÅŸtirildi. LÃ¼tfen yeni e-postanÄ±za gÃ¶nderilen doÄŸrulama linkine tÄ±klayÄ±n."
                 );
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? ChangeEmailAsync hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"âŒ ChangeEmailAsync hatasÄ±: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
 
         /// <summary>
-        /// Firebase native e-posta doğrulama kullanıldığı için bu metod kullanılmıyor.
-        /// Kullanıcı e-postadaki linke tıklayıp Firebase otomatik doğruluyor.
+        /// Firebase native e-posta doÄŸrulama kullanÄ±ldÄ±ÄŸÄ± iÃ§in bu metod kullanÄ±lmÄ±yor.
+        /// KullanÄ±cÄ± e-postadaki linke tÄ±klayÄ±p Firebase otomatik doÄŸruluyor.
         /// </summary>
         public async Task<ServiceResult<bool>> VerifyNewEmailAsync(string newEmail, string verificationCode)
         {
-            // ?? Firebase native kullanıldığı için bu metod deprecated
+            // ğŸ”¥ Firebase native kullanÄ±ldÄ±ÄŸÄ± iÃ§in bu metod deprecated
             await Task.CompletedTask;
             
             return ServiceResult<bool>.FailureResult(
-                "Bu özellik artık kullanılmıyor",
-                "Lütfen e-postaunuza gönderilen Firebase linkine tıklayıp yeni e-postanızı doğrulayın."
+                "Bu Ã¶zellik artÄ±k kullanÄ±lmÄ±yor",
+                "LÃ¼tfen e-postaunuza gÃ¶nderilen Firebase linkine tÄ±klayÄ±p yeni e-postanÄ±zÄ± doÄŸrulayÄ±n."
             );
         }
 
@@ -638,23 +641,23 @@ namespace KamPay.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
-                    return ServiceResult<bool>.FailureResult("Hata", "Tüm alanlar gerekli");
+                    return ServiceResult<bool>.FailureResult("Hata", "TÃ¼m alanlar gerekli");
 
                 if (newPassword.Length < Constants.MinPasswordLength)
-                    return ServiceResult<bool>.FailureResult("Hata", $"Yeni şifre en az {Constants.MinPasswordLength} karakter olmalıdır");
+                    return ServiceResult<bool>.FailureResult("Hata", $"Yeni ÅŸifre en az {Constants.MinPasswordLength} karakter olmalÄ±dÄ±r");
 
                 if (currentPassword == newPassword)
-                    return ServiceResult<bool>.FailureResult("Hata", "Yeni şifre, mevcut şifre ile aynı olamaz");
+                    return ServiceResult<bool>.FailureResult("Hata", "Yeni ÅŸifre, mevcut ÅŸifre ile aynÄ± olamaz");
 
-                // Firebase ile şifre değiştir
+                // Firebase ile ÅŸifre deÄŸiÅŸtir
                 try
                 {
                     var authLink = await _authProvider.SignInWithEmailAndPasswordAsync(email.ToLower(), currentPassword);
                     await _authProvider.ChangeUserPassword(authLink.FirebaseToken, newPassword);
 
-                    System.Diagnostics.Debug.WriteLine($"? Şifre değiştirildi: {email}");
+                    System.Diagnostics.Debug.WriteLine($"âœ… Åifre deÄŸiÅŸtirildi: {email}");
 
-                    return ServiceResult<bool>.SuccessResult(true, "Şifreniz başarıyla değiştirildi!");
+                    return ServiceResult<bool>.SuccessResult(true, "Åifreniz baÅŸarÄ±yla deÄŸiÅŸtirildi!");
                 }
                 catch (FirebaseAuthException ex)
                 {
@@ -663,7 +666,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? ChangePasswordAsync hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"âŒ ChangePasswordAsync hatasÄ±: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
@@ -676,7 +679,7 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine("?? Çıkış işlemi başlatılıyor...");
+                Console.WriteLine("ğŸ”“ Ã‡Ä±kÄ±ÅŸ iÅŸlemi baÅŸlatÄ±lÄ±yor...");
 
                 _currentUser = null;
                 _authLink = null;
@@ -687,14 +690,14 @@ namespace KamPay.Services
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
 
-                Console.WriteLine("? Çıkış başarıyla tamamlandı");
+                Console.WriteLine("âœ… Ã‡Ä±kÄ±ÅŸ baÅŸarÄ±yla tamamlandÄ±");
 
-                return ServiceResult<bool>.SuccessResult(true, "Çıkış başarılı");
+                return ServiceResult<bool>.SuccessResult(true, "Ã‡Ä±kÄ±ÅŸ baÅŸarÄ±lÄ±");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LogoutAsync hatası: {ex.Message}");
-                return ServiceResult<bool>.FailureResult("Çıkış yapılamadı", ex.Message);
+                Console.WriteLine($"âŒ LogoutAsync hatasÄ±: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Ã‡Ä±kÄ±ÅŸ yapÄ±lamadÄ±", ex.Message);
             }
         }
 
@@ -722,7 +725,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? GetCurrentUser hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"âŒ GetCurrentUser hatasÄ±: {ex.Message}");
                 return _currentUser;
             }
         }
@@ -732,7 +735,7 @@ namespace KamPay.Services
             if (_currentUser != null) 
                 return true;
             
-            // ?? GÜVENLIK: SecureStorage'dan kontrol et
+            // ğŸ”’ GÃœVENLIK: SecureStorage'dan kontrol et
             try
             {
                 var userId = SecureStorage.GetAsync(KEY_USER_ID).Result;
@@ -753,29 +756,29 @@ namespace KamPay.Services
             var result = new Models.ValidationResult();
 
             if (string.IsNullOrWhiteSpace(request.FirstName))
-                result.AddError("Ad alanı boş bırakılamaz");
+                result.AddError("Ad alanÄ± boÅŸ bÄ±rakÄ±lamaz");
             else if (!InputSanitizer.IsValidName(request.FirstName))
-                result.AddError("Ad alanı geçersiz karakterler içeriyor");
+                result.AddError("Ad alanÄ± geÃ§ersiz karakterler iÃ§eriyor");
 
             if (string.IsNullOrWhiteSpace(request.LastName))
-                result.AddError("Soyad alanı boş bırakılamaz");
+                result.AddError("Soyad alanÄ± boÅŸ bÄ±rakÄ±lamaz");
             else if (!InputSanitizer.IsValidName(request.LastName))
-                result.AddError("Soyad alanı geçersiz karakterler içeriyor");
+                result.AddError("Soyad alanÄ± geÃ§ersiz karakterler iÃ§eriyor");
 
             if (string.IsNullOrWhiteSpace(request.Email))
-                result.AddError("E-posta alanı boş bırakılamaz");
+                result.AddError("E-posta alanÄ± boÅŸ bÄ±rakÄ±lamaz");
             else if (!InputSanitizer.IsValidEmail(request.Email))
-                result.AddError("Geçersiz e-posta formatı");
+                result.AddError("GeÃ§ersiz e-posta formatÄ±");
             else if (!request.Email.ToLower().EndsWith(Constants.UniversityEmailDomain))
-                result.AddError($"Sadece {Constants.UniversityEmailDomain} uzantılı e-postalar kabul edilir");
+                result.AddError($"Sadece {Constants.UniversityEmailDomain} uzantÄ±lÄ± e-postalar kabul edilir");
 
             if (string.IsNullOrWhiteSpace(request.Password))
-                result.AddError("Şifre alanı boş bırakılamaz");
+                result.AddError("Åifre alanÄ± boÅŸ bÄ±rakÄ±lamaz");
             else if (request.Password.Length < Constants.MinPasswordLength)
-                result.AddError($"Şifre en az {Constants.MinPasswordLength} karakter olmalıdır");
+                result.AddError($"Åifre en az {Constants.MinPasswordLength} karakter olmalÄ±dÄ±r");
 
             if (request.Password != request.PasswordConfirm)
-                result.AddError("Şifreler eşleşmiyor");
+                result.AddError("Åifreler eÅŸleÅŸmiyor");
 
             return result;
         }
@@ -785,10 +788,10 @@ namespace KamPay.Services
             var result = new Models.ValidationResult();
 
             if (string.IsNullOrWhiteSpace(request.Email))
-                result.AddError("E-posta alanı boş bırakılamaz");
+                result.AddError("E-posta alanÄ± boÅŸ bÄ±rakÄ±lamaz");
 
             if (string.IsNullOrWhiteSpace(request.Password))
-                result.AddError("Şifre alanı boş bırakılamaz");
+                result.AddError("Åifre alanÄ± boÅŸ bÄ±rakÄ±lamaz");
 
             return result;
         }
@@ -798,50 +801,50 @@ namespace KamPay.Services
         #region Helper Methods
 
         /// <summary>
-        /// ?? GÜVENLIK: Session bilgilerini SecureStorage'da saklar
-        /// Tüm hassas bilgiler (user_id, token, email) güvenli şekilde şifrelenir
+        /// ğŸ”’ GÃœVENLIK: Session bilgilerini SecureStorage'da saklar
+        /// TÃ¼m hassas bilgiler (user_id, token, email) gÃ¼venli ÅŸekilde ÅŸifrelenir
         /// </summary>
         private async Task SaveUserSessionAsync(AppUser? user, string firebaseToken, bool rememberMe, int? expiresIn = null)
         {
             try
             {
-                Console.WriteLine("?? Session kaydediliyor (SecureStorage)...");
+                Console.WriteLine("ğŸ’¾ Session kaydediliyor (SecureStorage)...");
 
                 // User bilgilerini kaydet
                 if (user != null)
                 {
                     await SecureStorage.SetAsync(KEY_USER_ID, user.UserId);
                     await SecureStorage.SetAsync(KEY_USER_EMAIL, user.Email);
-                    Console.WriteLine($"? User bilgileri SecureStorage'a kaydedildi: {user.Email}");
+                    Console.WriteLine($"âœ… User bilgileri SecureStorage'a kaydedildi: {user.Email}");
                 }
 
-                // Firebase token'ı kaydet
+                // Firebase token'Ä± kaydet
                 await SecureStorage.SetAsync(KEY_FIREBASE_TOKEN, firebaseToken);
 
-                // "Beni Hatırla" durumunu kaydet
+                // "Beni HatÄ±rla" durumunu kaydet
                 await SecureStorage.SetAsync(KEY_REMEMBER_ME, rememberMe.ToString());
 
-                // Token expiry time'ı kaydet (varsayılan 1 saat)
+                // Token expiry time'Ä± kaydet (varsayÄ±lan 1 saat)
                 var expiryTime = DateTime.UtcNow.AddSeconds(expiresIn ?? 3600);
                 await SecureStorage.SetAsync(KEY_TOKEN_EXPIRY, expiryTime.ToString("O")); // ISO 8601 format
 
-                Console.WriteLine($"? Session güvenli şekilde kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
+                Console.WriteLine($"âœ… Session gÃ¼venli ÅŸekilde kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? SaveUserSessionAsync hatası: {ex.Message}");
-                throw; // Kritik hata, üst katmana ilet
+                Console.WriteLine($"âŒ SaveUserSessionAsync hatasÄ±: {ex.Message}");
+                throw; // Kritik hata, Ã¼st katmana ilet
             }
         }
 
         /// <summary>
-        /// ??? Tüm session bilgilerini SecureStorage'dan temizler
+        /// ğŸ—‘ï¸ TÃ¼m session bilgilerini SecureStorage'dan temizler
         /// </summary>
         private async Task ClearUserSessionAsync()
         {
             try
             {
-                Console.WriteLine("??? Session temizleniyor (SecureStorage)...");
+                Console.WriteLine("ğŸ—‘ï¸ Session temizleniyor (SecureStorage)...");
 
                 SecureStorage.Remove(KEY_USER_ID);
                 SecureStorage.Remove(KEY_USER_EMAIL);
@@ -849,13 +852,13 @@ namespace KamPay.Services
                 SecureStorage.Remove(KEY_REMEMBER_ME);
                 SecureStorage.Remove(KEY_TOKEN_EXPIRY);
 
-                Console.WriteLine("? Session güvenli şekilde temizlendi");
+                Console.WriteLine("âœ… Session gÃ¼venli ÅŸekilde temizlendi");
                 
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? ClearUserSessionAsync hatası: {ex.Message}");
+                Console.WriteLine($"âŒ ClearUserSessionAsync hatasÄ±: {ex.Message}");
             }
         }
 
@@ -863,15 +866,15 @@ namespace KamPay.Services
         {
             return ex.Reason switch
             {
-                AuthErrorReason.EmailExists => "Bu e-posta adresi zaten kayıtlı",
-                AuthErrorReason.InvalidEmailAddress => "Geçersiz e-posta adresi",
-                AuthErrorReason.WeakPassword => "Şifre çok zayıf, en az 6 karakter olmalı",
-                AuthErrorReason.WrongPassword => "E-posta veya şifre hatalı",
-                AuthErrorReason.UserNotFound => "Kullanıcı bulunamadı",
-                AuthErrorReason.TooManyAttemptsTryLater => "Çok fazla deneme yaptınız, lütfen daha sonra tekrar deneyin",
-                AuthErrorReason.UserDisabled => "Hesabınız devre dışı bırakılmış",
-                AuthErrorReason.InvalidIDToken => "Oturum süresi dolmuş, lütfen tekrar giriş yapın",
-                _ => $"Kimlik doğrulama hatası: {ex.Message}"
+                AuthErrorReason.EmailExists => "Bu e-posta adresi zaten kayÄ±tlÄ±",
+                AuthErrorReason.InvalidEmailAddress => "GeÃ§ersiz e-posta adresi",
+                AuthErrorReason.WeakPassword => "Åifre Ã§ok zayÄ±f, en az 6 karakter olmalÄ±",
+                AuthErrorReason.WrongPassword => "E-posta veya ÅŸifre hatalÄ±",
+                AuthErrorReason.UserNotFound => "KullanÄ±cÄ± bulunamadÄ±",
+                AuthErrorReason.TooManyAttemptsTryLater => "Ã‡ok fazla deneme yaptÄ±nÄ±z, lÃ¼tfen daha sonra tekrar deneyin",
+                AuthErrorReason.UserDisabled => "HesabÄ±nÄ±z devre dÄ±ÅŸÄ± bÄ±rakÄ±lmÄ±ÅŸ",
+                AuthErrorReason.InvalidIDToken => "Oturum sÃ¼resi dolmuÅŸ, lÃ¼tfen tekrar giriÅŸ yapÄ±n",
+                _ => $"Kimlik doÄŸrulama hatasÄ±: {ex.Message}"
             };
         }
 

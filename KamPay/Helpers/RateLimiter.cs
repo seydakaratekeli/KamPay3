@@ -5,20 +5,17 @@ using System.Linq;
 
 namespace KamPay.Helpers
 {
-    // Spam ve kötüye kullanımı önlemek için hız sınırlaması uygulamaya yardımcı sınıf
+    /// <summary>
+    /// ⚠️ DEPRECATED: Bu class artık AdvancedRateLimiter ile değiştirilmiştir.
+    /// Geriye dönük uyumluluk için tutulmuştur.
+    /// Yeni kod için lütfen SecureRateLimiters kullanın.
+    /// </summary>
     public class RateLimiter
     {
         private readonly ConcurrentDictionary<string, Queue<DateTime>> _requestLog;
         private readonly int _maxRequests;
         private readonly TimeSpan _timeWindow;
 
-      
-
-        // Belirtilen sınırlara sahip yeni bir hız sınırlayıcı oluşturur
-
-        /// <param name="maxRequests">Belirtilen zaman aralığında izin verilen maksimum istek sayısı</param>
-
-        /// <param name="timeWindow">Hız sınırlaması için zaman aralığı</param>
         public RateLimiter(int maxRequests, TimeSpan timeWindow)
         {
             _maxRequests = maxRequests;
@@ -26,12 +23,6 @@ namespace KamPay.Helpers
             _requestLog = new ConcurrentDictionary<string, Queue<DateTime>>();
         }
 
-
-        // Verilen tanımlayıcı için bir isteğin izin verilip verilmediğini kontrol eder
-
-        /// <param name="identifier">Benzersiz tanımlayıcı (ör., kullanıcı kimliği, IP adresi)</param>
-
-        /// <returns>İsteğe izin verilirse true, oran sınırı aşılırsa false</returns>
         public bool IsRequestAllowed(string identifier)
         {
             var now = DateTime.UtcNow;
@@ -57,7 +48,6 @@ namespace KamPay.Helpers
             }
         }
 
-        /// Geçerli zaman diliminde izin verilen kalan istek sayısını alır
         public int GetRemainingRequests(string identifier)
         {
             if (!_requestLog.TryGetValue(identifier, out var requests))
@@ -78,7 +68,6 @@ namespace KamPay.Helpers
             }
         }
 
-        // Tanımlayıcı için hız sınırının sıfırlanacağı zamanı alır
         public DateTime? GetResetTime(string identifier)
         {
             if (!_requestLog.TryGetValue(identifier, out var requests))
@@ -95,20 +84,21 @@ namespace KamPay.Helpers
             }
         }
 
-        // Belirli bir tanımlayıcı için istek günlüğünü temizler
         public void Reset(string identifier)
         {
             _requestLog.TryRemove(identifier, out _);
         }
 
-        // Tüm istek günlüklerini temizler
         public void ResetAll()
         {
             _requestLog.Clear();
         }
     }
 
-    // Pre-configured rate limiters for common scenarios
+    /// <summary>
+    /// ⚠️ DEPRECATED: Eski rate limiter'lar. Yeni kod için SecureRateLimiters kullanın.
+    /// Geriye dönük uyumluluk için tutulmuştur.
+    /// </summary>
     public static class RateLimiters
     {
         // Login attempts: 5 attempts per 15 minutes
@@ -148,55 +138,12 @@ namespace KamPay.Helpers
         public static RateLimiter Search => _searchLimiter.Value;
     }
 
-    // Hız sınırlama kontrolünün sonucu
-    public class RateLimitResult
-    {
-        // İsteğin izin verilip verilmeyeceğini alır veya ayarlar
-        public bool IsAllowed { get; set; }
-
-        // Geçerli zaman diliminde kalan istek sayısını alır veya ayarlar
-        public int RemainingRequests { get; set; }
-
-        // Hız sınırının sıfırlanacağı zamanı alır veya ayarlar
-        public DateTime? ResetTime { get; set; }
-
-        // Hız sınırlama durumunu açıklayan kullanıcı dostu mesajı alır veya ayarlar
-        public string Message { get; set; }
-
-        public static RateLimitResult Allowed(int remaining, DateTime? resetTime)
-        {
-            return new RateLimitResult
-            {
-                IsAllowed = true,
-                RemainingRequests = remaining,
-                ResetTime = resetTime
-            };
-        }
-
-        public static RateLimitResult Denied(DateTime? resetTime)
-        {
-            var timeUntilReset = resetTime.HasValue 
-                ? resetTime.Value - DateTime.UtcNow 
-                : TimeSpan.Zero;
-
-            var message = timeUntilReset.TotalMinutes > 1
-                ? $"Çok fazla deneme yaptınız. {Math.Ceiling(timeUntilReset.TotalMinutes)} dakika sonra tekrar deneyin."
-                : $"Çok fazla deneme yaptınız. {Math.Ceiling(timeUntilReset.TotalSeconds)} saniye sonra tekrar deneyin.";
-
-            return new RateLimitResult
-            {
-                IsAllowed = false,
-                RemainingRequests = 0,
-                ResetTime = resetTime,
-                Message = message
-            };
-        }
-    }
-
-    // Hız sınırlayıcı için genişletme yöntemleri
+    /// <summary>
+    /// ⚠️ DEPRECATED: Eski extension method. CheckRequest() kullanın.
+    /// Geriye dönük uyumluluk için tutulmuştur.
+    /// </summary>
     public static class RateLimiterExtensions
     {
-        // Hız sınırını kontrol eder ve ayrıntılı sonucu döndürür
         public static RateLimitResult CheckLimit(this RateLimiter limiter, string identifier)
         {
             var isAllowed = limiter.IsRequestAllowed(identifier);
@@ -209,6 +156,10 @@ namespace KamPay.Helpers
         }
     }
 
+    /// <summary>
+    /// ⚠️ DEPRECATED: RateLimitException artık kullanılmıyor.
+    /// Geriye dönük uyumluluk için tutulmuştur.
+    /// </summary>
     public class RateLimitException : Exception
     {
         public override string Message { get; }
