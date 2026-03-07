@@ -16,6 +16,8 @@ using KamPay.Resources.Languages;
 using Firebase.Database; 
 using Firebase.Auth; // ✅ YENİ EKLEME
 using KamPay.Helpers;
+using KamPay.Security;
+
 
 namespace KamPay
 {

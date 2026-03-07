@@ -8,6 +8,7 @@ using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.ViewModels;
+using KamPay.Security;
 using AppUser = KamPay.Models.User;
 
 namespace KamPay.Services
