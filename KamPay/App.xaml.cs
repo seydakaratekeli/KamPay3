@@ -29,7 +29,7 @@ namespace KamPay
                         // LocalizationResourceManager'ın başlatılmasını bekle
                         await Task.Delay(200);
                         
-                        // Kaydedilmiş dil tercihini al
+                        // Kaydedilmiş dil tercihini al (Language preference'i güvenli değil, Preferences'ta kalabilir)
                         var savedLanguage = Preferences.Get("AppLanguage", "tr");
                         System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
                         
@@ -78,8 +78,8 @@ namespace KamPay
             // ✅ YENİ: Otomatik giriş kontrolü (Remember Me)
             await TryAutoLoginAsync();
             
-            // ✅ CRITICAL FIX: Uygulama her başladığında logout kontrolü yap
-            CheckLogoutStatus();
+            // 🔒 GÜVENLIK FIX: Logout kontrolü kaldırıldı
+            // Çünkü artık SecureStorage kullanıyoruz, Preferences'ta userId yok
 
             // Navigasyon sonrası geri butonu davranışı
             Shell.Current.Navigated += (s, e) =>
@@ -169,34 +169,6 @@ namespace KamPay
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ TryAutoLoginAsync hatası: {ex.Message}");
-            }
-        }
-        
-        // ✅ CRITICAL FIX: Logout kontrolü
-        private void CheckLogoutStatus()
-        {
-            try
-            {
-                var userId = Preferences.Get("current_user_id", string.Empty);
-                
-                // Eğer userId varsa ama UserStateService'de kullanıcı yoksa, logout yapılmış demektir
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    var userStateService = MainPage?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
-                    if (userStateService?.CurrentUser == null)
-                    {
-                        Console.WriteLine("⚠️ Logout tespit edildi - Preferences temizleniyor");
-                        Preferences.Remove("current_user_id");
-                        Preferences.Remove("current_user_email");
-                        Preferences.Remove("firebase_token");
-                        Preferences.Remove("remember_me");
-                        Preferences.Remove("token_expiry");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ CheckLogoutStatus hatası: {ex.Message}");
             }
         }
     }

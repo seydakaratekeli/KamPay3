@@ -139,10 +139,16 @@ namespace KamPay
             {
                 _isNavigating = true;
 
-                // ✅ NOT: Otomatik giriş App.OnStart içinde yapıldı
-                // Burada sadece mevcut durumu kontrol ediyoruz
-                
-                var userId = Preferences.Get("current_user_id", string.Empty);
+                // 🔒 GÜVENLIK: SecureStorage'dan kontrol et
+                string userId = string.Empty;
+                try
+                {
+                    userId = await SecureStorage.GetAsync("secure_user_id") ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ SecureStorage okuma hatası: {ex.Message}");
+                }
 
                 if (!string.IsNullOrEmpty(userId))
                 {
@@ -158,11 +164,13 @@ namespace KamPay
                             if (currentUser == null)
                             {
                                 Console.WriteLine("⚠️ UserStateService'de kullanıcı yok - login ekranına yönlendiriliyor");
-                                Preferences.Remove("current_user_id");
-                                Preferences.Remove("current_user_email");
-                                Preferences.Remove("firebase_token");
-                                Preferences.Remove("remember_me");
-                                Preferences.Remove("token_expiry");
+                                
+                                // 🔒 GÜVENLIK: SecureStorage'ı temizle
+                                SecureStorage.Remove("secure_user_id");
+                                SecureStorage.Remove("secure_user_email");
+                                SecureStorage.Remove("secure_firebase_token");
+                                SecureStorage.Remove("secure_remember_me");
+                                SecureStorage.Remove("secure_token_expiry");
                                 
                                 // Login sayfasında kal
                                 await GoToAsync("//LoginPage");

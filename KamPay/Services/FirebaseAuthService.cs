@@ -17,6 +17,7 @@ namespace KamPay.Services
     /// Manuel þifre hash'leme yerine Firebase'in güvenli authentication sistemini kullanýr
     /// ? "Beni Hatýrla" özelliði ile otomatik giriþ desteði
     /// ? DI ile FirebaseAuthProvider ve FirebaseClient kullanýmý
+    /// ?? GÜVENLIK: Tüm hassas bilgiler SecureStorage'da saklanýr
     /// </summary>
     public class FirebaseAuthService : IAuthenticationService
     {
@@ -26,6 +27,13 @@ namespace KamPay.Services
         private readonly IUserProfileService _userProfileService;
         private AppUser? _currentUser;
         private FirebaseAuthLink? _authLink;
+
+        // ?? SecureStorage anahtarlarý
+        private const string KEY_USER_ID = "secure_user_id";
+        private const string KEY_USER_EMAIL = "secure_user_email";
+        private const string KEY_FIREBASE_TOKEN = "secure_firebase_token";
+        private const string KEY_REMEMBER_ME = "secure_remember_me";
+        private const string KEY_TOKEN_EXPIRY = "secure_token_expiry";
 
         // ? YENÝ: Constructor artýk tüm baðýmlýlýklarý DI'den alýyor
         public FirebaseAuthService(
@@ -207,7 +215,7 @@ namespace KamPay.Services
                 // 7?? Oturum bilgisini sakla
                 _currentUser = user;
                 
-                // ? YENÝ: Session'ý her zaman kaydet, ancak RememberMe durumunu iþaretle
+                // ?? GÜVENLIK: Hassas bilgileri SecureStorage'da sakla
                 await SaveUserSessionAsync(user, _authLink.FirebaseToken, request.RememberMe);
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
@@ -226,9 +234,8 @@ namespace KamPay.Services
         #region Auto Login (Remember Me)
 
         /// <summary>
-        /// ? YENÝ: Uygulama baþlangýcýnda otomatik giriþ kontrolü
+        /// ?? GÜVENLIK: Uygulama baþlangýcýnda otomatik giriþ kontrolü (SecureStorage)
         /// "Beni Hatýrla" iþaretliyse ve token geçerliyse otomatik giriþ yapar
-        /// Android Debug modunda da çalýþmasý için SecureStorage fallback'i var
         /// </summary>
         public async Task<ServiceResult<AppUser>> TryAutoLoginAsync()
         {
@@ -236,26 +243,9 @@ namespace KamPay.Services
             {
                 Console.WriteLine("?? Otomatik giriþ kontrolü baþlatýlýyor...");
 
-                // 1?? "Beni Hatýrla" kontrolü - Önce Preferences, sonra SecureStorage
-                var rememberMe = Preferences.Get("remember_me", false);
-                
-                if (!rememberMe)
-                {
-                    // Fallback: SecureStorage'dan kontrol et
-                    try
-                    {
-                        var secureRememberMe = await SecureStorage.GetAsync("secure_remember_me");
-                        if (!string.IsNullOrEmpty(secureRememberMe) && bool.TryParse(secureRememberMe, out var parsed))
-                        {
-                            rememberMe = parsed;
-                            Console.WriteLine($"? SecureStorage'dan RememberMe alýndý: {rememberMe}");
-                        }
-                    }
-                    catch (Exception secEx)
-                    {
-                        Console.WriteLine($"?? SecureStorage okuma hatasý: {secEx.Message}");
-                    }
-                }
+                // 1?? "Beni Hatýrla" kontrolü - SecureStorage'dan al
+                var rememberMeStr = await SecureStorage.GetAsync(KEY_REMEMBER_ME);
+                var rememberMe = !string.IsNullOrEmpty(rememberMeStr) && bool.Parse(rememberMeStr);
                 
                 if (!rememberMe)
                 {
@@ -263,44 +253,18 @@ namespace KamPay.Services
                     return ServiceResult<AppUser>.FailureResult("Otomatik giriþ yok", "Kullanýcý beni hatýrla seçeneðini iþaretlememiþ");
                 }
 
-                // 2?? Session bilgilerini al - Önce Preferences, sonra SecureStorage
-                var userId = Preferences.Get("current_user_id", string.Empty);
-                var firebaseToken = Preferences.Get("firebase_token", string.Empty);
-                var tokenExpiryStr = Preferences.Get("token_expiry", string.Empty);
-
-                // Fallback: SecureStorage'dan al
-                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
-                {
-                    Console.WriteLine("?? Preferences boþ, SecureStorage'dan deneniyor...");
-                    
-                    try
-                    {
-                        userId = await SecureStorage.GetAsync("secure_user_id") ?? string.Empty;
-                        firebaseToken = await SecureStorage.GetAsync("secure_firebase_token") ?? string.Empty;
-                        tokenExpiryStr = await SecureStorage.GetAsync("secure_token_expiry") ?? string.Empty;
-                        
-                        if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(firebaseToken))
-                        {
-                            Console.WriteLine($"? SecureStorage'dan session bilgileri alýndý");
-                            
-                            // Preferences'a geri yükle (sonraki eriþimler için)
-                            Preferences.Set("current_user_id", userId);
-                            Preferences.Set("firebase_token", firebaseToken);
-                            if (!string.IsNullOrEmpty(tokenExpiryStr))
-                                Preferences.Set("token_expiry", tokenExpiryStr);
-                        }
-                    }
-                    catch (Exception secEx)
-                    {
-                        Console.WriteLine($"?? SecureStorage okuma hatasý: {secEx.Message}");
-                    }
-                }
+                // 2?? Session bilgilerini al - SecureStorage'dan
+                var userId = await SecureStorage.GetAsync(KEY_USER_ID);
+                var firebaseToken = await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
+                var tokenExpiryStr = await SecureStorage.GetAsync(KEY_TOKEN_EXPIRY);
 
                 if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
                 {
                     Console.WriteLine("?? Session bilgileri eksik");
                     return ServiceResult<AppUser>.FailureResult("Session yok", "Kaydedilmiþ oturum bulunamadý");
                 }
+
+                Console.WriteLine($"? SecureStorage'dan session bilgileri alýndý: UserId={userId.Substring(0, Math.Min(8, userId.Length))}...");
 
                 // 3?? Token süresini kontrol et
                 if (!string.IsNullOrEmpty(tokenExpiryStr) && DateTime.TryParse(tokenExpiryStr, out var tokenExpiry))
@@ -339,16 +303,7 @@ namespace KamPay.Services
                     Console.WriteLine("?? Ýnternet baðlantýsý yok, cache'den kullanýcý yükleniyor");
                     
                     // Cache'den kullanýcý bilgilerini al (offline destek)
-                    var cachedEmail = Preferences.Get("current_user_email", string.Empty);
-                    
-                    if (string.IsNullOrEmpty(cachedEmail))
-                    {
-                        try
-                        {
-                            cachedEmail = await SecureStorage.GetAsync("secure_user_email") ?? string.Empty;
-                        }
-                        catch { /* Ignore */ }
-                    }
+                    var cachedEmail = await SecureStorage.GetAsync(KEY_USER_EMAIL);
                     
                     if (!string.IsNullOrEmpty(cachedEmail))
                     {
@@ -464,7 +419,7 @@ namespace KamPay.Services
                     // Kullanýcý þifresiz kontrol edemeyiz, manuel refresh gerekiyor
                     return ServiceResult<bool>.FailureResult(
                         "Doðrulama kontrol edilemedi",
-                        "Lütfen e-postanýzdaki linke týklayýn ve ardýndan giriþ yapýn."
+                        "Lütfen e-postaýnýzdaki linke týklayýn ve ardýndan giriþ yapýn."
                     );
                 }
 
@@ -475,7 +430,7 @@ namespace KamPay.Services
                 {
                     return ServiceResult<bool>.FailureResult(
                         "E-posta henüz doðrulanmadý",
-                        "Lütfen e-posta????ýzdaki linke týklayýn."
+                        "Lütfen e-postaalanýzdaki linke týklayýn."
                     );
                 }
 
@@ -732,10 +687,13 @@ namespace KamPay.Services
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
 
+                Console.WriteLine("? Çýkýþ baþarýyla tamamlandý");
+
                 return ServiceResult<bool>.SuccessResult(true, "Çýkýþ baþarýlý");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"? LogoutAsync hatasý: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Çýkýþ yapýlamadý", ex.Message);
             }
         }
@@ -745,7 +703,7 @@ namespace KamPay.Services
             if (_currentUser != null)
                 return _currentUser;
 
-            var userId = Preferences.Get("current_user_id", string.Empty);
+            var userId = await SecureStorage.GetAsync(KEY_USER_ID);
             if (string.IsNullOrEmpty(userId))
                 return null;
 
@@ -771,7 +729,19 @@ namespace KamPay.Services
 
         public bool IsUserLoggedIn()
         {
-            return _currentUser != null || !string.IsNullOrEmpty(Preferences.Get("current_user_id", string.Empty));
+            if (_currentUser != null) 
+                return true;
+            
+            // ?? GÜVENLIK: SecureStorage'dan kontrol et
+            try
+            {
+                var userId = SecureStorage.GetAsync(KEY_USER_ID).Result;
+                return !string.IsNullOrEmpty(userId);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -828,110 +798,58 @@ namespace KamPay.Services
         #region Helper Methods
 
         /// <summary>
-        /// ? GÜNCELLEME: Session bilgilerini kaydeder ve "Beni Hatýrla" durumunu iþaretler
-        /// Android Debug modunda da çalýþmasý için hem Preferences hem de SecureStorage kullanýlýr
+        /// ?? GÜVENLIK: Session bilgilerini SecureStorage'da saklar
+        /// Tüm hassas bilgiler (user_id, token, email) güvenli þekilde þifrelenir
         /// </summary>
         private async Task SaveUserSessionAsync(AppUser? user, string firebaseToken, bool rememberMe, int? expiresIn = null)
         {
             try
             {
-                // User ID ve Email'i kaydet
+                Console.WriteLine("?? Session kaydediliyor (SecureStorage)...");
+
+                // User bilgilerini kaydet
                 if (user != null)
                 {
-                    // ? Normal Preferences
-                    Preferences.Set("current_user_id", user.UserId);
-                    Preferences.Set("current_user_email", user.Email);
-                    
-                    // ? SecureStorage (Debug modunda bile kalýcý)
-                    try
-                    {
-                        await SecureStorage.SetAsync("secure_user_id", user.UserId);
-                        await SecureStorage.SetAsync("secure_user_email", user.Email);
-                        Console.WriteLine($"?? SecureStorage'a da kaydedildi");
-                    }
-                    catch (Exception secEx)
-                    {
-                        Console.WriteLine($"?? SecureStorage hatasý (devam ediliyor): {secEx.Message}");
-                    }
-                    
-                    Console.WriteLine($"?? User bilgileri kaydedildi: {user.Email}");
+                    await SecureStorage.SetAsync(KEY_USER_ID, user.UserId);
+                    await SecureStorage.SetAsync(KEY_USER_EMAIL, user.Email);
+                    Console.WriteLine($"? User bilgileri SecureStorage'a kaydedildi: {user.Email}");
                 }
 
                 // Firebase token'ý kaydet
-                Preferences.Set("firebase_token", firebaseToken);
-                
-                try
-                {
-                    await SecureStorage.SetAsync("secure_firebase_token", firebaseToken);
-                }
-                catch { /* SecureStorage optional */ }
+                await SecureStorage.SetAsync(KEY_FIREBASE_TOKEN, firebaseToken);
 
                 // "Beni Hatýrla" durumunu kaydet
-                Preferences.Set("remember_me", rememberMe);
-                
-                try
-                {
-                    await SecureStorage.SetAsync("secure_remember_me", rememberMe.ToString());
-                }
-                catch { /* SecureStorage optional */ }
+                await SecureStorage.SetAsync(KEY_REMEMBER_ME, rememberMe.ToString());
 
                 // Token expiry time'ý kaydet (varsayýlan 1 saat)
                 var expiryTime = DateTime.UtcNow.AddSeconds(expiresIn ?? 3600);
-                Preferences.Set("token_expiry", expiryTime.ToString("O")); // ISO 8601 format
-                
-                try
-                {
-                    await SecureStorage.SetAsync("secure_token_expiry", expiryTime.ToString("O"));
-                }
-                catch { /* SecureStorage optional */ }
+                await SecureStorage.SetAsync(KEY_TOKEN_EXPIRY, expiryTime.ToString("O")); // ISO 8601 format
 
-                Console.WriteLine($"? Session kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
-                
-                // ? EKLEME: Preferences'ýn gerçekten kaydedildiðini doðrula
-                var savedRememberMe = Preferences.Get("remember_me", false);
-                var savedUserId = Preferences.Get("current_user_id", string.Empty);
-                Console.WriteLine($"? Doðrulama - SavedRememberMe: {savedRememberMe}, SavedUserId: {savedUserId}");
-
-                await Task.CompletedTask;
+                Console.WriteLine($"? Session güvenli þekilde kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"? SaveUserSessionAsync hatasý: {ex.Message}");
+                throw; // Kritik hata, üst katmana ilet
             }
         }
 
+        /// <summary>
+        /// ??? Tüm session bilgilerini SecureStorage'dan temizler
+        /// </summary>
         private async Task ClearUserSessionAsync()
         {
             try
             {
-                // Preferences temizle
-                Preferences.Remove("current_user_id");
-                Preferences.Remove("current_user_email");
-                Preferences.Remove("firebase_token");
-                Preferences.Remove("remember_me");
-                Preferences.Remove("token_expiry");
-                
-                // SecureStorage temizle
-                try
-                {
-                    SecureStorage.Remove("secure_user_id");
-                    SecureStorage.Remove("secure_user_email");
-                    SecureStorage.Remove("secure_firebase_token");
-                    SecureStorage.Remove("secure_remember_me");
-                    SecureStorage.Remove("secure_token_expiry");
-                    Console.WriteLine("??? SecureStorage temizlendi");
-                }
-                catch (Exception secEx)
-                {
-                    Console.WriteLine($"?? SecureStorage temizleme hatasý: {secEx.Message}");
-                }
-                
-                Console.WriteLine("??? Session temizlendi");
-                
-                // ? EKLEME: Temizliðin gerçekten yapýldýðýný doðrula
-                var checkRememberMe = Preferences.Get("remember_me", false);
-                var checkUserId = Preferences.Get("current_user_id", string.Empty);
-                Console.WriteLine($"? Temizlik doðrulama - RememberMe: {checkRememberMe}, UserId: {checkUserId}");
+                Console.WriteLine("??? Session temizleniyor (SecureStorage)...");
+
+                SecureStorage.Remove(KEY_USER_ID);
+                SecureStorage.Remove(KEY_USER_EMAIL);
+                SecureStorage.Remove(KEY_FIREBASE_TOKEN);
+                SecureStorage.Remove(KEY_REMEMBER_ME);
+                SecureStorage.Remove(KEY_TOKEN_EXPIRY);
+
+                Console.WriteLine("? Session güvenli þekilde temizlendi");
                 
                 await Task.CompletedTask;
             }
