@@ -120,6 +120,7 @@ namespace KamPay
                 builder.Services.AddSingleton<App>();
 
                 // Product ve Storage servisleri
+                builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ YENİ: Görsel koordinatörü
                 builder.Services.AddSingleton<IProductService, FirebaseProductService>();
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 

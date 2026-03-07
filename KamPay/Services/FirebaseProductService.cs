@@ -9,13 +9,15 @@ namespace KamPay.Services;
 public class FirebaseProductService : IProductService
 {
     private readonly FirebaseClient _firebaseClient;
-    private readonly IStorageService _storageService;
+    private readonly IProductImageCoordinator _imageCoordinator; // ✅ YENİ: Görsel koordinatörü
     private readonly IProductCacheService _cacheService;
 
-    public FirebaseProductService(IStorageService storageService, IProductCacheService cacheService)
+    public FirebaseProductService(
+        IProductImageCoordinator imageCoordinator, // ✅ YENİ PARAMETRE
+        IProductCacheService cacheService)
     {
         _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-        _storageService = storageService;
+        _imageCoordinator = imageCoordinator ?? throw new ArgumentNullException(nameof(imageCoordinator));
         _cacheService = cacheService;
     }
 
@@ -234,22 +236,23 @@ public class FirebaseProductService : IProductService
                 CreatedAt = DateTime.UtcNow
             };
 
-            // --- RESİM YÜKLEME KODU ---
+            // ✅ REFACTOR: Görsel yükleme işi koordinatöre devredildi
             if (request.ImagePaths != null && request.ImagePaths.Any())
             {
-                var imageUrls = new List<string>();
-                for (int i = 0; i < Math.Min(request.ImagePaths.Count, Constants.MaxProductImages); i++)
+                var uploadResult = await _imageCoordinator.UploadProductImagesAsync(
+                    request.ImagePaths, 
+                    product.ProductId);
+
+                if (uploadResult.Success && uploadResult.Data != null && uploadResult.Data.Any())
                 {
-                    var uploadResult = await _storageService.UploadProductImageAsync(request.ImagePaths[i], product.ProductId, i);
-                    if (uploadResult.Success && !string.IsNullOrEmpty(uploadResult.Data))
-                    {
-                        imageUrls.Add(uploadResult.Data);
-                    }
+                    product.ImageUrls = uploadResult.Data;
+                    product.ThumbnailUrl = uploadResult.Data.First();
                 }
-                product.ImageUrls = imageUrls;
-                if (imageUrls.Any())
+                else
                 {
-                    product.ThumbnailUrl = imageUrls.First();
+                    return ServiceResult<Product>.FailureResult(
+                        "Görseller yüklenemedi", 
+                        uploadResult.Message);
                 }
             }
 
@@ -319,21 +322,17 @@ public class FirebaseProductService : IProductService
                 existingProduct.CategoryName = category.Name;
             }
 
+            // ✅ REFACTOR: Görsel yükleme işi koordinatöre devredildi
             if (request.ImagePaths != null && request.ImagePaths.Any())
             {
-                var newImageUrls = new List<string>();
-                for (int i = 0; i < Math.Min(request.ImagePaths.Count, Constants.MaxProductImages); i++)
+                var uploadResult = await _imageCoordinator.UploadProductImagesAsync(
+                    request.ImagePaths,
+                    productId);
+
+                if (uploadResult.Success && uploadResult.Data != null && uploadResult.Data.Any())
                 {
-                    var uploadResult = await _storageService.UploadProductImageAsync(request.ImagePaths[i], productId, i);
-                    if (uploadResult.Success && !string.IsNullOrEmpty(uploadResult.Data))
-                    {
-                        newImageUrls.Add(uploadResult.Data);
-                    }
-                }
-                existingProduct.ImageUrls = newImageUrls;
-                if (newImageUrls.Any())
-                {
-                    existingProduct.ThumbnailUrl = newImageUrls.First();
+                    existingProduct.ImageUrls = uploadResult.Data;
+                    existingProduct.ThumbnailUrl = uploadResult.Data.First();
                 }
             }
 
@@ -365,14 +364,19 @@ public class FirebaseProductService : IProductService
                 return ServiceResult<bool>.FailureResult("Ürün bulunamadı");
             }
 
+            // ✅ REFACTOR: Görsel silme işi koordinatöre devredildi
             if (product.ImageUrls != null && product.ImageUrls.Any())
             {
-                foreach (var imageUrl in product.ImageUrls)
+                var deleteResult = await _imageCoordinator.DeleteProductImagesAsync(product.ImageUrls);
+                
+                if (!deleteResult.Success)
                 {
-                    await _storageService.DeleteImageAsync(imageUrl);
+                    // Görseller silinemese bile işleme devam et (warning log)
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Görseller silinemedi: {deleteResult.Message}");
                 }
             }
 
+            // Favorileri sil
             var allFavorites = await _firebaseClient
                 .Child(Constants.FavoritesCollection)
                 .OrderBy("ProductId")
@@ -390,6 +394,7 @@ public class FirebaseProductService : IProductService
                 }
             }
 
+            // Ürünü sil
             await _firebaseClient
                 .Child(Constants.ProductsCollection)
                 .Child(productId)
