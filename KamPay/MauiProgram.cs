@@ -94,6 +94,14 @@ namespace KamPay
                     return provider;
                 });
 
+                // ✅ İYİLEŞTİRME 1: Localization Service DI'ye kaydet
+                builder.Services.AddSingleton<ILocalizationService, LocalizationResourceManager>();
+                System.Diagnostics.Debug.WriteLine("✅ ILocalizationService DI'ye kaydedildi");
+
+                // ✅ İYİLEŞTİRME 2: RealtimeSnapshotService Generic Factory
+                builder.Services.AddTransient(typeof(IRealtimeSnapshotService<>), typeof(RealtimeSnapshotService<>));
+                System.Diagnostics.Debug.WriteLine("✅ IRealtimeSnapshotService<T> DI'ye kaydedildi");
+
                 builder.Services.AddSingleton<IEmailService, EmailService>();
 
                 // ✅ IUserProfileService'i önce kaydet

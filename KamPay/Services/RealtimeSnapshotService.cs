@@ -5,15 +5,20 @@ using System.Reactive.Linq;
 
 namespace KamPay.Services
 {
-    // bu sayfa Firebase Realtime Database'den gerçek zamanlı veri anlık görüntüleri almak ve dinlemek için kullanılır.
-    public class RealtimeSnapshotService<T>
+    /// <summary>
+    /// Firebase Realtime Database'den gerçek zamanlı veri anlık görüntüleri almak için servis
+    /// ✅ DI ile kullanılabilir - FirebaseClient inject edilir
+    /// </summary>
+    public class RealtimeSnapshotService<T> : IRealtimeSnapshotService<T>
     {
         private readonly FirebaseClient _client;
         private IDisposable? _subscription;
 
-        public RealtimeSnapshotService(string baseUrl)
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public RealtimeSnapshotService(FirebaseClient client)
         {
-            _client = new FirebaseClient(baseUrl);
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+            System.Diagnostics.Debug.WriteLine($"✅ RealtimeSnapshotService<{typeof(T).Name}> oluşturuldu (DI ile)");
         }
 
         public async Task<Dictionary<string, T>> LoadSnapshotAsync(string path)

@@ -20,8 +20,8 @@ namespace KamPay.ViewModels
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
         private readonly IMessagingService _messagingService;
+        private readonly IRealtimeSnapshotService<ServiceOffer> _loader; // ✅ Interface kullan
 
-        private readonly RealtimeSnapshotService<ServiceOffer> _loader;
         private IDisposable? _listener;
 
         private readonly HashSet<string> _serviceIds = new();
@@ -85,15 +85,15 @@ namespace KamPay.ViewModels
             IAuthenticationService authService,
             IUserProfileService userProfileService,
             IUserStateService userStateService,
-            IMessagingService messagingService)
+            IMessagingService messagingService,
+            IRealtimeSnapshotService<ServiceOffer> realtimeLoader) // ✅ DI ile inject
         {
             _serviceService = serviceService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
             _messagingService = messagingService;
-
-            _loader = new RealtimeSnapshotService<ServiceOffer>(Constants.FirebaseRealtimeDbUrl);
+            _loader = realtimeLoader; // ✅ Artık DI'den geliyor
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 

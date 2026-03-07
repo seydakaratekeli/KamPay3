@@ -28,11 +28,11 @@ namespace KamPay.ViewModels
         private readonly IUserStateService _userStateService;
 
         //  UltraFastLoad: Snapshot + Realtime loader
-        private readonly RealtimeSnapshotService<Conversation> _loader;
-        private IDisposable? _realtimeListener;
+        private readonly IRealtimeSnapshotService<Conversation> _loader; // ✅ Interface
+        private readonly FirebaseClient _firebaseClient;
 
+        private IDisposable? _realtimeListener;
         private IDisposable? _conversationsSubscription;
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private User? _currentUser;
         private bool _isInitialized = false;
 
@@ -61,15 +61,16 @@ namespace KamPay.ViewModels
             IMessagingService messagingService,
             IAuthenticationService authService,
             IUserProfileService userProfileService,
-            IUserStateService userStateService)
+            IUserStateService userStateService,
+            IRealtimeSnapshotService<Conversation> realtimeLoader, // ✅ DI ile inject
+            FirebaseClient firebaseClient) // ✅ DI ile inject
         {
             _messagingService = messagingService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
-
-            //  UltraFastLoad: RealtimeSnapshotService başlat
-            _loader = new RealtimeSnapshotService<Conversation>(Constants.FirebaseRealtimeDbUrl);
+            _loader = realtimeLoader; // ✅ Artık DI'den geliyor
+            _firebaseClient = firebaseClient;
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;

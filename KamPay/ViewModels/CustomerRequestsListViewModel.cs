@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+ï»¿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Firebase.Database;
 using Firebase.Database.Streaming;
@@ -15,17 +15,19 @@ using System.Threading.Tasks;
 namespace KamPay.ViewModels
 {
     /// <summary>
-    /// ?? ARMUT MODELÝ: Profesyonellerin müþteri taleplerini gördüðü liste
+    /// ?? ARMUT MODELÄ°: Profesyonellerin mÃ¼ÅŸteri taleplerini gÃ¶rdÃ¼ÄŸÃ¼ liste
     /// </summary>
     public partial class CustomerRequestsListViewModel : ObservableObject, IDisposable
     {
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
+        private readonly IUserStateService _userStateService;
+        private readonly IRealtimeSnapshotService<CustomerServiceRequest> _loader; // âœ… Interface
         private readonly FirebaseClient _firebaseClient;
-        private readonly RealtimeSnapshotService<CustomerServiceRequest> _loader;
-        private IDisposable? _listener;
 
+        private IDisposable? _listener;
         private readonly HashSet<string> _requestIds = new();
+
         private string? _lastLoadedKey;
         private bool _isLoadingMore;
 
@@ -50,12 +52,15 @@ namespace KamPay.ViewModels
 
         public CustomerRequestsListViewModel(
             IServiceSharingService serviceService,
-            IAuthenticationService authService)
+            IAuthenticationService authService,
+            IUserStateService userStateService,
+            IRealtimeSnapshotService<CustomerServiceRequest> realtimeLoader) // âœ… DI ile inject
         {
             _serviceService = serviceService;
             _authService = authService;
+            _userStateService = userStateService;
+            _loader = realtimeLoader; // âœ… ArtÄ±k DI'den geliyor
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _loader = new RealtimeSnapshotService<CustomerServiceRequest>(Constants.FirebaseRealtimeDbUrl);
 
             _ = InitializeAsync();
         }
@@ -78,7 +83,7 @@ namespace KamPay.ViewModels
 
                 IsLoading = true;
 
-                // Sayfalama ile ilk yükleme
+                // Sayfalama ile ilk yÃ¼kleme
                 var result = await _serviceService.GetCustomerRequestsPagedAsync(
                     pageSize: 20,
                     lastKey: null,
@@ -124,7 +129,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Daha fazla yükle (Sonsuz Kaydýrma)
+        /// Daha fazla yÃ¼kle (Sonsuz KaydÄ±rma)
         /// </summary>
         [RelayCommand]
         private async Task LoadMoreRequestsAsync()
@@ -267,10 +272,10 @@ namespace KamPay.ViewModels
                 q = q.Where(r => r.Category == FilterCategory.Value);
             }
 
-            // Sýralama
+            // SÄ±ralama
             q = q.OrderByDescending(r => r.CreatedAt);
 
-            // Listeyi güncelle
+            // Listeyi gÃ¼ncelle
             FilteredRequests.Clear();
             foreach (var r in q)
                 FilteredRequests.Add(r);
@@ -294,7 +299,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Talep detayýna git
+        /// Talep detayÄ±na git
         /// </summary>
         [RelayCommand]
         private async Task ViewRequestDetailsAsync(CustomerServiceRequest request)

@@ -25,8 +25,10 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly ICategoryService _categoryService;
         private readonly IUserStateService _userStateService;
+        private readonly IRealtimeSnapshotService<Product> _loader; // ✅ Interface
+        private readonly FirebaseClient _firebaseClient;
+
         private IDisposable? _notificationSubscription;
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
         private CancellationTokenSource? _searchCancellationTokenSource;
         private readonly CacheManager<List<Product>> _cacheManager = new();
         private const string CACHE_KEY = "all_products";
@@ -37,7 +39,6 @@ namespace KamPay.ViewModels
         private List<Product> _allProducts = new();
 
         private IDisposable? _listener;
-        private RealtimeSnapshotService<Product> _loader;
 
         [ObservableProperty]
         private bool isSkeletonVisible = true;
@@ -81,18 +82,24 @@ namespace KamPay.ViewModels
             }
         }
 
-        public ProductListViewModel(IProductService productService, IAuthenticationService authService, ICategoryService categoryService, IUserStateService userStateService)
+        public ProductListViewModel(
+            IProductService productService,
+            IAuthenticationService authService,
+            ICategoryService categoryService,
+            IUserStateService userStateService,
+            IRealtimeSnapshotService<Product> realtimeLoader, // ✅ DI ile inject
+            FirebaseClient firebaseClient) // ✅ DI ile inject
         {
             _productService = productService;
             _authService = authService;
             _categoryService = categoryService;
             _userStateService = userStateService;
+            _loader = realtimeLoader; // ✅ Artık DI'den geliyor
+            _firebaseClient = firebaseClient;
 
             // Varsayılan sıralama ayarları
             SelectedSortOption = ProductSortOption.Newest;
             _selectedSortIndex = _sortOptionEnums.IndexOf(ProductSortOption.Newest);
-
-            _loader = new RealtimeSnapshotService<Product>(Constants.FirebaseRealtimeDbUrl);
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
