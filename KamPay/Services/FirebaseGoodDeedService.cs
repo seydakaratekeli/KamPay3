@@ -4,15 +4,17 @@ using KamPay.Models;
 using KamPay.Helpers;
 
 namespace KamPay.Services;
+
 public class FirebaseGoodDeedService : IGoodDeedService
 {
-    // bu sayfa, Firebase Realtime Database ile etkileşim kurarak iyi niyetli ilanların oluşturulması, alınması, beğenilmesi, silinmesi ve yorum eklenmesi gibi işlevleri sağlar. kullanıcıların iyi niyetli ilanlarla etkileşimde bulunmasını mümkün kılar.
     private readonly FirebaseClient _firebaseClient;
     private const string GoodDeedPostsCollection = "good_deed_posts";
 
-    public FirebaseGoodDeedService()
+    // ✅ Constructor DI ile FirebaseClient alıyor
+    public FirebaseGoodDeedService(FirebaseClient firebaseClient)
     {
-        _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+        _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+        System.Diagnostics.Debug.WriteLine("✅ FirebaseGoodDeedService oluşturuldu (DI ile)");
     }
 
     public async Task<ServiceResult<GoodDeedPost>> CreatePostAsync(GoodDeedPost post)

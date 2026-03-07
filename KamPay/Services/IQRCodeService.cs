@@ -41,7 +41,7 @@ namespace KamPay.Services
             double currentLongitude,
             string? verificationPin = null);
 
-       
+   
         /// QR kod süresini uzatır (1 kez, max 30 dakika)
        
         Task<ServiceResult<DateTime>> ExtendQRCodeValidityAsync(
@@ -80,19 +80,19 @@ namespace KamPay.Services
         private const int ExtendTimeThresholdMinutes = 15;
         
         // ✅ EKLEME: QR kod tarama için SemaphoreSlim (race condition önleme)
-        // Note: Static field with application lifetime scope - not disposed individually.
-        // Disposal is not needed as:
-        // 1. SemaphoreSlim is shared across all service instances
-        // 2. Lives for entire application lifetime (registered as singleton in DI)
-        // 3. Disposing would break concurrent operations in multi-instance scenarios
-        // 4. OS will reclaim resources on application shutdown
         private static readonly SemaphoreSlim _qrScanLock = new SemaphoreSlim(1, 1);
 
-        public FirebaseQRCodeService(IUserProfileService userProfileService, IStorageService storageService)
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public FirebaseQRCodeService(
+            FirebaseClient firebaseClient,
+            IUserProfileService userProfileService,
+            IStorageService storageService)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _userProfileService = userProfileService;
-            _storageService = storageService;
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseQRCodeService oluşturuldu (DI ile)");
         }
 
         public async Task<ServiceResult<bool>> CompleteDeliveryAsync(string qrCodeId)
@@ -344,7 +344,7 @@ namespace KamPay.Services
             }
         }
 
-       
+   
         /// QR kod süresini uzatır (1 kez, max 30 dakika)
        
         public async Task<ServiceResult<DateTime>> ExtendQRCodeValidityAsync(string qrCodeId, int additionalMinutes)

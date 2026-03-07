@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Text.Json;
 using KamPay.Resources.Languages;
 using Firebase.Database; 
+using Firebase.Auth; // ✅ YENİ EKLEME
 using KamPay.Helpers;
 
 namespace KamPay
@@ -76,78 +77,83 @@ namespace KamPay
                 // Servislerin DI kaydı
                 builder.Services.AddSingleton(emailSettings);
                 builder.Services.AddSingleton(firebaseConfig);
-                builder.Services.AddSingleton<IEmailService, EmailService>();
-                builder.Services.AddSingleton<FirebaseClient>(sp =>
-                    new FirebaseClient(Constants.FirebaseRealtimeDbUrl));
-
-                // ✅ FIX: IUserProfileService'i önce kaydet (FirebaseAuthService bağımlı)
-                builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
-
-                // 🔥 YENİ: Firebase Authentication Service
-                builder.Services.AddSingleton<IAuthenticationService>(sp =>
-                    new Services.FirebaseAuthService(
-                        firebaseConfig.ApiKey,
-                        sp.GetRequiredService<IEmailService>(),
-                        sp.GetRequiredService<IUserProfileService>()
-                    )
-                );
-
-                // AppShell'in kendisini ve ViewModel'ini DI container'a kaydediyoruz.
-                builder.Services.AddSingleton<AppShell>();
                 
-                // ✅ YENİ: App sınıfını da DI container'a ekle (IServiceProvider injection için)
+                // ✅ YENİ: Firebase temel servislerini DI'ye kaydet
+                builder.Services.AddSingleton<FirebaseClient>(sp =>
+                {
+                    var client = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+                    System.Diagnostics.Debug.WriteLine($"✅ FirebaseClient oluşturuldu: {Constants.FirebaseRealtimeDbUrl}");
+                    return client;
+                });
+
+                builder.Services.AddSingleton<FirebaseAuthProvider>(sp =>
+                {
+                    var config = sp.GetRequiredService<FirebaseConfigSettings>();
+                    var provider = new FirebaseAuthProvider(new FirebaseConfig(config.ApiKey));
+                    System.Diagnostics.Debug.WriteLine($"✅ FirebaseAuthProvider oluşturuldu");
+                    return provider;
+                });
+
+                builder.Services.AddSingleton<IEmailService, EmailService>();
+
+                // ✅ IUserProfileService'i önce kaydet
+                builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
+                
+                // ✅ INotificationService'i kaydet (IMessagingService bağımlı)
+                builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
+
+                // 🔥 Firebase Authentication Service (FirebaseAuthProvider DI'den geliyor)
+                builder.Services.AddSingleton<IAuthenticationService, FirebaseAuthService>();
+
+                // AppShell ve App
+                builder.Services.AddSingleton<AppShell>();
                 builder.Services.AddSingleton<App>();
 
+                // Product ve Storage servisleri
                 builder.Services.AddSingleton<IProductService, FirebaseProductService>();
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 
-                builder.Services.AddSingleton<IFavoriteService>(sp =>
-                 new FirebaseFavoriteService(sp.GetRequiredService<INotificationService>()));
-
+                // IMessagingService (INotificationService'e bağımlı)
                 builder.Services.AddSingleton<IMessagingService>(sp =>
-          new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
+                    new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
 
-                // ✅ Artık yukarıda kaydedildi, tekrar eklenmeyecek
-                // builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
+                // IFavoriteService (INotificationService'e bağımlı)
+                builder.Services.AddSingleton<IFavoriteService>(sp =>
+                    new FirebaseFavoriteService(sp.GetRequiredService<INotificationService>()));
                 
-                builder.Services.AddSingleton<IQRCodeService>(sp =>
-                    new FirebaseQRCodeService(
-                        sp.GetRequiredService<IUserProfileService>(),
-                        sp.GetRequiredService<IStorageService>())
-                );
+                // IQRCodeService (IUserProfileService ve IStorageService'e bağımlı)
+                builder.Services.AddSingleton<IQRCodeService, FirebaseQRCodeService>();
 
-
+                // Diğer servisler
                 builder.Services.AddSingleton<IFirebaseObserverService, FirebaseObserverService>();
                 builder.Services.AddSingleton<IProductCacheService, ProductCacheService>();
                 builder.Services.AddSingleton<IReverseGeocodeService, ReverseGeocodeService>();
+                
+                // ISurpriseBoxService
                 builder.Services.AddSingleton<ISurpriseBoxService>(sp =>
                     new FirebaseSurpriseBoxService(
                         sp.GetRequiredService<IUserProfileService>(),
                         sp.GetRequiredService<IProductService>(),
                         sp.GetRequiredService<INotificationService>()
                     )
-                ); 
+                );
+                
+                // IGoodDeedService
                 builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
-                builder.Services.AddSingleton<IServiceSharingService>(sp =>
-        new FirebaseServiceSharingService(
-            sp.GetRequiredService<INotificationService>(),
-            sp.GetRequiredService<IUserProfileService>(),
-            sp.GetRequiredService<IMessagingService>()
-        )
-     );
-                builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
+                // IServiceSharingService (tüm bağımlılıkları hazır)
+                builder.Services.AddSingleton<IServiceSharingService, FirebaseServiceSharingService>();
 
+                // ITransactionService (tüm bağımlılıkları hazır)
                 builder.Services.AddSingleton<ITransactionService>(sp =>
-    new FirebaseTransactionService(
-       sp.GetRequiredService<INotificationService>(),
-       sp.GetRequiredService<IProductService>(),
-       sp.GetRequiredService<IQRCodeService>(),
-       sp.GetRequiredService<IUserProfileService>(),
-       sp.GetRequiredService<FirebaseClient>() // Eksik parametre eklendi
-    )
- );
-
+                    new FirebaseTransactionService(
+                        sp.GetRequiredService<INotificationService>(),
+                        sp.GetRequiredService<IProductService>(),
+                        sp.GetRequiredService<IQRCodeService>(),
+                        sp.GetRequiredService<IUserProfileService>(),
+                        sp.GetRequiredService<FirebaseClient>()
+                    )
+                );
                 // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
                 //  Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
                 builder.Services.AddSingleton<IUserStateService>(sp =>

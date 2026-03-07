@@ -10,14 +10,29 @@ using System.Threading;
 
 namespace KamPay.Services
 {
-    // bu sayfanın amacı Firebase Realtime Database üzerinden hizmet paylaşımı ile ilgili işlemleri gerçekleştirmektir. kullanıcıların hizmet sunmalarını, taleplerini, ödemelerini ve ilgili bildirimleri yönetir. ama ödeme kısmı simülasyon şeklindedir. simulason şu anda tamamlanmamıştır.
     public class FirebaseServiceSharingService : IServiceSharingService
     {
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
         private readonly IUserProfileService _userProfileService;
         private readonly IMessagingService _messagingService;
-        // Basit OTP modeli (geçici koleksiyon için) bunu yaptık ta kullanıcaz mı bakalım ?? TEKRAR BAK
+
+        // ? Constructor DI ile FirebaseClient alıyor
+        public FirebaseServiceSharingService(
+            FirebaseClient firebaseClient,
+            INotificationService notificationService,
+            IUserProfileService userProfileService,
+            IMessagingService messagingService)
+        {
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
+            _messagingService = messagingService ?? throw new ArgumentNullException(nameof(messagingService));
+
+            System.Diagnostics.Debug.WriteLine("? FirebaseServiceSharingService oluşturuldu (DI ile)");
+        }
+
+        // Basit OTP modeli (geçici koleksiyon için)
         internal class TempOtpModel
         {
             public string Otp { get; set; } = string.Empty;
@@ -29,6 +44,7 @@ namespace KamPay.Services
 
 
         // Constructor to inject all required services
+        
         public FirebaseServiceSharingService(INotificationService notificationService, IUserProfileService userProfileService, IMessagingService messagingService)
         {
             _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);

@@ -21,9 +21,11 @@ namespace KamPay.Services
     {
         private readonly FirebaseClient _firebaseClient;
 
-        public FirebaseObserverService()
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public FirebaseObserverService(FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseObserverService oluşturuldu (DI ile)");
         }
 
         public IObservable<Product> ObserveProductChanges()
@@ -42,6 +44,7 @@ namespace KamPay.Services
 
         public void Dispose()
         {
+            // Observer pattern kullanıldığı için dispose'a gerek yok
         }
     }
 }

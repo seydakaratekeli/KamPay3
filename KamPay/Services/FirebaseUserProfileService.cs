@@ -12,14 +12,13 @@ namespace KamPay.Services
     public class FirebaseUserProfileService : IUserProfileService
     {
         private readonly FirebaseClient _firebaseClient;
-        //kkkkkkkkkkkk
-        public FirebaseUserProfileService()
+
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public FirebaseUserProfileService(FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseUserProfileService oluşturuldu (DI ile)");
         }
-
-
-
 
         /// Yeni kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
 

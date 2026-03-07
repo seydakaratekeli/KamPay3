@@ -16,6 +16,7 @@ namespace KamPay.Services
     /// ?? Firebase Authentication kullanan authentication servisi
     /// Manuel þifre hash'leme yerine Firebase'in güvenli authentication sistemini kullanýr
     /// ? "Beni Hatýrla" özelliði ile otomatik giriþ desteði
+    /// ? DI ile FirebaseAuthProvider ve FirebaseClient kullanýmý
     /// </summary>
     public class FirebaseAuthService : IAuthenticationService
     {
@@ -26,15 +27,19 @@ namespace KamPay.Services
         private AppUser? _currentUser;
         private FirebaseAuthLink? _authLink;
 
+        // ? YENÝ: Constructor artýk tüm baðýmlýlýklarý DI'den alýyor
         public FirebaseAuthService(
-            string apiKey,
+            FirebaseAuthProvider authProvider,
+            FirebaseClient firebaseClient,
             IEmailService emailService,
             IUserProfileService userProfileService)
         {
-            _authProvider = new FirebaseAuthProvider(new FirebaseConfig(apiKey));
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _emailService = emailService;
-            _userProfileService = userProfileService;
+            _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
+            
+            System.Diagnostics.Debug.WriteLine("? FirebaseAuthService oluþturuldu (DI ile)");
         }
 
         #region Registration

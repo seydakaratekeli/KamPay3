@@ -126,16 +126,6 @@ namespace KamPay
             {
                 Console.WriteLine("🔐 Otomatik giriş kontrolü yapılıyor...");
 
-                // ✅ DEBUG: Preferences'ları kontrol et
-                var rememberMeCheck = Preferences.Get("remember_me", false);
-                var userIdCheck = Preferences.Get("current_user_id", string.Empty);
-                var tokenCheck = Preferences.Get("firebase_token", string.Empty);
-                
-                Console.WriteLine($"📋 Preferences Durumu:");
-                Console.WriteLine($"  - RememberMe: {rememberMeCheck}");
-                Console.WriteLine($"  - UserId: {(string.IsNullOrEmpty(userIdCheck) ? "YOK" : "VAR")}");
-                Console.WriteLine($"  - Token: {(string.IsNullOrEmpty(tokenCheck) ? "YOK" : "VAR")}");
-
                 var authService = _serviceProvider.GetService<IAuthenticationService>();
                 if (authService == null)
                 {

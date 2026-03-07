@@ -9,16 +9,17 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
-
     // İşlem geçmişi takibi için Firebase uygulaması
     public class FirebaseTransactionHistoryService : ITransactionHistoryService
     {
         private readonly FirebaseClient _firebaseClient;
         private const string TRANSACTION_HISTORY_COLLECTION = "transaction_history";
 
-        public FirebaseTransactionHistoryService()
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public FirebaseTransactionHistoryService(FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseTransactionHistoryService oluşturuldu (DI ile)");
         }
 
         // Bir işlemi geçmişe kaydeder
@@ -59,8 +60,6 @@ namespace KamPay.Services
             }
         }
 
-        
-
         // Belirli bir kullanıcı için işlem geçmişini (hem gönderilen hem de alınan) alır.
 
         // NOT: Büyük veri kümeleriyle üretimde kullanım için,
@@ -69,7 +68,6 @@ namespace KamPay.Services
 
         // Mevcut uygulama tüm işlemleri getirir ve bellekte filtreler.
 
-        
         public async Task<ServiceResult<List<TransactionHistory>>> GetUserTransactionHistoryAsync(string userId, int limit = 50)
         {
             try
@@ -137,7 +135,6 @@ namespace KamPay.Services
             }
         }
 
-        
         // Belirli bir referans (örneğin, ürün, hizmet) için işlem geçmişini alır.
         // NOT: Büyük veri kümeleriyle üretim ortamında kullanım için,
         // uygun indeksleme ile Firebase sorguları kullanarak sunucu tarafı filtrelemeyi uygulamayı düşünün.

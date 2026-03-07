@@ -25,7 +25,8 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
         private readonly IStorageService _storageService;
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
+        private readonly IUserProfileService _userProfileService; // ✅ YENİ EKLEME
+        private readonly FirebaseClient _firebaseClient;
         private User? _currentUser;
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
         
@@ -86,12 +87,20 @@ namespace KamPay.ViewModels
             set => SetProperty(ref _onlineStatusText, value);
         }
 
-        public ChatViewModel(IMessagingService messagingService, IAuthenticationService authService, IUserStateService userStateService, IStorageService storageService)
+        public ChatViewModel(
+            IMessagingService messagingService,
+            IAuthenticationService authService,
+            IUserStateService userStateService,
+            IStorageService storageService,
+            IUserProfileService userProfileService, // ✅ YENİ EKLEME
+            FirebaseClient firebaseClient) // ✅ YENİ EKLEME
         {
             _messagingService = messagingService;
             _authService = authService;
             _userStateService = userStateService;
             _storageService = storageService;
+            _userProfileService = userProfileService; // ✅ YENİ EKLEME
+            _firebaseClient = firebaseClient; // ✅ YENİ EKLEME
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -1029,7 +1038,7 @@ namespace KamPay.ViewModels
                 var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
                 if (string.IsNullOrEmpty(otherUserId)) return;
 
-                var profileResult = await new FirebaseUserProfileService().GetUserProfileAsync(otherUserId);
+                var profileResult = await _userProfileService.GetUserProfileAsync(otherUserId);
                 if (profileResult.Success && profileResult.Data != null && !string.IsNullOrEmpty(profileResult.Data.ProfileImageUrl))
                 {
                     OtherUserPhoto = profileResult.Data.ProfileImageUrl;

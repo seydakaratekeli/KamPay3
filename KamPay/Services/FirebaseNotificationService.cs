@@ -18,9 +18,11 @@ namespace KamPay.Services
     {
         private readonly FirebaseClient _firebaseClient;
 
-        public FirebaseNotificationService()
+        // ✅ Constructor DI ile FirebaseClient alıyor
+        public FirebaseNotificationService(FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseNotificationService oluşturuldu (DI ile)");
         }
 
         private async Task CheckAndBroadcastUnreadStatus(string userId)
@@ -192,5 +194,4 @@ namespace KamPay.Services
         }
     }
 }
-    
     
