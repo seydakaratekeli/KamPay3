@@ -17,6 +17,7 @@ using Firebase.Database;
 using Firebase.Auth; // ✅ YENİ EKLEME
 using KamPay.Helpers;
 using KamPay.Security;
+using KamPay.Services.Payment; // ✅ EKLEME: Payment namespace
 
 
 namespace KamPay
@@ -178,9 +179,22 @@ namespace KamPay
                         sp.GetRequiredService<IProductService>(),
                         sp.GetRequiredService<IQRCodeService>(),
                         sp.GetRequiredService<IUserProfileService>(),
-                        sp.GetRequiredService<FirebaseClient>()
+                        sp.GetRequiredService<FirebaseClient>(),
+                        sp.GetRequiredService<IPaymentProviderFactory>() // ✅ YENİ PARAMETRE
                     )
                 );
+
+                // ✅ YENİ: ÖDEME SİSTEMİ - OCP PRENSİBİ
+                System.Diagnostics.Debug.WriteLine("✅ Ödeme sistemi kaydediliyor (OCP Pattern)...");
+                
+                // Provider'ları DI'ye kaydet (IEnumerable<IPaymentProvider> olarak inject edilecek)
+                builder.Services.AddSingleton<IPaymentProvider, CardSimulationProvider>();
+                builder.Services.AddSingleton<IPaymentProvider, BankTransferSimulationProvider>();
+                
+                // Factory'yi kaydet (Constructor'da IEnumerable<IPaymentProvider> alacak)
+                builder.Services.AddSingleton<IPaymentProviderFactory, PaymentProviderFactory>();
+                
+                System.Diagnostics.Debug.WriteLine("  ✓ IPaymentProviderFactory kaydedildi");
 
                 // ✅ KOORDINATÖRLER - Orkestrasyon Servisleri (Bağımlılıklardan SONRA kaydedilmeli)
                 System.Diagnostics.Debug.WriteLine("✅ Koordinatörler kaydediliyor...");

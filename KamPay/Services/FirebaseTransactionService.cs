@@ -4,6 +4,7 @@ using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Services;
+using KamPay.Services.Payment; // ✅ EKLEME: Payment provider'ları için
 using KamPay.Views;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace KamPay.Services
         private readonly IProductService _productService;
         private readonly IQRCodeService _qrCodeService;
         private readonly IUserProfileService _userProfileService;
+        private readonly IPaymentProviderFactory _paymentProviderFactory; // ✅ EKLEME
 
         // ✅ YARDIMCI METOT: QR Kod nesnesini bellekte oluşturur (DB'ye yazmaz)
         private DeliveryQRCode CreateDeliveryQRCodeModel(
@@ -90,13 +92,15 @@ namespace KamPay.Services
           IProductService productService,
           IQRCodeService qrCodeService,
           IUserProfileService userProfileService,
-      FirebaseClient firebaseClient)
+      FirebaseClient firebaseClient,
+      IPaymentProviderFactory paymentProviderFactory) // ✅ EKLEME
         {
             _firebaseClient = firebaseClient;
             _notificationService = notificationService;
             _productService = productService;
             _qrCodeService = qrCodeService;
-            _userProfileService = userProfileService; // Atama yapıldı
+            _userProfileService = userProfileService;
+            _paymentProviderFactory = paymentProviderFactory ?? throw new ArgumentNullException(nameof(paymentProviderFactory)); // ✅ EKLEME
         }
 
 
@@ -267,159 +271,89 @@ namespace KamPay.Services
                     return ServiceResult<PaymentDto>.FailureResult("İşlem ID'si bulunamadı.");
                 }
 
-                // ✅ DÜZELTİLDİ: Service prefix kontrolünü SADECE OKUMA için kullan
                 var isServicePayment = transactionId.StartsWith("service_");
                 System.Diagnostics.Debug.WriteLine($"   İşlem Tipi: {(isServicePayment ? "HİZMET" : "ÜRÜN")}");
 
-                // 1. Transaction'ı al ve doğrula (ürün veya hizmet olabilir)
+                // 1. Transaction'ı al ve doğrula
                 ChildQuery transactionNode;
                 object transaction;
 
                 if (isServicePayment)
                 {
-                    // HİZMET için ServiceRequest collection'ından al
                     var requestId = transactionId.Replace("service_", "");
-                    System.Diagnostics.Debug.WriteLine($"   ServiceRequest ID: {requestId}");
-                    
                     transactionNode = _firebaseClient.Child(Constants.ServiceRequestsCollection).Child(requestId);
                     transaction = await transactionNode.OnceSingleAsync<ServiceRequest>();
 
                     if (transaction == null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ ServiceRequest bulunamadı: {requestId}");
-                        System.Diagnostics.Debug.WriteLine($"   Collection: {Constants.ServiceRequestsCollection}");
-                        return ServiceResult<PaymentDto>.FailureResult("Hizmet talebi bulunamadı. Lütfen sayfayı yenileyin.");
-                    }
-                    
-                    System.Diagnostics.Debug.WriteLine($"✅ ServiceRequest bulundu!");
+                        return ServiceResult<PaymentDto>.FailureResult("Hizmet talebi bulunamadı.");
                 }
                 else
                 {
-                    // ✅ FIX: ÜRÜN için Transactions collection'ından al (service_ prefix EKLEME!)
-                    System.Diagnostics.Debug.WriteLine($"   Transaction ID (ÜRÜN): {transactionId}");
-                    System.Diagnostics.Debug.WriteLine($"   Collection: {Constants.TransactionsCollection}");
-                    
                     transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
                     transaction = await transactionNode.OnceSingleAsync<Transaction>();
 
                     if (transaction == null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Transaction bulunamadı!");
-                        System.Diagnostics.Debug.WriteLine($"   Aranan ID: {transactionId}");
-                        System.Diagnostics.Debug.WriteLine($"   Collection: {Constants.TransactionsCollection}");
-                        System.Diagnostics.Debug.WriteLine($"   Firebase URL: {Constants.FirebaseRealtimeDbUrl}");
-                        return ServiceResult<PaymentDto>.FailureResult("İşlem bulunamadı. Lütfen sayfayı yenileyin ve tekrar deneyin.");
-                    }
-                    
+                        return ServiceResult<PaymentDto>.FailureResult("İşlem bulunamadı.");
+                        
                     var productTransaction = transaction as Transaction;
-                    System.Diagnostics.Debug.WriteLine($"✅ Transaction bulundu!");
-                    System.Diagnostics.Debug.WriteLine($"   ProductId: {productTransaction?.ProductId}");
-                    System.Diagnostics.Debug.WriteLine($"   ProductTitle: {productTransaction?.ProductTitle}");
-                    System.Diagnostics.Debug.WriteLine($"   Status: {productTransaction?.Status}");
-                    System.Diagnostics.Debug.WriteLine($"   PaymentStatus: {productTransaction?.PaymentStatus}");
-                    System.Diagnostics.Debug.WriteLine($"   Type: {productTransaction?.Type}");
+                    
+                    // Güvenlik kontrolleri
+                    if (productTransaction.PaymentStatus != PaymentStatus.Pending)
+                        return ServiceResult<PaymentDto>.FailureResult("Bu işlem için ödeme zaten başlatılmış.");
+                    
+                    if (productTransaction.Status != TransactionStatus.Accepted)
+                        return ServiceResult<PaymentDto>.FailureResult("İşlem henüz satıcı tarafından onaylanmamış.");
+                    
+                    if (productTransaction.IsNegotiating)
+                        return ServiceResult<PaymentDto>.FailureResult("Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor.");
                 }
 
-                // 2. Ödenecek tutarı ve ödeme durumunu belirle
+                // 2. Ödenecek tutarı belirle
                 decimal amount;
-                object paymentStatus;
-
                 if (isServicePayment)
                 {
                     var serviceRequest = transaction as ServiceRequest;
                     if (serviceRequest.PaymentStatus != ServicePaymentStatus.None &&
                         serviceRequest.PaymentStatus != ServicePaymentStatus.Failed)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Ödeme zaten başlatılmış: {serviceRequest.PaymentStatus}");
                         return ServiceResult<PaymentDto>.FailureResult("Bu talep için ödeme zaten başlatılmış.");
-                    }
+                    
                     amount = serviceRequest.QuotedPrice ?? serviceRequest.Price;
-                    paymentStatus = ServicePaymentStatus.Initiated;
-                    System.Diagnostics.Debug.WriteLine($"   Hizmet Tutarı: {amount:N2}₺");
                 }
                 else
                 {
                     var productTransaction = transaction as Transaction;
-                    
-                    // ✅ GÜVENLİK: PaymentStatus kontrolü
-                    if (productTransaction.PaymentStatus != PaymentStatus.Pending)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ PaymentStatus uygun değil: {productTransaction.PaymentStatus}");
-                        return ServiceResult<PaymentDto>.FailureResult(
-                            "Bu işlem için ödeme zaten başlatılmış veya tamamlanmış."
-                        );
-                    }
-                    
-                    // ✅ GÜVENLİK: Status kontrolü - Satıcı onayı gerekli
-                    if (productTransaction.Status != TransactionStatus.Accepted)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Status uygun değil: {productTransaction.Status}");
-                        return ServiceResult<PaymentDto>.FailureResult(
-                            "İşlem henüz satıcı tarafından onaylanmamış. Önce onay beklenmeli."
-                        );
-                    }
-                    
-                    // ✅ GÜVENLİK: Pazarlık kontrolü - Fiyat üzerinde anlaşma gerekli
-                    if (productTransaction.IsNegotiating)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Pazarlık devam ediyor!");
-                        return ServiceResult<PaymentDto>.FailureResult(
-                            "Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor."
-                        );
-                    }
-                    
                     amount = productTransaction.QuotedPrice > 0 ? productTransaction.QuotedPrice : productTransaction.Price;
-                    paymentStatus = PaymentStatus.Pending;
-                    System.Diagnostics.Debug.WriteLine($"   Ürün Tutarı: {amount:N2}₺");
-                    System.Diagnostics.Debug.WriteLine($"   QuotedPrice: {productTransaction.QuotedPrice}");
-                    System.Diagnostics.Debug.WriteLine($"   Price: {productTransaction.Price}");
                 }
 
-                // 3. Payment DTO'sunu oluştur
-                var payment = new PaymentDto
+                // ✅ 3. OCP: Factory'den doğru provider'ı al (SWITCH YOK!)
+                IPaymentProvider provider;
+                try
                 {
-                    Amount = amount,
-                    Currency = "TRY",
-                    Status = ServicePaymentStatus.Initiated,
-                    Method = method?.ToLower() switch
-                    {
-                        "cardsim" => PaymentMethodType.CardSim,
-                        "banktransfersim" or "eft" or "havale" => PaymentMethodType.BankTransferSim,
-                        _ => PaymentMethodType.CardSim
-                    }
-                };
+                    provider = _paymentProviderFactory.GetProvider(method);
+                    System.Diagnostics.Debug.WriteLine($"✅ Provider seçildi: {provider.ProviderName}");
+                }
+                catch (NotSupportedException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Desteklenmeyen ödeme yöntemi: {method}");
+                    return ServiceResult<PaymentDto>.FailureResult(ex.Message);
+                }
 
+                // ✅ 4. Provider ile ödeme başlat (Polimorfizm - OCP)
+                var paymentResult = await provider.InitiatePaymentAsync(transactionId, amount);
+                
+                if (!paymentResult.Success || paymentResult.Data == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Ödeme başlatılamadı: {paymentResult.Message}");
+                    return paymentResult;
+                }
+
+                var payment = paymentResult.Data;
                 System.Diagnostics.Debug.WriteLine($"✅ PaymentDto oluşturuldu:");
                 System.Diagnostics.Debug.WriteLine($"   PaymentId: {payment.PaymentId}");
                 System.Diagnostics.Debug.WriteLine($"   Method: {payment.Method}");
                 System.Diagnostics.Debug.WriteLine($"   Amount: {payment.Amount:N2}₺");
 
-                // 4. KART ÖDEMESİ: OTP oluştur ve Firebase'e kaydet (2 dakika geçerli)
-                if (payment.Method == PaymentMethodType.CardSim)
-                {
-                    var otp = GenerateSecureOtp();
-                    await _firebaseClient
-                        .Child(Constants.TempOtpsCollection)
-                        .Child(payment.PaymentId)
-                        .PutAsync(new TempOtpModel
-                        {
-                            Otp = otp,
-                            ExpiresAt = DateTime.UtcNow.AddMinutes(PaymentConstants.OtpValidityMinutes)
-                        });
-
-                    System.Diagnostics.Debug.WriteLine($"✅ Kart ödemesi için OTP oluşturuldu (PaymentId: {payment.PaymentId})");
-                }
-
-                // 5. HAVALE/EFT: Banka bilgileri ve referans kodu oluştur
-                if (payment.Method == PaymentMethodType.BankTransferSim)
-                {
-                    payment.BankName = "Ziraat Bankası";
-                    payment.BankReference = GenerateBankReference();
-
-                    System.Diagnostics.Debug.WriteLine($"✅ Havale/EFT için referans oluşturuldu: {payment.BankReference}");
-                }
-
-                // 6. Transaction'ı güncelle (hizmet veya ürün)
+                // 5. Transaction'ı güncelle
                 if (isServicePayment)
                 {
                     var serviceRequest = transaction as ServiceRequest;
@@ -427,8 +361,6 @@ namespace KamPay.Services
                     serviceRequest.PaymentSimulationId = payment.PaymentId;
                     serviceRequest.PaymentStatus = ServicePaymentStatus.Initiated;
                     await transactionNode.PutAsync(serviceRequest);
-
-                    System.Diagnostics.Debug.WriteLine($"✅ ServiceRequest güncellendi: {serviceRequest.RequestId}");
                 }
                 else
                 {
@@ -437,19 +369,15 @@ namespace KamPay.Services
                     productTransaction.PaymentSimulationId = payment.PaymentId;
                     productTransaction.PaymentStatus = PaymentStatus.Pending;
                     await transactionNode.PutAsync(productTransaction);
-
-                    System.Diagnostics.Debug.WriteLine($"✅ Transaction güncellendi: {productTransaction.TransactionId}");
                 }
 
                 System.Diagnostics.Debug.WriteLine($"✅✅✅ CreatePaymentSimulationAsync BAŞARILI!");
-                return ServiceResult<PaymentDto>.SuccessResult(payment, "Ödeme simülasyonu başlatıldı.");
+                return ServiceResult<PaymentDto>.SuccessResult(payment, paymentResult.Message);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌❌❌ CreatePaymentSimulationAsync HATA!");
-                System.Diagnostics.Debug.WriteLine($"   Mesaj: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"   StackTrace: {ex.StackTrace}");
-                return ServiceResult<PaymentDto>.FailureResult("Simülasyon başlatılırken hata oluştu.", $"{ex.Message}\n\nLütfen internet bağlantınızı kontrol edin ve tekrar deneyin.");
+                System.Diagnostics.Debug.WriteLine($"❌❌❌ CreatePaymentSimulationAsync HATA: {ex.Message}");
+                return ServiceResult<PaymentDto>.FailureResult("Ödeme başlatılırken hata oluştu.", ex.Message);
             }
         }
         /// <summary>
@@ -496,8 +424,7 @@ namespace KamPay.Services
                     }
                 }
 
-                // 2. KART ÖDEMESİ: OTP Doğrulaması (GÜVENLİK)
-                // ✅ FIX: Dynamic type check and cast
+                // 2. ✅ OCP: Provider'ı bul ve doğrulama yap
                 PaymentMethodType paymentMethod = PaymentMethodType.None;
                 
                 if (isServicePayment)
@@ -511,38 +438,23 @@ namespace KamPay.Services
                     paymentMethod = productTransaction?.PaymentMethod ?? PaymentMethodType.None;
                 }
 
-                if (paymentMethod == PaymentMethodType.CardSim)
+                // ✅ OCP: Factory'den provider al
+                IPaymentProvider provider;
+                try
                 {
-                    // Kullanıcıdan gelen OTP'yi temizle (XSS/Injection saldırılarına karşı)
-                    var sanitizedOtp = InputSanitizer.SanitizeText(otp ?? "");
+                    provider = _paymentProviderFactory.GetProvider(paymentMethod.ToString());
+                }
+                catch (NotSupportedException)
+                {
+                    return ServiceResult<bool>.FailureResult($"Desteklenmeyen ödeme yöntemi: {paymentMethod}");
+                }
 
-                    // Firebase'den kaydedilmiş OTP'yi al
-                    var otpNode = _firebaseClient.Child(Constants.TempOtpsCollection).Child(paymentId);
-                    var saved = await otpNode.OnceSingleAsync<TempOtpModel>();
-
-                    // OTP doğrulama kontrolleri
-                    if (saved == null) 
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ OTP bulunamadı. PaymentId: {paymentId}");
-                        return ServiceResult<bool>.FailureResult("OTP bulunamadı.");
-                    }
-                    
-                    if (DateTime.UtcNow > saved.ExpiresAt) 
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ OTP süresi doldu. ExpiresAt: {saved.ExpiresAt}");
-                        return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
-                    }
-                    
-                    if (string.IsNullOrWhiteSpace(sanitizedOtp) || saved.Otp != sanitizedOtp)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ OTP geçersiz. PaymentId: {paymentId}");
-                        return ServiceResult<bool>.FailureResult("OTP geçersiz.");
-                    }
-                    
-                    System.Diagnostics.Debug.WriteLine($"✅ OTP doğrulandı! PaymentId: {paymentId}");
-                    
-                    // OTP'yi kullanıldıktan sonra sil (tek kullanımlık)
-                    await otpNode.DeleteAsync();
+                // ✅ OCP: Provider'ın kendi doğrulama metodunu çağır (Polimorfizm)
+                var validationResult = await provider.ConfirmPaymentAsync(paymentId, otp);
+                
+                if (!validationResult.Success)
+                {
+                    return validationResult;
                 }
 
                 // 3. Ödeme durumunu güncelle
@@ -566,7 +478,7 @@ namespace KamPay.Services
                     }
                 }
 
-                // 4. İŞLEM TİPİNE GÖRE TAMAMLAMA
+                // 4. İŞLEM TİPİNE GÖRE TAMAMLAMA (Mevcut kod aynı kalıyor)
                 
                 // ✅ HİZMET ÖDEMESİ: TransactionId "service_" ile başlıyorsa
                 if (transactionId.StartsWith("service_"))
@@ -1052,25 +964,25 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
                 // ✅ Pazarlık devam edebilir mi kontrol et (detaylı mesaj)
-                var canContinue = NegotiationRules.CanContinueNegotiation(
+                var canContinueCheck = NegotiationRules.CanContinueNegotiation(
                     transaction.NegotiationRoundCount,
                     transaction.NegotiationStartedAt);
                 
-                if (!canContinue.IsValid)
+                if (!canContinueCheck.IsValid)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Pazarlık limiti: {canContinue.ErrorMessage}");
-                    return ServiceResult<bool>.FailureResult(canContinue.ErrorMessage);
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Pazarlık limiti: {canContinueCheck.ErrorMessage}");
+                    return ServiceResult<bool>.FailureResult(canContinueCheck.ErrorMessage);
                 }
 
                 // ✅ Teklif fiyatını doğrula (orijinal fiyatın %50'sinden az olamaz)
-                var priceValidation = NegotiationRules.ValidateProposedPrice(
+                var priceCheck = NegotiationRules.ValidateProposedPrice(
                     proposedPrice, 
                     transaction.Price);
                 
-                if (!priceValidation.IsValid)
+                if (!priceCheck.IsValid)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz teklif: {priceValidation.ErrorMessage}");
-                    return ServiceResult<bool>.FailureResult(priceValidation.ErrorMessage);
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz teklif: {priceCheck.ErrorMessage}");
+                    return ServiceResult<bool>.FailureResult(priceCheck.ErrorMessage);
                 }
 
                 // Güncelle
