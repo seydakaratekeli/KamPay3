@@ -136,14 +136,6 @@ namespace KamPay
                 // ✅ YENİ: Mesaj medya koordinatörü
                 builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();
 
-                // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
-                builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
-                builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
-                
-                // IMessagingService (INotificationService'e bağımlı)
-                builder.Services.AddSingleton<IMessagingService>(sp =>
-                    new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
-
                 // IFavoriteService (INotificationService'e bağımlı)
                 builder.Services.AddSingleton<IFavoriteService>(sp =>
                     new FirebaseFavoriteService(sp.GetRequiredService<INotificationService>()));
@@ -189,6 +181,26 @@ namespace KamPay
                         sp.GetRequiredService<FirebaseClient>()
                     )
                 );
+
+                // ✅ KOORDINATÖRLER - Orkestrasyon Servisleri (Bağımlılıklardan SONRA kaydedilmeli)
+                System.Diagnostics.Debug.WriteLine("✅ Koordinatörler kaydediliyor...");
+                
+                // CacheCoordinator - IProductCacheService'e bağımlı
+                builder.Services.AddSingleton<ICacheCoordinator, CacheCoordinator>();
+                System.Diagnostics.Debug.WriteLine("  ✓ ICacheCoordinator kaydedildi");
+                
+                // ValidationCoordinator - IProductService'e bağımlı
+                builder.Services.AddSingleton<IValidationCoordinator, ValidationCoordinator>();
+                System.Diagnostics.Debug.WriteLine("  ✓ IValidationCoordinator kaydedildi");
+                
+                // NotificationCoordinator - INotificationService'e bağımlı
+                builder.Services.AddSingleton<INotificationCoordinator, NotificationCoordinator>();
+                System.Diagnostics.Debug.WriteLine("  ✓ INotificationCoordinator kaydedildi");
+                
+                // TransactionOrchestrator - ITransactionService, INotificationService, IProductService, IUserProfileService'e bağımlı
+                builder.Services.AddSingleton<ITransactionOrchestrator, TransactionOrchestrator>();
+                System.Diagnostics.Debug.WriteLine("  ✓ ITransactionOrchestrator kaydedildi");
+
                 // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
                 //  Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
                 builder.Services.AddSingleton<IUserStateService>(sp =>
@@ -273,7 +285,7 @@ namespace KamPay
                 LocalizationResourceManager.EnsureInitialized();
                 System.Diagnostics.Debug.WriteLine("⚙️ MauiApp build ediliyor...");
                 var app = builder.Build();
-                System.Diagnostics.Debug.WriteLine("✓ MauiApp başarıyla oluşturuldu");
+                System.Diagnostics.Debug.WriteLine("✓ MauiApp başarılıyla oluşturuldu");
 
                 return app;
             }
