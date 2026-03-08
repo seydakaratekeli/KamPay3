@@ -120,9 +120,21 @@ namespace KamPay
                 builder.Services.AddSingleton<App>();
 
                 // Product ve Storage servisleri
-                builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ YENİ: Görsel koordinatörü
+                builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ Görsel koordinatörü
+                builder.Services.AddSingleton<IProductCreationCoordinator, ProductCreationCoordinator>(); // ✅ YENİ: Ürün oluşturma koordinatörü
                 builder.Services.AddSingleton<IProductService, FirebaseProductService>();
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
+
+                // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
+                builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
+                builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
+                
+                // IMessagingService (INotificationService'e bağımlı)
+                builder.Services.AddSingleton<IMessagingService>(sp =>
+                    new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
+
+                // ✅ YENİ: Mesaj medya koordinatörü
+                builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();
 
                 // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
                 builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
