@@ -5,20 +5,32 @@ using KamPay.Models;
 using System.Linq;
 
 namespace KamPay.Services;
-// bu sayfanın amacı Firebase Realtime Database'den ürün verilerini almak, eklemek, güncellemek ve yönetmektir. kullanıcı ürünleri, kategoriler ve ürün durumları gibi işlevleri kapsar.
+
+/// <summary>
+/// ✅ SOLID PRENSİPLERE UYGUN: Firebase Product Service
+/// - SRP: Tek sorumluluk - ürün CRUD işlemleri
+/// - OCP: Genişletilebilir - yeni metod eklenebilir, mevcut kod değişmez
+/// - LSP: IProductService'in tüm davranışlarını doğru implement eder
+/// - ISP: Interface'ler küçük ve odaklanmış (Query, Command, Validation)
+/// - DIP: Concrete class'lara değil interface'lere bağımlı
+/// </summary>
 public class FirebaseProductService : IProductService
 {
     private readonly FirebaseClient _firebaseClient;
-    private readonly IProductImageCoordinator _imageCoordinator; // ✅ YENİ: Görsel koordinatörü
+    private readonly IProductImageCoordinator _imageCoordinator;
     private readonly IProductCacheService _cacheService;
 
+    // ✅ SOLID: Constructor Injection - tüm bağımlılıklar DI'den geliyor
     public FirebaseProductService(
-        IProductImageCoordinator imageCoordinator, // ✅ YENİ PARAMETRE
+        FirebaseClient firebaseClient,
+        IProductImageCoordinator imageCoordinator,
         IProductCacheService cacheService)
     {
-        _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+        _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
         _imageCoordinator = imageCoordinator ?? throw new ArgumentNullException(nameof(imageCoordinator));
-        _cacheService = cacheService;
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        
+        System.Diagnostics.Debug.WriteLine("✅ FirebaseProductService oluşturuldu (DI ile - SOLID uyumlu)");
     }
 
     public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null)

@@ -130,9 +130,11 @@ namespace KamPay
                 builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
                 builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
                 
-                // IMessagingService (INotificationService'e bağımlı)
+                // IMessagingService (INotificationService ve FirebaseClient'a bağımlı)
                 builder.Services.AddSingleton<IMessagingService>(sp =>
-                    new FirebaseMessagingService(sp.GetRequiredService<INotificationService>()));
+                    new FirebaseMessagingService(
+                        sp.GetRequiredService<FirebaseClient>(), // ✅ FIX: FirebaseClient eklendi
+                        sp.GetRequiredService<INotificationService>()));
 
                 // ✅ YENİ: Mesaj medya koordinatörü
                 builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();

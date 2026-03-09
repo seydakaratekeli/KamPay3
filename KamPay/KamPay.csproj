@@ -180,4 +180,8 @@
 		</MauiXaml>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Services\Handlers\" />
+	</ItemGroup>
+
 </Project>

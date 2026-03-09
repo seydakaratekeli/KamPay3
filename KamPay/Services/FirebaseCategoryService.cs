@@ -14,9 +14,11 @@ namespace KamPay.Services
         private readonly FirebaseClient _firebaseClient;
         private List<Category>? _categoriesCache;
 
-        public FirebaseCategoryService()
+        // ✅ SOLID FIX: FirebaseClient'ı DI'den alıyoruz (LSP ve DIP prensiplerine uygun)
+        public FirebaseCategoryService(FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseCategoryService oluşturuldu (DI ile)");
         }
 
         public async Task<IEnumerable<Category>> GetCategoriesAsync()

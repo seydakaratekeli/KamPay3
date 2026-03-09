@@ -2,28 +2,14 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
-
-    public interface IMessagingService
+    /// <summary>
+    /// ✅ SOLID İYİLEŞTİRME: IMessagingService artık küçük interface'leri birleştiriyor
+    /// - ISP: Query ve Command işlemleri ayrıldı
+    /// - SRP: Her interface'in tek sorumluluğu var
+    /// - LSP: Alt interface'lerden herhangi biri yerine kullanılabilir
+    /// </summary>
+    public interface IMessagingService : IMessageQueryService, IMessageCommandService
     {
-        Task<ServiceResult<Message>> SendMessageAsync(SendMessageRequest request, User sender);
-        Task<ServiceResult<List<Message>>> GetConversationMessagesAsync(string conversationId, int limit = 50);
-        Task<ServiceResult<List<Conversation>>> GetUserConversationsAsync(string userId);
-        Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null);
-       Task<ServiceResult<bool>> DeleteConversationAsync(string conversationId, string userId);
-        Task<ServiceResult<bool>> MarkMessagesAsReadAsync(string conversationId, string readerUserId);
-        Task<ServiceResult<int>> GetTotalUnreadMessageCountAsync(string userId);
-        IDisposable SubscribeToConversations(string userId, Action<List<Conversation>> onConversationsChanged);
-        IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged);
-
-       
-        /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
-       
-        Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl);
-
-       
-        /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
-       
-        Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string? newName, string? newPhotoUrl);
-
+        // ✅ Tüm metodlar alt interface'lerden geliyor
     }
 }

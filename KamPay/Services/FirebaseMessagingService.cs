@@ -19,10 +19,15 @@ namespace KamPay.Services
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
 
-        public FirebaseMessagingService(INotificationService notificationService)
+        // ✅ SOLID FIX: FirebaseClient'ı DI'den alıyoruz (LSP ve DIP prensiplerine uygun)
+        public FirebaseMessagingService(
+            FirebaseClient firebaseClient, // ✅ YENİ: DI'den alıyoruz
+            INotificationService notificationService)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _notificationService = notificationService;
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            
+            System.Diagnostics.Debug.WriteLine("✅ FirebaseMessagingService oluşturuldu (DI ile)");
         }
 
         private async Task CheckAndBroadcastUnreadMessageStatus(string userId)
