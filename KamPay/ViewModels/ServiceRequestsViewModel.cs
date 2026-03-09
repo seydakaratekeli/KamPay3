@@ -21,6 +21,7 @@ namespace KamPay.ViewModels
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
+        // ✅ DIP FIX: FirebaseClient artık DI'den geliyor (new keyword kaldırıldı)
         private readonly FirebaseClient _firebaseClient;
         private IDisposable? _requestsSubscription;
         private string? _currentUserId;
@@ -64,12 +65,16 @@ namespace KamPay.ViewModels
 
 
 
-        public ServiceRequestsViewModel(IServiceSharingService serviceService, IAuthenticationService authService, IUserStateService userStateService)
+        public ServiceRequestsViewModel(
+            IServiceSharingService serviceService, 
+            IAuthenticationService authService, 
+            IUserStateService userStateService,
+            FirebaseClient firebaseClient) // ✅ DIP FIX: YENİ PARAMETRE
         {
             _serviceService = serviceService;
             _authService = authService;
             _userStateService = userStateService;
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // ✅ DIP FIX: DI'den inject
 
             PaymentMethods = new ObservableCollection<PaymentOption>
             {
@@ -80,6 +85,7 @@ namespace KamPay.ViewModels
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
+            System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsViewModel oluşturuldu (DIP uyumlu - FirebaseClient DI'den)");
             _ = InitializeAsync();
         }
 

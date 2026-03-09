@@ -33,7 +33,8 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly ITransactionService _transactionService;
         private readonly IUserStateService _userStateService;
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
+        // ✅ DIP FIX: FirebaseClient artık DI'den geliyor (new keyword kaldırıldı)
+        private readonly FirebaseClient _firebaseClient;
         private IDisposable? _transactionListener;
         private string? _lastLoadedProductId;
         private bool _disposed = false;
@@ -83,7 +84,8 @@ namespace KamPay.ViewModels
             IFavoriteService favoriteService,
             IMessagingService messagingService,
             ITransactionService transactionService,
-            IUserStateService userStateService)
+            IUserStateService userStateService,
+            FirebaseClient firebaseClient) // ✅ DIP FIX: YENİ PARAMETRE
         {
             _productService = productService;
             _authService = authService;
@@ -91,9 +93,12 @@ namespace KamPay.ViewModels
             _messagingService = messagingService;
             _transactionService = transactionService;
             _userStateService = userStateService;
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // ✅ DIP FIX: DI'den inject
             
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
+            
+            System.Diagnostics.Debug.WriteLine("✅ ProductDetailViewModel oluşturuldu (DIP uyumlu - FirebaseClient DI'den)");
         }
 
         private void OnUserProfileChanged(object? sender, User updatedUser)
