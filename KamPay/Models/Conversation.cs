@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KamPay.Models
 {
-    public class Conversation
+    public partial class Conversation : ObservableObject
     {
         public string ConversationId { get; set; } = Guid.NewGuid().ToString();
         public string User1Id { get; set; } = "";
@@ -18,7 +19,9 @@ namespace KamPay.Models
         public string ProductId { get; set; } = "";
         public string ProductTitle { get; set; } = "";
         public string ProductThumbnail { get; set; } = "";
-        public string LastMessage { get; set; } = "";
+
+        // ? [ObservableProperty] — mesaj listesi güncelleme anýnda UI yansýr
+        [ObservableProperty] private string lastMessage = "";
         public DateTime LastMessageTime { get; set; }
         public string LastMessageSenderId { get; set; } = "";
         public int UnreadCountUser1 { get; set; }
@@ -27,31 +30,23 @@ namespace KamPay.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        //  ViewModel'ler için yardýmcý özellikler 
-        public string OtherUserName { get; set; } = "";
-        public string OtherUserPhotoUrl { get; set; } = "";
-        public int UnreadCount { get; set; }
+        // ? [ObservableProperty] — arka planda profil yüklenince UI otomatik güncellenir
+        [ObservableProperty] private string otherUserName = "";
+        [ObservableProperty] private string otherUserPhotoUrl = "";
+        [ObservableProperty] private int unreadCount;
 
-       
-        public string GetOtherUserId(string currentUserId)
-        {
-            return User1Id == currentUserId ? User2Id : User1Id;
-        }
+        public string GetOtherUserId(string currentUserId) =>
+            User1Id == currentUserId ? User2Id : User1Id;
 
-        public string GetOtherUserName(string currentUserId)
-        {
-            return User1Id == currentUserId ? User2Name : User1Name;
-        }
+        public string GetOtherUserName(string currentUserId) =>
+            User1Id == currentUserId ? User2Name : User1Name;
 
-        public string GetOtherUserPhotoUrl(string currentUserId)
-        {
-            return User1Id == currentUserId ? User2PhotoUrl : User1PhotoUrl;
-        }
-        public int GetUnreadCount(string currentUserId)
-        {
-            return currentUserId == User1Id ? UnreadCountUser1 : UnreadCountUser2;
-        }
-       
+        public string GetOtherUserPhotoUrl(string currentUserId) =>
+            User1Id == currentUserId ? User2PhotoUrl : User1PhotoUrl;
+
+        public int GetUnreadCount(string currentUserId) =>
+            currentUserId == User1Id ? UnreadCountUser1 : UnreadCountUser2;
+
         public string LastMessageTimeText
         {
             get

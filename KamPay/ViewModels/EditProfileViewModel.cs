@@ -50,10 +50,7 @@ namespace KamPay.ViewModels
                 if (uploadResult.Success)
                 {
                     TargetProfile.ProfileImageUrl = uploadResult.Data;
-
-                    // ✅ Daha temiz UI güncelleme: Nesnenin değiştiğini bildir
-                    OnPropertyChanged(nameof(TargetProfile));
-
+                    // ✅ UserProfile artık ObservableObject — ayrıca OnPropertyChanged gerekmiyor
                     await Shell.Current.DisplayAlert("Başarılı", "Fotoğraf yüklendi. Kaydetmeyi unutmayın.", "Tamam");
                 }
                 else

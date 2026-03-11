@@ -105,23 +105,20 @@ namespace KamPay.ViewModels
 
             try
             {
-                notification.IsRead = true; // UI'ı hemen güncelle
-                OnPropertyChanged(nameof(Notifications));
+                // ✅ Notification artık ObservableObject — IsRead değişince UI anında güncellenir
+                notification.IsRead = true;
 
                 var result = await _notificationService.MarkAsReadAsync(notification.NotificationId);
-                
+
                 if (!result.Success)
                 {
-                    // Hata durumunda geri al
                     notification.IsRead = false;
-                    OnPropertyChanged(nameof(Notifications));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ MarkAsRead hatası: {ex.Message}");
                 notification.IsRead = false;
-                OnPropertyChanged(nameof(Notifications));
             }
         }
 
@@ -137,22 +134,17 @@ namespace KamPay.ViewModels
                 var user = await _authService.GetCurrentUserAsync();
                 if (user == null) return;
 
-                // UI güncelle
+                // ✅ Her Notification kendi PropertyChanged'ını fırlatır — OnPropertyChanged(nameof(Notifications)) gereksiz
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     foreach (var n in Notifications)
-                    {
                         n.IsRead = true;
-                    }
-                    OnPropertyChanged(nameof(Notifications));
                 });
 
                 var result = await _notificationService.MarkAllAsReadAsync(user.UserId);
 
                 if (!result.Success)
-                {
                     await Shell.Current.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
-                }
             }
             catch (Exception ex)
             {

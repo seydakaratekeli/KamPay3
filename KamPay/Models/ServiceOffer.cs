@@ -1,16 +1,18 @@
-﻿using Newtonsoft.Json;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Newtonsoft.Json;
 
 
 namespace KamPay.Models;
 
-public class ServiceOffer
+// ✅ ObservableObject — ProviderName/Photo değişince CollectionView otomatik yenilenir
+public partial class ServiceOffer : ObservableObject
 {
     public string ServiceId { get; set; } = "";
     public string ProviderId { get; set; } = "";
-    public string ProviderName { get; set; } = "";
 
-    // : Hizmeti veren kişinin profil fotoğrafı
-    public string ProviderPhotoUrl { get; set; } = "default_avatar.png";
+    // ✅ [ObservableProperty] — OnUserProfileChanged güncellediğinde UI yansır
+    [ObservableProperty] private string providerName = "";
+    [ObservableProperty] private string providerPhotoUrl = "default_avatar.png";
 
     public ServiceCategory Category { get; set; }
     public string Title { get; set; } = "";

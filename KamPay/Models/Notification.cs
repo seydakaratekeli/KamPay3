@@ -1,7 +1,9 @@
-﻿namespace KamPay.Models;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-// Bildirim modeli
-public class Notification
+namespace KamPay.Models;
+
+// ✅ ObservableObject — IsRead değişince CollectionView anında güncellenir
+public partial class Notification : ObservableObject
 {
     public string NotificationId { get; set; } = Guid.NewGuid().ToString();
     public string UserId { get; set; } = "";
@@ -10,16 +12,13 @@ public class Notification
     public string Message { get; set; } = "";
     public string IconUrl { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public bool IsRead { get; set; }
+
+    // ✅ [ObservableProperty] — MarkAsRead anında UI'a yansır, OnPropertyChanged(nameof(Notifications)) artık gerekmez
+    [ObservableProperty] private bool isRead;
+
     public DateTime? ReadAt { get; set; }
-
- 
-
-    // İlgili veri (ürün, mesaj vb.)
     public string RelatedEntityId { get; set; } = "";
-    public string RelatedEntityType { get; set; } = ""; // "Product", "Message", "Badge" vb.
-
-    // Aksiyon URL'i
+    public string RelatedEntityType { get; set; } = "";
     public string ActionUrl { get; set; } = "";
 
     public Notification()
@@ -34,16 +33,10 @@ public class Notification
         get
         {
             var diff = DateTime.UtcNow - CreatedAt;
-
-            if (diff.TotalMinutes < 1)
-                return "Az önce";
-            if (diff.TotalMinutes < 60)
-                return $"{(int)diff.TotalMinutes} dakika önce";
-            if (diff.TotalHours < 24)
-                return $"{(int)diff.TotalHours} saat önce";
-            if (diff.TotalDays < 7)
-                return $"{(int)diff.TotalDays} gün önce";
-
+            if (diff.TotalMinutes < 1) return "Az önce";
+            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} dakika önce";
+            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} saat önce";
+            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays} gün önce";
             return CreatedAt.ToString("dd MMM yyyy");
         }
     }
@@ -51,20 +44,20 @@ public class Notification
 
 public enum NotificationType
 {
-    SurpriseBoxWon,      // Sürpriz kutu kazanıldı
-    DonationClaimed,     //  Bağış değerlendirildi
-    NewMessage = 0,      // Yeni mesaj
-    ProductSold = 1,     // Ürün satıldı
-    ProductViewed = 2,   // Ürününüz görüntülendi
-    NewFavorite = 3,     // Ürününüz favorilere eklendi
-    BadgeEarned = 4,     // Rozet kazandınız
-    PointsEarned = 5,    // Puan kazandınız
-    DonationMade = 6,    // Bağış yapıldı
-    SystemNotice = 7,    // Sistem bildirimi
-    NewOffer = 8,        // Yeni teklif/istek geldi
-    OfferAccepted = 9,   // Teklifin kabul edildi
-    OfferRejected = 10,  // Teklifin reddedildi
-    Quote = 11,          // Fiyat teklifi bildirimi
-    ServiceCompleted = 12, // ✅ Hizmet tamamlandı bildirimi
-    TransactionUpdate = 13 // İşlem güncellemesi (Pazarlık vb.)
+    SurpriseBoxWon,
+    DonationClaimed,
+    NewMessage = 0,
+    ProductSold = 1,
+    ProductViewed = 2,
+    NewFavorite = 3,
+    BadgeEarned = 4,
+    PointsEarned = 5,
+    DonationMade = 6,
+    SystemNotice = 7,
+    NewOffer = 8,
+    OfferAccepted = 9,
+    OfferRejected = 10,
+    Quote = 11,
+    ServiceCompleted = 12,
+    TransactionUpdate = 13
 }

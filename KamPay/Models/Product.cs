@@ -25,37 +25,48 @@ namespace KamPay.Models
     // Ürün modeli
     public partial class Product : ObservableObject
     {
-        public string ProductId { get; set; } = "";
-        public string Title { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string CategoryId { get; set; } = "";
-        public string CategoryName { get; set; } = "";
-        public bool HasPendingOffer { get; set; }
+        // ✅ [ObservableProperty] ile tanımlandı — CollectionView otomatik güncellenir
+        [ObservableProperty] private string productId = "";
+        [ObservableProperty] private string title = "";
+        [ObservableProperty] private string description = "";
+        [ObservableProperty] private string categoryId = "";
+        [ObservableProperty] private string categoryName = "";
+        [ObservableProperty] private bool hasPendingOffer;
 
-        // Ürün bilgileri
-        public ProductCondition Condition { get; set; }
-        public ProductType Type { get; set; }
-        public decimal Price { get; set; }
+        [ObservableProperty] private ProductCondition condition;
+        [ObservableProperty] private ProductType type;
+        [ObservableProperty] private decimal price;
 
-        // Kullanıcı bilgileri
-        public string UserId { get; set; } = "";
-        public string UserName { get; set; } = "";
-        public string UserEmail { get; set; } = "";
-        public string UserPhotoUrl { get; set; } = "";
+        // ✅ Kullanıcı bilgileri — OnUserProfileChanged ile güncelleniyor, artık UI'a yansır
+        [ObservableProperty] private string userId = "";
+        [ObservableProperty] private string userName = "";
+        [ObservableProperty] private string userEmail = "";
+        [ObservableProperty] private string userPhotoUrl = "";
 
-        // Konum bilgileri
-        public string Location { get; set; } = "";
-        public double? Latitude { get; set; }
-        public double? Longitude { get; set; }
+        [ObservableProperty] private string location = "";
+        [ObservableProperty] private double? latitude;
+        [ObservableProperty] private double? longitude;
 
         // Fotoğraflar
         public List<string> ImageUrls { get; set; } = new();
         public string ThumbnailUrl { get; set; } = "";
 
-        // Durum bilgileri
-        public bool IsActive { get; set; }
-        public bool IsReserved { get; set; }
-        public bool IsSold { get; set; }
+        // ✅ Durum bayrakları — IsSold/IsReserved değişince StatusText/StatusColor güncellenir
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusText))]
+        [NotifyPropertyChangedFor(nameof(StatusColor))]
+        private bool isActive;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusText))]
+        [NotifyPropertyChangedFor(nameof(StatusColor))]
+        private bool isReserved;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusText))]
+        [NotifyPropertyChangedFor(nameof(StatusColor))]
+        private bool isSold;
+
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? SoldAt { get; set; }
@@ -64,11 +75,8 @@ namespace KamPay.Models
         public ServicePaymentStatus PaymentStatus { get; set; } = ServicePaymentStatus.None;
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
         public string? BuyerId { get; set; }
-      //  public bool IsSold { get; set; } = false;
 
-      
         /// Ürünün durumunu belirler (Satış mı, Takas mı?)
-       
         public string StatusText
         {
             get
@@ -98,7 +106,6 @@ namespace KamPay.Models
         }
        
         // Etiket rengi
-    
         public Color StatusColor
         {
             get

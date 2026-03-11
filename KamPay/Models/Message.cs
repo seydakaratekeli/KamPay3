@@ -1,12 +1,13 @@
 // KamPay/Models/Message.cs
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using Newtonsoft.Json;
 
 namespace KamPay.Models
 {
-    
-    public class Message
+    // ✅ ObservableObject — IsSentByMe / IsImageLoading değişince UI anında güncellenir
+    public partial class Message : ObservableObject
     {
         public string MessageId { get; set; } = Guid.NewGuid().ToString();
         public string ConversationId { get; set; } = "";
@@ -17,53 +18,45 @@ namespace KamPay.Models
         public string ReceiverName { get; set; } = "";
         public string ReceiverPhotoUrl { get; set; } = "";
         public string Content { get; set; } = "";
-        
-        // Alternatif property adı için backward compatibility
+
         [JsonIgnore]
-        public string Text 
-        { 
-            get => Content; 
-            set => Content = value; 
+        public string Text
+        {
+            get => Content;
+            set => Content = value;
         }
-        
+
         public MessageType Type { get; set; } = MessageType.Text;
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
-        
-        // Alternatif property adı için backward compatibility
+
         [JsonIgnore]
-        public DateTime Timestamp 
-        { 
-            get => SentAt; 
-            set => SentAt = value; 
+        public DateTime Timestamp
+        {
+            get => SentAt;
+            set => SentAt = value;
         }
-        
+
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
         public bool IsDeleted { get; set; } = false;
-        
-        // Mesaj durumu özellikleri
         public bool IsDelivered { get; set; } = true;
-        
-        // Sistem mesajı kontrolü için
         public bool IsSystemMessage { get; set; } = false;
 
-        // Ürün referansı 
         public string ProductId { get; set; } = "";
         public string ProductTitle { get; set; } = "";
         public string ProductThumbnail { get; set; } = "";
         public string TimeText => SentAt.ToString("HH:mm");
-
-        // Fotoğraf mesajları için
         public string ImageUrl { get; set; } = "";
 
-        // (Veritabanına kaydedilmeyecek, sadece UI için)
-        [JsonIgnore] 
-        public bool IsSentByMe { get; set; }
+        // ✅ [ObservableProperty] — ChatViewModel'de temp mesajdan gerçek mesaja geçişte UI anında değişir
+        [ObservableProperty]
+        [property: JsonIgnore]
+        private bool isSentByMe;
 
-        // UI loading göstergesi için
-        [JsonIgnore]
-        public bool IsImageLoading { get; set; }
-
+        // ✅ [ObservableProperty] — Görsel yükleme tamamlanınca yükleme göstergesi kaybolur
+        [ObservableProperty]
+        [property: JsonIgnore]
+        private bool isImageLoading;
     }
 
     public enum MessageType

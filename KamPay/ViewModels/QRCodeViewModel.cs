@@ -189,7 +189,7 @@ namespace KamPay.ViewModels
                         "⚠️ Satıcı Henüz Teslim Almadı", 
                         "Takas sürecinde önce satıcı sizin ürününüzü almalıdır.\n\n" +
                         "👉 Satıcıya kendi QR kodunuzu gösterin ve okutun.\n" +
-                        "👉 Satıcı PIN girip teslim aldıktan sonra,\n" +
+                        "👉 Satıcı PIN girip teslim aldıkdan sonra,\n" +
                         "👉 Siz de satıcının QR kodunu taratabilirsiniz.",
                         "Anladım");
                     IsLoading = false;
@@ -650,7 +650,7 @@ namespace KamPay.ViewModels
             System.Diagnostics.Debug.WriteLine($"   MyDelivery Tamamlandı: {myDeliveryCompleted}");
             System.Diagnostics.Debug.WriteLine($"   OtherDelivery Tamamlandı: {otherDeliveryCompleted}");
             System.Diagnostics.Debug.WriteLine($"   Benim Sıram: {myTurnToDeliver}");
-            System.Diagnostics.Debug.WriteLine($"   Alabilirim: {canReceive}");
+            System.Diagnostics.Debug.WriteLine($"   Alabilirim: {CanReceive}");
             System.Diagnostics.Debug.WriteLine($"   Her İkisi Tamamlandı: {bothCompleted}");
             
             // ✅ YENİ: MyDelivery ve OtherUserDelivery bilgilerini de logla
@@ -665,12 +665,12 @@ namespace KamPay.ViewModels
             if (isSeller)
             {
                 // SATICI: İlk teslimat aşamasında veya karşı taraftan alma aşamasında tarayabilir
-                CanScanOtherQR = isFirstDelivery || canReceive;
+                CanScanOtherQR = isFirstDelivery || CanReceive;
             }
             else
             {
                 // ALICI: Sadece satıcı teslim ettikten sonra tarayabilir
-                CanScanOtherQR = canReceive;
+                CanScanOtherQR = CanReceive;
             }
             
             System.Diagnostics.Debug.WriteLine($"   ✅ CanScanOtherQR SET EDİLDİ: {CanScanOtherQR}");
@@ -682,7 +682,7 @@ namespace KamPay.ViewModels
                 ScanButtonText = "✅ Takas Tamamlandı";
                 CanScanOtherQR = false;
             }
-            else if (canReceive)
+            else if (CanReceive)
             {
                 PageTitle = "✅ Şimdi Sıra Karşı Tarafta";
                 InstructionText = $"Kendi ürününüzü ({MyDelivery?.ProductTitle}) teslim ettiniz!\n\n" +
