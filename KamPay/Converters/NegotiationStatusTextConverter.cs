@@ -13,7 +13,7 @@ namespace KamPay.Converters
     /// </summary>
     public class NegotiationStatusTextConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is not Transaction transaction)
                 return string.Empty;
@@ -103,7 +103,7 @@ namespace KamPay.Converters
             return "Pazarlık devam ediyor";
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

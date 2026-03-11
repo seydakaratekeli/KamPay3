@@ -88,7 +88,9 @@ namespace KamPay.Handlers
                 foreach (var id in _cameraManager.GetCameraIdList())
                 {
                     var characteristics = _cameraManager.GetCameraCharacteristics(id);
-                    var facing = (int?)characteristics.Get(CameraCharacteristics.LensFacing);
+                    var facingObj = characteristics.Get(CameraCharacteristics.LensFacing);
+                    if (facingObj == null) continue;
+                    var facing = (int)facingObj;
                     
                     // Arka kamera (LensFacing.Back = 1)
                     if (facing == (int)LensFacing.Back)
@@ -195,13 +197,17 @@ namespace KamPay.Handlers
                 captureRequestBuilder?.AddTarget(surface);
 
                 // ? Otomatik fokus ve ýþýk ayarlarý
-                captureRequestBuilder?.Set(CaptureRequest.ControlAfMode, (int)ControlAFMode.ContinuousPicture);
-                captureRequestBuilder?.Set(CaptureRequest.ControlAeMode, (int)ControlAEMode.On);
+                if (CaptureRequest.ControlAfMode != null)
+                    captureRequestBuilder?.Set(CaptureRequest.ControlAfMode, (int)ControlAFMode.ContinuousPicture);
+                if (CaptureRequest.ControlAeMode != null)
+                    captureRequestBuilder?.Set(CaptureRequest.ControlAeMode, (int)ControlAEMode.On);
 
+#pragma warning disable CA1422
                 _cameraDevice.CreateCaptureSession(
                     new[] { surface },
                     new CameraCaptureSessionCallback(this, captureRequestBuilder),
                     null);
+#pragma warning restore CA1422
 
                 System.Diagnostics.Debug.WriteLine("? Kamera önizleme baþlatýldý");
             }

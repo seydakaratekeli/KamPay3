@@ -28,15 +28,13 @@ namespace KamPay.Converters
                 {
                     try
                     {
-                        // MAUI'de string -> Color dönüþümü için en doðru yol:
                         var trueColor = Color.Parse(colors[0].Trim());
                         var falseColor = Color.Parse(colors[1].Trim());
                         return boolValue ? trueColor : falseColor;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        // Loglama yapýlabilir: Debug.WriteLine(ex.Message);
-                        // Hata durumunda Property'lere veya varsayýlana düþmesi için boþ býrakýlabilir
+                        // Hata durumunda Property'lere veya varsayýlana düþmesi için boþ býrakýldý
                     }
                 }
             }
@@ -47,7 +45,7 @@ namespace KamPay.Converters
                 return boolValue ? TrueColor : FalseColor;
             }
 
-            // 3. Fallback: Hiçbir þey bulunamazsa uygulama temasýna göre güvenli renkler
+            // 3. Fallback: Hiçbir þey bulunamazsa uygulama temasýna göre güvenli renklar
             return boolValue ? Colors.Red : Colors.Green;
         }
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

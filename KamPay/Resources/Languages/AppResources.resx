@@ -866,8 +866,6 @@
   <data name="ScanOtherCode" xml:space="preserve">
     <value>Karşı Tarafın Kodunu Tara</value>
   </data>
-  <data name="SurpriseBoxTitle" xml:space="preserve">
-  </data>
   <data name="Error" xml:space="preserve">
     <value>Hata</value>
   </data>
@@ -1322,5 +1320,8 @@ KamPay Ekibi</value>
     <value>Takas Tercihi</value>
   </data>
 </root>
+
+
+
 
 

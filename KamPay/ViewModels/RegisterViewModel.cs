@@ -14,7 +14,6 @@ namespace KamPay.ViewModels
     {
         private readonly IAuthenticationService _authService;
         private readonly IUserProfileService _userProfileService;
-        private System.Timers.Timer? _countdownTimer;
 
         [ObservableProperty]
         private string firstName = string.Empty;
@@ -53,8 +52,6 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private bool isCodeExpired = false;
-
-        private DateTime _codeExpiryTime;
 
         public RegisterViewModel(IAuthenticationService authService, IUserProfileService userProfileService)
         {
