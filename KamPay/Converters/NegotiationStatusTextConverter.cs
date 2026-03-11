@@ -21,9 +21,9 @@ namespace KamPay.Converters
             if (!transaction.IsNegotiating)
                 return string.Empty;
 
-            // ✅ Preferences üzerinden mevcut kullanıcı ID'sini al
-            var currentUserId = Preferences.Get("current_user_id", string.Empty);
-            
+            // Preferences yerine IUserStateService üzerinden al (şifresiz depoya yazılmasını önler)
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
+
             if (string.IsNullOrEmpty(currentUserId))
                 return "Pazarlık devam ediyor";
 

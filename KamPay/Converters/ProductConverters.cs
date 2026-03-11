@@ -8,6 +8,28 @@ using Microsoft.Maui.Graphics;
 
 namespace KamPay.Converters
 {
+    /// <summary>
+    /// Converter'lar DI alamadığı için mevcut kullanıcı ID'sine bu helper üzerinden erişilir.
+    /// Preferences yerine IUserStateService kullanarak şifresiz depoya yazılmasını önler.
+    /// </summary>
+    internal static class ConverterHelpers
+    {
+        internal static string GetCurrentUserId()
+        {
+            try
+            {
+                var service = Application.Current?.Handler?.MauiContext?.Services
+                    .GetService(typeof(KamPay.Services.IUserStateService))
+                    as KamPay.Services.IUserStateService;
+                return service?.CurrentUserId ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+    }
+
     /*
     // String boş mu kontrolü
     public class IsNotNullOrEmptyConverter : IValueConverter
@@ -114,7 +136,7 @@ namespace KamPay.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var currentUserId = Preferences.Get("current_user_id", string.Empty);
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
             var senderId = value as string;
 
             return senderId == currentUserId
@@ -133,7 +155,7 @@ namespace KamPay.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var currentUserId = Preferences.Get("current_user_id", string.Empty);
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
             var senderId = value as string;
 
             return senderId == currentUserId
@@ -152,7 +174,7 @@ namespace KamPay.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var currentUserId = Preferences.Get("current_user_id", string.Empty);
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
             var senderId = value as string;
 
             return senderId == currentUserId
@@ -171,7 +193,7 @@ namespace KamPay.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var currentUserId = Preferences.Get("current_user_id", string.Empty);
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
             var senderId = value as string;
 
             return senderId == currentUserId

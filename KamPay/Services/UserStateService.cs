@@ -18,6 +18,9 @@ namespace KamPay.Services
         private User? _currentUser;
         public User? CurrentUser => _currentUser;
 
+        /// <inheritdoc/>
+        public string CurrentUserId => _currentUser?.UserId ?? string.Empty;
+
         // UI'ın ve diğer ViewModel'lerin dinlediği olay
         public event EventHandler<User?>? UserProfileChanged;
 

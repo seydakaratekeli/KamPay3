@@ -7,6 +7,13 @@ namespace KamPay.Services
     public interface IUserStateService
     {
         User? CurrentUser { get; }
+
+        /// <summary>
+        /// Mevcut oturumdaki kullanıcı ID'si.
+        /// Converter'lar Preferences yerine bu property'yi kullanmalıdır.
+        /// </summary>
+        string CurrentUserId { get; }
+
         event EventHandler<User?>? UserProfileChanged;
 
         // ViewModel'lerin beklediği yeni metotlar
