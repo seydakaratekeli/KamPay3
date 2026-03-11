@@ -62,6 +62,35 @@ namespace KamPay
                         fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                         fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                         fonts.AddFont("MaterialIcons-Regular.ttf", "MaterialIcons");
+                    })
+                    // ✅ CUSTOM HANDLERS: Native performance optimizations
+                    .ConfigureMauiHandlers(handlers =>
+                    {
+#if ANDROID
+                        System.Diagnostics.Debug.WriteLine("🚀 Android Custom Handlers kaydediliyor...");
+                        
+                        // 1️⃣ Glide ile optimize edilmiş görsel yükleme
+                        handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
+                        System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (Glide) kaydedildi");
+                        
+                        // 2️⃣ RecyclerView ile optimize edilmiş liste/koleksiyon
+                        // ⚠️ ŞU AN KAPALI: Derleme hatası nedeniyle (type constraint sorunu)
+                        // TODO: .NET MAUI 8 CollectionViewHandler implementation'ını kontrol et
+                        // handlers.AddHandler<CollectionView, KamPay.Handlers.OptimizedCollectionViewHandler>();
+                        // System.Diagnostics.Debug.WriteLine("  ✓ OptimizedCollectionViewHandler (RecyclerView) kaydedildi");
+                        
+                        // 3️⃣ Camera2 API ile hızlı QR tarama (opsiyonel - ZXing.Net.Maui yerine)
+                        // ⚠️ DİKKAT: Şu an kapalı (ZXing.Net.Maui zaten yeterince hızlı)
+                        // handlers.AddHandler<ZXing.Net.Maui.Controls.CameraBarcodeReaderView, KamPay.Handlers.FastQRScannerHandler>();
+                        // System.Diagnostics.Debug.WriteLine("  ✓ FastQRScannerHandler (Camera2) kaydedildi");
+                        
+#elif IOS || MACCATALYST
+                        System.Diagnostics.Debug.WriteLine("🚀 iOS Custom Handlers kaydediliyor...");
+                        
+                        // 1️⃣ SDWebImage ile optimize edilmiş görsel yükleme
+                        handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
+                        System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (SDWebImage) kaydedildi");
+#endif
                     });
 
 

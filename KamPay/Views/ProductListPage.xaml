@@ -1,15 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
-             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:behaviors="clr-namespace:KamPay.Behaviors"
              xmlns:extensions="clr-namespace:KamPay.Extensions"
-             x:DataType="vm:ProductListViewModel"
+             xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ProductListPage"
-             Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Products]}"
+             Shell.BackgroundColor="#1E88E5"
+             Shell.ForegroundColor="White">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -216,6 +218,13 @@
                                 RemainingItemsThreshold="5"
                                 RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}"
                                 Margin="15,0,15,15">
+
+                    <!-- ✅ BEHAVIOR: RecyclerView Optimizasyonları -->
+                    <CollectionView.Behaviors>
+                        <behaviors:OptimizedCollectionViewBehavior 
+                            ItemCacheSize="20"
+                            PrefetchItemCount="4" />
+                    </CollectionView.Behaviors>
 
                     <CollectionView.EmptyView>
                         <Grid VerticalOptions="Center" 

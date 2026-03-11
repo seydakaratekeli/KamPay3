@@ -4,6 +4,7 @@
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:res="clr-namespace:KamPay.Services"
              xmlns:converters="clr-namespace:KamPay.Converters"
+             xmlns:behaviors="clr-namespace:KamPay.Behaviors"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ChatPage"
              Shell.NavBarIsVisible="False"
@@ -149,6 +150,14 @@
                             SelectionMode="None"
                             ItemsUpdatingScrollMode="KeepLastItemInView"
                             Margin="15,10,15,10">
+                
+                <!-- ✅ BEHAVIOR: RecyclerView Optimizasyonları -->
+                <CollectionView.Behaviors>
+                    <behaviors:OptimizedCollectionViewBehavior 
+                        ItemCacheSize="30"
+                        PrefetchItemCount="6" />
+                </CollectionView.Behaviors>
+                
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Message">
                         <Grid Padding="0,4">
