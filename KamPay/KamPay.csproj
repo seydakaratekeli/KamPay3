@@ -31,6 +31,15 @@
 	  <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<!-- Gelişmiş kod kırpma (kullanılmayan kodları siler), dosya boyutunu küçültür -->
+	<TrimMode>full</TrimMode>
+
+	<!-- Android için Native AOT (Ahead-of-Time) derlemesi, ilk açılış hızını devasa oranda artırır -->
+	<PublishAot Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">true</PublishAot>
+
+	</PropertyGroup>
+
 	<ItemGroup>
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
@@ -51,13 +60,6 @@
 		<MauiImage Remove="Resources\Images\dotnet_bot.png" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<AndroidAotProfile Include="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<LibraryProjectProperties Include="Resources\Images\default_avatar.png" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Update="Resources\Languages\AppResources.resx">
@@ -76,33 +78,31 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
-		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.0.0" />
+		<!-- <PackageReference Include="CommunityToolkit.Maui.Core" Version="9.0.0" /> Toolkit zaten Core barındırır, ekstra yazmaya gerek yok -->
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="FFImageLoading.Maui" Version="1.2.4" />
 		<PackageReference Include="FirebaseDatabase.net" Version="4.2.0" />
 		<PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
 		<!--  Firebase Authentication -->
 		<PackageReference Include="FirebaseAuthentication.net" Version="3.7.2" />
-		<PackageReference Include="Mapsui.Maui" Version="4.1.9" />
+		<PackageReference Include="LiteDB" Version="5.0.21" />
+		<PackageReference Include="Mapsui.Maui" Version="5.0.0" />
 
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
+		<!-- <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" /> .NET 10'da Legacy Renderer yoksa kapalı olmalı, yavaşlatır -->
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
-		<PackageReference Include="SkiaSharp" Version="2.88.9" />
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 		<PackageReference Include="ZXing.Net.Maui" Version="0.4.0" />
 		<PackageReference Include="ZXing.Net.Maui.Controls" Version="0.4.0" />
-		
-		<!--  CUSTOM HANDLERS: Android Glide (Görsel yükleme optimizasyonu) -->
-		<PackageReference Include="Xamarin.Android.Glide" Version="4.16.0.14" Condition="$(TargetFramework.Contains('android'))" />
-		<PackageReference Include="Xamarin.AndroidX.RecyclerView" Version="1.4.0.3" Condition="$(TargetFramework.Contains('android'))" />
-		
 
-		<!--  AndroidX Collection paket çakışmasını önle -->
-<PackageReference Include="Xamarin.AndroidX.Collection" Version="1.5.0.3" Condition="$(TargetFramework.Contains('android'))" />
-<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.5.0.3" Condition="$(TargetFramework.Contains('android'))" />
-		<!--  AndroidX Lifecycle paket çakışmasını önle -->
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime" Version="2.9.2.1" Condition="$(TargetFramework.Contains('android'))" />
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Ktx" Version="2.9.2.1" Condition="$(TargetFramework.Contains('android'))" />
+		<!-- .NET 10 SEBEBİYLE KAPATILAN PAKETLER: AndroidX ve çakışma çözücü paketler .NET 10 MAUI içinde native günceldir.
+			 (ÖZEL Glide Handler dosyanız hata verirse sadece Glide'ı tekrar açın) -->
+		<!-- <PackageReference Include="Xamarin.Android.Glide" Version="4.16.0.14" Condition="$(TargetFramework.Contains('android'))" /> -->
+		<!-- <PackageReference Include="Xamarin.AndroidX.RecyclerView" Version="1.4.0.3" Condition="$(TargetFramework.Contains('android'))" /> -->
+		<!-- <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.5.0.3" Condition="$(TargetFramework.Contains('android'))" /> -->
+		<!-- <PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.5.0.3" Condition="$(TargetFramework.Contains('android'))" /> -->
+		<!-- <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime" Version="2.9.2.1" Condition="$(TargetFramework.Contains('android'))" /> -->
+		<!-- <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Ktx" Version="2.9.2.1" Condition="$(TargetFramework.Contains('android'))" /> -->
 	</ItemGroup>
 
 	<ItemGroup>
@@ -194,6 +194,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Services\Handlers\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include=".github\instructions\dotnet-maui.instructions.md" />
+	  <None Include=".github\skills\turkish-description-method\SKILL.md" />
 	</ItemGroup>
 
 </Project>
