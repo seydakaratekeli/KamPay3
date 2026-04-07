@@ -1,0 +1,298 @@
+{
+  "settings": {
+    "components": {
+      "code": true,
+      "binaries": false
+    },
+    "targetId": "net10.0",
+    "targetDisplayName": ".NETCoreApp,Version=v10.0"
+  },
+  "analysisStartTime": "2026-04-07T09:46:49.452196Z",
+  "analysisEndTime": "2026-04-07T09:47:04.589234Z",
+  "privacyModeHelpUrl": "https://go.microsoft.com/fwlink/?linkid=2270980",
+  "stats": {
+    "summary": {
+      "projects": 1,
+      "issues": 3,
+      "incidents": 8,
+      "effort": 8
+    },
+    "charts": {
+      "severity": {
+        "Mandatory": 7,
+        "Optional": 0,
+        "Potential": 1,
+        "Information": 0
+      },
+      "category": {
+        "NuGet": 7,
+        "Project": 1
+      }
+    }
+  },
+  "projects": [
+    {
+      "path": "KamPay\\KamPay.csproj",
+      "startingProject": true,
+      "issues": 3,
+      "storyPoints": 8,
+      "properties": {
+        "appName": "KamPay",
+        "projectKind": "ClassLibrary",
+        "frameworks": [
+          "net8.0-android",
+          "net8.0-ios",
+          "net8.0-windows10.0.19041.0"
+        ],
+        "languages": [
+          "C#"
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "numberOfFiles": 223,
+        "numberOfCodeFiles": 220,
+        "linesTotal": 43583,
+        "linesOfCode": 41776,
+        "totalApiScanned": 0,
+        "minLinesOfCodeToChange": 0,
+        "maxLinesOfCodeToChange": 0
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "0224e95a-be6e-46da-8d2f-1ac7e6b7b68a",
+          "ruleId": "NuGet.0002",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.Extensions.Logging.Debug, 8.0.1\n\n\u00D6neri:\n\nRemove Microsoft.Extensions.Logging.Debug, and replace with new package Microsoft.Extensions.Logging.Debug 10.0.5",
+              "protected": "Microsoft.Extensions.Logging.Debug, 8.0.1\n\n\u00D6neri:\n\nRemove Microsoft.Extensions.Logging.Debug, and replace with new package Microsoft.Extensions.Logging.Debug 10.0.5"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Microsoft.Extensions.Logging.Debug, 8.0.1\n\n\u00D6neri:\n\nRemove Microsoft.Extensions.Logging.Debug, and replace with new package Microsoft.Extensions.Logging.Debug 10.0.5",
+            "protectedSnippet": "Microsoft.Extensions.Logging.Debug, 8.0.1\n\n\u00D6neri:\n\nRemove Microsoft.Extensions.Logging.Debug, and replace with new package Microsoft.Extensions.Logging.Debug 10.0.5",
+            "label": "Microsoft.Extensions.Logging.Debug 8.0.1",
+            "properties": {
+              "PackageId": "Microsoft.Extensions.Logging.Debug",
+              "PackageVersion": "8.0.1",
+              "PackageNewVersion": "10.0.5",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "bf4f27d8-caba-46cc-b092-0914fcd318e0",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.Android.Glide, 4.16.0\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.Android.Glide, 4.16.0\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.Android.Glide, 4.16.0\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.Android.Glide, 4.16.0\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.Android.Glide 4.16.0",
+            "properties": {
+              "PackageId": "Xamarin.Android.Glide",
+              "PackageVersion": "4.16.0",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "d9004e4a-362e-412e-be31-bf2229057812",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.AndroidX.RecyclerView, 1.3.2.7\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.AndroidX.RecyclerView, 1.3.2.7\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.AndroidX.RecyclerView, 1.3.2.7\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.AndroidX.RecyclerView, 1.3.2.7\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.AndroidX.RecyclerView 1.3.2.7",
+            "properties": {
+              "PackageId": "Xamarin.AndroidX.RecyclerView",
+              "PackageVersion": "1.3.2.7",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "1dbecb70-2528-401c-b867-356a489be9b3",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.AndroidX.Collection, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.AndroidX.Collection, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.AndroidX.Collection, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.AndroidX.Collection, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.AndroidX.Collection 1.4.2.1",
+            "properties": {
+              "PackageId": "Xamarin.AndroidX.Collection",
+              "PackageVersion": "1.4.2.1",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "73f0a4ab-8ef3-4b9b-9706-5387d99a07e9",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.AndroidX.Collection.Ktx, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.AndroidX.Collection.Ktx, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.AndroidX.Collection.Ktx, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.AndroidX.Collection.Ktx, 1.4.2.1\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.AndroidX.Collection.Ktx 1.4.2.1",
+            "properties": {
+              "PackageId": "Xamarin.AndroidX.Collection.Ktx",
+              "PackageVersion": "1.4.2.1",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "eb71714a-ce9d-4e69-abe2-84f2d289ebe4",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.AndroidX.Lifecycle.Runtime.Android, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.AndroidX.Lifecycle.Runtime.Android, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.AndroidX.Lifecycle.Runtime.Android, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.AndroidX.Lifecycle.Runtime.Android, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.AndroidX.Lifecycle.Runtime.Android 2.8.6",
+            "properties": {
+              "PackageId": "Xamarin.AndroidX.Lifecycle.Runtime.Android",
+              "PackageVersion": "2.8.6",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "78d7cebf-2371-4fd8-a5cb-a0f66bad0335",
+          "ruleId": "NuGet.0001",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+              "protected": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "protectedSnippet": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx, 2.8.6\n\n\u00D6neri:\n\nDesteklenen s\u00FCr\u00FCm bulunamad\u0131",
+            "label": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx 2.8.6",
+            "properties": {
+              "PackageId": "Xamarin.AndroidX.Lifecycle.Runtime.Ktx",
+              "PackageVersion": "2.8.6",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "f097d499-9899-4a73-92f8-63c6fadd5e62",
+          "ruleId": "Project.0002",
+          "projectPath": "KamPay\\KamPay.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Ge\u00E7erli hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0\n\u00D6nerilen hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0;net10.0-windows",
+              "protected": "Ge\u00E7erli hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0\n\u00D6nerilen hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0;net10.0-windows"
+            },
+            "kind": "File",
+            "path": "KamPay\\KamPay.csproj",
+            "snippet": "Ge\u00E7erli hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0\n\u00D6nerilen hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0;net10.0-windows",
+            "protectedSnippet": "Ge\u00E7erli hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0\n\u00D6nerilen hedef \u00E7er\u00E7eve: net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0;net10.0-windows",
+            "properties": {
+              "CurrentTargetFramework": "net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0",
+              "RecommendedTargetFramework": "net8.0-android;net8.0-ios;net8.0-windows10.0.19041.0;net10.0-windows"
+            }
+          }
+        }
+      ],
+      "features": []
+    }
+  ],
+  "rules": {
+    "NuGet.0002": {
+      "id": "NuGet.0002",
+      "isFeature": false,
+      "description": "Se\u00E7ili hedef \u00E7er\u00E7eve i\u00E7in NuGet paketi y\u00FCkseltmesi \u00F6nerilir.\n\nStandart .NET paketlerinin, projenin hedefledi\u011Fi .NET s\u00FCr\u00FCm\u00FCyle e\u015Fle\u015Fen s\u00FCr\u00FCmlere sahip olmas\u0131 \u00F6nerilir.\n\nBaz\u0131 di\u011Fer paketlerin se\u00E7ili hedef \u00E7er\u00E7eveler i\u00E7in daha iyi \u00E7al\u0131\u015Ft\u0131\u011F\u0131 da bilinir.",
+      "label": "NuGet paketinin y\u00FCkseltilmesi \u00F6nerilir",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262530",
+          "isCustom": false
+        }
+      ]
+    },
+    "NuGet.0001": {
+      "id": "NuGet.0001",
+      "isFeature": false,
+      "description": "NuGet paketi se\u00E7ili hedef \u00E7er\u00E7eveyle uyumsuz.\n\nPaketin se\u00E7ili proje hedef \u00E7er\u00E7evesini destekleyen bir s\u00FCr\u00FCme y\u00FCkseltilmesi gerekiyor. Yeni hedef \u00E7er\u00E7eveyi destekleyen yeni paket s\u00FCr\u00FCmleri yoksa, farkl\u0131 bir paket kullan\u0131lmal\u0131d\u0131r ve t\u00FCm kodun yeni API\u0027ye y\u00FCkseltilmesi gerekir.",
+      "label": "NuGet paketi uyumsuz",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262529",
+          "isCustom": false
+        }
+      ]
+    },
+    "Project.0002": {
+      "id": "Project.0002",
+      "isFeature": false,
+      "description": "Projenin hedef \u00E7er\u00E7evelerinin, bu y\u00FCkseltme i\u00E7in se\u00E7ti\u011Finiz yeni hedef \u00E7er\u00E7eve olarak de\u011Fi\u015Ftirilmesi gerekir.\n\nY\u00FCkseltme s\u0131ras\u0131nda hedef \u00E7er\u00E7eve uygun oldu\u011Funda ilgili platforma ayarlan\u0131r. Baz\u0131 durumlarda proje, modern .NET \u00E7er\u00E7evelerinde (Windows, iOS, Android vb.) art\u0131k kendi platformlar\u0131na sahip \u00F6zellikler kullan\u0131yorsa y\u00FCkseltmeden sonra birden \u00E7ok hedef \u00E7er\u00E7eve ortaya \u00E7\u0131kar.",
+      "label": "Projenin hedef \u00E7er\u00E7evelerinin de\u011Fi\u015Ftirilmesi gerekiyor",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": ".NET Framework\u2019ten .NET\u0027e ta\u015F\u0131maya genel bak\u0131\u015F",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265227",
+          "isCustom": false
+        },
+        {
+          "title": ".NET proje SDK\u0027lar\u0131",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265226",
+          "isCustom": false
+        }
+      ]
+    }
+  }
+}
