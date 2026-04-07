@@ -161,7 +161,7 @@ namespace KamPay.Services
                     var qr1 = CreateDeliveryQRCodeModel(
                         transactionId,
                         transaction.ProductId,
-                        transaction.ProductTitle,
+                        transaction.ProductTitle ?? "Bilinmiyor",
                         transaction.SellerId,
                         transaction.BuyerId,
                         PaymentConstants.QRCodeValidityMinutes
@@ -171,7 +171,7 @@ namespace KamPay.Services
                     var qr2 = CreateDeliveryQRCodeModel(
                         transactionId,
                         transaction.OfferedProductId,
-                        transaction.OfferedProductTitle,
+                        transaction.OfferedProductTitle ?? "Bilinmiyor",
                         transaction.BuyerId,
                         transaction.SellerId,
                         PaymentConstants.QRCodeValidityMinutes
@@ -186,7 +186,7 @@ namespace KamPay.Services
                     var qr = CreateDeliveryQRCodeModel(
                         transactionId,
                         transaction.ProductId,
-                        transaction.ProductTitle,
+                        transaction.ProductTitle ?? "Bilinmiyor",
                         transaction.SellerId,
                         transaction.BuyerId,
                         PaymentConstants.QRCodeValidityMinutes
@@ -296,15 +296,15 @@ namespace KamPay.Services
                         return ServiceResult<PaymentDto>.FailureResult("İşlem bulunamadı.");
                         
                     var productTransaction = transaction as Transaction;
-                    
+
                     // Güvenlik kontrolleri
-                    if (productTransaction.PaymentStatus != PaymentStatus.Pending)
+                    if (productTransaction?.PaymentStatus != PaymentStatus.Pending)
                         return ServiceResult<PaymentDto>.FailureResult("Bu işlem için ödeme zaten başlatılmış.");
-                    
-                    if (productTransaction.Status != TransactionStatus.Accepted)
+
+                    if (productTransaction?.Status != TransactionStatus.Accepted)
                         return ServiceResult<PaymentDto>.FailureResult("İşlem henüz satıcı tarafından onaylanmamış.");
-                    
-                    if (productTransaction.IsNegotiating)
+
+                    if (productTransaction?.IsNegotiating == true)
                         return ServiceResult<PaymentDto>.FailureResult("Pazarlık devam ediyor. Önce fiyat üzerinde anlaşmanız gerekiyor.");
                 }
 
@@ -313,16 +313,16 @@ namespace KamPay.Services
                 if (isServicePayment)
                 {
                     var serviceRequest = transaction as ServiceRequest;
-                    if (serviceRequest.PaymentStatus != ServicePaymentStatus.None &&
-                        serviceRequest.PaymentStatus != ServicePaymentStatus.Failed)
+                    if (serviceRequest?.PaymentStatus != ServicePaymentStatus.None &&
+                        serviceRequest?.PaymentStatus != ServicePaymentStatus.Failed)
                         return ServiceResult<PaymentDto>.FailureResult("Bu talep için ödeme zaten başlatılmış.");
-                    
-                    amount = serviceRequest.QuotedPrice ?? serviceRequest.Price;
+
+                    amount = serviceRequest?.QuotedPrice ?? serviceRequest?.Price ?? 0;
                 }
                 else
                 {
                     var productTransaction = transaction as Transaction;
-                    amount = productTransaction.QuotedPrice > 0 ? productTransaction.QuotedPrice : productTransaction.Price;
+                    amount = productTransaction?.QuotedPrice > 0 ? productTransaction.QuotedPrice : productTransaction?.Price ?? 0;
                 }
 
                 // ✅ 3. OCP: Factory'den doğru provider'ı al (SWITCH YOK!)

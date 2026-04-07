@@ -38,25 +38,25 @@ namespace KamPay.Handlers
             // ? URI Source (web görsel)
             if (VirtualView.Source is UriImageSource uriSource)
             {
-                Glide.With(context)
+                Glide.With(context!)
                     .Load(uriSource.Uri.ToString())
-                    .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.All)) // Disk cache
+                    .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.All!)) // Disk cache
                     .Placeholder(Android.Resource.Drawable.IcMenuGallery) // Placeholder
                     .Error(Android.Resource.Drawable.StatNotifyError) // Hata görseli
                     .CenterCrop() // AspectFill
                     .Into(imageView);
-                
+
                 System.Diagnostics.Debug.WriteLine($"? Glide: Görsel yüklendi - {uriSource.Uri}");
             }
             // ? File Source (yerel dosya)
             else if (VirtualView.Source is FileImageSource fileSource)
             {
-                Glide.With(context)
+                Glide.With(context!)
                     .Load(fileSource.File)
-                    .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.All))
+                    .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.All!))
                     .CenterCrop()
                     .Into(imageView);
-                
+
                 System.Diagnostics.Debug.WriteLine($"? Glide: Yerel görsel yüklendi - {fileSource.File}");
             }
             // ? Stream Source (bellek akýþý)
@@ -65,7 +65,7 @@ namespace KamPay.Handlers
                 // Stream'i byte array'e çevir (Glide byte[] kabul eder)
                 var cancellationToken = System.Threading.CancellationToken.None;
                 var streamTask = streamSource.Stream(cancellationToken);
-                
+
                 streamTask.ContinueWith(task =>
                 {
                     if (task.IsCompletedSuccessfully && task.Result != null)
@@ -74,10 +74,10 @@ namespace KamPay.Handlers
                         using var memoryStream = new System.IO.MemoryStream();
                         stream.CopyTo(memoryStream);
                         var bytes = memoryStream.ToArray();
-                        
-                        Glide.With(context)
+
+                        Glide.With(context!)
                             .Load(bytes)
-                            .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.None)) // Stream cache'lenmesin
+                            .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.None!)) // Stream cache'lenmesin
                             .CenterCrop()
                             .Into(imageView);
                     }

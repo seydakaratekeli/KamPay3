@@ -1,10 +1,7 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
-using System.Diagnostics;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace KamPay;
 
@@ -17,8 +14,10 @@ public class MainActivity : MauiAppCompatActivity
         {
             // ⚠️ SADECE DEBUG İÇİN: SSL sertifika doğrulamasını devre dışı bırak
 #if DEBUG
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
             System.Net.ServicePointManager.ServerCertificateValidationCallback = 
                 (sender, cert, chain, sslPolicyErrors) => true;
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
 #endif
 
             base.OnCreate(savedInstanceState);
@@ -39,12 +38,14 @@ public class MainActivity : MauiAppCompatActivity
                 {
                     try
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (App.Current?.MainPage != null)
                         {
                             await App.Current.MainPage.DisplayAlert("Hata Oluştu!",
                                 $"Hata: {args.Exception.Message}\n\nDetay: {args.Exception.InnerException?.Message ?? "Yok"}",
                                 "Tamam");
                         }
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     catch (Exception ex)
                     {

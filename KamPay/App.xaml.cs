@@ -1,7 +1,6 @@
 ﻿using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
-using System.Globalization;
 
 namespace KamPay
 {
@@ -22,7 +21,7 @@ namespace KamPay
                 System.Diagnostics.Debug.WriteLine("✓ MainPage (AppShell) atandı");
 
                 // Localization'ı daha güvenli başlat - hata olsa bile devam et
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     try
                     {
