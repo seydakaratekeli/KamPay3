@@ -12,7 +12,6 @@ namespace KamPay.API.Controllers
     {
         private readonly FirebaseClient _firebaseClient;
 
-        // Adım 3'te Program.cs'de eklediğimiz FirebaseClient buraya otomatik gelir
         public ProductsController(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient;
@@ -24,19 +23,19 @@ namespace KamPay.API.Controllers
         {
             try
             {
-                // Sunucumuz (API) Firebase'e gidip ürünleri alıyor
                 var urunler = await _firebaseClient
-                    .Child("products") // Senin Constants.ProductsCollection karşılığın
+                    .Child("products")
                     .OrderByKey()
                     .LimitToLast(50)
-                    .OnceAsync<object>(); // Şimdilik obje olarak çekiyoruz, daha sonra Product modelini API'ye de ekleyeceğiz.
+                    .OnceAsync<Product>();
 
-                var result = urunler.Select(x => new {
-                    ProductId = x.Key,
-                    Data = x.Object
+                var result = urunler.Select(x =>
+                {
+                    var urun = x.Object;
+                    urun.ProductId = x.Key;
+                    return urun;
                 }).ToList();
 
-                // MAUI'ye JSON olarak gönder
                 return Ok(result);
             }
             catch (Exception ex)
@@ -44,39 +43,90 @@ namespace KamPay.API.Controllers
                 return StatusCode(500, $"Sunucu hatası: {ex.Message}");
             }
         }
-    
 
-    // POST: api/v1/products
-[HttpPost]
-        [Authorize] // DİKKAT: Bu etiket sayesinde giriş yapmayanlar bu metoda asla ulaşamaz!
+        // POST: api/v1/products
+        [HttpPost]
+        [Authorize]
         public async Task<IActionResult> AddProduct([FromBody] Product yeniUrun)
         {
             try
             {
-                // 1. GÜVENLİK: İstek atan kişinin Token'ından Firebase UserId'sini alıyoruz
                 var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
 
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized("Geçersiz kullanıcı token'ı.");
 
-                // 2. İŞ MANTIĞI: İlanın sahibini (UserId) mobil uygulamanın göndermesine 
-                // güvenmiyoruz. Sunucudaki doğrulanmış kimliği (userId) zorla atıyoruz!
                 yeniUrun.UserId = userId;
                 yeniUrun.CreatedAt = DateTime.UtcNow;
 
-                // Fiyat kontrolü vs. burada yapılabilir
                 if (yeniUrun.Price < 0)
                     return BadRequest("Fiyat sıfırdan küçük olamaz.");
 
-                // 3. VERİTABANI: Ürünü Firebase'e kaydet
                 var response = await _firebaseClient.Child("products").PostAsync(yeniUrun);
 
-                // Geriye kaydedilen ürünün yeni ID'sini dönüyoruz
                 return Ok(new { Message = "Ürün başarıyla eklendi", ProductId = response.Key });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Sunucu hatası: {ex.Message}");
+            }
+        }
+
+        // PUT: api/v1/products/{id} (İlan Güncelleme)
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProduct(string id, [FromBody] Product guncelUrun)
+        {
+            try
+            {
+                var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+                var mevcutUrunSnapshot = await _firebaseClient.Child("products").Child(id).OnceSingleAsync<Product>();
+                if (mevcutUrunSnapshot == null) return NotFound("Ürün bulunamadı.");
+
+                if (mevcutUrunSnapshot.UserId != userId)
+                {
+                    return Forbid("Bu ilanı güncelleme yetkiniz yok!");
+                }
+
+                mevcutUrunSnapshot.Title = guncelUrun.Title;
+                mevcutUrunSnapshot.Price = guncelUrun.Price;
+                mevcutUrunSnapshot.Description = guncelUrun.Description;
+                mevcutUrunSnapshot.UpdatedAt = DateTime.UtcNow;
+
+                await _firebaseClient.Child("products").Child(id).PutAsync(mevcutUrunSnapshot);
+
+                return Ok(new { Message = "İlan başarıyla güncellendi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        // DELETE: api/v1/products/{id} (İlan Silme)
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteProduct(string id)
+        {
+            try
+            {
+                var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+                var mevcutUrun = await _firebaseClient.Child("products").Child(id).OnceSingleAsync<Product>();
+                if (mevcutUrun == null) return NotFound();
+
+                if (mevcutUrun.UserId != userId) return Forbid("Bu ilanı silme yetkiniz yok.");
+
+                await _firebaseClient.Child("products").Child(id).DeleteAsync();
+
+                return Ok(new { Message = "İlan başarıyla silindi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
     }
