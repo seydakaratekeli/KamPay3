@@ -29,6 +29,12 @@ namespace KamPay.Services
         /// Þu anki kullanýcýyý getirir
         Task<User> GetCurrentUserAsync();
 
+        /// <summary>
+        /// Geçerli kullanýcýnýn Firebase ID Token'ýný (JWT) getirir.
+        /// Token süresi dolmuþsa veya dolmaya yakýnsa otomatik olarak yeniler.
+        /// </summary>
+        Task<string> GetValidTokenAsync();
+
         /// Kullanýcýnýn giriþ yapýp yapmadýðýný kontrol eder
         bool IsUserLoggedIn();
 

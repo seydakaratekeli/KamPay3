@@ -152,7 +152,14 @@ namespace KamPay
                 // Product ve Storage servisleri
                 builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ Görsel koordinatörü
                 builder.Services.AddSingleton<IProductCreationCoordinator, ProductCreationCoordinator>(); // ✅ YENİ: Ürün oluşturma koordinatörü
-                builder.Services.AddSingleton<IProductService, FirebaseProductService>();
+
+                // YENİ API BAĞLANTISI (Garson) - Artık doğrudan Firebase ile değil, kendi API'miz ile haberleşiyoruz
+                builder.Services.AddSingleton<HttpClient>();
+                builder.Services.AddSingleton<IProductService, KamPay.Services.ProductApiService>();
+
+                // Eski servis (Yorum Satırında)
+                // builder.Services.AddSingleton<IProductService, FirebaseProductService>();
+
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 
                 // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi

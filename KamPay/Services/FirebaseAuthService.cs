@@ -146,6 +146,8 @@ namespace KamPay.Services
                         request.Email.ToLower(),
                         request.Password
                     );
+                    // Geliştirme aşaması için Token'ı konsola yazdır (Postman'de kullanmak için):
+                    System.Diagnostics.Debug.WriteLine($"\n\n=== POSTMAN ICIN BEARER TOKEN ===\n{_authLink.FirebaseToken}\n=================================\n\n");
                 }
                 catch (FirebaseAuthException ex)
                 {
@@ -728,6 +730,57 @@ namespace KamPay.Services
             {
                 System.Diagnostics.Debug.WriteLine($"❌ GetCurrentUser hatası: {ex.Message}");
                 return _currentUser;
+            }
+        }
+
+        public async Task<string> GetValidTokenAsync()
+        {
+            try
+            {
+                // Hafızadaki mevcut session bilgilerini al
+                var firebaseToken = await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
+                var tokenExpiryStr = await SecureStorage.GetAsync(KEY_TOKEN_EXPIRY);
+                var userId = await SecureStorage.GetAsync(KEY_USER_ID);
+
+                if (string.IsNullOrEmpty(firebaseToken) || string.IsNullOrEmpty(userId))
+                    return null; // Geçerli oturum yok
+
+                // Token'ın geçerlilik süresini kontrol et
+                if (!string.IsNullOrEmpty(tokenExpiryStr) && DateTime.TryParse(tokenExpiryStr, out var tokenExpiry))
+                {
+                    // Token bitmesine 5 dakikadan az kaldıysa veya çoktan bittiyse yenile (refresh)
+                    if (DateTime.UtcNow.AddMinutes(5) < tokenExpiry)
+                    {
+                        return firebaseToken; // Her şey yolunda, mevcut token hala geçerli
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine("🔄 Token süresi bitmek üzere, arka planda yenileniyor...");
+
+                // Süre dolmuşsa veya 5 dakikadan az kalmışsa yeni bir token iste
+                var refreshedAuth = await _authProvider.RefreshAuthAsync(new FirebaseAuthLink(_authProvider, new Firebase.Auth.FirebaseAuth
+                {
+                    FirebaseToken = firebaseToken,
+                    User = new Firebase.Auth.User { LocalId = userId }
+                }));
+
+                // Yeni token bilgilerini RAM'de güncelle
+                _authLink = refreshedAuth;
+
+                // Storage'da güncellemek için Beni Hatırla durumunu oku
+                var rememberMeStr = await SecureStorage.GetAsync(KEY_REMEMBER_ME);
+                var rememberMe = !string.IsNullOrEmpty(rememberMeStr) && bool.Parse(rememberMeStr);
+
+                await SaveUserSessionAsync(_currentUser, refreshedAuth.FirebaseToken, rememberMe, refreshedAuth.ExpiresIn);
+
+                System.Diagnostics.Debug.WriteLine("✅ Yeni Token başarıyla oluşturuldu.");
+                return refreshedAuth.FirebaseToken;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ GetValidTokenAsync hatası: {ex.Message}");
+                // Bir nedenden yenilenemezse (internet yok vs.) elimizdeki son token'ı dönmeyi deneriz.
+                return await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
             }
         }
 
