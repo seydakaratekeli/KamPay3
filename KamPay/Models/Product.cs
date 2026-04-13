@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 
@@ -49,7 +49,8 @@ namespace KamPay.Models
 
         // Fotoğraflar
         public List<string> ImageUrls { get; set; } = new();
-        public string ThumbnailUrl { get; set; } = "";
+        // ✅ PERFORMANS: ObservableProperty olarak değiştirildi — CachedImage binding'i doğru güncellenir
+        [ObservableProperty] private string thumbnailUrl = "";
 
         // ✅ Durum bayrakları — IsSold/IsReserved değişince StatusText/StatusColor güncellenir
         [ObservableProperty]

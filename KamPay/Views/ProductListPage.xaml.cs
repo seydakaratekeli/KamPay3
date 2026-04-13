@@ -26,36 +26,32 @@ namespace KamPay.Views
             {
                 _hasAnimated = true;
                 await Task.Delay(100);
-                await AnimatePageAsync();
+                AnimateBackgroundCircle();
             }
         }
 
-        private async Task AnimatePageAsync()
+        protected override void OnDisappearing()
         {
-            // Arka plan animasyonu
-            AnimateBackgroundCircle();
+            base.OnDisappearing();
+            // Sayfa kapanınca animasyonu durdur (kaynak sızıntısını önle)
+            Circle1.AbortAnimation("CircleRotation");
         }
 
+        /// <summary>
+        /// ✅ DÜZELTME: MAUI'nin native Animation API'si ile tekrarlayan animasyon.
+        /// Task.Run + while(true) yerine Animation.Commit kullanılıyor.
+        /// Bu yöntem UI thread'i bloke etmez ve scroll performansını etkilemez.
+        /// </summary>
         private void AnimateBackgroundCircle()
         {
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        await MainThread.InvokeOnMainThreadAsync(async () =>
-                        {
-                            await Circle1.RotateTo(360, 30000, Easing.Linear);
-                            Circle1.Rotation = 0;
-                        });
-                    }
-                    catch
-                    {
-                        break;
-                    }
-                }
-            });
+            var animation = new Animation(v => Circle1.Rotation = v, 0, 360);
+            animation.Commit(
+                owner: Circle1,
+                name: "CircleRotation",
+                length: 30000,
+                easing: Easing.Linear,
+                repeat: () => true  // Sonsuz tekrar — ama UI thread'i bloke etmeden!
+            );
         }
     }
 }

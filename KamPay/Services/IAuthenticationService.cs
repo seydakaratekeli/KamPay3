@@ -1,73 +1,81 @@
-using System.Threading.Tasks;
+ï»¿using System.Threading.Tasks;
 using KamPay.Models;
 
 namespace KamPay.Services
 {
     public interface IAuthenticationService
     {
-        /// Yeni kullanıcı kaydı yapar ve doğrulama kodu gönderir
+        /// Yeni kullanÄ±cÄ± kaydÄ± yapar ve doÄŸrulama kodu gÃ¶nderir
         Task<ServiceResult<User>> RegisterAsync(RegisterRequest request);
 
-        /// Kullanıcı girişi yapar
+        /// KullanÄ±cÄ± giriÅŸi yapar
         Task<ServiceResult<User>> LoginAsync(LoginRequest request);
 
-        /// E-posta doğrulama kodu gönderir
+        /// E-posta doÄŸrulama kodu gÃ¶nderir
         Task<ServiceResult<bool>> SendVerificationCodeAsync(string email);
 
-        /// E-posta doğrulama kodunu kontrol eder
+        /// E-posta doÄŸrulama kodunu kontrol eder
         Task<ServiceResult<bool>> VerifyEmailAsync(VerificationRequest request);
 
-        /// Kayıt isteğini doğrular
+        /// KayÄ±t isteÄŸini doÄŸrular
         ValidationResult ValidateRegistration(RegisterRequest request);
 
-        /// Giriş isteğini doğrular
+        /// GiriÅŸ isteÄŸini doÄŸrular
         ValidationResult ValidateLogin(LoginRequest request);
 
-        /// Kullanıcı çıkışı yapar
+        /// KullanÄ±cÄ± Ã§Ä±kÄ±ÅŸÄ± yapar
         Task<ServiceResult<bool>> LogoutAsync();
 
-        /// Şu anki kullanıcıyı getirir
+        /// Åu anki kullanÄ±cÄ±yÄ± getirir
         Task<User> GetCurrentUserAsync();
 
         /// <summary>
-        /// Geçerli kullanıcının Firebase ID Token'ını (JWT) getirir.
-        /// Token süresi dolmuşsa veya dolmaya yakınsa otomatik olarak yeniler.
+        /// GeÃ§erli kullanÄ±cÄ±nÄ±n Firebase ID Token'Ä±nÄ± (JWT) getirir.
+        /// Token sÃ¼resi dolmuÅŸsa veya dolmaya yakÄ±nsa otomatik olarak yeniler.
         /// </summary>
         Task<string> GetValidTokenAsync();
 
-        /// Kullanıcının giriş yapıp yapmadığını kontrol eder
+        /// <summary>
+        /// GeÃ§erli kullanÄ±cÄ±nÄ±n Firebase ID Token'Ä±nÄ± dÃ¶ner.
+        /// ProductApiService gibi API servisleri tarafÄ±ndan HTTP isteklerine
+        /// Bearer Token eklemek iÃ§in kullanÄ±lÄ±r.
+        /// Ä°Ã§ yapÄ±da GetValidTokenAsync()'i Ã§aÄŸÄ±rarak token yenileme iÅŸlemini de halleder.
+        /// </summary>
+        Task<string> GetCurrentUserTokenAsync();
+
+        /// KullanÄ±cÄ±nÄ±n giriÅŸ yapÄ±p yapmadÄ±ÄŸÄ±nÄ± kontrol eder
         bool IsUserLoggedIn();
 
-        // ?? YENİ: Firebase Authentication Özellikleri
+        // ğŸ” YENÄ°: Firebase Authentication Ã–zellikleri
 
         /// <summary>
-        /// Şifre sıfırlama e-postası gönderir
+        /// Åifre sÄ±fÄ±rlama e-postasÄ± gÃ¶nderir
         /// </summary>
         Task<ServiceResult<bool>> SendPasswordResetEmailAsync(string email);
 
         /// <summary>
-        /// Şifre sıfırlama kodunu doğrular ve yeni şifre belirler
+        /// Åifre sÄ±fÄ±rlama kodunu doÄŸrular ve yeni ÅŸifre belirler
         /// </summary>
         Task<ServiceResult<bool>> ResetPasswordAsync(string email, string verificationCode, string newPassword);
 
         /// <summary>
-        /// Kullanıcının e-posta adresini değiştirir (doğrulama kodu ile)
+        /// KullanÄ±cÄ±nÄ±n e-posta adresini deÄŸiÅŸtirir (doÄŸrulama kodu ile)
         /// </summary>
         Task<ServiceResult<bool>> ChangeEmailAsync(string currentEmail, string newEmail, string password);
 
         /// <summary>
-        /// Yeni e-posta adresini doğrular
+        /// Yeni e-posta adresini doÄŸrular
         /// </summary>
         Task<ServiceResult<bool>> VerifyNewEmailAsync(string newEmail, string verificationCode);
 
         /// <summary>
-        /// Kullanıcının şifresini değiştirir
+        /// KullanÄ±cÄ±nÄ±n ÅŸifresini deÄŸiÅŸtirir
         /// </summary>
         Task<ServiceResult<bool>> ChangePasswordAsync(string email, string currentPassword, string newPassword);
 
         /// <summary>
-        /// ? YENİ: Uygulama başlangıcında otomatik giriş kontrolü (Remember Me)
-        /// "Beni Hatırla" işaretliyse ve token geçerliyse otomatik giriş yapar
+        /// ğŸ”„ YENÄ°: Uygulama baÅŸlangÄ±cÄ±nda otomatik giriÅŸ kontrolÃ¼ (Remember Me)
+        /// "Beni HatÄ±rla" iÅŸaretliyse ve token geÃ§erliyse otomatik giriÅŸ yapar
         /// </summary>
         Task<ServiceResult<User>> TryAutoLoginAsync();
     }

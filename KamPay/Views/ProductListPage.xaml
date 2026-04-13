@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
@@ -267,9 +267,6 @@
                                     StrokeThickness="0"
                                     BackgroundColor="White"
                                     HeightRequest="270">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
-                                </Border.Shadow>
 
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductListViewModel}}, Path=ProductTappedCommand}" CommandParameter="{Binding .}"/>
@@ -284,17 +281,10 @@
                                                                     LoadingPlaceholder="loading_image.png"
                                                                     ErrorPlaceholder="error_image.png"
                                                                     DownsampleToViewSize="True"
-                                                                    FadeAnimationEnabled="True"/>
+                                                                    CacheType="Disk"
+                                                                    FadeAnimationEnabled="False"/>
 
-                                        <!-- Gradient Overlay -->
-                                        <BoxView VerticalOptions="End" HeightRequest="50">
-                                            <BoxView.Background>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                    <GradientStop Color="Transparent" Offset="0.0" />
-                                                    <GradientStop Color="#40000000" Offset="1.0" />
-                                                </LinearGradientBrush>
-                                            </BoxView.Background>
-                                        </BoxView>
+                                        <!-- ✅ PERFORMANS: Gradient overlay kaldırıldı (scroll sırasında LinearGradientBrush render maliyetli) -->
 
                                         <!-- Status Badge -->
                                         <Border IsVisible="{Binding StatusText, Converter={StaticResource IsNotNullOrEmptyConverter}}"
@@ -379,7 +369,7 @@
                                         </Grid>
                                     </VerticalStackLayout>
 
-                                    <BoxView Grid.Row="2" Color="Transparent" />
+                                    <!-- ✅ PERFORMANS: Boş BoxView spacer kaldırıldı (Grid row "*" zaten boşluk veriyor) -->
 
                                     <!-- User & Stats -->
                                     <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="12,8,12,12" VerticalOptions="End">
@@ -387,6 +377,9 @@
                                             <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" 
                                                                         HeightRequest="24" WidthRequest="24" 
                                                                         Aspect="AspectFill"
+                                                                        DownsampleToViewSize="True"
+                                                                        CacheType="Disk"
+                                                                        FadeAnimationEnabled="False"
                                                                         LoadingPlaceholder="person_icon.svg"
                                                                         ErrorPlaceholder="person_icon.svg">
                                                 <ffimageloading:CachedImage.Clip>

@@ -116,10 +116,15 @@ namespace KamPay.Views
         {
             try
             {
-                if (ProductMap?.Map == null)
+                if (ProductMap == null)
                 {
-                    Console.WriteLine("⚠️ ProductMap.Map null!");
+                    Console.WriteLine("⚠️ ProductMap null!");
                     return;
+                }
+
+                if (ProductMap.Map == null)
+                {
+                    ProductMap.Map = new Mapsui.Map();
                 }
 
                 // Önce mevcut layer'ları temizle

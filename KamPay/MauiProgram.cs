@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
 using FFImageLoading.Maui;
 using KamPay.Services;
@@ -68,11 +68,11 @@ namespace KamPay
                     {
 #if ANDROID
                         System.Diagnostics.Debug.WriteLine("🚀 Android Custom Handlers kaydediliyor...");
-                        
+
                         // 1️⃣ Glide ile optimize edilmiş görsel yükleme
-                        handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
-                        System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (Glide) kaydedildi");
-                        
+                        // handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
+                        // System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (Glide) kaydedildi");
+
                         // 2️⃣ RecyclerView ile optimize edilmiş liste/koleksiyon
                         // ⚠️ ŞU AN KAPALI: Derleme hatası nedeniyle (type constraint sorunu)
                         // TODO: .NET MAUI 8 CollectionViewHandler implementation'ını kontrol et
@@ -153,8 +153,25 @@ namespace KamPay
                 builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ Görsel koordinatörü
                 builder.Services.AddSingleton<IProductCreationCoordinator, ProductCreationCoordinator>(); // ✅ YENİ: Ürün oluşturma koordinatörü
 
-                // YENİ API BAĞLANTISI (Garson) - Artık doğrudan Firebase ile değil, kendi API'miz ile haberleşiyoruz
-                builder.Services.AddSingleton<HttpClient>();
+                // ✅ YENİ API BAĞLANTISI (Garson) - Artık doğrudan Firebase ile değil, kendi API'miz ile haberleşiyoruz
+                // ⚠️ Development: Self-signed SSL sertifikası bypass (Android emülatör + localhost için)
+                builder.Services.AddSingleton<HttpClient>(sp =>
+                {
+#if DEBUG
+                    var handler = new HttpClientHandler
+                    {
+                        // Development ortamında localhost'un self-signed sertifikasını kabul et
+                        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                    };
+                    var client = new HttpClient(handler);
+                    System.Diagnostics.Debug.WriteLine("⚠️ HttpClient: SSL sertifika doğrulaması KAPALI (Development)");
+#else
+                    var client = new HttpClient();
+                    System.Diagnostics.Debug.WriteLine("🔒 HttpClient: SSL sertifika doğrulaması AKTİF (Production)");
+#endif
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                    return client;
+                });
                 builder.Services.AddSingleton<IProductService, KamPay.Services.ProductApiService>();
 
                 // Eski servis (Yorum Satırında)

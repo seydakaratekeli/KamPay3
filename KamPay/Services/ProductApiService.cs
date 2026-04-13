@@ -15,27 +15,55 @@ public class ProductApiService : IProductService
 {
     private readonly HttpClient _httpClient;
     private readonly IAuthenticationService _authService;
-    // Android Emulator için localhost "10.0.2.2" olarak yazılmalıdır. Cihaz / iOS için sunucu IP adresi kullanılmalıdır.
-    private readonly string _baseUrl = "https://localhost:7147/api/v1/products"; 
+    private readonly string _baseUrl;
     private readonly IProductImageCoordinator _imageCoordinator;
+    private readonly IProductCacheService _cacheService;
 
-    public ProductApiService(HttpClient httpClient, IAuthenticationService authService, IProductImageCoordinator imageCoordinator)
+    public ProductApiService(HttpClient httpClient, IAuthenticationService authService, IProductImageCoordinator imageCoordinator, IProductCacheService cacheService)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         _imageCoordinator = imageCoordinator ?? throw new ArgumentNullException(nameof(imageCoordinator));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
-        System.Diagnostics.Debug.WriteLine("✅ ProductApiService oluşturuldu (API Garsonu devrede)");
+        // Platform bazlı API adresi belirleme:
+        // - Android Emülatör: localhost yerine 10.0.2.2 kullanılmalı
+        // - Android Gerçek Cihaz (USB): Bilgisayarın LAN IP adresi kullanılmalı
+        // - Windows (MAUI): localhost doğrudan çalışır
+        // ⚠️ Android'de HTTP kullanıyoruz (SSL sertifika sorunu olmasın diye)
+        //    AndroidManifest.xml'de usesCleartextTraffic="true" zaten açık
+#if ANDROID
+        // 📱 GERÇEK CİHAZ TESTİ: Bilgisayarınızın IP adresini buraya yazın
+        // CMD'de "ipconfig" komutu ile öğrenebilirsiniz
+        var baseHost = "http://192.168.1.5:5011";
+        
+        // 🖥️ EMÜLATÖR TESTİ İÇİN: Yukarıdaki satırı yorum yapıp bunu açın
+        // var baseHost = "http://10.0.2.2:5011";
+#elif IOS
+        var baseHost = "http://localhost:5011";
+#else
+        var baseHost = "http://localhost:5011";
+#endif
+        _baseUrl = $"{baseHost}/api/v1/products";
+
+        System.Diagnostics.Debug.WriteLine($"✅ ProductApiService oluşturuldu (API Garsonu devrede) → {_baseUrl}");
     }
 
     // --- GİZLİ SİLAHIMIZ: İSTEKLERE TOKEN EKLEYEN METOT ---
     private async Task SetAuthHeaderAsync()
     {
-        var token = await _authService.GetValidTokenAsync();
+        // 🌟 YENİ: Custom API JWT'mizi SecureStorage'dan alıyoruz
+        var token = await Microsoft.Maui.Storage.SecureStorage.GetAsync("KAMPAY_API_JWT");
+
         if (!string.IsNullOrEmpty(token))
         {
             // API'nin kapısındaki [Authorize] duvarını geçmek için Token'ı Header'a ekliyoruz
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            System.Diagnostics.Debug.WriteLine($"🔑 Auth token ayarlandı: {token.Substring(0, Math.Min(20, token.Length))}...");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ KAMPAY_API_JWT bulunamadı! Yetki gerektiren endpointler 401 hatası verebilir.");
         }
     }
 
@@ -49,19 +77,19 @@ public class ProductApiService : IProductService
             var response = await _httpClient.GetAsync(_baseUrl);
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
+                var products = await response.Content.ReadFromJsonAsync<List<Product>>(new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-                // NOT: API henüz tam Product dönmüyorsa burada mapping gerekebilir.
-                // İleride API tamamlandığında doğrudan:
-                // var products = await _httpClient.GetFromJsonAsync<List<Product>>(_baseUrl);
-
-                return ServiceResult<List<Product>>.SuccessResult(new List<Product>(), "Ürünler API'den çekildi");
+                return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>(), "Ürünler API'den çekildi");
             }
 
             return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"❌ GetAllProductsAsync hata: {ex.Message}");
             return ServiceResult<List<Product>>.FailureResult("API bağlantı hatası", ex.Message);
         }
     }
@@ -164,32 +192,65 @@ public class ProductApiService : IProductService
                 return ServiceResult<Product>.FailureResult("Geçersiz ürün", validation.Errors.ToArray());
             }
 
+            // 🛑 1. Resimleri İstemciden (MAUI) Doğrudan Firebase Storage'a Yükle
+            var tempProductId = Guid.NewGuid().ToString(); // Storage'da klasör adı veya ileride API'nin kabul edeceği ID
+            var uploadedImageUrls = new List<string>();
+
+            if (request.ImagePaths != null && request.ImagePaths.Any())
+            {
+                var uploadResult = await _imageCoordinator.UploadProductImagesParallelAsync(request.ImagePaths, tempProductId);
+                if (!uploadResult.Success)
+                {
+                    return ServiceResult<Product>.FailureResult("Resimler yüklenemedi", uploadResult.Message);
+                }
+
+                uploadedImageUrls = uploadResult.Data;
+            }
+
             // Örnek eşleme (API 'Product' modelini kabul ediyor)
             var newProduct = new Product
             {
+                ProductId = tempProductId,
                 Title = request.Title,
                 Description = request.Description,
                 Price = request.Price,
                 CategoryId = request.CategoryId ?? string.Empty,
+                CategoryName = request.CategoryName ?? string.Empty,
                 Condition = request.Condition,
                 Type = request.Type,
                 Location = request.Location ?? string.Empty,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = currentUser.UserId,
+                UserName = currentUser.FullName,
+                UserPhotoUrl = currentUser.ProfileImageUrl,
+                ImageUrls = uploadedImageUrls,
+                ThumbnailUrl = uploadedImageUrls.FirstOrDefault() ?? string.Empty
             };
 
             // Güvenlik headerı
             await SetAuthHeaderAsync();
 
             var response = await _httpClient.PostAsJsonAsync(_baseUrl, newProduct);
-            
+
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<Product>.SuccessResult(newProduct, "Ürün API üzerinden eklendi");
+                // API dönüşünde belki farklı ID veya Product gelebilir, duruma göre:
+                var apiProduct = await response.Content.ReadFromJsonAsync<Product>();
+                var finalProduct = apiProduct ?? newProduct;
+
+                // 🛑 Cache'e ekle
+                if (_cacheService != null)
+                {
+                    await _cacheService.UpdateProductInCacheAsync(finalProduct);
+                }
+
+                return ServiceResult<Product>.SuccessResult(finalProduct, "Ürün API üzerinden eklendi");
             }
-            return ServiceResult<Product>.FailureResult("Ürün eklenemedi", response.ReasonPhrase);
+            var authHeaders = response.Headers.WwwAuthenticate.ToString();
+            return ServiceResult<Product>.FailureResult("Ürün eklenemedi", $"{response.StatusCode} - {authHeaders} - {response.ReasonPhrase}");
         }
         catch (Exception ex)
         {
@@ -312,15 +373,44 @@ public class ProductApiService : IProductService
         try
         {
             await SetAuthHeaderAsync();
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/save", product);
+            
+            System.Diagnostics.Debug.WriteLine($"📤 SaveProductDirectly → {_baseUrl}");
+            System.Diagnostics.Debug.WriteLine($"📤 Product: {product.Title}, UserId: {product.UserId}");
+            
+            var response = await _httpClient.PostAsJsonAsync(_baseUrl, product);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            
+            System.Diagnostics.Debug.WriteLine($"📥 API Yanıt: {response.StatusCode} - {responseContent}");
+            
             if (response.IsSuccessStatusCode)
             {
+                // API { Message, ProductId } formatında dönüyor, Product değil.
+                // Bu yüzden gönderdiğimiz product objesini doğrudan kullanıyoruz.
+                try
+                {
+                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                    if (apiResponse.TryGetProperty("ProductId", out var pidProp) ||
+                        apiResponse.TryGetProperty("productId", out pidProp))
+                    {
+                        product.ProductId = pidProp.GetString() ?? product.ProductId;
+                    }
+                }
+                catch { /* API yanıtı parse edilemezse orijinal ProductId'yi kullan */ }
+
+                // Önbelleğe de ekleyelim
+                if (_cacheService != null)
+                {
+                    await _cacheService.UpdateProductInCacheAsync(product);
+                }
                 return ServiceResult<Product>.SuccessResult(product, "Ürün doğrudan kaydedildi");
             }
-            return ServiceResult<Product>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+
+            var authHeaders = response.Headers.WwwAuthenticate.ToString();
+            return ServiceResult<Product>.FailureResult("İşlem başarısız", $"{response.StatusCode} - {authHeaders} - {responseContent}");
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"❌ SaveProductDirectly hata: {ex.Message}");
             return ServiceResult<Product>.FailureResult("API hatası", ex.Message);
         }
     }

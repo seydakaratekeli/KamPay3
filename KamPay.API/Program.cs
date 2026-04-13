@@ -4,6 +4,10 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;               // OpenApiInfo, OpenApiSecurityScheme vs. (v2+ namespace)
+using KamPay.API.Repositories;
+using KamPay.API.Services;
+using KamPay.API.Middlewares;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,23 +28,31 @@ builder.Services.AddSingleton(new FirebaseClient(
     }));
 
 // --- YENİ EKLENEN KISIM: JWT Güvenlik Duvarı ---
-var firebaseProjectId = "kampay-b006d"; // Örn: kampay-12345
+var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "YOUR_VERY_SECURE_SECRET_KEY_HERE_MIN_16_CHARS";
+var issuer = builder.Configuration["JwtSettings:Issuer"] ?? "KamPayAPI";
+var audience = builder.Configuration["JwtSettings:Audience"] ?? "KamPayApp";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = $"https://securetoken.google.com/{firebaseProjectId}";
+        options.IncludeErrorDetails = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = $"https://securetoken.google.com/{firebaseProjectId}",
+            ValidIssuer = issuer,
             ValidateAudience = true,
-            ValidAudience = firebaseProjectId,
-            ValidateLifetime = true
+            ValidAudience = audience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
 // Add services to the container.
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -79,8 +91,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Development'ta HTTP ile de çalışabilsin (mobil cihaz testi için)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
+app.UseMiddleware<FirebaseTokenValidationMiddleware>(); // Firebase ID Token Doğrulama Middleware'i
 app.UseAuthentication(); // Kimlik Kontrolü (Sen kimsin?)
 app.UseAuthorization();  // Yetki Kontrolü (Buraya girmeye yetkin var mı?)
 

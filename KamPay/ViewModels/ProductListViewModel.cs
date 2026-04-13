@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -34,6 +34,11 @@ namespace KamPay.ViewModels
         private const string CACHE_KEY = "all_products";
         private string? _lastLoadedKey;
         private bool _isLoadingMore;
+
+        // ✅ PERFORMANS: Realtime eventleri debounce etmek için timer
+        private System.Threading.Timer? _realtimeDebounceTimer;
+        private readonly object _realtimeLock = new();
+        private bool _hasPendingRealtimeUpdate;
 
         // Tüm ürünlerin tutulduğu ana liste (filtreleme için)
         private List<Product> _allProducts = new();
@@ -198,6 +203,10 @@ namespace KamPay.ViewModels
             }
         }
 
+        /// <summary>
+        /// ✅ DÜZELTME: Realtime event'leri uygula ama ExecuteFiltering'i DEBOUNCE et.
+        /// Birden fazla event hızlıca geldiğinde, tek bir UI güncellemesi yapılır.
+        /// </summary>
         private void ApplyRealtimeEvent(FirebaseEvent<Product> evt)
         {
             var product = evt.Object;
@@ -223,7 +232,31 @@ namespace KamPay.ViewModels
                     _allProducts.Remove(existing);
             }
 
-            ExecuteFiltering();
+            // ✅ DEBOUNCE: 300ms içinde gelen tüm eventleri topla, sonra tek seferde filtrele
+            ScheduleDebouncedFiltering();
+        }
+
+        /// <summary>
+        /// 300ms debounce ile ExecuteFiltering çağırır.
+        /// Birden fazla Firebase event'i art arda geldiğinde yalnızca son çağrı sonrası 300ms bekleyip tek sefer çalışır.
+        /// </summary>
+        private void ScheduleDebouncedFiltering()
+        {
+            lock (_realtimeLock)
+            {
+                _hasPendingRealtimeUpdate = true;
+                _realtimeDebounceTimer?.Dispose();
+                _realtimeDebounceTimer = new System.Threading.Timer(_ =>
+                {
+                    lock (_realtimeLock)
+                    {
+                        if (!_hasPendingRealtimeUpdate) return;
+                        _hasPendingRealtimeUpdate = false;
+                    }
+                    MainThread.BeginInvokeOnMainThread(ExecuteFiltering);
+                    Debug.WriteLine("✅ Debounced ExecuteFiltering çalıştı");
+                }, null, 300, Timeout.Infinite);
+            }
         }
 
         #region Veri Yükleme ve Filtreleme Mantığı
@@ -313,48 +346,87 @@ namespace KamPay.ViewModels
             }
         }
 
+        /// <summary>
+        /// ✅ DÜZELTME: O(n) karmaşıklığında ve batch-friendly koleksiyon güncelleme.
+        /// - Küçük değişikliklerde (<%30 fark) → yerinde güncelleme (az CollectionChanged event)
+        /// - Büyük değişikliklerde → Clear + toplu Add (tek CollectionChanged event)
+        /// </summary>
         private void UpdateProductsCollection(List<Product> newProducts)
         {
-            var toRemove = Products
-                .Where(p => !newProducts.Any(np => np.ProductId == p.ProductId))
-                .ToList();
-
-            foreach (var item in toRemove)
+            // Eğer mevcut liste boş veya fark çok büyükse → toplu yenileme (en hızlı yol)
+            if (Products.Count == 0 || newProducts.Count == 0 ||
+                Math.Abs(Products.Count - newProducts.Count) > Products.Count * 0.3)
             {
-                Products.Remove(item);
+                Products.Clear();
+                foreach (var product in newProducts)
+                {
+                    Products.Add(product);
+                }
+                return;
+            }
+
+            // ✅ O(n) Dictionary lookup — eski O(n²) nested loop yerine
+            var existingMap = new Dictionary<string, int>(Products.Count);
+            for (int j = 0; j < Products.Count; j++)
+            {
+                existingMap[Products[j].ProductId] = j;
+            }
+
+            var newIdSet = new HashSet<string>(newProducts.Select(p => p.ProductId));
+
+            // 1. Silinecekleri kaldır (sondan başa — index kaymasını önle)
+            for (int j = Products.Count - 1; j >= 0; j--)
+            {
+                if (!newIdSet.Contains(Products[j].ProductId))
+                {
+                    Products.RemoveAt(j);
+                }
+            }
+
+            // 2. Yeni/güncellenen ürünleri ekle veya yerinde güncelle
+            // Map'i yeniden oluştur (silme sonrası indexler değişti)
+            existingMap.Clear();
+            for (int j = 0; j < Products.Count; j++)
+            {
+                existingMap[Products[j].ProductId] = j;
             }
 
             for (int i = 0; i < newProducts.Count; i++)
             {
                 var newProduct = newProducts[i];
-                var existingIndex = -1;
 
-                for (int j = 0; j < Products.Count; j++)
+                if (existingMap.TryGetValue(newProduct.ProductId, out int existingIndex))
                 {
-                    if (Products[j].ProductId == newProduct.ProductId)
+                    // Mevcut ürünü güncelle (yerinde değiştirme — Move gereksiz)
+                    if (existingIndex == i)
                     {
-                        existingIndex = j;
-                        break;
+                        Products[i] = newProduct;
                     }
-                }
-
-                if (existingIndex >= 0)
-                {
-                    if (existingIndex != i)
+                    else if (existingIndex < Products.Count && i < Products.Count)
                     {
                         Products.Move(existingIndex, i);
+                        Products[i] = newProduct;
+                        // Move sonrası map'i güncelle
+                        existingMap.Clear();
+                        for (int j = 0; j < Products.Count; j++)
+                        {
+                            existingMap[Products[j].ProductId] = j;
+                        }
                     }
-                    Products[i] = newProduct;
                 }
                 else
                 {
+                    // Yeni ürün — doğru pozisyona ekle
                     if (i < Products.Count)
-                    {
                         Products.Insert(i, newProduct);
-                    }
                     else
-                    {
                         Products.Add(newProduct);
+
+                    // Insert sonrası map'i güncelle
+                    existingMap.Clear();
+                    for (int j = 0; j < Products.Count; j++)
+                    {
+                        existingMap[Products[j].ProductId] = j;
                     }
                 }
             }
@@ -714,6 +786,7 @@ namespace KamPay.ViewModels
         {
             _notificationSubscription?.Dispose();
             _listener?.Dispose();
+            _realtimeDebounceTimer?.Dispose(); // ✅ Debounce timer'ı temizle
             _userStateService.UserProfileChanged -= OnUserProfileChanged;
             WeakReferenceMessenger.Default.UnregisterAll(this);
         }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,6 +10,8 @@ using KamPay.Models;
 using KamPay.ViewModels;
 using KamPay.Security;
 using AppUser = KamPay.Models.User;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace KamPay.Services
 {
@@ -148,6 +150,45 @@ namespace KamPay.Services
                     );
                     // Geliştirme aşaması için Token'ı konsola yazdır (Postman'de kullanmak için):
                     System.Diagnostics.Debug.WriteLine($"\n\n=== POSTMAN ICIN BEARER TOKEN ===\n{_authLink.FirebaseToken}\n=================================\n\n");
+
+                    // 🌟 YENİ: Firebase Token'ını KamPay.API'ye gönderip kendi Custom JWT'mizi alıyoruz 🌟
+                    try
+                    {
+                        using var apiHttpClient = new System.Net.Http.HttpClient();
+
+                        // NOT: Geliştirme ortamında (localhost) test ediyorsanız doğru IP'yi (örn; Android emülatör için 10.0.2.2) ayarlamalısınız.
+                        // Canlı sunucunuz varsa direkt onun URL'sini yazın: https://YOUR_API_DOMAIN/api/Auth/login
+                        // https://localhost:7143/api/Auth/login YERİNE:
+                        string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; // Kendi IP'nizi ve API portunuzu yazın. SSL sorunu yaşamamak için http tavsiye edilir
+
+                        var loginPayload = new { IdToken = _authLink.FirebaseToken };
+                        var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
+
+                        if (apiResponse.IsSuccessStatusCode)
+                        {
+                            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                            var responseData = await apiResponse.Content.ReadFromJsonAsync<Models.ApiLoginResponseDto>(options);
+                            if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
+                            {
+                                await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
+                                System.Diagnostics.Debug.WriteLine($"✅ KamPay API JWT başarıyla alındı ve kaydedildi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("⚠️ API başarılı yanıt döndü ama Token okunamadı (NULL)!");
+                            }
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"⚠️ API Login Hatası: {apiResponse.StatusCode}");
+                            var errorRaw = await apiResponse.Content.ReadAsStringAsync();
+                            System.Diagnostics.Debug.WriteLine($"API DETAY: {errorRaw}");
+                        }
+                    }
+                    catch (Exception apiEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️ API'ye erişilirken hata oluştu: {apiEx.Message}");
+                    }
                 }
                 catch (FirebaseAuthException ex)
                 {
@@ -291,8 +332,32 @@ namespace KamPay.Services
                             // Yenilenen token'ı kaydet
                             _authLink = refreshedAuth;
                             await SaveUserSessionAsync(null, refreshedAuth.FirebaseToken, true, refreshedAuth.ExpiresIn);
-                            
+
                             Console.WriteLine("✅ Token başarıyla yenilendi");
+
+                            // 🌟 YENİ: Firebase Token yenilendiğinde kendi API'mize de bildirip API JWT'mizi yeniliyoruz 🌟
+                            try
+                            {
+                                using var apiHttpClient = new System.Net.Http.HttpClient();
+                                string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; 
+                                var loginPayload = new { IdToken = refreshedAuth.FirebaseToken };
+                                var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
+
+                                if (apiResponse.IsSuccessStatusCode)
+                                {
+                                    var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                                    var responseData = await apiResponse.Content.ReadFromJsonAsync<Models.ApiLoginResponseDto>(options);
+                                    if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
+                                    {
+                                        await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
+                                        System.Diagnostics.Debug.WriteLine($"✅ KamPay API JWT başarıyla yenilendi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                                    }
+                                }
+                            }
+                            catch (Exception apiEx)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"⚠️ API Token yenilerken hata: {apiEx.Message}");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -353,6 +418,41 @@ namespace KamPay.Services
 
                 // 8️⃣ Current user'ı ayarla
                 _currentUser = user;
+
+                // 🌟 YENİ: Firebase Token henüz süresi dolmamışsa bile API tarafında JWT var mı yok mu/geçerli mi kontrolü yapılmıyordu
+                // LocalStorage'de API Token yoksa yeniden Login ol
+                var apiToken = await Microsoft.Maui.Storage.SecureStorage.GetAsync("KAMPAY_API_JWT");
+                if (string.IsNullOrEmpty(apiToken))
+                {
+                    try
+                    {
+                        using var apiHttpClient = new System.Net.Http.HttpClient();
+                        string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; 
+                        var loginPayload = new { IdToken = firebaseToken };
+                        var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
+
+                        if (apiResponse.IsSuccessStatusCode)
+                        {
+                            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                            var responseData = await apiResponse.Content.ReadFromJsonAsync<Models.ApiLoginResponseDto>(options);
+                            if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
+                            {
+                                await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
+                                System.Diagnostics.Debug.WriteLine($"✅ TryAutoLogin: KamPay API JWT yeniden alındı.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                            }
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"⚠️ TryAutoLogin API Login Hatası: {apiResponse.StatusCode}");
+                            var errorRaw = await apiResponse.Content.ReadAsStringAsync();
+                            System.Diagnostics.Debug.WriteLine($"API DETAY: {errorRaw}");
+                        }
+                    }
+                    catch (Exception apiEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️ TryAutoLogin API çağırma hatası: {apiEx.Message}");
+                    }
+                }
 
                 Console.WriteLine($"✅ Otomatik giriş başarılı: {user.Email}");
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
@@ -688,6 +788,9 @@ namespace KamPay.Services
                 _authLink = null;
                 await ClearUserSessionAsync();
 
+                // 🌟 YENİ: Custom API JWT Tokemimizi da silelim
+                Microsoft.Maui.Storage.SecureStorage.Remove("KAMPAY_API_JWT");
+
                 var userStateService = Application.Current?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
                 userStateService?.ClearUser();
 
@@ -782,6 +885,16 @@ namespace KamPay.Services
                 // Bir nedenden yenilenemezse (internet yok vs.) elimizdeki son token'ı dönmeyi deneriz.
                 return await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
             }
+        }
+
+        /// <summary>
+        /// Geçerli kullanıcının Firebase ID Token'ını döner.
+        /// ProductApiService.SetAuthHeaderAsync() tarafından çağrılır.
+        /// İç yapıda GetValidTokenAsync()'e delege eder.
+        /// </summary>
+        public async Task<string> GetCurrentUserTokenAsync()
+        {
+            return await GetValidTokenAsync();
         }
 
         public bool IsUserLoggedIn()

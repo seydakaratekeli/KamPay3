@@ -294,7 +294,7 @@
                             
                             <Border StrokeShape="RoundRectangle 16"
                                     StrokeThickness="0"
-                                    HeightRequest="220">
+                                    HeightRequest="180">
                                 <Border.Shadow>
                                     <Shadow Brush="Black" Opacity="0.08" Radius="8" Offset="0,2"/>
                                 </Border.Shadow>
@@ -383,7 +383,7 @@
                                         Wrap="Wrap"
                                         JustifyContent="Start">
                                 <BindableLayout.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate x:DataType="x:String">
                                         <Border StrokeShape="RoundRectangle 12"
                                                 StrokeThickness="2"
                                                 Stroke="#2196F3"

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Firebase.Database;
-using Firebase.Database.Query;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using KamPay.API.Models;
+using KamPay.API.Services;
 
 namespace KamPay.API.Controllers
 {
@@ -10,11 +10,11 @@ namespace KamPay.API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly FirebaseClient _firebaseClient;
+        private readonly IProductService _productService;
 
-        public ProductsController(FirebaseClient firebaseClient)
+        public ProductsController(IProductService productService)
         {
-            _firebaseClient = firebaseClient;
+            _productService = productService;
         }
 
         // GET: api/v1/products
@@ -23,19 +23,7 @@ namespace KamPay.API.Controllers
         {
             try
             {
-                var urunler = await _firebaseClient
-                    .Child("products")
-                    .OrderByKey()
-                    .LimitToLast(50)
-                    .OnceAsync<Product>();
-
-                var result = urunler.Select(x =>
-                {
-                    var urun = x.Object;
-                    urun.ProductId = x.Key;
-                    return urun;
-                }).ToList();
-
+                var result = await _productService.GetAllProductsAsync();
                 return Ok(result);
             }
             catch (Exception ex)
@@ -51,20 +39,17 @@ namespace KamPay.API.Controllers
         {
             try
             {
-                var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized("Geçersiz kullanıcı token'ı.");
 
-                yeniUrun.UserId = userId;
-                yeniUrun.CreatedAt = DateTime.UtcNow;
-
                 if (yeniUrun.Price < 0)
                     return BadRequest("Fiyat sıfırdan küçük olamaz.");
 
-                var response = await _firebaseClient.Child("products").PostAsync(yeniUrun);
+                var productId = await _productService.CreateProductAsync(yeniUrun, userId);
 
-                return Ok(new { Message = "Ürün başarıyla eklendi", ProductId = response.Key });
+                return Ok(new { Message = "Ürün başarıyla eklendi", ProductId = productId });
             }
             catch (Exception ex)
             {
@@ -79,10 +64,10 @@ namespace KamPay.API.Controllers
         {
             try
             {
-                var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-                var mevcutUrunSnapshot = await _firebaseClient.Child("products").Child(id).OnceSingleAsync<Product>();
+                var mevcutUrunSnapshot = await _productService.GetProductByIdAsync(id);
                 if (mevcutUrunSnapshot == null) return NotFound("Ürün bulunamadı.");
 
                 if (mevcutUrunSnapshot.UserId != userId)
@@ -90,12 +75,7 @@ namespace KamPay.API.Controllers
                     return Forbid("Bu ilanı güncelleme yetkiniz yok!");
                 }
 
-                mevcutUrunSnapshot.Title = guncelUrun.Title;
-                mevcutUrunSnapshot.Price = guncelUrun.Price;
-                mevcutUrunSnapshot.Description = guncelUrun.Description;
-                mevcutUrunSnapshot.UpdatedAt = DateTime.UtcNow;
-
-                await _firebaseClient.Child("products").Child(id).PutAsync(mevcutUrunSnapshot);
+                await _productService.UpdateProductAsync(id, guncelUrun, userId);
 
                 return Ok(new { Message = "İlan başarıyla güncellendi." });
             }
@@ -112,15 +92,15 @@ namespace KamPay.API.Controllers
         {
             try
             {
-                var userId = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-                var mevcutUrun = await _firebaseClient.Child("products").Child(id).OnceSingleAsync<Product>();
+                var mevcutUrun = await _productService.GetProductByIdAsync(id);
                 if (mevcutUrun == null) return NotFound();
 
                 if (mevcutUrun.UserId != userId) return Forbid("Bu ilanı silme yetkiniz yok.");
 
-                await _firebaseClient.Child("products").Child(id).DeleteAsync();
+                await _productService.DeleteProductAsync(id, userId);
 
                 return Ok(new { Message = "İlan başarıyla silindi." });
             }

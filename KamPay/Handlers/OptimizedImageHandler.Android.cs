@@ -17,7 +17,7 @@ namespace KamPay.Handlers
         protected override void ConnectHandler(ImageView platformView)
         {
             base.ConnectHandler(platformView);
-            
+
             LoadImageWithGlide(platformView);
         }
 
