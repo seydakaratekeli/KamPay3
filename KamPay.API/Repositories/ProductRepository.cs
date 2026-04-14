@@ -29,6 +29,12 @@ namespace KamPay.API.Repositories
             }).ToList();
         }
 
+        public async Task<List<Product>> GetByUserIdAsync(string userId)
+        {
+            var allProducts = await GetAllAsync(1000); 
+            return allProducts.Where(p => p.UserId == userId).ToList();
+        }
+
         public async Task<Product?> GetByIdAsync(string id)
         {
             var product = await _firebaseClient.Child("products").Child(id).OnceSingleAsync<Product>();

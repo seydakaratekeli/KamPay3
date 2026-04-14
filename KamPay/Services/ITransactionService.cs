@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using KamPay.Models;
 
@@ -48,7 +48,8 @@ namespace KamPay.Services
         Task<ServiceResult<bool>> ProposePriceForSaleAsync(
             string transactionId,
             decimal proposedPrice,
-            string currentUserId
+            string currentUserId,
+            bool isInitialRequest = false
         );
 
        

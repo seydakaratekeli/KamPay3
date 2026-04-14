@@ -166,133 +166,6 @@
                                    Margin="0,-4,0,0"/>
                         </VerticalStackLayout>
 
-                        <!-- Negotiation Panel -->
-                        <Border StrokeShape="RoundRectangle 16"
-                                StrokeThickness="0"
-                                BackgroundColor="#FFF3E0"
-                                Padding="16"
-                                IsVisible="{Binding HasActiveTransaction}">
-                            <Border.Shadow>
-                                <Shadow Brush="#FF9800" Opacity="0.15" Radius="8" Offset="0,2"/>
-                            </Border.Shadow>
-                            <VerticalStackLayout Spacing="12">
-                                <Label Text="💰 Talep Durumu" 
-                                       FontSize="16" 
-                                       FontAttributes="Bold" 
-                                       TextColor="#E65100"/>
-                                
-                                <Label Text="{Binding ActiveTransaction.StatusText}"
-                                       FontSize="13"
-                                       TextColor="#424242"
-                                       Margin="0,0,0,4"/>
-
-                                <VerticalStackLayout Spacing="8" 
-                                                     IsVisible="{Binding ActiveTransaction.IsNegotiating}">
-                                    <Label Text="🤝 Pazarlık Devam Ediyor" 
-                                           FontSize="14" 
-                                           FontAttributes="Bold"
-                                           TextColor="#FF6F00"/>
-                                    
-                                    <Label IsVisible="{Binding ActiveTransaction.ProposedPriceByBuyer}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="Sizin Teklifiniz: " FontAttributes="Bold"/>
-                                                <Span Text="{Binding ActiveTransaction.ProposedPriceByBuyer, StringFormat='{0:N2} ₺'}" 
-                                                      TextColor="#4CAF50" 
-                                                      FontAttributes="Bold"/>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    
-                                    <Label IsVisible="{Binding ActiveTransaction.CounterOfferBySeller}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="Satıcının Karşı Teklifi: " FontAttributes="Bold"/>
-                                                <Span Text="{Binding ActiveTransaction.CounterOfferBySeller, StringFormat='{0:N2} ₺'}" 
-                                                      TextColor="#FF5722" 
-                                                      FontAttributes="Bold"/>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-
-                                    <Label IsVisible="{Binding ActiveTransaction.AdditionalCashByRequester}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="Ek Nakit Teklifiniz: " FontAttributes="Bold"/>
-                                                <Span Text="{Binding ActiveTransaction.AdditionalCashByRequester, StringFormat='{0:N2} ₺'}" 
-                                                      TextColor="#4CAF50" 
-                                                      FontAttributes="Bold"/>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    
-                                    <Label IsVisible="{Binding ActiveTransaction.CounterCashByOwner}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="İstenen Ek Nakit: " FontAttributes="Bold"/>
-                                                <Span Text="{Binding ActiveTransaction.CounterCashByOwner, StringFormat='{0:N2} ₺'}" 
-                                                      TextColor="#FF5722" 
-                                                      FontAttributes="Bold"/>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                </VerticalStackLayout>
-
-                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" Margin="0,8,0,0">
-                                    <Button Grid.Column="0"
-                                            Text="💬"
-                                            Command="{Binding MessageSellerCommand}"
-                                            BackgroundColor="#2196F3"
-                                            TextColor="White"
-                                            CornerRadius="12"
-                                            FontSize="18"
-                                            HeightRequest="44"/>
-                                    
-                                    <Button Grid.Column="1"
-                                            Text="💰"
-                                            BackgroundColor="#FF9800"
-                                            TextColor="White"
-                                            CornerRadius="12"
-                                            FontSize="18"
-                                            HeightRequest="44">
-                                        <Button.IsVisible>
-                                            <MultiBinding Converter="{StaticResource CanNegotiateConverter}">
-                                                <Binding Path="ActiveTransaction.Status" />
-                                                <Binding Path="ActiveTransaction.IsNegotiating" />
-                                            </MultiBinding>
-                                        </Button.IsVisible>
-                                        <Button.Triggers>
-                                            <DataTrigger TargetType="Button" 
-                                                         Binding="{Binding Product.Type}" 
-                                                         Value="{x:Static models:ProductType.Satis}">
-                                                <Setter Property="Command" Value="{Binding ProposePriceCommand}"/>
-                                            </DataTrigger>
-                                            <DataTrigger TargetType="Button" 
-                                                         Binding="{Binding Product.Type}" 
-                                                         Value="{x:Static models:ProductType.Takas}">
-                                                <Setter Property="Command" Value="{Binding ProposeAdditionalCashCommand}"/>
-                                            </DataTrigger>
-                                        </Button.Triggers>
-                                    </Button>
-                                    
-                                    <Button Grid.Column="2"
-                                            Text="✓"
-                                            Command="{Binding AcceptNegotiatedPriceCommand}"
-                                            BackgroundColor="#4CAF50"
-                                            TextColor="White"
-                                            CornerRadius="12"
-                                            FontSize="18"
-                                            HeightRequest="44"
-                                            IsVisible="{Binding ActiveTransaction.IsNegotiating}"/>
-                                </Grid>
-
-                                <Label Text="💡 Satıcıyla mesajlaşabilir, fiyat pazarlığı yapabilir ve anlaştıktan sonra teklifi kabul edebilirsiniz."
-                                       FontSize="11"
-                                       TextColor="#757575"
-                                       LineBreakMode="WordWrap"
-                                       Margin="0,4,0,0"/>
-                            </VerticalStackLayout>
-                        </Border>
 
                         <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
 
@@ -577,6 +450,21 @@
                                 <Setter Property="Text" Value="{extensions:Translate OfferTrade}" />
                             </DataTrigger>
                         </Button.Triggers>
+                    </Button>
+
+                    <Button Grid.Column="1" 
+                            Text="💰 Pazarlık Yap" 
+                            Command="{Binding MessageSellerCommand}" 
+                            HeightRequest="50" 
+                            CornerRadius="14" 
+                            BackgroundColor="#FF9800" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            FontSize="15" 
+                            IsVisible="{Binding HasActiveTransaction}">
+                        <Button.Shadow>
+                            <Shadow Brush="#FF9800" Opacity="0.4" Radius="10" Offset="0,4"/>
+                        </Button.Shadow>
                     </Button>
 
                     <Button Grid.Column="2" 

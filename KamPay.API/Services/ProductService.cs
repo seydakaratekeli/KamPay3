@@ -17,6 +17,11 @@ namespace KamPay.API.Services
             return await _productRepository.GetAllAsync();
         }
 
+        public async Task<List<Product>> GetUserProductsAsync(string userId)
+        {
+            return await _productRepository.GetByUserIdAsync(userId);
+        }
+
         public async Task<Product?> GetProductByIdAsync(string id)
         {
             return await _productRepository.GetByIdAsync(id);

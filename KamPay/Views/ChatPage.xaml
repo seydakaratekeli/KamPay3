@@ -7,6 +7,7 @@
              xmlns:behaviors="clr-namespace:KamPay.Behaviors"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              x:Class="KamPay.Views.ChatPage"
+             x:Name="chatPageRoot"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#F5F9FC">
 
@@ -178,20 +179,83 @@
                                        FontAttributes="Bold"/>
                             </Border>
                             
-                            <!--  Normal Mesajlar -->
+                            <!-- 💰 PAZARLIK MESAJI (Negotiation) -->
                             <Border Padding="12"
                                    StrokeShape="RoundRectangle 16"
                                    StrokeThickness="0"
                                    MaximumWidthRequest="280"
-                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='System,Invert=True'}">
+                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Negotiation}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="HorizontalOptions" Value="Center" />
+                                        <Setter Property="BackgroundColor" Value="#FFF3E0" /> <!-- Turuncumsu Arka Plan -->
+                                        <Setter Property="Shadow">
+                                            <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.1"/>
+                                        </Setter>
+                                    </Style>
+                                </Border.Style>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                                        <Label Text="💰" FontSize="18" VerticalOptions="Center"/>
+                                        <Label Text="{Binding NegotiationAction}" FontAttributes="Bold" FontSize="12" TextColor="#F57C00" VerticalOptions="Center" TextTransform="Uppercase"/>
+                                    </HorizontalStackLayout>
+                                    
+                                    <Label Text="{Binding Content}"
+                                           LineBreakMode="WordWrap"
+                                           TextColor="#212121"
+                                           FontSize="15"
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                    
+                                    <!-- Butonlar kısmı: Sadece karşı tarafın gönderdiği teklifler için butonları göster (Kendi teklifini kabul edemezsin) -->
+                                    <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" Margin="0,5,0,0"
+                                                           IsVisible="{Binding IsSentByMe, Converter={StaticResource InvertedBoolConverter}}">
+                                        <Button Text="Kabul Et"
+                                                BackgroundColor="#4CAF50"
+                                                TextColor="White"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontSize="12"
+                                                FontAttributes="Bold"
+                                                Padding="10,0"
+                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.AcceptOfferCommand}"
+                                                CommandParameter="{Binding .}" />
+                                                
+                                        <Button Text="Karşı Teklif"
+                                                BackgroundColor="#1E88E5"
+                                                TextColor="White"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontSize="12"
+                                                FontAttributes="Bold"
+                                                Padding="10,0"
+                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ProposeOfferCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                            
+                            <!--  Normal Mesajlar -->
+                            <Border Padding="12"
+                                   StrokeShape="RoundRectangle 16"
+                                   StrokeThickness="0"
+                                   MaximumWidthRequest="280">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="HorizontalOptions" Value="Start" />
                                         <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                                        <Setter Property="IsVisible" Value="True" />
                                         <Setter Property="Shadow">
                                             <Shadow Brush="Black" Offset="0,1" Radius="6" Opacity="0.08"/>
                                         </Setter>
                                         <Style.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="System">
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="Negotiation">
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
                                             <DataTrigger TargetType="Border"
                                                          Binding="{Binding IsSentByMe}"
                                                          Value="True">
@@ -217,7 +281,7 @@
                                                    WidthRequest="240"
                                                    HeightRequest="200">
                                                 <Image.GestureRecognizers>
-                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ViewImageCommand}"
+                                                    <TapGestureRecognizer Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ViewImageCommand}"
                                                                           CommandParameter="{Binding ImageUrl}" />
                                                 </Image.GestureRecognizers>
                                             </Image>
@@ -333,8 +397,8 @@
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,-2" Radius="10" Opacity="0.08"/>
             </Border.Shadow>
-            <Grid ColumnDefinitions="Auto,*,Auto"
-                  ColumnSpacing="10">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto"
+                  ColumnSpacing="8">
                 
                 <!--  Fotoğraf Butonu -->
                 <Border Grid.Column="0"
@@ -352,8 +416,25 @@
                            VerticalOptions="Center"/>
                 </Border>
                 
-                <!-- Mesaj Entry -->
+                <!-- 💰 Teklif Ver Butonu (Sadece ActiveTransaction varsa) -->
                 <Border Grid.Column="1"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="#FFF3E0"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        StrokeThickness="0"
+                        IsVisible="{Binding HasActiveTransaction}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ProposeOfferCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="💰"
+                           FontSize="24"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
+                
+                <!--  Mesaj Entry -->
+                <Border Grid.Column="2"
                        Padding="14,0"
                        StrokeShape="RoundRectangle 24"
                        StrokeThickness="1"
@@ -372,7 +453,7 @@
                 </Border>
 
                 <!-- Gönder Butonu -->
-                <Border Grid.Column="2"
+                <Border Grid.Column="3"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="{StaticResource Primary}"
                         WidthRequest="48"

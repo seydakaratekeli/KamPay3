@@ -48,6 +48,11 @@ namespace KamPay.Models
         public string TimeText => SentAt.ToString("HH:mm");
         public string ImageUrl { get; set; } = "";
 
+        // Pazarlık (Negotiation) özellikleri
+        public decimal? ProposedPrice { get; set; }
+        public string? NegotiationAction { get; set; }
+        public string? RelatedTransactionId { get; set; }
+
         // ✅ [ObservableProperty] — ChatViewModel'de temp mesajdan gerçek mesaja geçişte UI anında değişir
         [ObservableProperty]
         [property: JsonIgnore]
@@ -64,7 +69,8 @@ namespace KamPay.Models
         Text = 0,
         Image = 1,
         Product = 2,
-        System = 3
+        System = 3,
+        Negotiation = 4
     }
 
     // Mesaj gönderme için DTO (Veri Transfer Nesnesi)
@@ -75,5 +81,10 @@ namespace KamPay.Models
         public MessageType Type { get; set; } = MessageType.Text;
         public string ProductId { get; set; } = "";
         public string ImageUrl { get; set; } = "";
+        
+        // Pazarlık DTO alanları
+        public decimal? ProposedPrice { get; set; }
+        public string? NegotiationAction { get; set; }
+        public string? RelatedTransactionId { get; set; }
     }
 }

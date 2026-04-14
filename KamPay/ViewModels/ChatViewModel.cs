@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -25,7 +25,8 @@ namespace KamPay.ViewModels
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
         private readonly IStorageService _storageService;
-        private readonly IUserProfileService _userProfileService; // ✅ YENİ EKLEME
+        private readonly IUserProfileService _userProfileService;
+        private readonly ITransactionService _transactionService; // ✅ EKLENEN
         private readonly FirebaseClient _firebaseClient;
         private User? _currentUser;
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
@@ -73,6 +74,12 @@ namespace KamPay.ViewModels
         public ObservableCollection<Message> Messages { get; set; } = new();
         public Conversation? Conversation { get; set; }
 
+        [ObservableProperty]
+        private Transaction? activeTransaction;
+
+        [ObservableProperty]
+        private bool hasActiveTransaction;
+
         private bool _isOtherUserOnline;
         public bool IsOtherUserOnline
         {
@@ -92,15 +99,17 @@ namespace KamPay.ViewModels
             IAuthenticationService authService,
             IUserStateService userStateService,
             IStorageService storageService,
-            IUserProfileService userProfileService, // ✅ YENİ EKLEME
-            FirebaseClient firebaseClient) // ✅ YENİ EKLEME
+            IUserProfileService userProfileService,
+            ITransactionService transactionService, // ✅ EKLENEN
+            FirebaseClient firebaseClient)
         {
             _messagingService = messagingService;
             _authService = authService;
             _userStateService = userStateService;
             _storageService = storageService;
-            _userProfileService = userProfileService; // ✅ YENİ EKLEME
-            _firebaseClient = firebaseClient; // ✅ YENİ EKLEME
+            _userProfileService = userProfileService;
+            _transactionService = transactionService; // ✅ EKLENEN
+            _firebaseClient = firebaseClient;
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -288,6 +297,41 @@ namespace KamPay.ViewModels
 
                         // ✅ Fallback: Kullanıcı profil servisi ile fotoğraf yükle
                         await EnsureOtherUserPhotoAsync();
+
+                        // ✅ LOAD ACTIVE TRANSACTION (Daha güvenli yöntem)
+                        try
+                        {
+                            var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
+                            if (myOffersResult.Success && myOffersResult.Data != null)
+                            {
+                                var match = myOffersResult.Data.FirstOrDefault(t => t.ConversationId == ConversationId);
+                                if (match != null)
+                                {
+                                    ActiveTransaction = match;
+                                    HasActiveTransaction = true;
+                                    Console.WriteLine($"✅ ActiveTransaction loaded: {match.TransactionId}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"⚠️ Bu konuşmaya bağlı işlem bulunamadı: {ConversationId}");
+                                    // Belki henüz conversationId set edilmemiş bir transaction var? ProductId filtresiyle de bakılabilir
+                                    if (Conversation != null && !string.IsNullOrEmpty(Conversation.ProductId))
+                                    {
+                                        var fallbackMatch = myOffersResult.Data.FirstOrDefault(t => t.ProductId == Conversation.ProductId && (t.Status == TransactionStatus.Pending || t.IsNegotiating));
+                                        if (fallbackMatch != null)
+                                        {
+                                            ActiveTransaction = fallbackMatch;
+                                            HasActiveTransaction = true;
+                                            Console.WriteLine($"✅ ActiveTransaction loaded via Fallback ProductId: {fallbackMatch.TransactionId}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ Could not load active transaction: {ex.Message}");
+                        }
                     }
                     else
                     {
@@ -755,6 +799,158 @@ namespace KamPay.ViewModels
             if (oldKeys.Any())
             {
                 Console.WriteLine($"🗑️ {oldKeys.Count} eski cache otomatik temizlendi");
+            }
+        }
+
+        // ✅ IN-CHAT NEGOTIATION COMMANDS
+
+        [RelayCommand]
+        private async Task ProposeOfferAsync(Message message)
+        {
+            // Kullanılacak özel transaction (Balon üzerinden geliyorsa kendi transaction'ı, alt butondan geliyorsa genel ActiveTransaction)
+            Transaction targetTransaction = ActiveTransaction;
+
+            if (message != null && !string.IsNullOrEmpty(message.RelatedTransactionId))
+            {
+                // Eğer buton, bir teklif balonundan tetiklendiyse ve balonda işlem ID'si varsa onu kullan
+                // Mevcut listedeki işlemler arasından bulmayı deneriz
+                var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
+                if (myOffersResult.Success && myOffersResult.Data != null)
+                {
+                    var specificTx = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
+                    if (specificTx != null)
+                    {
+                        targetTransaction = specificTx;
+                    }
+                }
+            }
+
+            if (targetTransaction == null) 
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif işlem (transaction) yüklenemedi. Lütfen sayfayı yenileyin veya tekrar girin.", "Tamam");
+                return;
+            }
+            if (_currentUser == null) return;
+
+            try
+            {
+                var result = await Application.Current!.MainPage!.DisplayPromptAsync(
+                    $"💰 Fiyat Teklifi ({targetTransaction.ProductTitle})",
+                    "Teklif etmek istediğiniz tutarı girin (₺):",
+                    Res["SendButton"] ?? "Gönder",
+                    Res["Cancel"] ?? "İptal",
+                    "Örn: 500",
+                    keyboard: Keyboard.Numeric
+                );
+
+                if (string.IsNullOrWhiteSpace(result)) return;
+
+                if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar giriniz.", "Tamam");
+                    return;
+                }
+
+                IsLoading = true;
+
+                // Satıcı mı Alıcı mı?
+                if (targetTransaction.SellerId == _currentUser.UserId)
+                {
+                    // Satıcı ise CounterOffer gönder
+                    var response = await _transactionService.SendCounterOfferForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
+                    if (!response.Success)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", response.Message, "Tamam");
+                    }
+                }
+                else
+                {
+                    // Alıcı ise ProposePrice gönder
+                    var response = await _transactionService.ProposePriceForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
+                    if (!response.Success)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", response.Message, "Tamam");
+                    }
+                }
+
+                // Tekrar transaction'ı yükleyelim ki UI güncellensin
+                await LoadChatAsync();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task AcceptOfferAsync(Message message)
+        {
+            if (message == null) return;
+            
+            // Özel transaction bul (karışıklığı önlemek için mesaj bilgisini süz)
+            Transaction targetTransaction = ActiveTransaction;
+            if (!string.IsNullOrEmpty(message.RelatedTransactionId))
+            {
+                var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser?.UserId ?? "");
+                if (myOffersResult.Success && myOffersResult.Data != null)
+                {
+                    var specificTx = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
+                    if (specificTx != null)
+                    {
+                        targetTransaction = specificTx;
+                    }
+                }
+            }
+
+            if (targetTransaction == null) 
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif işlem yüklenemedi. Lütfen sayfayı yenile.", "Tamam");
+                return;
+            }
+            if (_currentUser == null) return;
+            
+            // Eğer teklif zaten kabul edildiyse veya reddedildiyse işlem yapma
+            if (targetTransaction.Status != TransactionStatus.Pending || !targetTransaction.IsNegotiating)
+            {
+                 await Application.Current!.MainPage!.DisplayAlert("Uyarı", "Bu pazarlık zaten sonuçlanmış.", "Tamam");
+                 return;
+            }
+
+            try
+            {
+                var confirm = await Application.Current!.MainPage!.DisplayAlert(
+                    $"Onay ({targetTransaction.ProductTitle})",
+                    $"{message.ProposedPrice:N2}₺ teklifi kabul etmek istediğinize emin misiniz?",
+                    "Kabul Et",
+                    "İptal"
+                );
+
+                if (!confirm) return;
+
+                IsLoading = true;
+
+                var result = await _transactionService.AcceptNegotiatedPriceAsync(targetTransaction.TransactionId, _currentUser.UserId);
+
+                if (result.Success)
+                {
+                    await LoadChatAsync(); // State'i güncelle
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

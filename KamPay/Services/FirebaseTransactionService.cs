@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Helpers;
@@ -936,7 +936,8 @@ namespace KamPay.Services
         public async Task<ServiceResult<bool>> ProposePriceForSaleAsync(
             string transactionId,
             decimal proposedPrice,
-            string currentUserId)
+            string currentUserId,
+            bool isInitialRequest = false)
         {
             try
             {
@@ -1006,23 +1007,36 @@ namespace KamPay.Services
 
                 System.Diagnostics.Debug.WriteLine($"✅ Fiyat teklifi kaydedildi: {proposedPrice:N2}₺ (Tur: {transaction.NegotiationRoundCount})");
 
+                // Bildirim başlığı ve mesajını belirle
+                string notificationTitle = isInitialRequest ? "💰 Satın Alma İsteği" : "💰 Yeni Fiyat Teklifi";
+                string notificationMessage = isInitialRequest
+                    ? $"{transaction.BuyerName}, '{transaction.ProductTitle}' ürününü satın almak istiyor. ({proposedPrice:N2}₺)"
+                    : $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {proposedPrice:N2}₺ teklif etti. (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})";
+
                 // Bildirim
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = transaction.SellerId,
                     Type = NotificationType.NewOffer,
-                    Title = "💰 Yeni Fiyat Teklifi",
-                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {proposedPrice:N2}₺ teklif etti. (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})",
+                    Title = notificationTitle,
+                    Message = notificationMessage,
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
-                    await AddSystemMessageAsync(
+                    string messageText = isInitialRequest 
+                        ? $"💰 Alıcı bu ürünü liste fiyatından ({proposedPrice:N2}₺) satın almak istiyor." 
+                        : $"💰 Alıcı: {proposedPrice:N2}₺ teklif etti.";
+
+                    await AddNegotiationMessageAsync(
                         transaction.ConversationId,
-                        $"📦 [{transaction.ProductTitle} - Satış]\n💰 Fiyat Teklifi: {proposedPrice:N2} ₺\n" +
-                        $"(Orijinal fiyat: {transaction.Price:N2} ₺)\n" +
-                        $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}"
+                        messageText,
+                        proposedPrice,
+                        currentUserId,
+                        transaction.BuyerName,
+                        transaction.TransactionId,
+                        "Propose"
                     );
                 }
 
@@ -1121,14 +1135,14 @@ namespace KamPay.Services
 
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
-                    var buyerOffer = transaction.ProposedPriceByBuyer.HasValue 
-                        ? $"\n(Alıcının teklifi: {transaction.ProposedPriceByBuyer:N2} ₺)" 
-                        : "";
-    
-                    await AddSystemMessageAsync(
+                    await AddNegotiationMessageAsync(
                         transaction.ConversationId,
-                        $"📦 [{transaction.ProductTitle} - Satış]\n💰 Karşı Teklif: {counterOffer:N2} ₺{buyerOffer}\n" +
-                        $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}"
+                        $"🔄 Satıcı: {counterOffer:N2}₺ karşı teklif etti.",
+                        counterOffer,
+                        currentUserId,
+                        transaction.SellerName,
+                        transaction.TransactionId,
+                        "CounterOffer"
                     );
                 }
 
@@ -1439,17 +1453,14 @@ namespace KamPay.Services
                 // Konuşmaya sistem mesajı ekle
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
-                    var typeIcon = transaction.Type == ProductType.Satis ? "📦" : "🔄";
-                    var typeText = transaction.Type == ProductType.Satis ? "Satış" : "Takas";
-                    
-                    var exchangeInfo = transaction.Type == ProductType.Takas && !string.IsNullOrEmpty(transaction.OfferedProductTitle)
-                        ? $"\n(Takas: {transaction.OfferedProductTitle} ↔ {transaction.ProductTitle})"
-                        : "";
-    
-                    await AddSystemMessageAsync(
+                    await AddNegotiationMessageAsync(
                         transaction.ConversationId,
-                        $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n✅ Fiyat Anlaşması: {agreedAmount:N2} ₺{exchangeInfo}\n\n" +
-                        $"✅ İşlem onaylandı! {(transaction.Type == ProductType.Satis ? "Ödeme yapılabilir" : "Teslimat için QR kodları kullanılabilir")}."
+                        $"✅ Teklifi kabul etti. \nAnlaşılan Fiyat: {agreedAmount:N2} ₺",
+                        agreedAmount,
+                        currentUserId,
+                        currentUserId == transaction.BuyerId ? transaction.BuyerName : transaction.SellerName,
+                        transaction.TransactionId,
+                        "Accept"
                     );
                 }
 
@@ -1685,6 +1696,55 @@ namespace KamPay.Services
                 Console.WriteLine($"❌ AddSystemMessageAsync hatası: {ex.Message}");
                 Console.WriteLine($"   StackTrace: {ex.StackTrace}");
                 System.Diagnostics.Debug.WriteLine($"⚠️ Sistem mesajı eklenemedi: {ex.Message}");
+            }
+        }
+
+        // Pazarlık mesajı eklemek için yardımcı metod
+        private async Task AddNegotiationMessageAsync(string conversationId, string messageText, decimal proposedPrice, string senderId, string senderName, string transactionId, string action)
+        {
+            try
+            {
+                Console.WriteLine($"📝 AddNegotiationMessageAsync çağrıldı:");
+                
+                var negotiationMessage = new Message
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    ConversationId = conversationId,
+                    SenderId = senderId,
+                    SenderName = senderName,
+                    Content = messageText,
+                    SentAt = DateTime.UtcNow,
+                    IsRead = false,
+                    IsSystemMessage = false,
+                    Type = MessageType.Negotiation,
+                    ProposedPrice = proposedPrice,
+                    RelatedTransactionId = transactionId,
+                    NegotiationAction = action
+                };
+
+                await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(conversationId)
+                    .Child(negotiationMessage.MessageId)
+                    .PutAsync(negotiationMessage);
+
+                // Konuşmanın son mesajını güncelle
+                var conversationRef = _firebaseClient
+                    .Child(Constants.ConversationsCollection)
+                    .Child(conversationId);
+
+                var conversation = await conversationRef.OnceSingleAsync<Conversation>();
+                if (conversation != null)
+                {
+                    conversation.LastMessage = messageText;
+                    conversation.LastMessageTime = DateTime.UtcNow;
+                    conversation.UpdatedAt = DateTime.UtcNow;
+                    await conversationRef.PutAsync(conversation);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Pazarlık mesajı eklenemedi: {ex.Message}");
             }
         }
 

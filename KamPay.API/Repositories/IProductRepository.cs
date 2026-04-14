@@ -5,6 +5,7 @@ namespace KamPay.API.Repositories
     public interface IProductRepository
     {
         Task<List<Product>> GetAllAsync(int limit = 50);
+        Task<List<Product>> GetByUserIdAsync(string userId);
         Task<Product?> GetByIdAsync(string id);
         Task<string> AddAsync(Product product);
         Task UpdateAsync(string id, Product product);

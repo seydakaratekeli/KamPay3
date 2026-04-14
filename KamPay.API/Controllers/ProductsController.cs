@@ -32,6 +32,43 @@ namespace KamPay.API.Controllers
             }
         }
 
+        // GET: api/v1/products/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductById(string id)
+        {
+            try
+            {
+                var product = await _productService.GetProductByIdAsync(id);
+                if (product == null)
+                    return NotFound("Ürün bulunamadı.");
+
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Sunucu hatası: {ex.Message}");
+            }
+        }
+
+        // GET: api/v1/products/user/{userId}
+        [HttpGet("user/{userId}")]
+        [Authorize]
+        public async Task<IActionResult> GetUserProducts(string userId)
+        {
+            try
+            {
+                var myUserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(myUserId)) return Unauthorized();
+
+                var result = await _productService.GetUserProductsAsync(userId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Sunucu hatası: {ex.Message}");
+            }
+        }
+
         // POST: api/v1/products
         [HttpPost]
         [Authorize]

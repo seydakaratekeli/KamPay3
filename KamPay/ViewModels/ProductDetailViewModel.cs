@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
@@ -330,7 +330,49 @@ namespace KamPay.ViewModels
                         break;
 
                     case ProductType.Satis:
-                        // ✅ DÜZELTİLDİ: Satış için direkt talep gönder (pazarlıksız akış)
+                        // Kullanıcıya liste fiyatı mı yoksa pazarlık mı istediğini soralım
+                        var action = await Application.Current.MainPage.DisplayActionSheet(
+                            "Satın Alma Seçeneği",
+                            Res["Cancel"] ?? "İptal",
+                            null,
+                            $"Liste Fiyatıyla Al ({Product.Price:N2}₺)",
+                            "Fiyat Teklifi Ver (Pazarlık Yap)");
+
+                        if (action == (Res["Cancel"] ?? "İptal") || action == null)
+                        {
+                            IsLoading = false;
+                            return;
+                        }
+
+                        decimal targetPrice = Product.Price;
+                        bool isFixedPrice = true;
+
+                        if (action == "Fiyat Teklifi Ver (Pazarlık Yap)")
+                        {
+                            var priceResult = await Application.Current.MainPage.DisplayPromptAsync(
+                                "💰 Fiyat Teklifi",
+                                $"'{Product.Title}' için teklifinizi girin (₺):",
+                                Res["SendButton"] ?? "Gönder",
+                                Res["Cancel"] ?? "İptal",
+                                "Örn: 450",
+                                keyboard: Keyboard.Numeric);
+
+                            if (string.IsNullOrWhiteSpace(priceResult))
+                            {
+                                IsLoading = false;
+                                return;
+                            }
+
+                            if (!decimal.TryParse(priceResult, out targetPrice) || targetPrice <= 0)
+                            {
+                                await Application.Current.MainPage.DisplayAlert(Res["Error"] ?? "Hata", "Geçerli bir tutar giriniz.", Res["Ok"] ?? "Tamam");
+                                IsLoading = false;
+                                return;
+                            }
+                            isFixedPrice = false;
+                        }
+
+                        // Satış için talebi oluştur
                         var saleResult = await _transactionService.CreateRequestAsync(Product, currentUser);
                         
                         if (saleResult.Success)
@@ -338,20 +380,35 @@ namespace KamPay.ViewModels
                             ActiveTransaction = saleResult.Data;
                             HasActiveTransaction = true;
                             
-                            var message = $"✅ Satın alma talebiniz gönderildi!\n\n" +
-                                          $"📦 Ürün: {Product.Title}\n" +
-                                          $"💰 Fiyat: {Product.Price:N2}₺\n\n" +
-                                          $"🎯 Şimdi yapabilecekleriniz:\n" +
-                                          $"• 💬 Satıcıyla mesajlaşın\n" +
-                                          $"• 💰 Fiyat pazarlığı yapın (isteğe bağlı)\n" +
-                                          $"• ⏳ Satıcının onayını bekleyin\n\n" +
-                                          $"📌 Not: Satıcı teklifi kabul edince ödeme yapabilirsiniz.";
+                            // Hemen konuşmayı başlat
+                            var convResult = await _transactionService.StartConversationForTransactionAsync(ActiveTransaction.TransactionId, currentUser.UserId);
                             
-                            await Application.Current.MainPage.DisplayAlert(
-                                Res["Success"], 
-                                message, 
-                                Res["Ok"]
-                            );
+                            if (convResult.Success)
+                            {
+                                // Seçilen fiyatı (liste fiyatı veya pazarlık) teklif olarak gönder
+                                // isInitialRequest true ise "liste fiyatından almak istiyor", false ise "teklif verdi" yazar.
+                                await _transactionService.ProposePriceForSaleAsync(ActiveTransaction.TransactionId, targetPrice, currentUser.UserId, isInitialRequest: isFixedPrice);
+                                
+                                // Durum bilgisini chate entegre et
+                                string statusNote = isFixedPrice 
+                                    ? "⏳ Satın alma talebi (liste fiyatı) oluşturuldu.\nLütfen satıcının onaylaması bekleniyor."
+                                    : $"⏳ Pazarlık başlatıldı (Teklif: {targetPrice:N2}₺).\nLütfen satıcının teklifi değerlendirmesi bekleniyor.";
+
+                                var systemMessageRequest = new SendMessageRequest
+                                {
+                                    ReceiverId = Product.UserId,
+                                    Content = statusNote,
+                                    Type = MessageType.System,
+                                    ProductId = Product.ProductId
+                                };
+                                await _messagingService.SendMessageAsync(systemMessageRequest, currentUser);
+                            }
+                            
+                            // Pop-up kaldırıldı, kullanıcıyı direkt konuşma penceresine yönlendir
+                            if (convResult.Success)
+                            {
+                                await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={convResult.Data}");
+                            }
                         }
                         else
                         {
@@ -433,79 +490,14 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Fiyat teklifi (Satış için - Alıcı)
+        //  Fiyat teklifi (Satış için - Alıcı) Artık Chat ekranına yönlendiriyor
         [RelayCommand]
         private async Task ProposePriceAsync()
         {
             if (ActiveTransaction == null || Product == null || Product.Type != ProductType.Satis) return;
-
-            try
-            {
-                // ✅ DÜZELTİLDİ: ALICI için net metin (sadece kendi teklifini ve satıcının karşı teklifini görür)
-                var currentPriceText = Product.Price > 0 
-                    ? $"📦 Ürün Fiyatı: {Product.Price:N2}₺\n\n"
-                    : "";
-
-                var yourOfferText = ActiveTransaction.ProposedPriceByBuyer.HasValue
-                    ? $"💰 Sizin Teklifiniz: {ActiveTransaction.ProposedPriceByBuyer:N2}₺\n"
-                    : "";
-
-                var counterOfferText = ActiveTransaction.CounterOfferBySeller.HasValue
-                    ? $"🔄 Satıcının Karşı Teklifi: {ActiveTransaction.CounterOfferBySeller:N2}₺\n\n"
-                    : "\n";
-
-                if (Application.Current?.MainPage == null) return;
-
-                var result = await Application.Current.MainPage.DisplayPromptAsync(
-                    "💰 Fiyat Teklifi Gönder",
-                    $"{currentPriceText}{yourOfferText}{counterOfferText}Yeni teklifinizi girin:",
-                    Res["SendButton"],
-                    Res["Cancel"],
-                    Res["PriceTLPlaceholder"],
-                    keyboard: Keyboard.Numeric
-                );
-
-                if (string.IsNullOrWhiteSpace(result)) return;
-
-                if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
-                {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["EnterValidPrice"], Res["Ok"]);
-                    return;
-                }
-
-                IsLoading = true;
-                var currentUser = await _authService.GetCurrentUserAsync();
-                if (currentUser == null) return;
-
-                var proposeResult = await _transactionService.ProposePriceForSaleAsync(
-                    ActiveTransaction.TransactionId,
-                    proposedPrice,
-                    currentUser.UserId
-                );
-
-                if (proposeResult.Success)
-                {
-                    await Application.Current.MainPage.DisplayAlert(
-                        Res["Success"], 
-                        Res["PriceProposalSent"], 
-                        Res["Ok"]
-                    );
-                    await LoadActiveTransactionAsync(currentUser.UserId);
-                }
-                else
-                {
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], proposeResult.Message, Res["Ok"]);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (Application.Current?.MainPage != null)
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            
+            // "Pazarlık Yap" butonuna basıldığında direkt chat ekranına yönlendiriyoruz.
+            await MessageSellerAsync();
         }
 
         //  Ek nakit teklifi (Takas için - Talep Eden)
