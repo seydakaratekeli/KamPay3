@@ -23,9 +23,6 @@ namespace KamPay.Views
         {
             base.OnAppearing();
 
-            // Verileri yenile
-            await _viewModel.InitializeAsync();
-
             // Arka plan animasyonunu başlat
             StartBackgroundRotation();
 
@@ -33,8 +30,17 @@ namespace KamPay.Views
             if (!_hasAnimated)
             {
                 _hasAnimated = true;
-                await Task.Delay(100);
+                // UI donmasını önlemek için sekme geçişine zaman tanı
+                await Task.Delay(350);
                 await AnimatePageAsync();
+
+                // Animasyonlar bittikten sonra veriyi beklemeden (async ateşle unut) tetikle
+                _ = _viewModel.InitializeAsync();
+            }
+            else
+            {
+                // Daha önce animasyon yapıldıysa doğrudan çek
+                _ = _viewModel.InitializeAsync();
             }
         }
 

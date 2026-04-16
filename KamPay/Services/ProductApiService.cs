@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using KamPay.Helpers;
 using KamPay.Models;
 
@@ -19,6 +21,11 @@ public class ProductApiService : IProductService
     private readonly IProductImageCoordinator _imageCoordinator;
     private readonly IProductCacheService _cacheService;
 
+    private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public ProductApiService(HttpClient httpClient, IAuthenticationService authService, IProductImageCoordinator imageCoordinator, IProductCacheService cacheService)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -35,12 +42,12 @@ public class ProductApiService : IProductService
 #if ANDROID
         // 📱 GERÇEK CİHAZ TESTİ: Bilgisayarınızın IP adresini buraya yazın
         // CMD'de "ipconfig" komutu ile öğrenebilirsiniz
-        var baseHost = "http://192.168.88.177:5011";
-        
+        var baseHost = "http://192.168.226.219:5011";
+
         // 🖥️ EMÜLATÖR TESTİ İÇİN: Yukarıdaki satırı yorum yapıp bunu açın
         // var baseHost = "http://10.0.2.2:5011";
 #elif IOS
-        var baseHost = "http://localhost:5011";
+        var baseHost = "http://192.168.226.219:5011";
 #else
         var baseHost = "http://localhost:5011";
 #endif
@@ -69,18 +76,15 @@ public class ProductApiService : IProductService
 
     #region IProductQueryService Methods
 
-    public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null)
+    public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null, CancellationToken cancellationToken = default)
     {
         try
         {
             // Token'a gerek yok, herkes ürünleri görebilir. Direkt API'mizden çekiyoruz.
-            var response = await _httpClient.GetAsync(_baseUrl);
+            var response = await _httpClient.GetAsync(_baseUrl, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>(new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
 
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>(), "Ürünler API'den çekildi");
             }
@@ -94,36 +98,36 @@ public class ProductApiService : IProductService
         }
     }
 
-    public async Task<ServiceResult<Product>> GetProductByIdAsync(string productId) 
+    public async Task<ServiceResult<Product>> GetProductByIdAsync(string productId, CancellationToken cancellationToken = default) 
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/{productId}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/{productId}", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var product = await response.Content.ReadFromJsonAsync<Product>();
+                var product = await response.Content.ReadFromJsonAsync<Product>(_jsonOptions, cancellationToken);
                 if (product != null)
                 {
                     return ServiceResult<Product>.SuccessResult(product);
                 }
             }
-            return ServiceResult<Product>.FailureResult("Ürün bulunamadı", response.ReasonPhrase);
+            return ServiceResult<Product>.FailureResult($"API Hatası ({response.StatusCode})", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<Product>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<Product>.FailureResult("API bağlantı hatası", ex.Message);
         }
     }
 
-    public async Task<ServiceResult<List<Product>>> GetUserProductsAsync(string userId) 
+    public async Task<ServiceResult<List<Product>>> GetUserProductsAsync(string userId, CancellationToken cancellationToken = default) 
     {
         try
         {
             // API'de /user/{userId} rotasının olduğunu varsayıyoruz
-            var response = await _httpClient.GetAsync($"{_baseUrl}/user/{userId}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/user/{userId}", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>();
+                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
             }
             return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
@@ -134,15 +138,15 @@ public class ProductApiService : IProductService
         }
     }
 
-    public async Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null) 
+    public async Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null, CancellationToken cancellationToken = default) 
     {
         try
         {
             var query = $"?categoryId={categoryId}&searchText={searchText}";
-            var response = await _httpClient.GetAsync($"{_baseUrl}{query}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}{query}", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>();
+                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
             }
             return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
@@ -153,15 +157,15 @@ public class ProductApiService : IProductService
         }
     }
 
-    public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(int pageSize = 20, string? lastKey = null, ProductFilter? filter = null)
+    public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(int pageSize = 20, string? lastKey = null, ProductFilter? filter = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var query = $"?pageSize={pageSize}&lastKey={lastKey}";
-            var response = await _httpClient.GetAsync($"{_baseUrl}/paged{query}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/paged{query}", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>();
+                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
             }
             return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
@@ -172,7 +176,7 @@ public class ProductApiService : IProductService
         }
     }
 
-    public Task<ServiceResult<List<Category>>> GetCategoriesAsync()
+    public Task<ServiceResult<List<Category>>> GetCategoriesAsync(CancellationToken cancellationToken = default)
     {
         // Kategoriler de API'den gelecek şekilde güncellenecek
         return Task.FromResult(ServiceResult<List<Category>>.SuccessResult(Category.GetDefaultCategories(), "Varsayılan Kategoriler"));

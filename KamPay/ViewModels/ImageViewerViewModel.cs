@@ -1,16 +1,40 @@
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace KamPay.ViewModels
 {
     // bu sayfa teslimat fotoğrafını görüntülemek ve indirmek için kullanılır
-    [QueryProperty(nameof(PhotoUrl), "photoUrl")]
-    [QueryProperty(nameof(ImagesJson), "images")]
-    [QueryProperty(nameof(SelectedIndex), "index")]
+    [QueryProperty("PhotoUrl", "photoUrl")]
+    [QueryProperty("ImagesJson", "imagesJson")] // Keep for deep links if needed, map to different key
+    [QueryProperty("InputImages", "images")]
+    [QueryProperty("SelectedIndex", "index")]
     public partial class ImageViewerViewModel : ObservableObject
     {
         [ObservableProperty] private string photoUrl = string.Empty;
         [ObservableProperty] private string imagesJson = string.Empty;
+
+        private List<string> _inputImages = new();
+        public List<string> InputImages
+        {
+            get => _inputImages;
+            set
+            {
+                if (SetProperty(ref _inputImages, value))
+                {
+                    if (value != null && value.Count > 0)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            ProductImages.Clear();
+                            foreach (var img in value) ProductImages.Add(img);
+                            IsLoading = false;
+                        });
+                    }
+                }
+            }
+        }
+
         [ObservableProperty] private int selectedIndex;
         [ObservableProperty] private bool isLoading = true;
 
@@ -20,8 +44,12 @@ namespace KamPay.ViewModels
         {
             if (!string.IsNullOrEmpty(value) && ProductImages.Count == 0)
             {
-                ProductImages.Add(value);
-                IsLoading = false;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    ProductImages.Clear();
+                    ProductImages.Add(value);
+                    IsLoading = false;
+                });
             }
         }
 
@@ -35,8 +63,11 @@ namespace KamPay.ViewModels
                     var images = System.Text.Json.JsonSerializer.Deserialize<List<string>>(decoded);
                     if (images != null)
                     {
-                        ProductImages.Clear();
-                        foreach (var img in images) ProductImages.Add(img);
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            ProductImages.Clear();
+                            foreach (var img in images) ProductImages.Add(img);
+                        });
                     }
                 }
                 catch { }

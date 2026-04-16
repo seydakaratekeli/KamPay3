@@ -34,7 +34,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isRefreshing;
 
-        public ObservableCollection<Favorite> FavoriteItems { get; } = new();
+        public ObservableRangeCollection<Favorite> FavoriteItems { get; } = new();
 
         public FavoritesViewModel(IFavoriteService favoriteService, IProductService productService, IAuthenticationService authService)
         {
@@ -78,9 +78,9 @@ namespace KamPay.ViewModels
                     .OnceAsync<Favorite>();
 
                 // Listeyi temizle ve doldur
-                FavoriteItems.Clear();
                 _favoriteIds.Clear();
 
+                var favoriteItemsList = new System.Collections.Generic.List<Favorite>();
                 foreach (var item in initialSnapshot)
                 {
                     var fav = item.Object;
@@ -88,10 +88,11 @@ namespace KamPay.ViewModels
 
                     if (!_favoriteIds.Contains(fav.FavoriteId))
                     {
-                        FavoriteItems.Add(fav);
+                        favoriteItemsList.Add(fav);
                         _favoriteIds.Add(fav.FavoriteId);
                     }
                 }
+                FavoriteItems.ReplaceRange(favoriteItemsList);
 
                 //  KRİTİK: Veri olsun ya da olmasın yüklemeyi bitir.
                 IsLoading = false;

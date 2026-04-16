@@ -19,15 +19,22 @@ namespace KamPay.Views
         {
             base.OnAppearing();
 
-            // ViewModel'in initialize metodunu çağır
-            await _viewModel.InitializeAsync();
-
-            // Animasyonları çalıştır
             if (!_hasAnimated)
             {
                 _hasAnimated = true;
-                await Task.Delay(100);
+                // MAUI Tab geçişinin tamamlanması ve uygulamanın donmaması için UI'a 350ms nefes aldır
+                await Task.Delay(350);
+
+                // Önce ekranı akıcı şekilde çiz
                 await AnimatePageAsync();
+
+                // Sonra arkaplanda veriyi yüklemeye başla
+                _ = _viewModel.InitializeAsync();
+            }
+            else
+            {
+                // Zaten sayfa önceden çizildiyse beklemeden yükle (Fakat asenkron olarak, UI'ı kitlemeden)
+                _ = _viewModel.InitializeAsync();
             }
         }
 

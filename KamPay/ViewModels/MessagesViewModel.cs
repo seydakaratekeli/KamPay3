@@ -54,7 +54,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private Conversation? selectedConversation;
 
-        public ObservableCollection<Conversation> Conversations { get; } = new();
+        public ObservableRangeCollection<Conversation> Conversations { get; } = new();
 
         
         public MessagesViewModel(
@@ -196,12 +196,11 @@ namespace KamPay.ViewModels
                     // UI'a ekle
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        Conversations.Clear();
+                        Conversations.ReplaceRange(userConversations);
                         _conversationIds.Clear();
 
                         foreach (var conversation in userConversations)
                         {
-                            Conversations.Add(conversation);
                             _conversationIds.Add(conversation.ConversationId);
                         }
 

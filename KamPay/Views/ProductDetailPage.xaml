@@ -9,6 +9,7 @@
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:extensions="clr-namespace:KamPay.Extensions"
     x:Class="KamPay.Views.ProductDetailPage"
+    x:Name="ProductDetailPageRoot"
     Title="{extensions:Translate ProductDetailTitle}"
     BackgroundColor="#F5F9FC"
     Shell.BackgroundColor="#1E88E5"
@@ -49,34 +50,13 @@
                         <CarouselView.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer 
+                                            Command="{Binding BindingContext.ViewProductImageCommand, Source={x:Reference ProductDetailPageRoot}}"
+                                            CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
                                     <!-- ✅ Tam ekran görüntüleme için TapGestureRecognizer -->
-                                    <Image Source="{Binding .}" Aspect="AspectFill">
-                                        <Image.GestureRecognizers>
-                                            <TapGestureRecognizer 
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductDetailViewModel}}, Path=ViewProductImageCommand}"
-                                                CommandParameter="{Binding .}" />
-                                        </Image.GestureRecognizers>
-                                    </Image>
-                                    
-                                    <!-- Önizleme İkonu -->
-                                    <Border BackgroundColor="#CC2196F3"
-                                            WidthRequest="40"
-                                            HeightRequest="40"
-                                            StrokeThickness="0"
-                                            HorizontalOptions="Center"
-                                            VerticalOptions="Center"
-                                            Opacity="0.9">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="20"/>
-                                        </Border.StrokeShape>
-                                        <Border.Shadow>
-                                            <Shadow Brush="#2196F3" Opacity="0.4" Radius="8" Offset="0,4"/>
-                                        </Border.Shadow>
-                                        <Label Text="🔍"
-                                               FontSize="20"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"/>
-                                    </Border>
+                                    <Image Source="{Binding .}" Aspect="AspectFill" InputTransparent="True" />
                                 </Grid>
                             </DataTemplate>
                         </CarouselView.ItemTemplate>
@@ -96,28 +76,7 @@
                                    SelectedIndicatorColor="{StaticResource Primary}"
                                    HorizontalOptions="Center"
                                    VerticalOptions="End"
-                                   Margin="0,0,0,45" />
-                    
-                    <!-- ✅ Tam Ekran Buton Alternatifi -->
-                    <Border StrokeShape="RoundRectangle 25"
-                            BackgroundColor="#CC2196F3"
-                            WidthRequest="50"
-                            HeightRequest="50"
-                            StrokeThickness="0"
-                            HorizontalOptions="End"
-                            VerticalOptions="Start"
-                            Margin="15">
-                        <Border.Shadow>
-                            <Shadow Brush="#2196F3" Opacity="0.4" Radius="10" Offset="0,4"/>
-                        </Border.Shadow>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding ViewCurrentImageCommand}" />
-                        </Border.GestureRecognizers>
-                        <Label Text="🖼️"
-                               FontSize="24"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"/>
-                    </Border>
+                                   Margin="0,0,0,15" />
                 </Grid>
 
                 <!-- Main Content Card -->

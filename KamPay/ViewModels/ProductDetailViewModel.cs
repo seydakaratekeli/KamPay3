@@ -188,7 +188,14 @@ namespace KamPay.ViewModels
                 else
                 {
                     if (Application.Current?.MainPage != null)
-                        await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["ProductNotFound"], Res["Ok"]);
+                    {
+                        var errorMsg = string.IsNullOrEmpty(result.Message) ? Res["ProductNotFound"].ToString() : result.Message;
+                        if (result.Errors != null && result.Errors.Any()) 
+                        {
+                            errorMsg += $"\n\nTeknik Hata Özeti: {string.Join("\n", result.Errors)}";
+                        }
+                        await Application.Current.MainPage.DisplayAlert("Detaylı API Hatası", errorMsg, "Tamam");
+                    }
                     await Shell.Current.GoToAsync("..");
                 }
             }
@@ -919,19 +926,24 @@ namespace KamPay.ViewModels
         private async Task ViewProductImageAsync(string imageUrl)
         {
             if (string.IsNullOrEmpty(imageUrl)) return;
-            
+
             try
             {
                 var imagesList = ProductImages.ToList();
-                var imagesJson = System.Text.Json.JsonSerializer.Serialize(imagesList);
-                var encodedJson = System.Net.WebUtility.UrlEncode(imagesJson);
                 var index = ProductImages.IndexOf(imageUrl);
-                
-                await Shell.Current.GoToAsync($"ImageViewerPage?images={encodedJson}&index={index}");
+                if (index < 0) index = 0;
+
+                var parameters = new Dictionary<string, object>
+                {
+                    { "images", imagesList },
+                    { "index", index }
+                };
+
+                await Shell.Current.GoToAsync("ImageViewerPage", parameters);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Fallback to single image if serialization fails
+                // Fallback to single image if something goes wrong
                 await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
             }
         }

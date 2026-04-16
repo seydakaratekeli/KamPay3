@@ -38,7 +38,6 @@ namespace KamPay.Views
             MainContainer.Opacity = 0;
             MainContainer.Scale = 0.9;
             TopBar.TranslationY = -100;
-            BottomBar.TranslationY = 100;
             BackgroundCircles.Opacity = 0;
 
             // Arka plan fade-in
@@ -52,8 +51,7 @@ namespace KamPay.Views
 
             // Kontrol barları animasyonu
             await Task.WhenAll(
-                TopBar.TranslateTo(0, 0, 350, Easing.CubicOut),
-                BottomBar.TranslateTo(0, 0, 350, Easing.CubicOut)
+                TopBar.TranslateTo(0, 0, 350, Easing.CubicOut)
             );
         }
 
@@ -68,8 +66,7 @@ namespace KamPay.Views
             await Task.WhenAll(
                 MainContainer.FadeTo(0, 200, Easing.CubicIn),
                 MainContainer.ScaleTo(0.9, 200, Easing.CubicIn),
-                TopBar.TranslateTo(0, -100, 200, Easing.CubicIn),
-                BottomBar.TranslateTo(0, 100, 200, Easing.CubicIn)
+                TopBar.TranslateTo(0, -100, 200, Easing.CubicIn)
             );
         }
 
@@ -138,9 +135,6 @@ namespace KamPay.Views
                     // Zoom'u uygula
                     image.Scale = _currentScale;
                     ImageCarousel.IsSwipeEnabled = _currentScale <= 1.1;
-                    
-                    // Zoom göstergesini güncelle
-                    _ = ShowZoomIndicatorAsync(_currentScale);
                     break;
 
                 case GestureStatus.Completed:
@@ -230,8 +224,6 @@ namespace KamPay.Views
                     image.TranslateTo(0, 0, 250, Easing.CubicInOut)
                 );
             }
-
-            await ShowZoomIndicatorAsync(_currentScale);
         }
 
         // ✅ Reset zoom metodu
@@ -245,45 +237,9 @@ namespace KamPay.Views
                 image.ScaleTo(1, 250, Easing.CubicInOut),
                 image.TranslateTo(0, 0, 250, Easing.CubicInOut)
             );
-
-            await ShowZoomIndicatorAsync(1);
         }
 
-        // ? Reset butonu için event handler
-        private void OnResetZoomTapped(object? sender, EventArgs e)
-        {
-            // Reset zoom for all images or just rely on the fact that scale state is shared
-            // In a better implementation, we'd track the current Image element.
-            // For now, if we are zoomed, we can't easily find the Image from here 
-            // without a reference, so we'll rely on the user to double tap or pinch back.
-            // However, most modern viewers just reset everything or the current item.
-        }
-
-        private async Task ShowZoomIndicatorAsync(double zoom)
-        {
-            if (ZoomIndicator == null || ZoomLabel == null) return;
-
-            try
-            {
-                ZoomLabel.Text = $"{(int)(zoom * 100)}%";
-                ZoomIndicator.IsVisible = true;
-
-                // Fade in
-                await ZoomIndicator.FadeTo(1, 150);
-
-                // 1.5 saniye bekle
-                await Task.Delay(1500);
-
-                // Fade out
-                await ZoomIndicator.FadeTo(0, 300);
-                ZoomIndicator.IsVisible = false;
-            }
-            catch
-            {
-                // Animasyon sırasında sayfa kapatılırsa hata vermesin
             }
         }
-    }
-}
 
 

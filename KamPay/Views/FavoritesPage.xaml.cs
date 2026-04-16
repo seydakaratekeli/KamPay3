@@ -20,24 +20,32 @@ public partial class FavoritesPage : ContentPage
     {
         base.OnAppearing();
 
-        //  Sadece ilk kez yükle, sonraki gelişlerde real-time listener zaten çalışıyor
-        if (_isFirstLoad)
-        {
-            await _viewModel.InitializeAsync();
-            _isFirstLoad = false;
-            System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: Cache'den gösterildi (Listener zaten aktif)");
-        }
-
-        // Animasyonları çalıştır
         if (!_hasAnimated)
         {
             _hasAnimated = true;
-            await Task.Delay(100);
+            // Tab geçişinin dondurmamasını sağlamak amacıyla işletim sistemine 350ms animasyon tamamlama süresi tanıyoruz.
+            await Task.Delay(350);
             await AnimatePageAsync();
+
+            if (_isFirstLoad)
+            {
+                _ = _viewModel.InitializeAsync();
+                _isFirstLoad = false;
+                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
+            }
+        }
+        else
+        {
+            if (_isFirstLoad)
+            {
+                _ = _viewModel.InitializeAsync();
+                _isFirstLoad = false;
+                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: Cache'den gösterildi (Listener zaten aktif)");
+            }
         }
     }
 

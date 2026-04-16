@@ -11,6 +11,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// API'nin tüm ağ arayüzlerinden ve belirttiğimiz porttan yanıt vermesini zorluyoruz:
+builder.WebHost.UseUrls("http://0.0.0.0:5011");
+
 // 1. Firebase Admin SDK'yı Başlat (Güvenlik ve Auth için)
 FirebaseApp.Create(new AppOptions()
 {

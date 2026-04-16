@@ -20,7 +20,22 @@ public partial class GoodDeedBoardPage : ContentPage
     {
         base.OnAppearing();
 
-        // Sayfa her görüntülendiğinde, ViewModel'deki dinleyiciyi güvenli şekilde başlat.
+        if (!_hasAnimated)
+        {
+            _hasAnimated = true;
+            // UI Thread animasyon için temiz bırakılıyor
+            await Task.Delay(350);
+            await AnimatePageAsync();
+            SafeStartListening();
+        }
+        else
+        {
+            SafeStartListening();
+        }
+    }
+
+    private async void SafeStartListening()
+    {
         if (_viewModel != null)
         {
             try
@@ -29,20 +44,12 @@ public partial class GoodDeedBoardPage : ContentPage
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"❌ GoodDeedBoardPage OnAppearing hatası: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ GoodDeedBoardPage OnAppearing hatası: {ex.Message}");
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
                     await DisplayAlert("Hata", "Sayfa yüklenirken bir hata oluştu.", "Tamam");
                 });
             }
-        }
-
-        // Animasyonları çalıştır
-        if (!_hasAnimated)
-        {
-            _hasAnimated = true;
-            await Task.Delay(100);
-            await AnimatePageAsync();
         }
     }
 

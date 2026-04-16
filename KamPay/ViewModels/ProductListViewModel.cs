@@ -42,6 +42,7 @@ namespace KamPay.ViewModels
 
         // Tüm ürünlerin tutulduğu ana liste (filtreleme için)
         private List<Product> _allProducts = new();
+        private readonly object _allProductsLock = new();
 
         private IDisposable? _listener;
 
@@ -49,7 +50,7 @@ namespace KamPay.ViewModels
         private bool isSkeletonVisible = true;
 
         // Arayüze bağlanan ve sadece filtrelenmiş ürünleri gösteren liste
-        public ObservableCollection<Product> Products { get; } = new();
+        public ObservableRangeCollection<Product> Products { get; } = new();
         public ObservableCollection<Category> Categories { get; } = new();
 
         #region Observable Properties (Arayüzle İletişim Kuran Özellikler)
@@ -115,7 +116,7 @@ namespace KamPay.ViewModels
                 OnPropertyChanged(nameof(SortOptionStrings));
                 OnPropertyChanged(nameof(SelectedSortIndex));
                 // Filtrelemeyi tekrar uygula (metin tabanlı filtreler varsa diye)
-                ExecuteFiltering();
+                _ = ExecuteFilteringAsync();
             };
 
             WeakReferenceMessenger.Default.Register<FavoriteCountChangedMessage>(this, (r, m) =>
@@ -123,11 +124,14 @@ namespace KamPay.ViewModels
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     var receivedProduct = m.Value;
-                    var productInAll = _allProducts.FirstOrDefault(p => p.ProductId == receivedProduct.ProductId);
-                    if (productInAll != null)
+                    lock (_allProductsLock)
                     {
-                        productInAll.FavoriteCount = receivedProduct.FavoriteCount;
-                        productInAll.ViewCount = receivedProduct.ViewCount;
+                        var productInAll = _allProducts.FirstOrDefault(p => p.ProductId == receivedProduct.ProductId);
+                        if (productInAll != null)
+                        {
+                            productInAll.FavoriteCount = receivedProduct.FavoriteCount;
+                            productInAll.ViewCount = receivedProduct.ViewCount;
+                        }
                     }
 
                     var productInProducts = Products.FirstOrDefault(p => p.ProductId == receivedProduct.ProductId);
@@ -146,7 +150,7 @@ namespace KamPay.ViewModels
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        _allProducts.Clear();
+                        lock (_allProductsLock) { _allProducts.Clear(); }
                         Products.Clear();
                         _cacheManager.Clear();
                         _lastLoadedKey = null;
@@ -200,16 +204,16 @@ namespace KamPay.ViewModels
 
                 if (result.Success && result.Data != null && result.Data.Any())
                 {
-                    _allProducts = result.Data;
-                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
+                    lock (_allProductsLock) { _allProducts = result.Data; }
+                    await ExecuteFilteringAsync();
                 }
                 else
                 {
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
-                        _allProducts.Clear();
+                        lock (_allProductsLock) { _allProducts.Clear(); }
                         Products.Clear();
-                        EmptyMessage = "Henüz ürün eklenmemiş";
+                        EmptyMessage = string.IsNullOrEmpty(result.Message) || result.Success ? "Henüz ürün eklenmemiş" : $"Bağlantı Hatası:\n{result.Message}\n({string.Join("\n", result.Errors ?? new List<string>())})";
                     });
                 }
 
@@ -220,9 +224,10 @@ namespace KamPay.ViewModels
                 });
 
                 // Realtime listener'ı başlat (sadece değişiklikleri dinlemek için)
+                // 🚀 DÜZELTME: Listener eventlerinin artık hiçbir şekilde MainThread.BeginInvoke içine GİRMEMESİ gerekiyor. (Binlerce mesaj arayüzü felç eder)
                 _listener = _loader.Listen(Constants.ProductsCollection, evt =>
                 {
-                    MainThread.BeginInvokeOnMainThread(() => ApplyRealtimeEvent(evt));
+                    ApplyRealtimeEvent(evt);
                 });
             }
             catch (Exception ex)
@@ -236,30 +241,34 @@ namespace KamPay.ViewModels
         /// <summary>
         /// ✅ DÜZELTME: Realtime event'leri uygula ama ExecuteFiltering'i DEBOUNCE et.
         /// Birden fazla event hızlıca geldiğinde, tek bir UI güncellemesi yapılır.
+        /// Ayrıca arkaplanda çalışarak UI kilitlenmesini engeller.
         /// </summary>
         private void ApplyRealtimeEvent(FirebaseEvent<Product> evt)
         {
             var product = evt.Object;
             product.ProductId = evt.Key;
 
-            var existing = _allProducts.FirstOrDefault(p => p.ProductId == product.ProductId);
+            // 🚀 DÜZELTME: RAM erişimi için lock bloklandı.
+            lock (_allProductsLock)
+            {
+                var index = _allProducts.FindIndex(p => p.ProductId == product.ProductId);
 
-            if (evt.EventType == FirebaseEventType.InsertOrUpdate)
-            {
-                if (existing != null)
+                if (evt.EventType == FirebaseEventType.InsertOrUpdate)
                 {
-                    int index = _allProducts.IndexOf(existing);
-                    _allProducts[index] = product;
+                    if (index >= 0)
+                    {
+                        _allProducts[index] = product;
+                    }
+                    else
+                    {
+                        _allProducts.Insert(0, product);
+                    }
                 }
-                else
+                else if (evt.EventType == FirebaseEventType.Delete)
                 {
-                    _allProducts.Insert(0, product);
+                    if (index >= 0)
+                        _allProducts.RemoveAt(index);
                 }
-            }
-            else if (evt.EventType == FirebaseEventType.Delete)
-            {
-                if (existing != null)
-                    _allProducts.Remove(existing);
             }
 
             // ✅ DEBOUNCE: 300ms içinde gelen tüm eventleri topla, sonra tek seferde filtrele
@@ -283,7 +292,7 @@ namespace KamPay.ViewModels
                         if (!_hasPendingRealtimeUpdate) return;
                         _hasPendingRealtimeUpdate = false;
                     }
-                    MainThread.BeginInvokeOnMainThread(ExecuteFiltering);
+                    _ = ExecuteFilteringAsync();
                     Debug.WriteLine("✅ Debounced ExecuteFiltering çalıştı");
                 }, null, 300, Timeout.Infinite);
             }
@@ -293,18 +302,26 @@ namespace KamPay.ViewModels
 
         async partial void OnUserIdChanged(string? value)
         {
-            _allProducts.Clear();
+            lock (_allProductsLock) { _allProducts.Clear(); }
             Products.Clear();
 
             if (!string.IsNullOrEmpty(value))
             {
                 IsLoading = true;
-                EmptyMessage = "Henüz ürün eklemediniz";
+                await MainThread.InvokeOnMainThreadAsync(() => EmptyMessage = "Henüz ürün eklemediniz");
                 var result = await _productService.GetUserProductsAsync(value);
-                if (result.Success && result.Data != null)
+                if (result.Success && result.Data != null && result.Data.Any())
                 {
-                    _allProducts = result.Data;
-                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
+                    lock (_allProductsLock) { _allProducts = result.Data; }
+                    await ExecuteFilteringAsync();
+                }
+                else
+                {
+                     await MainThread.InvokeOnMainThreadAsync(() =>
+                     {
+                         lock (_allProductsLock) { _allProducts.Clear(); }
+                         Products.Clear();
+                     });
                 }
                 await MainThread.InvokeOnMainThreadAsync(() => IsLoading = false);
             }
@@ -315,64 +332,79 @@ namespace KamPay.ViewModels
             }
         }
 
-        private void ExecuteFiltering()
+        private async Task ExecuteFilteringAsync()
         {
             try
             {
-                if (!MainThread.IsMainThread)
+                System.Diagnostics.Debug.WriteLine($"🔍 ExecuteFilteringAsync başladı. Toplam ürün: {_allProducts.Count}");
+
+                // UI nesnelerine diğer thread'den erişirken sorun çıkmasını önlemek için yerel değişkenlere alalım
+                var categoryId = SelectedCategory?.CategoryId;
+                var searchText = SearchText;
+                var selectedType = SelectedType;
+                var sortOption = SelectedSortOption;
+
+                // 🚀 OPTİMİZASYON: Tüm filtreleme arka planda (Task.Run) yapılıyor, UI Thread bloklanmıyor.
+                var filteredList = await Task.Run(() =>
                 {
-                    MainThread.BeginInvokeOnMainThread(ExecuteFiltering);
-                    return;
-                }
+                    List<Product> safeSnapshot;
+                    lock (_allProductsLock)
+                    {
+                        safeSnapshot = _allProducts.ToList();
+                    }
 
-                System.Diagnostics.Debug.WriteLine($"🔍 ExecuteFiltering başladı. Toplam ürün: {_allProducts.Count}");
+                    // 🚀 OPTİMİZASYON: Zaten filtrelenmiş verilerle çalışıyoruz
+                    // Sadece UI seviyesinde ek filtreler uygulayacağız
+                    IEnumerable<Product> filtered = safeSnapshot.Where(p => p.IsActive && !p.IsSold);
 
-                // 🚀 OPTİMİZASYON: Zaten filtrelenmiş verilerle çalışıyoruz
-                // Sadece UI seviyesinde ek filtreler uygulayacağız
-                IEnumerable<Product> filtered = _allProducts.Where(p => p.IsActive && !p.IsSold);
+                    // Kategori filtresi (eğer değiştirilmişse)
+                    if (!string.IsNullOrEmpty(categoryId))
+                    {
+                        filtered = filtered.Where(p => p.CategoryId == categoryId);
+                    }
 
-                // Kategori filtresi (eğer değiştirilmişse)
-                if (SelectedCategory != null && !string.IsNullOrEmpty(SelectedCategory.CategoryId))
+                    // Arama metni (eğer varsa)
+                    if (!string.IsNullOrEmpty(searchText))
+                    {
+                        var searchLower = searchText.ToLowerInvariant();
+                        filtered = filtered.Where(p =>
+                            p.Title.ToLowerInvariant().Contains(searchLower) ||
+                            p.Description.ToLowerInvariant().Contains(searchLower));
+                    }
+
+                    // Tip filtresi (eğer varsa)
+                    if (selectedType.HasValue)
+                    {
+                        filtered = filtered.Where(p => p.Type == selectedType.Value);
+                    }
+
+                    // Sıralama
+                    filtered = sortOption switch
+                    {
+                        ProductSortOption.Oldest => filtered.OrderBy(p => p.CreatedAt),
+                        ProductSortOption.PriceAsc => filtered.OrderBy(p => p.Price),
+                        ProductSortOption.PriceDesc => filtered.OrderByDescending(p => p.Price),
+                        ProductSortOption.MostViewed => filtered.OrderByDescending(p => p.ViewCount),
+                        ProductSortOption.MostFavorited => filtered.OrderByDescending(p => p.FavoriteCount),
+                        _ => filtered.OrderByDescending(p => p.CreatedAt), // Newest
+                    };
+
+                    return filtered.ToList();
+                });
+
+                // Sonuçları ve UI güncellemelerini UI Thread üzerinden yap (UpdateProductsCollection zaten MainThread içinde çalışmış olacak)
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    filtered = filtered.Where(p => p.CategoryId == SelectedCategory.CategoryId);
-                }
+                    UpdateProductsCollection(filteredList);
 
-                // Arama metni (eğer varsa)
-                if (!string.IsNullOrEmpty(SearchText))
-                {
-                    var searchLower = SearchText.ToLowerInvariant();
-                    filtered = filtered.Where(p =>
-                        p.Title.ToLowerInvariant().Contains(searchLower) ||
-                        p.Description.ToLowerInvariant().Contains(searchLower));
-                }
-
-                // Tip filtresi (eğer varsa)
-                if (SelectedType.HasValue)
-                {
-                    filtered = filtered.Where(p => p.Type == SelectedType.Value);
-                }
-
-                // Sıralama
-                filtered = SelectedSortOption switch
-                {
-                    ProductSortOption.Oldest => filtered.OrderBy(p => p.CreatedAt),
-                    ProductSortOption.PriceAsc => filtered.OrderBy(p => p.Price),
-                    ProductSortOption.PriceDesc => filtered.OrderByDescending(p => p.Price),
-                    ProductSortOption.MostViewed => filtered.OrderByDescending(p => p.ViewCount),
-                    ProductSortOption.MostFavorited => filtered.OrderByDescending(p => p.FavoriteCount),
-                    _ => filtered.OrderByDescending(p => p.CreatedAt), // Newest
-                };
-
-                var filteredList = filtered.ToList();
-                UpdateProductsCollection(filteredList);
-
-                IsLoading = false;
-                EmptyMessage = Products.Any() ? string.Empty : "Arama kriterlerinize uygun ürün bulunamadı";
+                    IsLoading = false;
+                    EmptyMessage = Products.Any() ? string.Empty : "Arama kriterlerinize uygun ürün bulunamadı";
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ ExecuteFiltering hatası: {ex.Message}");
-                IsLoading = false;
+                System.Diagnostics.Debug.WriteLine($"❌ ExecuteFilteringAsync hatası: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() => IsLoading = false);
             }
         }
 
@@ -387,77 +419,70 @@ namespace KamPay.ViewModels
             if (Products.Count == 0 || newProducts.Count == 0 ||
                 Math.Abs(Products.Count - newProducts.Count) > Products.Count * 0.3)
             {
-                Products.Clear();
-                foreach (var product in newProducts)
-                {
-                    Products.Add(product);
-                }
+                Products.ReplaceRange(newProducts);
                 return;
             }
 
-            // ✅ O(n) Dictionary lookup — eski O(n²) nested loop yerine
-            var existingMap = new Dictionary<string, int>(Products.Count);
-            for (int j = 0; j < Products.Count; j++)
+            // 1. Silinecekleri kaldır (sondan başa — index kaymasını önle)
+            // Sadece tek bir HashSet kullanarak bellek dostu bir O(N) arama yapıyoruz.
+            var newIdSet = new HashSet<string>(newProducts.Count);
+            foreach (var p in newProducts)
             {
-                existingMap[Products[j].ProductId] = j;
+                newIdSet.Add(p.ProductId);
             }
 
-            var newIdSet = new HashSet<string>(newProducts.Select(p => p.ProductId));
-
-            // 1. Silinecekleri kaldır (sondan başa — index kaymasını önle)
-            for (int j = Products.Count - 1; j >= 0; j--)
+            for (int i = Products.Count - 1; i >= 0; i--)
             {
-                if (!newIdSet.Contains(Products[j].ProductId))
+                if (!newIdSet.Contains(Products[i].ProductId))
                 {
-                    Products.RemoveAt(j);
+                    Products.RemoveAt(i);
                 }
             }
 
-            // 2. Yeni/güncellenen ürünleri ekle veya yerinde güncelle
-            // Map'i yeniden oluştur (silme sonrası indexler değişti)
-            existingMap.Clear();
-            for (int j = 0; j < Products.Count; j++)
-            {
-                existingMap[Products[j].ProductId] = j;
-            }
-
+            // 2. Yeni/güncellenen ürünleri ekle veya yerinde güncelle (GC Allocation Yaratmadan)
+            // Liste içerisinde yer değiştirme (Move) işlemleri için Dictionary oluşturup silmek yerine,
+            // direkt liste elemanlarını tarıyoruz. Zaten ufak değişikliklerde ( < %30 ) GC oluşturmamak CPU'dan daha değerlidir.
             for (int i = 0; i < newProducts.Count; i++)
             {
                 var newProduct = newProducts[i];
 
-                if (existingMap.TryGetValue(newProduct.ProductId, out int existingIndex))
+                if (i < Products.Count)
                 {
-                    // Mevcut ürünü güncelle (yerinde değiştirme — Move gereksiz)
-                    if (existingIndex == i)
+                    var currentProduct = Products[i];
+
+                    // Eleman zaten doğru sıradaysa, sadece verisini güncelle
+                    if (currentProduct.ProductId == newProduct.ProductId)
                     {
                         Products[i] = newProduct;
                     }
-                    else if (existingIndex < Products.Count && i < Products.Count)
+                    else
                     {
-                        Products.Move(existingIndex, i);
-                        Products[i] = newProduct;
-                        // Move sonrası map'i güncelle
-                        existingMap.Clear();
-                        for (int j = 0; j < Products.Count; j++)
+                        // Yanlış sıradaysa, listede ilerde mi duruyor diye bak
+                        int existingIndex = -1;
+                        for (int j = i + 1; j < Products.Count; j++)
                         {
-                            existingMap[Products[j].ProductId] = j;
+                            if (Products[j].ProductId == newProduct.ProductId)
+                            {
+                                existingIndex = j;
+                                break;
+                            }
+                        }
+
+                        if (existingIndex != -1) // Ürün aşağıdaki indekslerde var, buraya taşı (Move)
+                        {
+                            Products.Move(existingIndex, i);
+                            Products[i] = newProduct;
+                        }
+                        else // Ürün listede yok (Yeni ürün), o zaman araya ekle
+                        {
+                            Products.Insert(i, newProduct);
                         }
                     }
                 }
                 else
                 {
-                    // Yeni ürün — doğru pozisyona ekle
-                    if (i < Products.Count)
-                        Products.Insert(i, newProduct);
-                    else
-                        Products.Add(newProduct);
-
-                    // Insert sonrası map'i güncelle
-                    existingMap.Clear();
-                    for (int j = 0; j < Products.Count; j++)
-                    {
-                        existingMap[Products[j].ProductId] = j;
-                    }
+                    // Listenin sonuna geldik, geri kalanları ekle
+                    Products.Add(newProduct);
                 }
             }
         }
@@ -474,11 +499,11 @@ namespace KamPay.ViewModels
                 // 🚀 OPTİMİZASYON: Arama için sunucu filtrelemesi kullan
                 if (!string.IsNullOrEmpty(SearchText) && SearchText.Length >= 2)
                 {
-                    await ReloadWithFilterAsync();
+                    await ReloadWithFilterAsync(_searchCancellationTokenSource.Token);
                 }
                 else
                 {
-                    ExecuteFiltering(); // Lokal filtreleme
+                    await ExecuteFilteringAsync(); // Lokal filtreleme
                 }
             }
             catch (TaskCanceledException)
@@ -501,7 +526,7 @@ namespace KamPay.ViewModels
             {
                 SelectedSortIndex = index;
             }
-            ExecuteFiltering(); // Sıralama için lokal filtreleme yeterli
+            _ = ExecuteFilteringAsync(); // Sıralama için lokal filtreleme yeterli
         }
 
         partial void OnSelectedTypeChanged(ProductType? value)
@@ -511,7 +536,7 @@ namespace KamPay.ViewModels
         }
 
         // 🆕 YENİ METOD: Filtrelerle yeniden yükleme
-        private async Task ReloadWithFilterAsync()
+        private async Task ReloadWithFilterAsync(CancellationToken cancellationToken = default)
         {
             if (IsLoading) return;
 
@@ -528,12 +553,22 @@ namespace KamPay.ViewModels
                     SearchText = SearchText
                 };
 
-                var result = await _productService.GetAllProductsAsync(filter);
+                var result = await _productService.GetAllProductsAsync(filter, cancellationToken);
 
-                if (result.Success && result.Data != null)
+                if (result.Success && result.Data != null && result.Data.Any())
                 {
-                    _allProducts = result.Data;
-                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
+                    lock (_allProductsLock) { _allProducts = result.Data; }
+                    await ExecuteFilteringAsync();
+                }
+                else
+                {
+                     await MainThread.InvokeOnMainThreadAsync(() =>
+                     {
+                         lock (_allProductsLock) { _allProducts.Clear(); }
+                         Products.Clear();
+                         // API hatası varsa EmptyMessage'a hatayı yaz, ki kullanıcı görebilsin.
+                         EmptyMessage = string.IsNullOrEmpty(result.Message) || result.Success ? "Arama kriterlerinize uygun ürün bulunamadı" : $"API'ye ulaşılamıyor:\n{result.Message}\n({string.Join(", ", result.Errors ?? new List<string>())})";
+                     });
                 }
             }
             catch (Exception ex)
@@ -553,10 +588,10 @@ namespace KamPay.ViewModels
         private void ToggleFilterPanel() => ShowFilterPanel = !ShowFilterPanel;
 
         [RelayCommand]
-        private void ApplyFilters()
+        private async Task ApplyFilters()
         {
             ShowFilterPanel = false;
-            ExecuteFiltering();
+            await ExecuteFilteringAsync();
         }
 
         [RelayCommand]
@@ -614,8 +649,7 @@ namespace KamPay.ViewModels
                 {
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
-                        Products.Clear();
-                        foreach (var p in cachedProducts) Products.Add(p);
+                        Products.ReplaceRange(cachedProducts);
                     });
                     return;
                 }
@@ -639,11 +673,7 @@ namespace KamPay.ViewModels
 
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
-                        Products.Clear();
-                        foreach (var product in productsResult.Data)
-                        {
-                            Products.Add(product);
-                        }
+                        Products.ReplaceRange(productsResult.Data);
                     });
 
                     if (productsResult.Data.Any())
@@ -685,10 +715,7 @@ namespace KamPay.ViewModels
                 {
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
-                        foreach (var product in moreProducts.Data)
-                        {
-                            Products.Add(product);
-                        }
+                        Products.AddRange(moreProducts.Data);
                     });
 
                     _lastLoadedKey = moreProducts.Data.Last().ProductId;
@@ -789,10 +816,25 @@ namespace KamPay.ViewModels
 
         private void UpdateUserInfoInProducts(IEnumerable<Product> products, User updatedUser)
         {
-            foreach (var product in products.Where(p => p.UserId == updatedUser.UserId))
+            // _allProducts için çağrıldığında kilit alıyoruz
+            if (ReferenceEquals(products, _allProducts))
             {
-                product.UserName = updatedUser.FullName;
-                product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                lock (_allProductsLock)
+                {
+                    foreach (var product in _allProducts.Where(p => p.UserId == updatedUser.UserId))
+                    {
+                        product.UserName = updatedUser.FullName;
+                        product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var product in products.Where(p => p.UserId == updatedUser.UserId))
+                {
+                    product.UserName = updatedUser.FullName;
+                    product.UserPhotoUrl = updatedUser.ProfileImageUrl;
+                }
             }
         }
 

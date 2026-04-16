@@ -1210,7 +1210,7 @@ namespace KamPay.ViewModels
 
             try
             {
-                await Shell.Current.GoToAsync($"{nameof(ImageViewerPage)}?imageUrl={Uri.EscapeDataString(imageUrl)}");
+                await Shell.Current.GoToAsync($"{nameof(ImageViewerPage)}?photoUrl={Uri.EscapeDataString(imageUrl)}");
             }
             catch (Exception ex)
             {
