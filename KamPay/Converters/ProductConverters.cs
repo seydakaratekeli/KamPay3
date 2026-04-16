@@ -536,4 +536,56 @@ namespace KamPay.Converters
             throw new NotImplementedException();
         }
     }
+
+    public class ProductToStatusTextConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is Product product)
+            {
+                if (parameter?.ToString() == "HasValue")
+                    return product.IsSold || product.IsReserved;
+
+                if (product.IsSold && product.Type == ProductType.Takas) return "TAKAS YAPILDI ✓";
+                if (product.IsSold && product.Type == ProductType.Satis) return "SATILDI ✓";
+                if (product.IsSold && product.Type == ProductType.Bagis) return "BAĞIŞLANDI ✓";
+
+                if (product.IsReserved && product.Type == ProductType.Takas) return "TAKAS SÜRECİNDE";
+                if (product.IsReserved && product.Type == ProductType.Satis) return "SATIŞ SÜRECİNDE";
+                if (product.IsReserved && product.Type == ProductType.Bagis) return "BAĞIŞ SÜRECİNDE"; 
+            }
+            return parameter?.ToString() == "HasValue" ? false : string.Empty;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    public class ProductToStatusColorConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is Product product)
+            {
+                if (product.IsSold) return Color.FromArgb("#4CAF50");
+                if (product.IsReserved) return Color.FromArgb("#FF9800");
+            }
+            return Colors.Transparent;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    public class ProductToPriceTextConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is Product product)
+            {
+                return product.Type == ProductType.Satis ? $"{product.Price:N2} ₺" : product.Type == ProductType.Bagis ? "Ücretsiz" : "Takas";
+            }
+            return string.Empty;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
 }

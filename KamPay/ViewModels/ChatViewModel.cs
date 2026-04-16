@@ -195,16 +195,13 @@ namespace KamPay.ViewModels
                     CleanupCurrentConversation();
                 }
 
-                // Kullanıcı bilgisi (singleton pattern)
+                //  HER DURUMDA yeni kullanc al (oturum deYiYikliYini yakalamak iin)
+                _currentUser = await _authService.GetCurrentUserAsync();
                 if (_currentUser == null)
                 {
-                    _currentUser = await _authService.GetCurrentUserAsync();
-                    if (_currentUser == null)
-                    {
-                        await Application.Current!.MainPage!.DisplayAlert("Hata", "Giriş yapmış kullanıcı bulunamadı.", "Tamam");
-                        await Shell.Current.GoToAsync("..");
-                        return;
-                    }
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "GiriY yapmY kullanc bulunamad.", "Tamam");
+                    await Shell.Current.GoToAsync("..");
+                    return;
                 }
 
                 //  CACHE: Cache'de varsa oradan yükle

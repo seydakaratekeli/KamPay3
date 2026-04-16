@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
@@ -29,7 +29,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
 
-        <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
+        <!-- âœ¨ HEADER WITH GRADIENT BACKGROUND -->
         <Grid Grid.Row="0" RowDefinitions="Auto">
             <!-- Gradient Background -->
             <BoxView>
@@ -54,11 +54,11 @@
             <!-- Title -->
             <Grid Padding="20,50,20,20">
                 <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
-                    <Label Text="💬 Mesajlar" 
+                    <Label Text="ğŸ’¬ Mesajlar" 
                            FontSize="28" 
                            FontAttributes="Bold" 
                            TextColor="White" />
-                    <Label Text="Konuşmalarınız burada" 
+                    <Label Text="KonuÅŸmalarÄ±nÄ±z burada" 
                            FontSize="13" 
                            TextColor="White" 
                            Opacity="0.9"/>
@@ -66,7 +66,7 @@
             </Grid>
         </Grid>
 
-        <!-- ARAMA ÇUBUĞU -->
+        <!-- ARAMA Ã‡UBUÄU -->
         <Grid Grid.Row="1" Padding="15,15,15,10" x:Name="SearchSection">
             <Border StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
@@ -77,7 +77,7 @@
                     <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
                 </Border.Shadow>
                 <Grid ColumnDefinitions="Auto,*">
-                    <Label Text="🔍" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
+                    <Label Text="ğŸ”" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
                     <Entry Grid.Column="1"
                            Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SearchInChats]}"
                            FontSize="15"
@@ -90,7 +90,7 @@
             </Border>
         </Grid>
 
-        <!-- ANA İÇERİK -->
+        <!-- ANA Ä°Ã‡ERÄ°K -->
         <Grid Grid.Row="2">
 
             <!-- REFRESH VIEW -->
@@ -120,7 +120,7 @@
                                     <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                                 </Border.Shadow>
                                 <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Label Text="💬" FontSize="70" HorizontalTextAlignment="Center"/>
+                                    <Label Text="ğŸ’¬" FontSize="70" HorizontalTextAlignment="Center"/>
                                     <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessagesYet]}" 
                                            FontSize="16" 
                                            TextColor="{StaticResource TextSecondary}" 
@@ -155,7 +155,7 @@
 
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
 
-                                    <!-- PROFİL FOTO -->
+                                    <!-- PROFÄ°L FOTO -->
                                     <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
                                         <ffimageloading:CachedImage 
                                             Source="{Binding OtherUserPhotoUrl}" 
@@ -186,7 +186,7 @@
                                         </Border>
                                     </Grid>
 
-                                    <!-- KULLANICI BİLGİSİ -->
+                                    <!-- KULLANICI BÄ°LGÄ°SÄ° -->
                                     <VerticalStackLayout Grid.Column="1" 
                                                          VerticalOptions="Center" 
                                                          Spacing="4">
@@ -196,7 +196,8 @@
                                                TextColor="{StaticResource TextPrimary}"
                                                LineBreakMode="TailTruncation"/>
 
-                                        <Label Text="{Binding LastMessage}" 
+                                        <Label Text="{Binding ProductName}" FontSize="12" FontAttributes="Italic" TextColor="{StaticResource Primary}" LineBreakMode="TailTruncation"/>
+                                        <Label Text="{Binding LastMessage}"
                                                FontSize="14" 
                                                TextColor="{StaticResource TextSecondary}"
                                                LineBreakMode="TailTruncation"
@@ -269,3 +270,7 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+
+
+

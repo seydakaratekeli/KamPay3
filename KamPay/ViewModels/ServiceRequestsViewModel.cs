@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
 using KamPay.Services;
 using KamPay.Views;
@@ -84,6 +85,29 @@ namespace KamPay.ViewModels
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
+
+            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!m.Value) // Logout
+                    {
+                        _requestsSubscription?.Dispose();
+                        _requestsSubscription = null;
+                        IncomingRequests.Clear();
+                        OutgoingRequests.Clear();
+                        _incomingRequestIds.Clear();
+                        _outgoingRequestIds.Clear();
+                        _currentUserId = null;
+                        _initialLoadComplete = false;
+                    }
+                    else // Login
+                    {
+                        _initialLoadComplete = false;
+                        _ = InitializeAsync();
+                    }
+                });
+            });
 
             System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsViewModel oluşturuldu (DIP uyumlu - FirebaseClient DI'den)");
             _ = InitializeAsync();

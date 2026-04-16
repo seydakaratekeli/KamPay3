@@ -54,18 +54,12 @@ namespace KamPay.Models
 
         // ✅ Durum bayrakları — IsSold/IsReserved değişince StatusText/StatusColor güncellenir
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(StatusText))]
-        [NotifyPropertyChangedFor(nameof(StatusColor))]
         private bool isActive;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(StatusText))]
-        [NotifyPropertyChangedFor(nameof(StatusColor))]
         private bool isReserved;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(StatusText))]
-        [NotifyPropertyChangedFor(nameof(StatusColor))]
         private bool isSold;
 
         public DateTime CreatedAt { get; set; }
@@ -76,52 +70,6 @@ namespace KamPay.Models
         public ServicePaymentStatus PaymentStatus { get; set; } = ServicePaymentStatus.None;
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
         public string? BuyerId { get; set; }
-
-        /// Ürünün durumunu belirler (Satış mı, Takas mı?)
-        public string StatusText
-        {
-            get
-            {
-                // Önce TAMAMLANAN durumlar (IsSold)
-                if (IsSold && Type == ProductType.Takas)
-                    return "TAKAS YAPILDI ✓";
-
-                if (IsSold && Type == ProductType.Satis)
-                    return "SATILDI ✓";
-
-                if (IsSold && Type == ProductType.Bagis) 
-                    return "BAĞIŞLANDI ✓";
-
-                // Sonra BEKLEYEN durumlar (IsReserved)
-                if (IsReserved && Type == ProductType.Takas)
-                    return "TAKAS SÜRECİNDE";
-
-                if (IsReserved && Type == ProductType.Satis)
-                    return "SATIŞ SÜRECİNDE";
-
-                if (IsReserved && Type == ProductType.Bagis) 
-                    return "BAĞIŞ SÜRECİNDE"; 
-
-                return string.Empty;
-            }
-        }
-       
-        // Etiket rengi
-        public Color StatusColor
-        {
-            get
-            {
-                if (IsSold)
-                    return Color.FromArgb("#4CAF50"); // Yeşil
-
-                if (IsReserved)
-                    return Color.FromArgb("#FF9800"); // Turuncu
-
-                return Colors.Transparent;
-            }
-        }
-
-
 
         // İstatistikler
         [ObservableProperty]
@@ -145,52 +93,6 @@ namespace KamPay.Models
             IsSold = false;
             ViewCount = 0;
             FavoriteCount = 0;
-        }
-
-        // Yardımcı özellikler
-        public string ConditionText => Condition switch
-        {
-            ProductCondition.YeniGibi => "Yeni Gibi",
-            ProductCondition.CokIyi => "Çok İyi",
-            ProductCondition.Iyi => "İyi",
-            ProductCondition.Orta => "Orta",
-            ProductCondition.Kullanilabilir => "Kullanılabilir",
-            _ => "Belirtilmemiş"
-        };
-
-        public string TypeText => Type switch
-        {
-            ProductType.Satis => "Satılık",
-            ProductType.Bagis => "Bağış",
-            ProductType.Takas => "Takas",
-            _ => "Belirtilmemiş"
-        };
-
-        public string PriceText => Type == ProductType.Satis
-            ? $"{Price:N2} ₺"
-            : Type == ProductType.Bagis
-                ? "Ücretsiz"
-                : "Takas";
-
-        public string TimeAgoText
-        {
-            get
-            {
-                var timeSpan = DateTime.UtcNow - CreatedAt;
-
-                if (timeSpan.TotalMinutes < 1)
-                    return "Az önce";
-                if (timeSpan.TotalMinutes < 60)
-                    return $"{(int)timeSpan.TotalMinutes} dakika önce";
-                if (timeSpan.TotalHours < 24)
-                    return $"{(int)timeSpan.TotalHours} saat önce";
-                if (timeSpan.TotalDays < 7)
-                    return $"{(int)timeSpan.TotalDays} gün önce";
-                if (timeSpan.TotalDays < 30)
-                    return $"{(int)(timeSpan.TotalDays / 7)} hafta önce";
-
-                return CreatedAt.ToString("dd MMM yyyy");
-            }
         }
 
         public bool HasImages => ImageUrls != null && ImageUrls.Count > 0;

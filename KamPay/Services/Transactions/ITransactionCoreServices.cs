@@ -1,12 +1,12 @@
-using KamPay.Models;
+ï»¿using KamPay.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace KamPay.Services.Transactions
 {
     /// <summary>
-    /// ? ISP: Transaction Query Ýþlemleri
-    /// Sadece transaction OKUMA iþlemlerini yapacak sýnýflar bu interface'i implement eder
+    /// ? ISP: Transaction Query ï¿½ï¿½lemleri
+    /// Sadece transaction OKUMA iï¿½lemlerini yapacak sï¿½nï¿½flar bu interface'i implement eder
     /// </summary>
     public interface ITransactionQueryService
     {
@@ -15,8 +15,8 @@ namespace KamPay.Services.Transactions
     }
 
     /// <summary>
-    /// ? ISP: Transaction Oluþturma Ýþlemleri
-    /// Sadece yeni transaction OLUÞTURMA iþlemlerini yapacak sýnýflar bu interface'i implement eder
+    /// ? ISP: Transaction Oluï¿½turma ï¿½ï¿½lemleri
+    /// Sadece yeni transaction OLUï¿½TURMA iï¿½lemlerini yapacak sï¿½nï¿½flar bu interface'i implement eder
     /// </summary>
     public interface ITransactionCreationService
     {
@@ -25,13 +25,14 @@ namespace KamPay.Services.Transactions
     }
 
     /// <summary>
-    /// ? ISP: Transaction Durum Yönetimi Ýþlemleri
-    /// Sadece transaction durumunu YÖNETEN sýnýflar bu interface'i implement eder
+    /// ? ISP: Transaction Durum Yï¿½netimi ï¿½ï¿½lemleri
+    /// Sadece transaction durumunu Yï¿½NETEN sï¿½nï¿½flar bu interface'i implement eder
     /// </summary>
     public interface ITransactionStatusService
     {
         Task<ServiceResult<Transaction>> RespondToOfferAsync(string transactionId, bool accept);
         Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId);
         Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId);
+        Task<ServiceResult<Transaction>> CompleteManualSaleAsync(string transactionId, string sellerId);
     }
 }

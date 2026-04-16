@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -74,6 +74,29 @@ namespace KamPay.ViewModels
 
             // Kullanıcı profil değişikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
+
+            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
+            {
+                if (!m.Value) // Logout
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Conversations.Clear();
+                        _conversationIds.Clear();
+                        _isInitialized = false;
+                        _currentUser = null;
+                        EmptyMessage = "Mesajları görmek için giriş yapmalısınız.";
+                    });
+                }
+                else // Login
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        _isInitialized = false;
+                        _ = InitializeAsync();
+                    });
+                }
+            });
         }
 
         private void OnUserProfileChanged(object? sender, User updatedUser)

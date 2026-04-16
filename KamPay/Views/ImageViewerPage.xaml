@@ -65,25 +65,30 @@
                 </VerticalStackLayout>
             </Grid>
 
-            <!-- Zoomable Image Container with Gestures -->
-            <Grid x:Name="ImageContainer"
-                  BackgroundColor="Transparent"
-                  HorizontalOptions="Fill"
-                  VerticalOptions="Fill">
-                
-                <Image x:Name="MainImage"
-                       Source="{Binding PhotoUrl}"
-                       Aspect="AspectFit"
-                       VerticalOptions="Center"
-                       HorizontalOptions="Center"
-                       BackgroundColor="Transparent">
-                    <Image.GestureRecognizers>
-                        <PinchGestureRecognizer PinchUpdated="OnPinchUpdated" />
-                        <PanGestureRecognizer PanUpdated="OnPanUpdated" />
-                        <TapGestureRecognizer Tapped="OnImageTapped" NumberOfTapsRequired="2" />
-                    </Image.GestureRecognizers>
-                </Image>
-            </Grid>
+            <!-- Image Carousel for browsing multiple images -->
+            <CarouselView x:Name="ImageCarousel"
+                          ItemsSource="{Binding ProductImages}"
+                          Position="{Binding SelectedIndex}"
+                          Loop="False">
+                <CarouselView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Image Source="{Binding .}"
+                                   Aspect="AspectFit"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   BackgroundColor="Transparent">
+                                <Image.GestureRecognizers>
+                                    <PinchGestureRecognizer PinchUpdated="OnPinchUpdated" />
+                                    <PanGestureRecognizer PanUpdated="OnPanUpdated" />
+                                    <TapGestureRecognizer Tapped="OnImageTapped" NumberOfTapsRequired="2" />
+                                    <TapGestureRecognizer Tapped="OnSingleTap" NumberOfTapsRequired="1" />
+                                </Image.GestureRecognizers>
+                            </Image>
+                        </Grid>
+                    </DataTemplate>
+                </CarouselView.ItemTemplate>
+            </CarouselView>
 
             <!-- Top Control Bar -->
             <Border x:Name="TopBar"

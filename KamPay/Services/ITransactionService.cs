@@ -28,6 +28,7 @@ namespace KamPay.Services
         Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId); 
 
         Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId);
+        Task<ServiceResult<Transaction>> CompleteManualSaleAsync(string transactionId, string sellerId);
 
         /// <summary>
         /// Ödeme simülasyonu başlatır (Hizmet veya Ürün için)

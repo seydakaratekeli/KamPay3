@@ -145,20 +145,20 @@
                                                         BackgroundColor="#E3F2FD"
                                                         Padding="12,6"
                                                         HorizontalOptions="Start">
-                                                    <Label Text="{Binding PriceText}"
-                                                           FontAttributes="Bold"
-                                                           FontSize="16"
-                                                           TextColor="#2196F3" />
+                                                    <Label Text="{Binding ., Converter={StaticResource ProductToPriceTextConverter}}"
+                                                             FontAttributes="Bold"
+                                                             FontSize="16"
+                                                             TextColor="#2196F3" />
                                                 </Border>
 
                                                 <HorizontalStackLayout Spacing="5">
                                                     <Label Text="🕒"
                                                            FontSize="12"
                                                            VerticalOptions="Center"/>
-                                                    <Label Text="{Binding TimeAgoText}"
-                                                           FontSize="12"
-                                                           TextColor="#9E9E9E"
-                                                           VerticalOptions="Center"/>
+                                                    <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}"
+                                                             FontSize="12"
+                                                             TextColor="#9E9E9E"
+                                                             VerticalOptions="Center"/>
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
 

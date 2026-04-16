@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -128,7 +128,7 @@ namespace KamPay.Services
                     .PutAsync(message);
 
                 // Conversation güncelleme
-                conversation.LastMessage = message.Type == MessageType.Text ? message.Content : "?? Medya";
+                conversation.LastMessage = message.Type == MessageType.Image ? "📷 Medya" : (message.Content ?? "Mesaj");
                 conversation.LastMessageTime = DateTime.UtcNow;
                 conversation.LastMessageSenderId = sender.UserId;
                 conversation.UpdatedAt = DateTime.UtcNow;

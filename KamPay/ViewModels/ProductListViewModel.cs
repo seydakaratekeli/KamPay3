@@ -140,6 +140,29 @@ namespace KamPay.ViewModels
             });
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (r, m) => { HasUnreadNotifications = m.Value; });
 
+            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
+            {
+                if (!m.Value) // Logout
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        _allProducts.Clear();
+                        Products.Clear();
+                        _cacheManager.Clear();
+                        _lastLoadedKey = null;
+                        UserId = string.Empty;
+                        EmptyMessage = "Ürünler yükleniyor...";
+                    });
+                }
+                else // Login
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        _ = InitializeAsync();
+                    });
+                }
+            });
+
             // ✅ Constructor'da otomatik başlat
             _ = InitializeAsync();
         }
@@ -178,16 +201,23 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null && result.Data.Any())
                 {
                     _allProducts = result.Data;
-                    ExecuteFiltering();
+                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
                 }
                 else
                 {
-                    _allProducts.Clear();
-                    Products.Clear();
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        _allProducts.Clear();
+                        Products.Clear();
+                        EmptyMessage = "Henüz ürün eklenmemiş";
+                    });
                 }
 
-                IsSkeletonVisible = false;
-                IsLoading = false;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    IsSkeletonVisible = false;
+                    IsLoading = false;
+                });
 
                 // Realtime listener'ı başlat (sadece değişiklikleri dinlemek için)
                 _listener = _loader.Listen(Constants.ProductsCollection, evt =>
@@ -274,13 +304,13 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null)
                 {
                     _allProducts = result.Data;
-                    ExecuteFiltering();
+                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
                 }
-                IsLoading = false;
+                await MainThread.InvokeOnMainThreadAsync(() => IsLoading = false);
             }
             else
             {
-                EmptyMessage = "Arama kriterlerinize uygun ürün bulunamadı";
+                await MainThread.InvokeOnMainThreadAsync(() => EmptyMessage = "Arama kriterlerinize uygun ürün bulunamadı");
                 await UltraFastLoadAsync();
             }
         }
@@ -503,7 +533,7 @@ namespace KamPay.ViewModels
                 if (result.Success && result.Data != null)
                 {
                     _allProducts = result.Data;
-                    ExecuteFiltering();
+                    await MainThread.InvokeOnMainThreadAsync(ExecuteFiltering);
                 }
             }
             catch (Exception ex)
@@ -512,7 +542,7 @@ namespace KamPay.ViewModels
             }
             finally
             {
-                IsLoading = false;
+                await MainThread.InvokeOnMainThreadAsync(() => IsLoading = false);
             }
         }
 

@@ -181,7 +181,7 @@ namespace KamPay.Services
                     atomicUpdates[$"{Constants.DeliveryQRCodesCollection}/{qr2.QRCodeId}"] = qr2;
                 }
                 // d) BAĞIŞ İÇİN QR KOD OLUŞTUR
-                else if (transaction.Type == ProductType.Bagis)
+                else if (transaction.Type == ProductType.Bagis || transaction.Type == ProductType.Satis)
                 {
                     var qr = CreateDeliveryQRCodeModel(
                         transactionId,
@@ -1025,9 +1025,9 @@ namespace KamPay.Services
 
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
-                    string messageText = isInitialRequest 
-                        ? $"💰 Alıcı bu ürünü liste fiyatından ({proposedPrice:N2}₺) satın almak istiyor." 
-                        : $"💰 Alıcı: {proposedPrice:N2}₺ teklif etti.";
+                    string messageText = isInitialRequest
+                        ? $"💰 [{transaction.ProductTitle} - Satış]\nAlıcı bu ürünü liste fiyatından ({proposedPrice:N2}₺) satın almak istiyor."
+                        : $"💰 [{transaction.ProductTitle} - Satış]\nAlıcı: {proposedPrice:N2}₺ teklif etti.";
 
                     await AddNegotiationMessageAsync(
                         transaction.ConversationId,
@@ -1137,7 +1137,7 @@ namespace KamPay.Services
                 {
                     await AddNegotiationMessageAsync(
                         transaction.ConversationId,
-                        $"🔄 Satıcı: {counterOffer:N2}₺ karşı teklif etti.",
+                        $"🔄 [{transaction.ProductTitle} - Satış]\nSatıcı: {counterOffer:N2}₺ karşı teklif etti.",
                         counterOffer,
                         currentUserId,
                         transaction.SellerName,
@@ -1455,7 +1455,7 @@ namespace KamPay.Services
                 {
                     await AddNegotiationMessageAsync(
                         transaction.ConversationId,
-                        $"✅ Teklifi kabul etti. \nAnlaşılan Fiyat: {agreedAmount:N2} ₺",
+                        $"✅ [{transaction.ProductTitle} - Satış]\nTeklifi kabul etti.\nAnlaşılan Fiyat: {agreedAmount:N2} ₺",
                         agreedAmount,
                         currentUserId,
                         currentUserId == transaction.BuyerId ? transaction.BuyerName : transaction.SellerName,
@@ -1780,5 +1780,33 @@ namespace KamPay.Services
         }
 
         #endregion
-    }
+    
+        public async Task<ServiceResult<Transaction>> CompleteManualSaleAsync(string transactionId, string sellerId)
+        {
+            try
+            {
+                var transactionNode = _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId);
+                var transaction = await transactionNode.OnceSingleAsync<Transaction>();
+
+                if (transaction == null)
+                    return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
+
+                if (transaction.SellerId != sellerId)
+                    return ServiceResult<Transaction>.FailureResult("Sadece satıcı işlemi tamamlayabilir.");
+
+                if (transaction.Type != ProductType.Satis)
+                    return ServiceResult<Transaction>.FailureResult("Bu senaryo sadece satış işlemleri içindir.");
+
+                if (transaction.Status != TransactionStatus.Accepted && transaction.Status != TransactionStatus.Pending)
+                    return ServiceResult<Transaction>.FailureResult("İşlem bu durumdayken tamamlanamaz.");
+
+                // İşlemi tamamla (puan ver, ürünü kapat, bildirim gönder)
+                return await CompleteTransactionInternalAsync(transaction);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<Transaction>.FailureResult("Satış tamamlanamadı.", ex.Message);
+            }
+        }
+}
 }

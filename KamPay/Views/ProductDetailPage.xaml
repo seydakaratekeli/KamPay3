@@ -159,7 +159,7 @@
                                    FontAttributes="Bold"
                                    LineBreakMode="WordWrap" />
 
-                            <Label Text="{Binding Product.PriceText}"
+                            <Label Text="{Binding Product, Converter={StaticResource ProductToPriceTextConverter}}"
                                    TextColor="{StaticResource Primary}"
                                    FontSize="28"
                                    FontAttributes="Bold"
@@ -173,7 +173,7 @@
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="15" ColumnSpacing="15">
                             <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
                                 <Label Text="{extensions:Translate ConditionLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
-                                <Label Text="{Binding Product.ConditionText}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
+                                <Label Text="{Binding Product.Condition, Converter={StaticResource ProductConditionConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
@@ -338,7 +338,7 @@
 
                                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
                                     <Label Text="{Binding Product.UserName}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
-                                    <Label Text="{Binding Product.TimeAgoText}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                    <Label Text="{Binding Product.CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
                                 </VerticalStackLayout>
 
                                 <Button Grid.Column="2" 

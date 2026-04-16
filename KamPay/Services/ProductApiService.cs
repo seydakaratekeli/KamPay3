@@ -35,7 +35,7 @@ public class ProductApiService : IProductService
 #if ANDROID
         // 📱 GERÇEK CİHAZ TESTİ: Bilgisayarınızın IP adresini buraya yazın
         // CMD'de "ipconfig" komutu ile öğrenebilirsiniz
-        var baseHost = "http://192.168.1.5:5011";
+        var baseHost = "http://192.168.88.177:5011";
         
         // 🖥️ EMÜLATÖR TESTİ İÇİN: Yukarıdaki satırı yorum yapıp bunu açın
         // var baseHost = "http://10.0.2.2:5011";
@@ -318,7 +318,7 @@ public class ProductApiService : IProductService
         try
         {
             await SetAuthHeaderAsync();
-            var response = await _httpClient.PatchAsync($"{_baseUrl}/{productId}/marksold", null);
+            var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/marksold", new { });
             if (response.IsSuccessStatusCode)
             {
                 return ServiceResult<bool>.SuccessResult(true, "Ürün satıldı olarak işaretlendi");
@@ -336,7 +336,7 @@ public class ProductApiService : IProductService
         try
         {
             await SetAuthHeaderAsync();
-            var response = await _httpClient.PatchAsync($"{_baseUrl}/{productId}/markexchanged", null);
+            var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/markexchanged", new { });
             if (response.IsSuccessStatusCode)
             {
                 return ServiceResult<bool>.SuccessResult(true, "Ürün takas edildi olarak işaretlendi");

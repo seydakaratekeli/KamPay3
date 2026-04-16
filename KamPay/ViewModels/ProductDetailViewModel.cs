@@ -320,7 +320,6 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            IsLoading = true;
             try
             {
                 switch (Product.Type)
@@ -340,7 +339,6 @@ namespace KamPay.ViewModels
 
                         if (action == (Res["Cancel"] ?? "İptal") || action == null)
                         {
-                            IsLoading = false;
                             return;
                         }
 
@@ -359,19 +357,18 @@ namespace KamPay.ViewModels
 
                             if (string.IsNullOrWhiteSpace(priceResult))
                             {
-                                IsLoading = false;
                                 return;
                             }
 
-                            if (!decimal.TryParse(priceResult, out targetPrice) || targetPrice <= 0)
+                            if (!decimal.TryParse(priceResult.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out targetPrice) || targetPrice <= 0)
                             {
                                 await Application.Current.MainPage.DisplayAlert(Res["Error"] ?? "Hata", "Geçerli bir tutar giriniz.", Res["Ok"] ?? "Tamam");
-                                IsLoading = false;
                                 return;
                             }
                             isFixedPrice = false;
                         }
 
+                        IsLoading = true;
                         // Satış için talebi oluştur
                         var saleResult = await _transactionService.CreateRequestAsync(Product, currentUser);
                         
@@ -418,6 +415,7 @@ namespace KamPay.ViewModels
                         break;
                         
                     case ProductType.Bagis:
+                        IsLoading = true;
                         // ✅ Bağış akışı (değişiklik yok)
                         var donationResult = await _transactionService.CreateRequestAsync(Product, currentUser);
                         
@@ -530,7 +528,7 @@ namespace KamPay.ViewModels
 
                 if (string.IsNullOrWhiteSpace(result)) return;
 
-                if (!decimal.TryParse(result, out var cashAmount) || cashAmount < 0)
+                if (!decimal.TryParse(result.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var cashAmount) || cashAmount < 0)
                 {
                     await Application.Current.MainPage.DisplayAlert(Res["Error"], Res["EnterValidAmount"], Res["Ok"]);
                     return;
@@ -702,7 +700,7 @@ namespace KamPay.ViewModels
                 await Share.RequestAsync(new ShareTextRequest
                 {
                     Title = Product.Title,
-                    Text = $"{Product.Title}\n{Product.Description}\n{Product.PriceText}\n\n{Res["SharedWithKamPay"]}"
+                    Text = $"{Product.Title}\n{Product.Description}\n{(Product.Type == ProductType.Satis ? $"{Product.Price:N2} ₺" : Product.Type == ProductType.Bagis ? "Ücretsiz" : "Takas")}\n\n{Res["SharedWithKamPay"]}"
                 });
             }
             catch (Exception ex)
@@ -715,9 +713,67 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task MarkAsSoldAsync()
         {
-            if (Product == null) return;
+            if (Product == null || Application.Current?.MainPage == null) return;
 
-            if (Application.Current?.MainPage == null) return;
+            if (Product.Type == ProductType.Satis)
+            {
+                try
+                {
+                    IsLoading = true;
+                    var transactions = await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .OnceAsync<Transaction>();
+                        
+                    var productTransactions = transactions
+                        .Select(t => t.Object)
+                        .Where(t => t.ProductId == ProductId && 
+                                   (t.Status == TransactionStatus.Accepted || t.Status == TransactionStatus.Pending))
+                        .ToList();
+
+                    IsLoading = false;
+
+                    if (productTransactions.Any())
+                    {
+                        var options = productTransactions.Select(t => $"{t.BuyerName}").Distinct().ToList();
+                        options.Add("Uygulama dışından birine sattım");
+
+                        var action = await Application.Current.MainPage.DisplayActionSheet(
+                            "Bu ürünü kime sattınız?",
+                            "İptal",
+                            null,
+                            options.ToArray()
+                        );
+
+                        if (action == "İptal" || string.IsNullOrEmpty(action)) 
+                            return;
+
+                        IsLoading = true;
+
+                        if (action == "Uygulama dışından birine sattım")
+                        {
+                            await MarkProductAsSoldDirectlyAsync();
+                        }
+                        else
+                        {
+                            var selectedTransaction = productTransactions.FirstOrDefault(t => $"{t.BuyerName}" == action);
+                            if (selectedTransaction != null)
+                            {
+                                // Güvenli Teslimat (QR Kod) sürecine yönlendir
+                                await Shell.Current.GoToAsync($"QRCodeDisplayPage?transactionId={selectedTransaction.TransactionId}");
+                            }
+                        }
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Hata: {ex.Message}");
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            }
 
             var confirm = await Application.Current.MainPage.DisplayAlert(
                 Res["Confirmation"],
@@ -727,7 +783,11 @@ namespace KamPay.ViewModels
             );
 
             if (!confirm) return;
+            await MarkProductAsSoldDirectlyAsync();
+        }
 
+        private async Task MarkProductAsSoldDirectlyAsync()
+        {
             try
             {
                 IsLoading = true;
@@ -736,34 +796,27 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert(
-                        Res["Success"],
-                        Res["ProductMarkedAsSold"],
-                        Res["Ok"]
-                    );
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert(Res["Success"], Res["ProductMarkedAsSold"], Res["Ok"]);
 
                     await LoadProductAsync();
                 }
                 else
                 {
-                    // YANLIŞ:
-                    //await Application.Current.Main.Page.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
-
-                    // DOĞRU:
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
+                    if (Application.Current?.MainPage != null)
+                        await Application.Current.MainPage.DisplayAlert(Res["Error"], result.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
             {
                 if (Application.Current?.MainPage != null)
-                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
+                     await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
                 IsLoading = false;
             }
         }
-
         [RelayCommand]
         private async Task EditProductAsync()
         {
@@ -867,7 +920,20 @@ namespace KamPay.ViewModels
         {
             if (string.IsNullOrEmpty(imageUrl)) return;
             
-            await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
+            try
+            {
+                var imagesList = ProductImages.ToList();
+                var imagesJson = System.Text.Json.JsonSerializer.Serialize(imagesList);
+                var encodedJson = System.Net.WebUtility.UrlEncode(imagesJson);
+                var index = ProductImages.IndexOf(imageUrl);
+                
+                await Shell.Current.GoToAsync($"ImageViewerPage?images={encodedJson}&index={index}");
+            }
+            catch (Exception ex)
+            {
+                // Fallback to single image if serialization fails
+                await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
+            }
         }
 
         //  Mevcut görseli tam ekran göster

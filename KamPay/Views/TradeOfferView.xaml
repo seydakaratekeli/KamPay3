@@ -105,7 +105,7 @@
                                                    TextColor="#212121"
                                                    LineBreakMode="TailTruncation"
                                                    MaxLines="2"/>
-                                            <Label Text="{Binding PriceText}" 
+                                            <Label Text="{Binding ., Converter={StaticResource ProductToPriceTextConverter}}" 
                                                    FontSize="13"
                                                    TextColor="#1E88E5"
                                                    FontAttributes="Bold"/>

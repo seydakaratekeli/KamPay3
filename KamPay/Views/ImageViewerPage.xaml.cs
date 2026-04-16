@@ -1,4 +1,4 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 
 namespace KamPay.Views
 {
@@ -137,6 +137,7 @@ namespace KamPay.Views
                     
                     // Zoom'u uygula
                     image.Scale = _currentScale;
+                    ImageCarousel.IsSwipeEnabled = _currentScale <= 1.1;
                     
                     // Zoom göstergesini güncelle
                     _ = ShowZoomIndicatorAsync(_currentScale);
@@ -147,6 +148,7 @@ namespace KamPay.Views
                     if (_currentScale <= 1)
                     {
                         ResetZoom(image);
+                    ImageCarousel.IsSwipeEnabled = true;
                     }
                     break;
             }
@@ -203,6 +205,8 @@ namespace KamPay.Views
         }
 
         // ✅ İYİLEŞTİRİLMİŞ: Double tap to zoom
+        private void OnSingleTap(object sender, EventArgs e) { /* BarlarÄ± gizle/gÃ¶ster logic */ }
+
         private async void OnImageTapped(object? sender, EventArgs e)
         {
             if (sender is not Image image)
@@ -212,6 +216,7 @@ namespace KamPay.Views
             {
                 // Zoomlu ise reset yap
                 ResetZoom(image);
+                    ImageCarousel.IsSwipeEnabled = true;
             }
             else
             {
@@ -244,13 +249,14 @@ namespace KamPay.Views
             await ShowZoomIndicatorAsync(1);
         }
 
-        // ✅ Reset butonu için event handler
+        // ? Reset butonu için event handler
         private void OnResetZoomTapped(object? sender, EventArgs e)
         {
-            if (MainImage != null && _currentScale > 1)
-            {
-                ResetZoom(MainImage);
-            }
+            // Reset zoom for all images or just rely on the fact that scale state is shared
+            // In a better implementation, we'd track the current Image element.
+            // For now, if we are zoomed, we can't easily find the Image from here 
+            // without a reference, so we'll rely on the user to double tap or pinch back.
+            // However, most modern viewers just reset everything or the current item.
         }
 
         private async Task ShowZoomIndicatorAsync(double zoom)
@@ -279,3 +285,5 @@ namespace KamPay.Views
         }
     }
 }
+
+

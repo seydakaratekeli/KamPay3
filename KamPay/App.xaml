@@ -123,6 +123,9 @@
             <converters:PostTypeToIconConverter x:Key="PostTypeToIconConverter"/>
             <converters:ProductTypeConverter x:Key="ProductTypeConverter"/>
             <converters:ProductConditionConverter x:Key="ProductConditionConverter"/>
+            <converters:ProductToStatusTextConverter x:Key="ProductToStatusTextConverter"/>
+            <converters:ProductToStatusColorConverter x:Key="ProductToStatusColorConverter"/>
+            <converters:ProductToPriceTextConverter x:Key="ProductToPriceTextConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
@@ -397,7 +397,7 @@
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,-2" Radius="10" Opacity="0.08"/>
             </Border.Shadow>
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto"
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto"
                   ColumnSpacing="8">
                 
                 <!--  Fotoğraf Butonu -->
@@ -416,6 +416,22 @@
                            VerticalOptions="Center"/>
                 </Border>
                 
+                <!-- 🛒 Teslimatı Onayla Butonu -->
+                <Border Grid.Column="1"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="#E8F5E9"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        StrokeThickness="0"
+                        IsVisible="{Binding IsDeliveryButtonVisible}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CompleteDeliveryFromChatCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="🛒"
+                           FontSize="24"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
                 <!-- 💰 Teklif Ver Butonu (Sadece ActiveTransaction varsa) -->
                 <Border Grid.Column="1"
                         StrokeShape="RoundRectangle 24"

@@ -287,15 +287,15 @@
                                         <!-- ✅ PERFORMANS: Gradient overlay kaldırıldı (scroll sırasında LinearGradientBrush render maliyetli) -->
 
                                         <!-- Status Badge -->
-                                        <Border IsVisible="{Binding StatusText, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                                BackgroundColor="{Binding StatusColor}"
+                                        <Border IsVisible="{Binding ., Converter={StaticResource ProductToStatusTextConverter}, ConverterParameter=HasValue}"
+                                                BackgroundColor="{Binding ., Converter={StaticResource ProductToStatusColorConverter}}"
                                                 StrokeThickness="0"
                                                 HorizontalOptions="Start"
                                                 VerticalOptions="Start"
                                                 Margin="10"
                                                 Padding="8,4"
                                                 StrokeShape="RoundRectangle 8">
-                                            <Label Text="{Binding StatusText}" 
+                                            <Label Text="{Binding ., Converter={StaticResource ProductToStatusTextConverter}}" 
                                                    TextColor="White" 
                                                    FontSize="10" 
                                                    FontAttributes="Bold"/>

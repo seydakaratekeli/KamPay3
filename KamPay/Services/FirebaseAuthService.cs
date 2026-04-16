@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -45,13 +45,13 @@ namespace KamPay.Services
             FirebaseClient firebaseClient,
             IEmailService emailService,
             IUserProfileService userProfileService,
-            ISecurityAuditService securityAudit) // ✅ Ekle
+            ISecurityAuditService securityAudit) 
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
-            _securityAudit = securityAudit; // ✅ Ekle
+            _securityAudit = securityAudit; 
             
             System.Diagnostics.Debug.WriteLine("✅ FirebaseAuthService oluşturuldu (DI ile)");
         }
@@ -159,7 +159,7 @@ namespace KamPay.Services
                         // NOT: Geliştirme ortamında (localhost) test ediyorsanız doğru IP'yi (örn; Android emülatör için 10.0.2.2) ayarlamalısınız.
                         // Canlı sunucunuz varsa direkt onun URL'sini yazın: https://YOUR_API_DOMAIN/api/Auth/login
                         // https://localhost:7143/api/Auth/login YERİNE:
-                        string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; // Kendi IP'nizi ve API portunuzu yazın. SSL sorunu yaşamamak için http tavsiye edilir
+                        string apiUrl = "http://192.168.88.177:5011/api/Auth/login"; // Kendi IP'nizi ve API portunuzu yazın. SSL sorunu yaşamamak için http tavsiye edilir
 
                         var loginPayload = new { IdToken = _authLink.FirebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
@@ -339,7 +339,7 @@ namespace KamPay.Services
                             try
                             {
                                 using var apiHttpClient = new System.Net.Http.HttpClient();
-                                string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; 
+                                string apiUrl = "http://192.168.88.177:5011/api/Auth/login"; 
                                 var loginPayload = new { IdToken = refreshedAuth.FirebaseToken };
                                 var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 
@@ -427,7 +427,7 @@ namespace KamPay.Services
                     try
                     {
                         using var apiHttpClient = new System.Net.Http.HttpClient();
-                        string apiUrl = "http://192.168.1.5:5011/api/Auth/login"; 
+                        string apiUrl = "http://192.168.88.177:5011/api/Auth/login"; 
                         var loginPayload = new { IdToken = firebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 
@@ -793,6 +793,18 @@ namespace KamPay.Services
 
                 var userStateService = Application.Current?.Handler?.MauiContext?.Services.GetService<IUserStateService>();
                 userStateService?.ClearUser();
+
+                // 🧹 Tüm UI cachelerini global olarak temizle
+                try
+                {
+                    KamPay.ViewModels.ChatViewModel.ClearCache();
+                    var productCache = Application.Current?.Handler?.MauiContext?.Services.GetService<KamPay.Services.IProductCacheService>();
+                    if (productCache != null) await productCache.InvalidateCacheAsync();
+                }
+                catch (Exception cacheEx)
+                {
+                    Console.WriteLine($"⚠️ Cache temizleme hatası: {cacheEx.Message}");
+                }
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
 

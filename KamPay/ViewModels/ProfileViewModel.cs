@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
 using KamPay.Services;
 using KamPay.Views;
@@ -57,6 +58,22 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
         // ✅ Global durum değişikliklerini dinle
         _userStateService.UserProfileChanged += OnUserProfileChanged;
+
+        WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (!m.Value) // Logout
+                {
+                    ResetViewModelState();
+                }
+                else // Login
+                {
+                    _isDataLoaded = false;
+                    _ = InitializeAsync();
+                }
+            });
+        });
     }
 
     // ✅ Kullanıcı verisi değiştiğinde (EditProfile'dan dönüldüğünde) tetiklenir

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -63,6 +63,29 @@ namespace KamPay.ViewModels
                 });
             });
             
+            WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!m.Value) // Logout
+                    {
+                        StopListening();
+                        IncomingOffers.Clear();
+                        OutgoingOffers.Clear();
+                        _incomingIds.Clear();
+                        _outgoingIds.Clear();
+                        _currentUserId = null;
+                        _isInitialized = false;
+                        _initialLoadComplete = false;
+                    }
+                    else // Login
+                    {
+                        _isInitialized = false;
+                        _ = InitializeAsync();
+                    }
+                });
+            });
+
             _ = InitializeAsync();
         }
 
@@ -807,8 +830,33 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                var navigationParameter = new Dictionary<string, object> { { "Transaction", transaction } };
-                await Shell.Current.GoToAsync(nameof(PaymentPage), navigationParameter);
+                var paymentMethod = await Application.Current.MainPage.DisplayActionSheet(
+                    "Ödeme Yöntemi Seçin",
+                    "İptal",
+                    null,
+                    "Kart ile (Uygulama İçi)",
+                    "Nakit / IBAN ile (Elden)"
+                );
+
+                if (paymentMethod == "İptal" || string.IsNullOrEmpty(paymentMethod)) return;
+
+                if (paymentMethod == "Kart ile (Uygulama İçi)")
+                {
+                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Kredi kartı ile ödeme sistemi yakında geliştirilecektir. Lütfen Nakit / IBAN seçeneğini kullanın.", "Tamam");
+                    return;
+                }
+                else if (paymentMethod == "Nakit / IBAN ile (Elden)")
+                {
+                    // Kullanıcıyı bilgilendir
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Bilgilendirme", 
+                        "Nakit veya IBAN ile ödeme seçeneğinde, ödeme süreci doğrudan kullanıcılar arasında gerçekleşir. KamPay bu ödeme sürecine teknik olarak dahil olmaz.\n\nEğer ödemeyi tamamladıysanız veya teslimat anında yapacaksanız, lütfen QR kod aşamasına geçerek teslimatı güvenli bir şekilde onaylayın.", 
+                        "Anladım, QR Koduna Git"
+                    );
+
+                    // Uygulama dışı ödeme seçildiği için doğrudan QR kod (güvenli fiziki/dijital onay) aşamasına geçir.
+                    await Shell.Current.GoToAsync($"QRCodeDisplayPage?transactionId={transaction.TransactionId}");
+                }
             }
             else if (transaction.Type == ProductType.Takas || transaction.Type == ProductType.Bagis)
             {
@@ -1106,7 +1154,7 @@ namespace KamPay.ViewModels
 
                 if (string.IsNullOrWhiteSpace(amountText)) return;
 
-                if (!decimal.TryParse(amountText, out var amount) || amount <= 0)
+                if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
                 {
                     await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir fiyat girin (sıfırdan büyük)", "Tamam");
                     return;
@@ -1165,7 +1213,7 @@ namespace KamPay.ViewModels
 
                 if (string.IsNullOrWhiteSpace(amountText)) return;
 
-                if (!decimal.TryParse(amountText, out var amount) || amount < 0)
+                if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount < 0)
                 {
                     await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin (sıfır veya pozitif)", "Tamam");
                     return;
@@ -1225,7 +1273,7 @@ namespace KamPay.ViewModels
 
                 if (string.IsNullOrWhiteSpace(amountText)) return;
 
-                if (!decimal.TryParse(amountText, out var amount) || amount <= 0)
+                if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
                 {
                     await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir fiyat girin (sıfırdan büyük)", "Tamam");
                     return;
