@@ -1,5 +1,5 @@
-using Firebase.Database;
-using Firebase.Database.Query; // ? Extension methods için
+ï»¿using Firebase.Database;
+using Firebase.Database.Query; // ? Extension methods iÃ§in
 using KamPay.Helpers;
 using KamPay.Models;
 using System;
@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 namespace KamPay.Services.Payment
 {
     /// <summary>
-    /// ?? KART SÝMÜLASYONU PROVIDER
+    /// ?? KART SÄ°MÃœLASYONU PROVIDER
     /// 
-    /// OCP Prensibi: Bu sýnýfý deðiþtirmeden yeni provider ekleyebilirsin.
-    /// Örneðin: StripePaymentProvider, IyzicoPaymentProvider vs.
+    /// OCP Prensibi: Bu sÄ±nÄ±fÄ± deÄŸiÅŸtirmeden yeni provider ekleyebilirsin.
+    /// Ã–rneÄŸin: StripePaymentProvider, IyzicoPaymentProvider vs.
     /// </summary>
     public class CardSimulationProvider : IPaymentProvider
     {
@@ -41,10 +41,10 @@ namespace KamPay.Services.Payment
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // ?? GÜVENLÝK: Kriptografik OTP oluþtur
+                // ?? GÃœVENLÄ°K: Kriptografik OTP oluÅŸtur
                 var otp = GenerateSecureOtp();
 
-                // ? Geçici OTP'yi Firebase'e kaydet (2 dakika geçerli)
+                // ? GeÃ§ici OTP'yi Firebase'e kaydet (2 dakika geÃ§erli)
                 await _firebaseClient
                     .Child(Constants.TempOtpsCollection)
                     .Child(payment.PaymentId)
@@ -54,14 +54,14 @@ namespace KamPay.Services.Payment
                         ExpiresAt = DateTime.UtcNow.AddMinutes(OtpValidityMinutes)
                     });
 
-                System.Diagnostics.Debug.WriteLine($"? Kart simülasyonu OTP: {otp} (PaymentId: {payment.PaymentId})");
+                KamPay.Helpers.AppLogger.DebugLog($"? Kart simÃ¼lasyonu OTP: {otp} (PaymentId: {payment.PaymentId})");
 
-                return ServiceResult<PaymentDto>.SuccessResult(payment, $"OTP oluþturuldu: {otp} (Simülasyon)");
+                return ServiceResult<PaymentDto>.SuccessResult(payment, $"OTP oluÅŸturuldu: {otp} (SimÃ¼lasyon)");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? CardSim hatasý: {ex.Message}");
-                return ServiceResult<PaymentDto>.FailureResult("Kart simülasyonu baþlatýlamadý", ex.Message);
+                KamPay.Helpers.AppLogger.DebugLog($"? CardSim hatasÄ±: {ex.Message}");
+                return ServiceResult<PaymentDto>.FailureResult("Kart simÃ¼lasyonu baÅŸlatÄ±lamadÄ±", ex.Message);
             }
         }
 
@@ -73,24 +73,24 @@ namespace KamPay.Services.Payment
                 var savedOtp = await otpNode.OnceSingleAsync<dynamic>();
 
                 if (savedOtp == null)
-                    return ServiceResult<bool>.FailureResult("OTP bulunamadý.");
+                    return ServiceResult<bool>.FailureResult("OTP bulunamadÄ±.");
 
                 var expiresAt = DateTime.Parse(savedOtp.ExpiresAt.ToString());
                 if (DateTime.UtcNow > expiresAt)
-                    return ServiceResult<bool>.FailureResult("OTP süresi doldu.");
+                    return ServiceResult<bool>.FailureResult("OTP sÃ¼resi doldu.");
 
                 var storedOtp = savedOtp.Otp.ToString();
                 if (string.IsNullOrWhiteSpace(verificationData) || storedOtp != verificationData)
-                    return ServiceResult<bool>.FailureResult("OTP geçersiz.");
+                    return ServiceResult<bool>.FailureResult("OTP geÃ§ersiz.");
 
-                // ? Kullanýldýktan sonra sil (tek kullanýmlýk)
+                // ? KullanÄ±ldÄ±ktan sonra sil (tek kullanÄ±mlÄ±k)
                 await otpNode.DeleteAsync();
 
-                return ServiceResult<bool>.SuccessResult(true, "OTP doðrulandý.");
+                return ServiceResult<bool>.SuccessResult(true, "OTP doÄŸrulandÄ±.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("OTP doðrulama hatasý", ex.Message);
+                return ServiceResult<bool>.FailureResult("OTP doÄŸrulama hatasÄ±", ex.Message);
             }
         }
 
@@ -98,7 +98,7 @@ namespace KamPay.Services.Payment
         {
             try
             {
-                // Simülasyon için basit durum kontrolü
+                // SimÃ¼lasyon iÃ§in basit durum kontrolÃ¼
                 return await Task.FromResult(ServiceResult<PaymentDto>.SuccessResult(
                     new PaymentDto 
                     { 
@@ -109,7 +109,7 @@ namespace KamPay.Services.Payment
             }
             catch (Exception ex)
             {
-                return ServiceResult<PaymentDto>.FailureResult("Durum sorgulanamadý", ex.Message);
+                return ServiceResult<PaymentDto>.FailureResult("Durum sorgulanamadÄ±", ex.Message);
             }
         }
 
@@ -124,3 +124,4 @@ namespace KamPay.Services.Payment
         }
     }
 }
+

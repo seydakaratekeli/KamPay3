@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,21 +13,21 @@ using KamPay.ViewModels;
 
 namespace KamPay.Services
 {
-    // bu sayfanın amacı Firebase Realtime Database üzerinden mesajlaşma işlevlerini yönetmektir. Mesaj gönderme, alma, konuşma oluşturma, okunmamış mesaj sayısını takip etme ve kullanıcı bilgilerini güncelleme gibi işlevleri kapsar. kullanıcılar arasındaki iletişimi sağlar ve mesajlaşma deneyimini yönetir.
+    // bu sayfanÄ±n amacÄ± Firebase Realtime Database Ã¼zerinden mesajlaÅŸma iÅŸlevlerini yÃ¶netmektir. Mesaj gÃ¶nderme, alma, konuÅŸma oluÅŸturma, okunmamÄ±ÅŸ mesaj sayÄ±sÄ±nÄ± takip etme ve kullanÄ±cÄ± bilgilerini gÃ¼ncelleme gibi iÅŸlevleri kapsar. kullanÄ±cÄ±lar arasÄ±ndaki iletiÅŸimi saÄŸlar ve mesajlaÅŸma deneyimini yÃ¶netir.
     public class FirebaseMessagingService : IMessagingService
     {
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
 
-        // ✅ SOLID FIX: FirebaseClient'ı DI'den alıyoruz (LSP ve DIP prensiplerine uygun)
+        // âœ… SOLID FIX: FirebaseClient'Ä± DI'den alÄ±yoruz (LSP ve DIP prensiplerine uygun)
         public FirebaseMessagingService(
-            FirebaseClient firebaseClient, // ✅ YENİ: DI'den alıyoruz
+            FirebaseClient firebaseClient, // âœ… YENÄ°: DI'den alÄ±yoruz
             INotificationService notificationService)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseMessagingService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… FirebaseMessagingService oluÅŸturuldu (DI ile)");
         }
 
         private async Task CheckAndBroadcastUnreadMessageStatus(string userId)
@@ -41,8 +41,8 @@ namespace KamPay.Services
         {
             try
             {
-                // 1. Rate Limiting Kontrolü: Dakikada en fazla 30 mesaj
-                var limitCheck = RateLimiters.Message.CheckLimit(sender.UserId);
+                // 1. Rate Limiting KontrolÃ¼: Dakikada en fazla 30 mesaj
+                var limitCheck = KamPay.Helpers.SecureRateLimiters.Message.CheckRequest(sender.UserId);
                 if (!limitCheck.IsAllowed)
                 {
                     return ServiceResult<Message>.FailureResult(limitCheck.Message);
@@ -50,35 +50,35 @@ namespace KamPay.Services
 
                 if (request == null || sender == null || string.IsNullOrEmpty(request.ReceiverId))
                 {
-                    return ServiceResult<Message>.FailureResult("Geçersiz istek: Gönderen veya alıcı boş olamaz.");
+                    return ServiceResult<Message>.FailureResult("GeÃ§ersiz istek: GÃ¶nderen veya alÄ±cÄ± boÅŸ olamaz.");
                 }
 
-                // 2. Girdi Temizleme (Input Sanitization) ve Doğrulama
+                // 2. Girdi Temizleme (Input Sanitization) ve DoÄŸrulama
                 if (request.Type == MessageType.Text)
                 {
                     if (string.IsNullOrEmpty(request.Content))
                     {
-                        return ServiceResult<Message>.FailureResult("Mesaj içeriği boş olamaz.");
+                        return ServiceResult<Message>.FailureResult("Mesaj iÃ§eriÄŸi boÅŸ olamaz.");
                     }
 
-                    // GÜVENLİK: Mesaj içeriğini XSS saldırılarına karşı temizle
+                    // GÃœVENLÄ°K: Mesaj iÃ§eriÄŸini XSS saldÄ±rÄ±larÄ±na karÅŸÄ± temizle
                     request.Content = InputSanitizer.SanitizeText(request.Content);
 
-                    // Temizleme sonrası içerik boş kalmışsa (sadece zararlı kodlardan oluşuyorsa) engelle
+                    // Temizleme sonrasÄ± iÃ§erik boÅŸ kalmÄ±ÅŸsa (sadece zararlÄ± kodlardan oluÅŸuyorsa) engelle
                     if (string.IsNullOrWhiteSpace(request.Content))
                     {
-                        return ServiceResult<Message>.FailureResult("Geçersiz mesaj içeriği.");
+                        return ServiceResult<Message>.FailureResult("GeÃ§ersiz mesaj iÃ§eriÄŸi.");
                     }
                 }
                 else if (request.Type == MessageType.Image && string.IsNullOrEmpty(request.ImageUrl))
                 {
-                    return ServiceResult<Message>.FailureResult("Görsel URL'i boş olamaz.");
+                    return ServiceResult<Message>.FailureResult("GÃ¶rsel URL'i boÅŸ olamaz.");
                 }
 
                 var conversationResult = await GetOrCreateConversationAsync(sender.UserId, request.ReceiverId, request.ProductId);
                 if (!conversationResult.Success || conversationResult.Data == null)
                 {
-                    return ServiceResult<Message>.FailureResult("Konuşma oluşturulamadı veya bulunamadı.");
+                    return ServiceResult<Message>.FailureResult("KonuÅŸma oluÅŸturulamadÄ± veya bulunamadÄ±.");
                 }
                 var conversation = conversationResult.Data;
 
@@ -89,7 +89,7 @@ namespace KamPay.Services
 
                 if (receiver == null)
                 {
-                    return ServiceResult<Message>.FailureResult("Alıcı kullanıcı bulunamadı.");
+                    return ServiceResult<Message>.FailureResult("AlÄ±cÄ± kullanÄ±cÄ± bulunamadÄ±.");
                 }
 
                 var message = new Message
@@ -120,15 +120,15 @@ namespace KamPay.Services
                     }
                 }
 
-                //  OPTIMIZE: Paralel yazma işlemleri
+                //  OPTIMIZE: Paralel yazma iÅŸlemleri
                 var messageTask = _firebaseClient
                     .Child(Constants.MessagesCollection)
                     .Child(conversation.ConversationId)
                     .Child(message.MessageId)
                     .PutAsync(message);
 
-                // Conversation güncelleme
-                conversation.LastMessage = message.Type == MessageType.Image ? "📷 Medya" : (message.Content ?? "Mesaj");
+                // Conversation gÃ¼ncelleme
+                conversation.LastMessage = message.Type == MessageType.Image ? "ğŸ“· Medya" : (message.Content ?? "Mesaj");
                 conversation.LastMessageTime = DateTime.UtcNow;
                 conversation.LastMessageSenderId = sender.UserId;
                 conversation.UpdatedAt = DateTime.UtcNow;
@@ -143,19 +143,19 @@ namespace KamPay.Services
                     .Child(conversation.ConversationId)
                     .PutAsync(conversation);
 
-                //  İki işlemi paralel bekle
+                //  Ä°ki iÅŸlemi paralel bekle
                 await Task.WhenAll(messageTask, conversationTask);
 
-                return ServiceResult<Message>.SuccessResult(message, "Mesaj başarıyla gönderildi.");
+                return ServiceResult<Message>.SuccessResult(message, "Mesaj baÅŸarÄ±yla gÃ¶nderildi.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SendMessageAsync Hata: {ex.Message}");
-                return ServiceResult<Message>.FailureResult("Mesaj gönderilemedi. Bir hata oluştu.", ex.Message);
+                KamPay.Helpers.AppLogger.DebugLog($"SendMessageAsync Hata: {ex.Message}");
+                return ServiceResult<Message>.FailureResult("Mesaj gÃ¶nderilemedi. Bir hata oluÅŸtu.", ex.Message);
             }
         }
 
-        // OPTIMIZE: Limit ve sıralama ekle
+        // OPTIMIZE: Limit ve sÄ±ralama ekle
         public async Task<ServiceResult<List<Message>>> GetConversationMessagesAsync(string conversationId, int limit = 50)
         {
             try
@@ -164,7 +164,7 @@ namespace KamPay.Services
                     .Child(Constants.MessagesCollection)
                     .Child(conversationId)
                     .OrderByKey()
-                    .LimitToLast(limit) //  Firebase'den sadece son N mesajı çek
+                    .LimitToLast(limit) //  Firebase'den sadece son N mesajÄ± Ã§ek
                     .OnceAsync<Message>();
 
                 var messages = messagesRef
@@ -175,14 +175,14 @@ namespace KamPay.Services
                         return msg;
                     })
                     .Where(m => !m.IsDeleted)
-                    .OrderBy(m => m.SentAt) // Zaten limit'li geldi, sıralama hafif
+                    .OrderBy(m => m.SentAt) // Zaten limit'li geldi, sÄ±ralama hafif
                     .ToList();
 
                 return ServiceResult<List<Message>>.SuccessResult(messages);
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<Message>>.FailureResult("Mesajlar yüklenemedi", ex.Message);
+                return ServiceResult<List<Message>>.FailureResult("Mesajlar yÃ¼klenemedi", ex.Message);
             }
         }
 
@@ -191,9 +191,9 @@ namespace KamPay.Services
         {
             try
             {
-                //araştır
-                // Firebase.Database.net kütüphanesi çoklu index sorgusunu desteklemiyor
-                // Tüm konuşmaları çek, sonra client-side filtrele
+                //araÅŸtÄ±r
+                // Firebase.Database.net kÃ¼tÃ¼phanesi Ã§oklu index sorgusunu desteklemiyor
+                // TÃ¼m konuÅŸmalarÄ± Ã§ek, sonra client-side filtrele
                 var allConversationsTask = _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -216,7 +216,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<Conversation>>.FailureResult("Konuşmalar yüklenemedi", ex.Message);
+                return ServiceResult<List<Conversation>>.FailureResult("KonuÅŸmalar yÃ¼klenemedi", ex.Message);
             }
         }
 
@@ -224,7 +224,7 @@ namespace KamPay.Services
         {
             try
             {
-                //  OPTIMIZE: Önce cache'den kontrol et (isteğe bağlı)
+                //  OPTIMIZE: Ã–nce cache'den kontrol et (isteÄŸe baÄŸlÄ±)
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -241,7 +241,7 @@ namespace KamPay.Services
                     return ServiceResult<Conversation>.SuccessResult(existing);
                 }
 
-                //  Paralel kullanıcı sorguları
+                //  Paralel kullanÄ±cÄ± sorgularÄ±
                 var user1Task = _firebaseClient
                     .Child(Constants.UsersCollection)
                     .Child(user1Id)
@@ -259,7 +259,7 @@ namespace KamPay.Services
 
                 if (user1 == null || user2 == null)
                 {
-                    return ServiceResult<Conversation>.FailureResult("Kullanıcı bulunamadı");
+                    return ServiceResult<Conversation>.FailureResult("KullanÄ±cÄ± bulunamadÄ±");
                 }
 
                 var conversation = new Conversation
@@ -270,7 +270,7 @@ namespace KamPay.Services
                     User2Id = user2Id,
                     User2Name = user2.FullName ?? string.Empty,
                     User2PhotoUrl = user2.ProfileImageUrl ?? string.Empty,
-                    LastMessage = "Konuşma başladı",
+                    LastMessage = "KonuÅŸma baÅŸladÄ±",
                     LastMessageTime = DateTime.UtcNow
                 };
 
@@ -298,7 +298,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<Conversation>.FailureResult("Konuşma oluşturulamadı", ex.Message);
+                return ServiceResult<Conversation>.FailureResult("KonuÅŸma oluÅŸturulamadÄ±", ex.Message);
             }
         }
 
@@ -312,7 +312,7 @@ namespace KamPay.Services
                     .OnceSingleAsync<Conversation>();
 
                 if (conversation == null)
-                    return ServiceResult<bool>.FailureResult("Konuşma bulunamadı.");
+                    return ServiceResult<bool>.FailureResult("KonuÅŸma bulunamadÄ±.");
 
                 bool needsUpdate = false;
 
@@ -327,7 +327,7 @@ namespace KamPay.Services
                     needsUpdate = true;
                 }
 
-                //  Sadece değişiklik varsa Firebase'e yaz
+                //  Sadece deÄŸiÅŸiklik varsa Firebase'e yaz
                 if (needsUpdate)
                 {
                     await _firebaseClient
@@ -335,7 +335,7 @@ namespace KamPay.Services
                         .Child(conversationId)
                         .PutAsync(conversation);
 
-                    // Okunmamış sayısını güncelle
+                    // OkunmamÄ±ÅŸ sayÄ±sÄ±nÄ± gÃ¼ncelle
                     await CheckAndBroadcastUnreadMessageStatus(readerUserId);
                 }
 
@@ -343,7 +343,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Mesajlar okundu olarak işaretlenemedi.", ex.Message);
+                return ServiceResult<bool>.FailureResult("Mesajlar okundu olarak iÅŸaretlenemedi.", ex.Message);
             }
         }
 
@@ -353,7 +353,7 @@ namespace KamPay.Services
             {
                 var conversationsResult = await GetUserConversationsAsync(userId);
                 if (!conversationsResult.Success || conversationsResult.Data == null)
-                    return ServiceResult<int>.FailureResult("Okunmamış mesajlar sayılamadı.");
+                    return ServiceResult<int>.FailureResult("OkunmamÄ±ÅŸ mesajlar sayÄ±lamadÄ±.");
 
                 int totalUnread = conversationsResult.Data
                     .Sum(convo => convo.User1Id == userId
@@ -364,7 +364,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<int>.FailureResult("Okunmamış mesajlar sayılamadı.", ex.Message);
+                return ServiceResult<int>.FailureResult("OkunmamÄ±ÅŸ mesajlar sayÄ±lamadÄ±.", ex.Message);
             }
         }
 
@@ -379,7 +379,7 @@ namespace KamPay.Services
 
                 if (conversation == null)
                 {
-                    return ServiceResult<bool>.FailureResult("Konuşma bulunamadı");
+                    return ServiceResult<bool>.FailureResult("KonuÅŸma bulunamadÄ±");
                 }
 
                 conversation.IsActive = false;
@@ -389,16 +389,16 @@ namespace KamPay.Services
                     .Child(conversationId)
                     .PutAsync(conversation);
 
-                return ServiceResult<bool>.SuccessResult(true, "Konuşma silindi");
+                return ServiceResult<bool>.SuccessResult(true, "KonuÅŸma silindi");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Silme başarısız", ex.Message);
+                return ServiceResult<bool>.FailureResult("Silme baÅŸarÄ±sÄ±z", ex.Message);
             }
         }
 
-        //  Bu metod artık kullanılmıyor (direkt Firebase Observable kullanılıyor)
-        [Obsolete("Direkt ViewModel'de Firebase Observable kullanın")]
+        //  Bu metod artÄ±k kullanÄ±lmÄ±yor (direkt Firebase Observable kullanÄ±lÄ±yor)
+        [Obsolete("Direkt ViewModel'de Firebase Observable kullanÄ±n")]
         public IDisposable SubscribeToConversations(string userId, Action<List<Conversation>> onConversationsChanged)
         {
             var observable = _firebaseClient
@@ -423,13 +423,13 @@ namespace KamPay.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SubscribeToConversations Hata: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"SubscribeToConversations Hata: {ex.Message}");
                 }
             });
         }
 
-        //  Bu metod artık kullanılmıyor (direkt Firebase Observable kullanılıyor)
-        [Obsolete("Direkt ViewModel'de Firebase Observable kullanın")]
+        //  Bu metod artÄ±k kullanÄ±lmÄ±yor (direkt Firebase Observable kullanÄ±lÄ±yor)
+        [Obsolete("Direkt ViewModel'de Firebase Observable kullanÄ±n")]
         public IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged)
         {
             var observable = _firebaseClient
@@ -455,21 +455,21 @@ namespace KamPay.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"SubscribeToMessages Hata: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"SubscribeToMessages Hata: {ex.Message}");
                 }
             });
         }
 
 
         /// <summary>
-        /// Kullanıcının tüm mesajlarındaki isim bilgilerini günceller
-        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+        /// KullanÄ±cÄ±nÄ±n tÃ¼m mesajlarÄ±ndaki isim bilgilerini gÃ¼nceller
+        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle gÃ¼ncelleme
         /// </summary>
         public async Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
-                // 1?? Kullanıcının dahil olduğu konuşmaları bul
+                // 1?? KullanÄ±cÄ±nÄ±n dahil olduÄŸu konuÅŸmalarÄ± bul
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -481,16 +481,16 @@ namespace KamPay.Services
 
                 if (!userConversations.Any())
                 {
-                    return ServiceResult<bool>.SuccessResult(true, "Güncellenecek mesaj yok");
+                    return ServiceResult<bool>.SuccessResult(true, "GÃ¼ncellenecek mesaj yok");
                 }
 
-                // 2?? Her mesaj için PatchAsync çağrıları oluştur
+                // 2?? Her mesaj iÃ§in PatchAsync Ã§aÄŸrÄ±larÄ± oluÅŸtur
                 var tasks = new List<Task>();
                 int messageCount = 0;
 
                 foreach (var conversationId in userConversations)
                 {
-                    // Bu konuşmadaki tüm mesajları al
+                    // Bu konuÅŸmadaki tÃ¼m mesajlarÄ± al
                     var messages = await _firebaseClient
                         .Child(Constants.MessagesCollection)
                         .Child(conversationId)
@@ -501,14 +501,14 @@ namespace KamPay.Services
                         var msg = messageEntry.Object;
                         var perMessageUpdates = new Dictionary<string, object>();
 
-                        // Gönderen kişi güncelleniyorsa
+                        // GÃ¶nderen kiÅŸi gÃ¼ncelleniyorsa
                         if (msg.SenderId == userId && !string.IsNullOrWhiteSpace(newName))
                         {
                             perMessageUpdates["SenderName"] = newName;
                             messageCount++;
                         }
 
-                        // Alıcı kişi güncelleniyorsa
+                        // AlÄ±cÄ± kiÅŸi gÃ¼ncelleniyorsa
                         if (msg.ReceiverId == userId)
                         {
                             if (!string.IsNullOrWhiteSpace(newName))
@@ -536,28 +536,28 @@ namespace KamPay.Services
                 if (tasks.Any())
                 {
                     await Task.WhenAll(tasks);
-                    Console.WriteLine($"? {messageCount} mesaj PatchAsync ile güncellendi");
+                    KamPay.Helpers.AppLogger.DebugLog($"? {messageCount} mesaj PatchAsync ile gÃ¼ncellendi");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"{messageCount} mesaj güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, $"{messageCount} mesaj gÃ¼ncellendi");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? UpdateUserInfoInMessages hatası: {ex.Message}");
-                return ServiceResult<bool>.FailureResult("Mesajlar güncellenemedi", ex.Message);
+                KamPay.Helpers.AppLogger.DebugLog($"? UpdateUserInfoInMessages hatasÄ±: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("Mesajlar gÃ¼ncellenemedi", ex.Message);
             }
         }
 
 
         /// <summary>
-        /// Kullanıcının tüm konuşmalarındaki isim ve profil fotoğrafı bilgilerini günceller
-        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle güncelleme
+        /// KullanÄ±cÄ±nÄ±n tÃ¼m konuÅŸmalarÄ±ndaki isim ve profil fotoÄŸrafÄ± bilgilerini gÃ¼nceller
+        /// ? OPTIMIZE: Firebase multi-path atomic update ile tek istekle gÃ¼ncelleme
         /// </summary>
         public async Task<ServiceResult<bool>> UpdateUserInfoInConversationsAsync(string userId, string? newName, string? newPhotoUrl)
         {
             try
             {
-                // 1?? Kullanıcının konuşmalarını bul
+                // 1?? KullanÄ±cÄ±nÄ±n konuÅŸmalarÄ±nÄ± bul
                 var allConversations = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OnceAsync<Conversation>();
@@ -568,7 +568,7 @@ namespace KamPay.Services
 
                 if (!userConversations.Any())
                 {
-                    return ServiceResult<bool>.SuccessResult(true, "Güncellenecek konuşma yok");
+                    return ServiceResult<bool>.SuccessResult(true, "GÃ¼ncellenecek konuÅŸma yok");
                 }
 
                 var tasks = new List<Task>();
@@ -578,7 +578,7 @@ namespace KamPay.Services
                     var conversation = conversationEntry.Object;
                     var perConvUpdates = new Dictionary<string, object>();
 
-                    // User1 güncelleniyorsa
+                    // User1 gÃ¼ncelleniyorsa
                     if (conversation.User1Id == userId)
                     {
                         if (!string.IsNullOrWhiteSpace(newName))
@@ -587,7 +587,7 @@ namespace KamPay.Services
                             perConvUpdates["User1PhotoUrl"] = newPhotoUrl;
                     }
 
-                    // User2 güncelleniyorsa
+                    // User2 gÃ¼ncelleniyorsa
                     if (conversation.User2Id == userId)
                     {
                         if (!string.IsNullOrWhiteSpace(newName))
@@ -610,15 +610,15 @@ namespace KamPay.Services
                 if (tasks.Any())
                 {
                     await Task.WhenAll(tasks);
-                    Console.WriteLine($"? {userConversations.Count} konuşma PatchAsync ile güncellendi");
+                    KamPay.Helpers.AppLogger.DebugLog($"? {userConversations.Count} konuÅŸma PatchAsync ile gÃ¼ncellendi");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"{userConversations.Count} konuşma güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, $"{userConversations.Count} konuÅŸma gÃ¼ncellendi");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? UpdateUserInfoInConversations hatası: {ex.Message}");
-                return ServiceResult<bool>.FailureResult("Konuşmalar güncellenemedi", ex.Message);
+                KamPay.Helpers.AppLogger.DebugLog($"? UpdateUserInfoInConversations hatasÄ±: {ex.Message}");
+                return ServiceResult<bool>.FailureResult("KonuÅŸmalar gÃ¼ncellenemedi", ex.Message);
             }
         }
     }

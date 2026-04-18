@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -34,8 +34,8 @@ namespace KamPay.ViewModels
         private CancellationTokenSource? _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 5000;
 
-        public ObservableCollection<Transaction> IncomingOffers { get; } = new();
-        public ObservableCollection<Transaction> OutgoingOffers { get; } = new();
+        public ObservableRangeCollection<Transaction> IncomingOffers { get; } = new();
+        public ObservableRangeCollection<Transaction> OutgoingOffers { get; } = new();
 
         [ObservableProperty] private bool isLoading = true;
         [ObservableProperty] private bool isRefreshing;
@@ -45,20 +45,20 @@ namespace KamPay.ViewModels
         [ObservableProperty] private bool hasIncomingOffers = false;
         [ObservableProperty] private bool hasOutgoingOffers = false;
 
-        public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService, IUserStateService userStateService)
+        public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService, IUserStateService userStateService, FirebaseClient firebaseClient)
         {
             _transactionService = transactionService;
             _authService = authService;
             _userStateService = userStateService;
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient;
             _userStateService.UserProfileChanged += OnUserProfileChanged;
             
-            // ✅ PaymentCompleted mesajını dinle
+            // âœ… PaymentCompleted mesajÄ±nÄ± dinle
             WeakReferenceMessenger.Default.Register<PaymentCompletedMessage>(this, (r, m) =>
             {
                 _ = MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    Debug.WriteLine("💰 PaymentCompleted mesajı alındı, offers yenileniyor...");
+                    Debug.WriteLine("ğŸ’° PaymentCompleted mesajÄ± alÄ±ndÄ±, offers yenileniyor...");
                     await RefreshOffersAsync();
                 });
             });
@@ -117,7 +117,7 @@ namespace KamPay.ViewModels
                 IsSkeletonVisible = false;
                 IsRefreshing = false;
                 UpdateHasOffers();
-                Debug.WriteLine("⚠️ Kullanıcı oturum açmamış");
+                Debug.WriteLine("âš ï¸ KullanÄ±cÄ± oturum aÃ§mamÄ±ÅŸ");
                 return;
             }
 
@@ -130,7 +130,7 @@ namespace KamPay.ViewModels
         {
             if (_allOffersSubscription != null) return;
 
-            Debug.WriteLine($"🎧 Offers listener başlatılıyor: {userId}");
+            Debug.WriteLine($"ğŸ§ Offers listener baÅŸlatÄ±lÄ±yor: {userId}");
 
             _loadingTimeoutCts?.Cancel();
             _loadingTimeoutCts?.Dispose();
@@ -147,7 +147,7 @@ namespace KamPay.ViewModels
                 {
                     if (!_initialLoadComplete)
                     {
-                        Debug.WriteLine("⏳ Loading timeout - veri gelmedi.");
+                        Debug.WriteLine("â³ Loading timeout - veri gelmedi.");
                         IsLoading = false;
                         IsSkeletonVisible = false;
                         IsRefreshing = false;
@@ -178,20 +178,20 @@ namespace KamPay.ViewModels
                                     IsLoading = false;
                                     IsSkeletonVisible = false;
                                     IsRefreshing = false;
-                                    Debug.WriteLine("✅ İlk gerçek realtime offer geldi — loading kapatıldı.");
+                                    Debug.WriteLine("âœ… Ä°lk gerÃ§ek realtime offer geldi â€” loading kapatÄ±ldÄ±.");
                                 }
 
                                 UpdateHasOffers();
                             }
                             catch (Exception ex)
                             {
-                                Debug.WriteLine($"❌ Offer batch hatası: {ex.Message}");
+                                Debug.WriteLine($"âŒ Offer batch hatasÄ±: {ex.Message}");
                             }
                         });
                     },
                     error =>
                     {
-                        Debug.WriteLine($"❌ Firebase listener hatası: {error.Message}");
+                        Debug.WriteLine($"âŒ Firebase listener hatasÄ±: {error.Message}");
                         MainThread.InvokeOnMainThreadAsync(() =>
                         {
                             IsLoading = false;
@@ -208,7 +208,7 @@ namespace KamPay.ViewModels
             {
                 if (token.IsCancellationRequested) return;
 
-                Debug.WriteLine("📸 Snapshot yükleniyor...");
+                Debug.WriteLine("ğŸ“¸ Snapshot yÃ¼kleniyor...");
 
                 var snapshot = await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -240,7 +240,7 @@ namespace KamPay.ViewModels
                             IsSkeletonVisible = false;
                             IsRefreshing = false;
                             UpdateHasOffers();
-                            Debug.WriteLine("✅ Snapshot yüklendi — teklif yok.");
+                            Debug.WriteLine("âœ… Snapshot yÃ¼klendi â€” teklif yok.");
                         }
                     });
                     return;
@@ -248,13 +248,16 @@ namespace KamPay.ViewModels
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
+                    var newIncoming = new List<Transaction>();
+                    var newOutgoing = new List<Transaction>();
+
                     foreach (var transaction in userOffers)
                     {
                         if (transaction.SellerId == userId)
                         {
                             if (!_incomingIds.Contains(transaction.TransactionId))
                             {
-                                IncomingOffers.Add(transaction);
+                                newIncoming.Add(transaction);
                                 _incomingIds.Add(transaction.TransactionId);
                             }
                         }
@@ -262,11 +265,14 @@ namespace KamPay.ViewModels
                         {
                             if (!_outgoingIds.Contains(transaction.TransactionId))
                             {
-                                OutgoingOffers.Add(transaction);
+                                newOutgoing.Add(transaction);
                                 _outgoingIds.Add(transaction.TransactionId);
                             }
                         }
                     }
+
+                    if (newIncoming.Any()) IncomingOffers.AddRange(newIncoming);
+                    if (newOutgoing.Any()) OutgoingOffers.AddRange(newOutgoing);
 
                     if (!_initialLoadComplete)
                     {
@@ -275,13 +281,13 @@ namespace KamPay.ViewModels
                         IsSkeletonVisible = false;
                         IsRefreshing = false;
                         UpdateHasOffers();
-                        Debug.WriteLine($"✅ Snapshot yüklendi — {userOffers.Count} teklif bulundu.");
+                        Debug.WriteLine($"âœ… Snapshot yÃ¼klendi â€” {userOffers.Count} teklif bulundu.");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
+                Debug.WriteLine($"âš ï¸ Snapshot yÃ¼klenirken hata: {ex.Message}");
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsLoading = false;
@@ -320,7 +326,7 @@ namespace KamPay.ViewModels
 
                 if (!string.IsNullOrEmpty(transaction.TransactionId) && transaction.TransactionId.StartsWith("service_"))
                 {
-                    Debug.WriteLine($"⚠️ Hizmet transaction'ı atlanıyor: {transaction.TransactionId}");
+                    Debug.WriteLine($"âš ï¸ Hizmet transaction'Ä± atlanÄ±yor: {transaction.TransactionId}");
                     continue;
                 }
 
@@ -329,7 +335,7 @@ namespace KamPay.ViewModels
                     if (UpdateOfferInCollection(IncomingOffers, _incomingIds, transaction, e.EventType))
                     {
                         hasIncomingChanges = true;
-                        Debug.WriteLine($"🔄 INCOMING güncellendi: {transaction.TransactionId}");
+                        Debug.WriteLine($"ğŸ”„ INCOMING gÃ¼ncellendi: {transaction.TransactionId}");
                         Debug.WriteLine($"   Status: {transaction.Status}, Payment: {transaction.PaymentStatus}");
                         Debug.WriteLine($"   IsNegotiating: {transaction.IsNegotiating}, QuotedPrice: {transaction.QuotedPrice}");
                     }
@@ -339,7 +345,7 @@ namespace KamPay.ViewModels
                     if (UpdateOfferInCollection(OutgoingOffers, _outgoingIds, transaction, e.EventType))
                     {
                         hasOutgoingChanges = true;
-                        Debug.WriteLine($"🔄 OUTGOING güncellendi: {transaction.TransactionId}");
+                        Debug.WriteLine($"ğŸ”„ OUTGOING gÃ¼ncellendi: {transaction.TransactionId}");
                         Debug.WriteLine($"   Status: {transaction.Status}, Payment: {transaction.PaymentStatus}");
                         Debug.WriteLine($"   IsNegotiating: {transaction.IsNegotiating}, QuotedPrice: {transaction.QuotedPrice}");
                     }
@@ -350,18 +356,18 @@ namespace KamPay.ViewModels
             {
                 SortOffersInPlace(IncomingOffers);
                 OnPropertyChanged(nameof(IncomingOffers));
-                Debug.WriteLine($"✅ IncomingOffers collection updated - Count: {IncomingOffers.Count}");
+                Debug.WriteLine($"âœ… IncomingOffers collection updated - Count: {IncomingOffers.Count}");
             }
 
             if (hasOutgoingChanges)
             {
                 SortOffersInPlace(OutgoingOffers);
                 OnPropertyChanged(nameof(OutgoingOffers));
-                Debug.WriteLine($"✅ OutgoingOffers collection updated - Count: {OutgoingOffers.Count}");
+                Debug.WriteLine($"âœ… OutgoingOffers collection updated - Count: {OutgoingOffers.Count}");
             }
         }
 
-        private bool UpdateOfferInCollection(ObservableCollection<Transaction> collection, HashSet<string> idTracker, Transaction transaction, FirebaseEventType eventType)
+        private bool UpdateOfferInCollection(ObservableRangeCollection<Transaction> collection, HashSet<string> idTracker, Transaction transaction, FirebaseEventType eventType)
         {
             var existing = collection.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
 
@@ -386,7 +392,7 @@ namespace KamPay.ViewModels
                         {
                             collection.RemoveAt(index);
                             collection.Insert(index, transaction);
-                            Debug.WriteLine($"✅ GÜNCELLEME: {transaction.TransactionId} - Status: {transaction.Status}, Payment: {transaction.PaymentStatus}, Index: {index}");
+                            Debug.WriteLine($"âœ… GÃœNCELLEME: {transaction.TransactionId} - Status: {transaction.Status}, Payment: {transaction.PaymentStatus}, Index: {index}");
                             return true;
                         }
                         
@@ -396,7 +402,7 @@ namespace KamPay.ViewModels
                     {
                         collection.Add(transaction);
                         idTracker.Add(transaction.TransactionId);
-                        Debug.WriteLine($"✅ YENİ EKLEME: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… YENÄ° EKLEME: {transaction.TransactionId}");
                         return true;
                     }
                     break;
@@ -406,7 +412,7 @@ namespace KamPay.ViewModels
                     {
                         collection.Remove(existing);
                         idTracker.Remove(transaction.TransactionId);
-                        Debug.WriteLine($"✅ SİLİNDİ: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… SÄ°LÄ°NDÄ°: {transaction.TransactionId}");
                         return true;
                     }
                     break;
@@ -414,7 +420,7 @@ namespace KamPay.ViewModels
             return false;
         }
 
-        private void SortOffersInPlace(ObservableCollection<Transaction> collection)
+        private void SortOffersInPlace(ObservableRangeCollection<Transaction> collection)
         {
             var sorted = collection.OrderByDescending(t => t.CreatedAt).ToList();
             for (int i = 0; i < sorted.Count; i++)
@@ -428,7 +434,7 @@ namespace KamPay.ViewModels
         {
             HasIncomingOffers = IncomingOffers.Any();
             HasOutgoingOffers = OutgoingOffers.Any();
-            Debug.WriteLine($"📊 UpdateHasOffers: Gelen={IncomingOffers.Count} (HasIncoming={HasIncomingOffers}), Giden={OutgoingOffers.Count} (HasOutgoing={HasOutgoingOffers})");
+            Debug.WriteLine($"ğŸ“Š UpdateHasOffers: Gelen={IncomingOffers.Count} (HasIncoming={HasIncomingOffers}), Giden={OutgoingOffers.Count} (HasOutgoing={HasOutgoingOffers})");
         }
 
         [RelayCommand]
@@ -439,7 +445,7 @@ namespace KamPay.ViewModels
             try
             {
                 IsRefreshing = true;
-                Debug.WriteLine("🔄 RefreshOffersAsync başladı — IsRefreshing = true");
+                Debug.WriteLine("ğŸ”„ RefreshOffersAsync baÅŸladÄ± â€” IsRefreshing = true");
                 
                 // Cancel any ongoing loading timeout
                 _loadingTimeoutCts?.Cancel();
@@ -463,7 +469,7 @@ namespace KamPay.ViewModels
                     _currentUserId = currentUser.UserId;
                     StartListeningForOffers(currentUser.UserId);
                     
-                    // ✅ FIX: Wait for initial load with max 5 second timeout
+                    // âœ… FIX: Wait for initial load with max 5 second timeout
                     var maxWaitTime = 5000;
                     var waitedTime = 0;
                     var checkInterval = 200;
@@ -474,16 +480,16 @@ namespace KamPay.ViewModels
                         waitedTime += checkInterval;
                     }
                     
-                    Debug.WriteLine($"✅ Refresh beklemesi tamamlandı: {waitedTime}ms, InitialLoadComplete: {_initialLoadComplete}");
+                    Debug.WriteLine($"âœ… Refresh beklemesi tamamlandÄ±: {waitedTime}ms, InitialLoadComplete: {_initialLoadComplete}");
                 }
                 else
                 {
-                    Debug.WriteLine("⚠️ Refresh: Kullanıcı bulunamadı");
+                    Debug.WriteLine("âš ï¸ Refresh: KullanÄ±cÄ± bulunamadÄ±");
                 }
             }
             catch (Exception ex) 
             { 
-                Debug.WriteLine($"❌ Refresh hatası: {ex.Message}"); 
+                Debug.WriteLine($"âŒ Refresh hatasÄ±: {ex.Message}"); 
             }
             finally
             {
@@ -491,7 +497,7 @@ namespace KamPay.ViewModels
                 {
                     IsRefreshing = false;
                     UpdateHasOffers();
-                    Debug.WriteLine("✅ Refresh tamamlandı, IsRefreshing = false");
+                    Debug.WriteLine("âœ… Refresh tamamlandÄ±, IsRefreshing = false");
                 });
             }
         }
@@ -523,42 +529,58 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task RejectOfferAsync(Transaction transaction) => await RespondToOfferInternalAsync(transaction, false);
 
+        private async Task UpdateOfferInUIAsync(Transaction transaction, ServiceResult<Transaction> result)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
+                if (existingIncoming != null && result.Data != null)
+                {
+                    var index = IncomingOffers.IndexOf(existingIncoming);
+                    IncomingOffers.RemoveAt(index);
+                    IncomingOffers.Insert(index, result.Data);
+                    OnPropertyChanged(nameof(IncomingOffers));
+                    Debug.WriteLine($"âœ… UI manuel gÃ¼ncellendi: {transaction.TransactionId}");
+                }
+            });
+        }
+
         private async Task RespondToOfferInternalAsync(Transaction transaction, bool accept)
         {
             if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             try
             {
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                     return;
                 }
 
                 if (transaction.SellerId != currentUser.UserId)
                 {
-                    await Application.Current.MainPage.DisplayAlert(
-                        "⚠️ Yetkiniz Yok", 
-                        "Sadece satıcı/ürün sahibi bu teklifi onaylayabilir veya reddedebilir.", 
+                    await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        "âš ï¸ Yetkiniz Yok", 
+                        "Sadece satÄ±cÄ±/Ã¼rÃ¼n sahibi bu teklifi onaylayabilir veya reddedebilir.", 
                         "Tamam"
                     );
                     return;
                 }
 
-                // ✅ 1. SATIŞ - Pazarlıksız
+                // âœ… 1. SATIÅ - PazarlÄ±ksÄ±z
                 if (transaction.Type == ProductType.Satis && !transaction.IsNegotiating && transaction.QuotedPrice > 0)
                 {
                     var message = accept
-                        ? $"'{transaction.ProductTitle}' için {transaction.BuyerName} tarafından gönderilen satın alma talebini kabul ediyor musunuz?\n\n💰 Satış Fiyatı: {transaction.QuotedPrice:N2}₺"
-                        : $"'{transaction.ProductTitle}' için {transaction.BuyerName} tarafından gönderilen satın alma talebini reddetmek istediğinizden emin misiniz?";
+                        ? $"'{transaction.ProductTitle}' iÃ§in {transaction.BuyerName} tarafÄ±ndan gÃ¶nderilen satÄ±n alma talebini kabul ediyor musunuz?\n\nğŸ’° SatÄ±ÅŸ FiyatÄ±: {transaction.QuotedPrice:N2}â‚º"
+                        : $"'{transaction.ProductTitle}' iÃ§in {transaction.BuyerName} tarafÄ±ndan gÃ¶nderilen satÄ±n alma talebini reddetmek istediÄŸinizden emin misiniz?";
 
-                    var confirm = await Application.Current.MainPage.DisplayAlert(
-                        accept ? "✅ Satın Alma Talebini Onayla" : "❌ Satın Alma Talebini Reddet",
+                    var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        accept ? "âœ… SatÄ±n Alma Talebini Onayla" : "âŒ SatÄ±n Alma Talebini Reddet",
                         message,
                         accept ? "Evet, Kabul Et" : "Evet, Reddet",
-                        "Vazgeç"
+                        "VazgeÃ§"
                     );
 
                     if (!confirm) return;
@@ -569,50 +591,39 @@ namespace KamPay.ViewModels
                     
                     if (result.Success)
                     {
-                        Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
                         
-                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (existingIncoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(existingIncoming);
-                                IncomingOffers.RemoveAt(index);
-                                IncomingOffers.Insert(index, result.Data);
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
-                            }
-                        });
+                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "Satın alma talebi kabul edildi! Alıcı ödeme yapabilir." 
-                            : "Satın alma talebi reddedildi.";
+                            ? "SatÄ±n alma talebi kabul edildi! AlÄ±cÄ± Ã¶deme yapabilir." 
+                            : "SatÄ±n alma talebi reddedildi.";
 
-                        await Application.Current.MainPage.DisplayAlert("✅ Başarılı", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
                     
                     IsLoading = false;
                     return;
                 }
 
-                // ✅ 2. PAZARLIK Devam Ediyor
+                // âœ… 2. PAZARLIK Devam Ediyor
                 if (transaction.IsNegotiating)
                 {
                     var agreedAmount = transaction.AgreedAmount;
                     var confirmMessage = transaction.Type == ProductType.Satis
-                        ? $"Pazarlık devam ediyor!\n\n💰 Son Teklif: {agreedAmount:N2}₺\n\nBu fiyat üzerinde anlaştınız mı? Eğer anlaştıysanız, önce pazarlık kutusundaki '✓' butonuna basarak fiyatı onaylayın."
-                        : $"Takas için ek nakit pazarlığı devam ediyor!\n\n💰 Son Teklif: {agreedAmount:N2}₺\n\nBu tutar üzerinde anlaştınız mı? Eğer anlaştıysanız, önce pazarlık kutusundaki '✓' butonuna basarak tutarı onaylayın.";
+                        ? $"PazarlÄ±k devam ediyor!\n\nğŸ’° Son Teklif: {agreedAmount:N2}â‚º\n\nBu fiyat Ã¼zerinde anlaÅŸtÄ±nÄ±z mÄ±? EÄŸer anlaÅŸtÄ±ysanÄ±z, Ã¶nce pazarlÄ±k kutusundaki 'âœ“' butonuna basarak fiyatÄ± onaylayÄ±n."
+                        : $"Takas iÃ§in ek nakit pazarlÄ±ÄŸÄ± devam ediyor!\n\nğŸ’° Son Teklif: {agreedAmount:N2}â‚º\n\nBu tutar Ã¼zerinde anlaÅŸtÄ±nÄ±z mÄ±? EÄŸer anlaÅŸtÄ±ysanÄ±z, Ã¶nce pazarlÄ±k kutusundaki 'âœ“' butonuna basarak tutarÄ± onaylayÄ±n.";
 
-                    await Application.Current.MainPage.DisplayAlert("⚠️ Pazarlık Devam Ediyor", confirmMessage, "Anladım");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ PazarlÄ±k Devam Ediyor", confirmMessage, "AnladÄ±m");
                     return;
                 }
 
-                // ✅ 3. SATIŞ - Pazarlık Sonrası
+                // âœ… 3. SATIÅ - PazarlÄ±k SonrasÄ±
                 bool hadNegotiation = transaction.ProposedPriceByBuyer.HasValue || transaction.CounterOfferBySeller.HasValue;
                 
                 if (transaction.Type == ProductType.Satis && hadNegotiation && !transaction.IsNegotiating)
@@ -620,20 +631,20 @@ namespace KamPay.ViewModels
                     var agreedPrice = transaction.QuotedPrice > 0 ? transaction.QuotedPrice : transaction.Price;
                     
                     var message = accept
-                        ? $"'{transaction.ProductTitle}' için {transaction.BuyerName} ile pazarlık sonucu {agreedPrice:N2}₺ üzerinde anlaştınız.\n\nBu fiyatla satışı onaylıyor musunuz?\n\n📦 Orijinal Fiyat: {transaction.Price:N2}₺"
-                        : $"'{transaction.ProductTitle}' için pazarlığı iptal etmek ve teklifi reddetmek istediğinizden emin misiniz?";
+                        ? $"'{transaction.ProductTitle}' iÃ§in {transaction.BuyerName} ile pazarlÄ±k sonucu {agreedPrice:N2}â‚º Ã¼zerinde anlaÅŸtÄ±nÄ±z.\n\nBu fiyatla satÄ±ÅŸÄ± onaylÄ±yor musunuz?\n\nğŸ“¦ Orijinal Fiyat: {transaction.Price:N2}â‚º"
+                        : $"'{transaction.ProductTitle}' iÃ§in pazarlÄ±ÄŸÄ± iptal etmek ve teklifi reddetmek istediÄŸinizden emin misiniz?";
 
                     if (transaction.ProposedPriceByBuyer.HasValue)
-                        message += $"\n💰 Alıcının Teklifi: {transaction.ProposedPriceByBuyer:N2}₺";
+                        message += $"\nğŸ’° AlÄ±cÄ±nÄ±n Teklifi: {transaction.ProposedPriceByBuyer:N2}â‚º";
                     
                     if (transaction.CounterOfferBySeller.HasValue)
-                        message += $"\n🔄 Sizin Karşı Teklifiniz: {transaction.CounterOfferBySeller:N2}₺";
+                        message += $"\nğŸ”„ Sizin KarÅŸÄ± Teklifiniz: {transaction.CounterOfferBySeller:N2}â‚º";
 
-                    var confirm = await Application.Current.MainPage.DisplayAlert(
-                        accept ? "✅ Pazarlık Sonucu Onayı" : "❌ Teklifi Reddet",
+                    var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        accept ? "âœ… PazarlÄ±k Sonucu OnayÄ±" : "âŒ Teklifi Reddet",
                         message,
                         accept ? "Evet, Onayla" : "Evet, Reddet",
-                        "Vazgeç"
+                        "VazgeÃ§"
                     );
 
                     if (!confirm) return;
@@ -644,55 +655,44 @@ namespace KamPay.ViewModels
                     
                     if (result.Success)
                     {
-                        Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
                         
-                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (existingIncoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(existingIncoming);
-                                IncomingOffers.RemoveAt(index);
-                                IncomingOffers.Insert(index, result.Data);
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
-                            }
-                        });
+                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "Pazarlık sonucu onaylandı! Alıcı ödeme yapabilir." 
+                            ? "PazarlÄ±k sonucu onaylandÄ±! AlÄ±cÄ± Ã¶deme yapabilir." 
                             : "Teklif reddedildi.";
 
-                        await Application.Current.MainPage.DisplayAlert("✅ Başarılı", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
                     
                     IsLoading = false;
                     return;
                 }
 
-                // ✅ 4. TAKAS - Pazarlıksız veya Pazarlık Sonrası
+                // âœ… 4. TAKAS - PazarlÄ±ksÄ±z veya PazarlÄ±k SonrasÄ±
                 if (transaction.Type == ProductType.Takas)
                 {
                     var message = accept
-                        ? $"'{transaction.ProductTitle}' ↔ '{transaction.OfferedProductTitle}' takas teklifini kabul ediyor musunuz?"
-                        : $"'{transaction.ProductTitle}' için takas teklifini reddetmek istediğinizden emin misiniz?";
+                        ? $"'{transaction.ProductTitle}' â†” '{transaction.OfferedProductTitle}' takas teklifini kabul ediyor musunuz?"
+                        : $"'{transaction.ProductTitle}' iÃ§in takas teklifini reddetmek istediÄŸinizden emin misiniz?";
 
-                    // Ek nakit varsa göster
+                    // Ek nakit varsa gÃ¶ster
                     if (transaction.QuotedPrice > 0)
                     {
-                        message += $"\n\n💰 Anlaşılan Ek Nakit: {transaction.QuotedPrice:N2}₺";
+                        message += $"\n\nğŸ’° AnlaÅŸÄ±lan Ek Nakit: {transaction.QuotedPrice:N2}â‚º";
                     }
 
-                    var confirm = await Application.Current.MainPage.DisplayAlert(
-                        accept ? "✅ Takas Teklifini Onayla" : "❌ Takas Teklifini Reddet",
+                    var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        accept ? "âœ… Takas Teklifini Onayla" : "âŒ Takas Teklifini Reddet",
                         message,
                         accept ? "Evet, Kabul Et" : "Evet, Reddet",
-                        "Vazgeç"
+                        "VazgeÃ§"
                     );
 
                     if (!confirm) return;
@@ -703,49 +703,38 @@ namespace KamPay.ViewModels
                     
                     if (result.Success)
                     {
-                        Debug.WriteLine($"✅ TAKAS onaylandı: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… TAKAS onaylandÄ±: {transaction.TransactionId}");
                         
-                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (existingIncoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(existingIncoming);
-                                IncomingOffers.RemoveAt(index);
-                                IncomingOffers.Insert(index, result.Data);
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
-                            }
-                        });
+                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "Takas teklifi kabul edildi! QR kodlar oluşturuldu." 
+                            ? "Takas teklifi kabul edildi! QR kodlar oluÅŸturuldu." 
                             : "Takas teklifi reddedildi.";
 
-                        await Application.Current.MainPage.DisplayAlert("✅ Başarılı", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
                     
                     IsLoading = false;
                     return;
                 }
 
-                // ✅ 5. BAĞIŞ
+                // âœ… 5. BAÄIÅ
                 if (transaction.Type == ProductType.Bagis)
                 {
                     var message = accept
-                        ? $"'{transaction.ProductTitle}' bağış talebini kabul ediyor musunuz?\n\n{transaction.BuyerName} bu ürünü talep etti."
-                        : $"'{transaction.ProductTitle}' için bağış talebini reddetmek istediğinizden emin misiniz?";
+                        ? $"'{transaction.ProductTitle}' baÄŸÄ±ÅŸ talebini kabul ediyor musunuz?\n\n{transaction.BuyerName} bu Ã¼rÃ¼nÃ¼ talep etti."
+                        : $"'{transaction.ProductTitle}' iÃ§in baÄŸÄ±ÅŸ talebini reddetmek istediÄŸinizden emin misiniz?";
 
-                    var confirm = await Application.Current.MainPage.DisplayAlert(
-                        accept ? "✅ Bağış Talebini Onayla" : "❌ Bağış Talebini Reddet",
+                    var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        accept ? "âœ… BaÄŸÄ±ÅŸ Talebini Onayla" : "âŒ BaÄŸÄ±ÅŸ Talebini Reddet",
                         message,
                         accept ? "Evet, Kabul Et" : "Evet, Reddet",
-                        "Vazgeç"
+                        "VazgeÃ§"
                     );
 
                     if (!confirm) return;
@@ -756,47 +745,36 @@ namespace KamPay.ViewModels
                     
                     if (result.Success)
                     {
-                        Debug.WriteLine($"✅ BAĞIŞ onaylandı: {transaction.TransactionId}");
+                        Debug.WriteLine($"âœ… BAÄIÅ onaylandÄ±: {transaction.TransactionId}");
                         
-                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
-                        await MainThread.InvokeOnMainThreadAsync(() =>
-                        {
-                            var existingIncoming = IncomingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                            if (existingIncoming != null && result.Data != null)
-                            {
-                                var index = IncomingOffers.IndexOf(existingIncoming);
-                                IncomingOffers.RemoveAt(index);
-                                IncomingOffers.Insert(index, result.Data);
-                                OnPropertyChanged(nameof(IncomingOffers));
-                                Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
-                            }
-                        });
+                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "Bağış talebi kabul edildi!" 
-                            : "Bağış talebi reddedildi.";
+                            ? "BaÄŸÄ±ÅŸ talebi kabul edildi!" 
+                            : "BaÄŸÄ±ÅŸ talebi reddedildi.";
 
-                        await Application.Current.MainPage.DisplayAlert("✅ Başarılı", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
                     
                     IsLoading = false;
                     return;
                 }
 
-                // ✅ Buraya düşmemeli artık
-                await Application.Current.MainPage.DisplayAlert(
+                // âœ… Buraya dÃ¼ÅŸmemeli artÄ±k
+                await Shell.Current.CurrentPage.DisplayAlertAsync(
                     "Bilgi", 
-                    "Bu işlem için uygun akış belirlenemedi. Lütfen sayfayı yenileyip tekrar deneyin.", 
+                    "Bu iÅŸlem iÃ§in uygun akÄ±ÅŸ belirlenemedi. LÃ¼tfen sayfayÄ± yenileyip tekrar deneyin.", 
                     "Tamam"
                 );
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -808,53 +786,53 @@ namespace KamPay.ViewModels
         private async Task CompletePaymentAsync(Transaction transaction)
         {
             if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             if (transaction.Type == ProductType.Satis)
             {
                 if (transaction.Status != TransactionStatus.Accepted)
                 {
-                    await Application.Current.MainPage.DisplayAlert("⚠️ Onay Bekleniyor", "Satıcının teklifi onaylaması gerekiyor. Henüz ödeme yapılamaz.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ Onay Bekleniyor", "SatÄ±cÄ±nÄ±n teklifi onaylamasÄ± gerekiyor. HenÃ¼z Ã¶deme yapÄ±lamaz.", "Tamam");
                     return;
                 }
 
                 if (transaction.PaymentStatus == PaymentStatus.Paid)
                 {
-                    await Application.Current.MainPage.DisplayAlert("✅ Ödeme Tamamlandı", "Bu işlem için ödeme zaten yapılmış.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… Ã–deme TamamlandÄ±", "Bu iÅŸlem iÃ§in Ã¶deme zaten yapÄ±lmÄ±ÅŸ.", "Tamam");
                     return;
                 }
 
                 if (transaction.IsNegotiating)
                 {
-                    await Application.Current.MainPage.DisplayAlert("⚠️ Pazarlık Devam Ediyor", "Önce fiyat üzerinde anlaşmanız gerekiyor.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ PazarlÄ±k Devam Ediyor", "Ã–nce fiyat Ã¼zerinde anlaÅŸmanÄ±z gerekiyor.", "Tamam");
                     return;
                 }
 
-                var paymentMethod = await Application.Current.MainPage.DisplayActionSheet(
-                    "Ödeme Yöntemi Seçin",
-                    "İptal",
+                var paymentMethod = await Shell.Current.CurrentPage.DisplayActionSheet(
+                    "Ã–deme YÃ¶ntemi SeÃ§in",
+                    "Ä°ptal",
                     null,
-                    "Kart ile (Uygulama İçi)",
+                    "Kart ile (Uygulama Ä°Ã§i)",
                     "Nakit / IBAN ile (Elden)"
                 );
 
-                if (paymentMethod == "İptal" || string.IsNullOrEmpty(paymentMethod)) return;
+                if (paymentMethod == "Ä°ptal" || string.IsNullOrEmpty(paymentMethod)) return;
 
-                if (paymentMethod == "Kart ile (Uygulama İçi)")
+                if (paymentMethod == "Kart ile (Uygulama Ä°Ã§i)")
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Kredi kartı ile ödeme sistemi yakında geliştirilecektir. Lütfen Nakit / IBAN seçeneğini kullanın.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Kredi kartÄ± ile Ã¶deme sistemi yakÄ±nda geliÅŸtirilecektir. LÃ¼tfen Nakit / IBAN seÃ§eneÄŸini kullanÄ±n.", "Tamam");
                     return;
                 }
                 else if (paymentMethod == "Nakit / IBAN ile (Elden)")
                 {
-                    // Kullanıcıyı bilgilendir
-                    await Application.Current.MainPage.DisplayAlert(
+                    // KullanÄ±cÄ±yÄ± bilgilendir
+                    await Shell.Current.CurrentPage.DisplayAlertAsync(
                         "Bilgilendirme", 
-                        "Nakit veya IBAN ile ödeme seçeneğinde, ödeme süreci doğrudan kullanıcılar arasında gerçekleşir. KamPay bu ödeme sürecine teknik olarak dahil olmaz.\n\nEğer ödemeyi tamamladıysanız veya teslimat anında yapacaksanız, lütfen QR kod aşamasına geçerek teslimatı güvenli bir şekilde onaylayın.", 
-                        "Anladım, QR Koduna Git"
+                        "Nakit veya IBAN ile Ã¶deme seÃ§eneÄŸinde, Ã¶deme sÃ¼reci doÄŸrudan kullanÄ±cÄ±lar arasÄ±nda gerÃ§ekleÅŸir. KamPay bu Ã¶deme sÃ¼recine teknik olarak dahil olmaz.\n\nEÄŸer Ã¶demeyi tamamladÄ±ysanÄ±z veya teslimat anÄ±nda yapacaksanÄ±z, lÃ¼tfen QR kod aÅŸamasÄ±na geÃ§erek teslimatÄ± gÃ¼venli bir ÅŸekilde onaylayÄ±n.", 
+                        "AnladÄ±m, QR Koduna Git"
                     );
 
-                    // Uygulama dışı ödeme seçildiği için doğrudan QR kod (güvenli fiziki/dijital onay) aşamasına geçir.
+                    // Uygulama dÄ±ÅŸÄ± Ã¶deme seÃ§ildiÄŸi iÃ§in doÄŸrudan QR kod (gÃ¼venli fiziki/dijital onay) aÅŸamasÄ±na geÃ§ir.
                     await Shell.Current.GoToAsync($"QRCodeDisplayPage?transactionId={transaction.TransactionId}");
                 }
             }
@@ -868,31 +846,31 @@ namespace KamPay.ViewModels
         private async Task ConfirmDonationAsync(Transaction transaction)
         {
             if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             if (transaction.Type != ProductType.Bagis)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu komut sadece bağış işlemleri için geçerlidir.", "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu komut sadece baÄŸÄ±ÅŸ iÅŸlemleri iÃ§in geÃ§erlidir.", "Tamam");
                 return;
             }
 
             if (transaction.Status != TransactionStatus.Accepted)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu bağış henüz onaylanmamış.", "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu baÄŸÄ±ÅŸ henÃ¼z onaylanmamÄ±ÅŸ.", "Tamam");
                 return;
             }
 
             if (transaction.PaymentStatus == PaymentStatus.Paid)
             {
-                await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu bağış zaten tamamlanmış.", "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu baÄŸÄ±ÅŸ zaten tamamlanmÄ±ÅŸ.", "Tamam");
                 return;
             }
 
-            var confirm = await Application.Current.MainPage.DisplayAlert(
-                "Bağış Onayı",
-                $"'{transaction.ProductTitle}' ürününü teslim aldığınızı onaylıyor musunuz?\n\nBu işlem geri alınamaz ve puanlar hesaplara eklenecektir.",
-                "Evet, Teslim Aldım",
-                "Hayır"
+            var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(
+                "BaÄŸÄ±ÅŸ OnayÄ±",
+                $"'{transaction.ProductTitle}' Ã¼rÃ¼nÃ¼nÃ¼ teslim aldÄ±ÄŸÄ±nÄ±zÄ± onaylÄ±yor musunuz?\n\nBu iÅŸlem geri alÄ±namaz ve puanlar hesaplara eklenecektir.",
+                "Evet, Teslim AldÄ±m",
+                "HayÄ±r"
             );
 
             if (!confirm) return;
@@ -900,25 +878,22 @@ namespace KamPay.ViewModels
             IsLoading = true;
             try
             {
-                if (_transactionService is FirebaseTransactionService firebaseService)
-                {
-                    if (string.IsNullOrEmpty(_currentUserId)) return;
+                if (string.IsNullOrEmpty(_currentUserId)) return;
 
-                    var result = await firebaseService.ConfirmDonationAsync(transaction.TransactionId, _currentUserId);
+                var result = await _transactionService.ConfirmDonationAsync(transaction.TransactionId, _currentUserId);
 
                     if (result.Success)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Başarılı", "Bağış onaylandı! Puanlarınız eklendi.", "Harika!");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("BaÅŸarÄ±lÄ±", "BaÄŸÄ±ÅŸ onaylandÄ±! PuanlarÄ±nÄ±z eklendi.", "Harika!");
                     }
                     else
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
-                }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", $"Bağış onaylanırken hata oluştu: {ex.Message}", "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", $"BaÄŸÄ±ÅŸ onaylanÄ±rken hata oluÅŸtu: {ex.Message}", "Tamam");
             }
             finally
             {
@@ -928,7 +903,7 @@ namespace KamPay.ViewModels
 
         public void StopListening()
         {
-            Debug.WriteLine("🛑 Offers listener durduruluyor...");
+            Debug.WriteLine("ğŸ›‘ Offers listener durduruluyor...");
             _loadingTimeoutCts?.Cancel();
             _allOffersSubscription?.Dispose();
             _allOffersSubscription = null;
@@ -938,7 +913,7 @@ namespace KamPay.ViewModels
         {
             if (_allOffersSubscription == null && !string.IsNullOrEmpty(_currentUserId))
             {
-                Debug.WriteLine("▶️ Offers listener devam ediyor...");
+                Debug.WriteLine("â–¶ï¸ Offers listener devam ediyor...");
                 StartListeningForOffers(_currentUserId);
             }
         }
@@ -951,23 +926,23 @@ namespace KamPay.ViewModels
 
             try
             {
-                Debug.WriteLine("🧹 OffersViewModel dispose ediliyor...");
+                Debug.WriteLine("ğŸ§¹ OffersViewModel dispose ediliyor...");
                 
-                // ✅ EKLEME: Listener temizliği
+                // âœ… EKLEME: Listener temizliÄŸi
                 _allOffersSubscription?.Dispose();
                 _allOffersSubscription = null;
                 
-                // ✅ EKLEME: Messenger unregister
+                // âœ… EKLEME: Messenger unregister
                 WeakReferenceMessenger.Default.Unregister<PaymentCompletedMessage>(this);
                 
-                // Timer temizliği
+                // Timer temizliÄŸi
                 _loadingTimeoutCts?.Cancel();
                 _loadingTimeoutCts?.Dispose();
                 
-                // Event temizliği
+                // Event temizliÄŸi
                 _userStateService.UserProfileChanged -= OnUserProfileChanged;
                 
-                // ✅ EKLEME: Collection temizliği
+                // âœ… EKLEME: Collection temizliÄŸi
                 IncomingOffers.Clear();
                 OutgoingOffers.Clear();
                 _incomingIds.Clear();
@@ -976,11 +951,11 @@ namespace KamPay.ViewModels
                 _initialLoadComplete = false;
                 _isInitialized = false;
                 
-                Console.WriteLine("✅ OffersViewModel resources disposed");
+                KamPay.Helpers.AppLogger.DebugLog("âœ… OffersViewModel resources disposed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ OffersViewModel dispose hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ OffersViewModel dispose hatasÄ±: {ex.Message}");
             }
             finally
             {
@@ -988,13 +963,13 @@ namespace KamPay.ViewModels
             }
         }
 
-        #region 💰 PAZARLIK KOMUTLARI
+        #region ğŸ’° PAZARLIK KOMUTLARI
 
         [RelayCommand]
         private async Task MessagePartnerAsync(Transaction transaction)
         {
             if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
             if (string.IsNullOrEmpty(_currentUserId)) return;
 
             try
@@ -1005,18 +980,18 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… KonuÅŸma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={result.Data}");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MessagePartner hatası: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ MessagePartner hatasÄ±: {ex.Message}");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -1028,7 +1003,7 @@ namespace KamPay.ViewModels
         private async Task AcceptNegotiatedPriceAsync(Transaction transaction)
         {
             if (transaction == null) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
             if (string.IsNullOrEmpty(_currentUserId)) return;
 
             try
@@ -1036,13 +1011,13 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                     return;
                 }
 
                 if (!transaction.IsNegotiating)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Şu anda aktif bir pazarlık bulunmuyor.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Åu anda aktif bir pazarlÄ±k bulunmuyor.", "Tamam");
                     return;
                 }
 
@@ -1053,49 +1028,49 @@ namespace KamPay.ViewModels
                 {
                     if (transaction.BuyerId != _currentUserId)
                     {
-                        await Application.Current.MainPage.DisplayAlert("⚠️ Yetkiniz Yok", "Sadece alıcı bu karşı teklifi onaylayabilir.", "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ Yetkiniz Yok", "Sadece alÄ±cÄ± bu karÅŸÄ± teklifi onaylayabilir.", "Tamam");
                         return;
                     }
 
                     if (!transaction.CounterOfferBySeller.HasValue)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Bilgi", "Satıcının karşı teklifi bekleniyor.", "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "SatÄ±cÄ±nÄ±n karÅŸÄ± teklifi bekleniyor.", "Tamam");
                         return;
                     }
 
-                    confirmTitle = "✅ Karşı Teklifi Onayla";
-                    confirmMessage = $"'{transaction.ProductTitle}' için satıcının karşı teklifini kabul ediyor musunuz?\n\n" +
-                                   $"💰 Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}₺\n" +
-                                   $"🔄 Satıcının Karşı Teklifi: {transaction.CounterOfferBySeller:N2}₺\n\n" +
-                                   $"✅ Onaylanan Fiyat: {transaction.CounterOfferBySeller:N2}₺";
+                    confirmTitle = "âœ… KarÅŸÄ± Teklifi Onayla";
+                    confirmMessage = $"'{transaction.ProductTitle}' iÃ§in satÄ±cÄ±nÄ±n karÅŸÄ± teklifini kabul ediyor musunuz?\n\n" +
+                                   $"ğŸ’° Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}â‚º\n" +
+                                   $"ğŸ”„ SatÄ±cÄ±nÄ±n KarÅŸÄ± Teklifi: {transaction.CounterOfferBySeller:N2}â‚º\n\n" +
+                                   $"âœ… Onaylanan Fiyat: {transaction.CounterOfferBySeller:N2}â‚º";
                 }
                 else if (transaction.Type == ProductType.Takas)
                 {
                     if (transaction.BuyerId != _currentUserId)
                     {
-                        await Application.Current.MainPage.DisplayAlert("⚠️ Yetkiniz Yok", "Sadece talep eden bu karşı teklifi onaylayabilir.", "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ Yetkiniz Yok", "Sadece talep eden bu karÅŸÄ± teklifi onaylayabilir.", "Tamam");
                         return;
                     }
 
                     if (!transaction.CounterCashByOwner.HasValue)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Bilgi", "Sahip'in karşı teklifi bekleniyor.", "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Sahip'in karÅŸÄ± teklifi bekleniyor.", "Tamam");
                         return;
                     }
 
-                    confirmTitle = "✅ Karşı Teklifi Onayla";
-                    confirmMessage = $"'{transaction.ProductTitle}' için sahip'in ek nakit karşı teklifini kabul ediyor musunuz?\n\n" +
-                                   $"💰 Sizin Ek Nakit Teklifiniz: {transaction.AdditionalCashByRequester:N2}₺\n" +
-                                   $"🔄 Sahip'in Karşı Teklifi: {transaction.CounterCashByOwner:N2}₺\n\n" +
-                                   $"✅ Onaylanan Ek Nakit: {transaction.CounterCashByOwner:N2}₺";
+                    confirmTitle = "âœ… KarÅŸÄ± Teklifi Onayla";
+                    confirmMessage = $"'{transaction.ProductTitle}' iÃ§in sahip'in ek nakit karÅŸÄ± teklifini kabul ediyor musunuz?\n\n" +
+                                   $"ğŸ’° Sizin Ek Nakit Teklifiniz: {transaction.AdditionalCashByRequester:N2}â‚º\n" +
+                                   $"ğŸ”„ Sahip'in KarÅŸÄ± Teklifi: {transaction.CounterCashByOwner:N2}â‚º\n\n" +
+                                   $"âœ… Onaylanan Ek Nakit: {transaction.CounterCashByOwner:N2}â‚º";
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu işlem türü için pazarlık onayı geçerli değil.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu iÅŸlem tÃ¼rÃ¼ iÃ§in pazarlÄ±k onayÄ± geÃ§erli deÄŸil.", "Tamam");
                     return;
                 }
 
-                var confirm = await Application.Current.MainPage.DisplayAlert(confirmTitle, confirmMessage, "Evet, Kabul Ediyorum", "Hayır");
+                var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(confirmTitle, confirmMessage, "Evet, Kabul Ediyorum", "HayÄ±r");
 
                 if (!confirm) return;
 
@@ -1105,24 +1080,24 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+                    Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
 
-                    await Application.Current.MainPage.DisplayAlert(
-                        "✅ Başarılı",
+                    await Shell.Current.CurrentPage.DisplayAlertAsync(
+                        "âœ… BaÅŸarÄ±lÄ±",
                         transaction.Type == ProductType.Satis 
-                            ? "Fiyat üzerinde anlaştınız! Satıcı son onayını verecek." 
-                            : "Ek nakit tutarı üzerinde anlaştınız! Sahip son onayını verecek.",
+                            ? "Fiyat Ã¼zerinde anlaÅŸtÄ±nÄ±z! SatÄ±cÄ± son onayÄ±nÄ± verecek." 
+                            : "Ek nakit tutarÄ± Ã¼zerinde anlaÅŸtÄ±nÄ±z! Sahip son onayÄ±nÄ± verecek.",
                         "Harika!"
                     );
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -1134,21 +1109,21 @@ namespace KamPay.ViewModels
         private async Task ProposePriceAsync(Transaction transaction)
         {
             if (transaction == null || transaction.BuyerId != _currentUserId) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             try
             {
-                var currentPriceText = transaction.Type == ProductType.Satis ? $"📦 Ürün Fiyatı: {transaction.Price:N2}₺\n\n" : "";
-                var yourOfferText = transaction.ProposedPriceByBuyer.HasValue ? $"💰 Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}₺\n" : "";
-                var counterOfferText = transaction.CounterOfferBySeller.HasValue ? $"🔄 Satıcının Karşı Teklifi: {transaction.CounterOfferBySeller:N2}₺\n\n" : "\n";
-                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
+                var currentPriceText = transaction.Type == ProductType.Satis ? $"ğŸ“¦ ÃœrÃ¼n FiyatÄ±: {transaction.Price:N2}â‚º\n\n" : "";
+                var yourOfferText = transaction.ProposedPriceByBuyer.HasValue ? $"ğŸ’° Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}â‚º\n" : "";
+                var counterOfferText = transaction.CounterOfferBySeller.HasValue ? $"ğŸ”„ SatÄ±cÄ±nÄ±n KarÅŸÄ± Teklifi: {transaction.CounterOfferBySeller:N2}â‚º\n\n" : "\n";
+                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"ğŸ“Š PazarlÄ±k Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
 
-                var amountText = await Application.Current.MainPage.DisplayPromptAsync(
-                    "💰 Fiyat Teklifi",
+                var amountText = await Shell.Current.CurrentPage.DisplayPromptAsync(
+                    "ğŸ’° Fiyat Teklifi",
                     $"{currentPriceText}{yourOfferText}{counterOfferText}{roundInfo}Ne kadar teklif etmek istiyorsunuz?",
-                    "Gönder",
-                    "İptal",
-                    placeholder: "Örn: 150",
+                    "GÃ¶nder",
+                    "Ä°ptal",
+                    placeholder: "Ã–rn: 150",
                     keyboard: Keyboard.Numeric
                 );
 
@@ -1156,13 +1131,13 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir fiyat girin (sıfırdan büyük)", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "GeÃ§erli bir fiyat girin (sÄ±fÄ±rdan bÃ¼yÃ¼k)", "Tamam");
                     return;
                 }
 
                 if (transaction.ProposedPriceByBuyer.HasValue && Math.Abs(transaction.ProposedPriceByBuyer.Value - amount) < 0.01m)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu teklifi zaten gönderdiniz. Farklı bir tutar deneyin.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu teklifi zaten gÃ¶nderdiniz. FarklÄ± bir tutar deneyin.", "Tamam");
                     return;
                 }
 
@@ -1173,16 +1148,16 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("✅ Başarılı", $"Fiyat teklifiniz ({amount:N2}₺) satıcıya iletildi!", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", $"Fiyat teklifiniz ({amount:N2}â‚º) satÄ±cÄ±ya iletildi!", "Tamam");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -1194,20 +1169,20 @@ namespace KamPay.ViewModels
         private async Task ProposeAdditionalCashAsync(Transaction transaction)
         {
             if (transaction == null || transaction.BuyerId != _currentUserId) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             try
             {
-                var yourOfferText = transaction.AdditionalCashByRequester.HasValue ? $"💰 Sizin Teklifiniz: {transaction.AdditionalCashByRequester:N2}₺\n" : "";
-                var counterOfferText = transaction.CounterCashByOwner.HasValue ? $"🔄 Sahip'in Karşı Teklifi: {transaction.CounterCashByOwner:N2}₺\n\n" : "\n";
-                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
+                var yourOfferText = transaction.AdditionalCashByRequester.HasValue ? $"ğŸ’° Sizin Teklifiniz: {transaction.AdditionalCashByRequester:N2}â‚º\n" : "";
+                var counterOfferText = transaction.CounterCashByOwner.HasValue ? $"ğŸ”„ Sahip'in KarÅŸÄ± Teklifi: {transaction.CounterCashByOwner:N2}â‚º\n\n" : "\n";
+                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"ğŸ“Š PazarlÄ±k Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
 
-                var amountText = await Application.Current.MainPage.DisplayPromptAsync(
-                    "💰 Ek Nakit Teklifi",
+                var amountText = await Shell.Current.CurrentPage.DisplayPromptAsync(
+                    "ğŸ’° Ek Nakit Teklifi",
                     $"{yourOfferText}{counterOfferText}{roundInfo}Ne kadar ek nakit teklif etmek istiyorsunuz?\n(0 girebilirsiniz - sade takas)",
-                    "Gönder",
-                    "İptal",
-                    placeholder: "Örn: 50",
+                    "GÃ¶nder",
+                    "Ä°ptal",
+                    placeholder: "Ã–rn: 50",
                     keyboard: Keyboard.Numeric
                 );
 
@@ -1215,13 +1190,13 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount < 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar girin (sıfır veya pozitif)", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "GeÃ§erli bir tutar girin (sÄ±fÄ±r veya pozitif)", "Tamam");
                     return;
                 }
 
                 if (transaction.AdditionalCashByRequester.HasValue && Math.Abs(transaction.AdditionalCashByRequester.Value - amount) < 0.01m)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu teklifi zaten gönderdiniz. Farklı bir tutar deneyin.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu teklifi zaten gÃ¶nderdiniz. FarklÄ± bir tutar deneyin.", "Tamam");
                     return;
                 }
 
@@ -1232,16 +1207,16 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("✅ Başarılı", $"Ek nakit teklifiniz ({amount:N2}₺) iletildi!", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", $"Ek nakit teklifiniz ({amount:N2}â‚º) iletildi!", "Tamam");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -1253,21 +1228,21 @@ namespace KamPay.ViewModels
         private async Task SendCounterOfferAsync(Transaction transaction)
         {
             if (transaction == null || transaction.SellerId != _currentUserId) return;
-            if (Application.Current?.MainPage == null) return;
+            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
 
             try
             {
-                var originalPriceText = $"📦 Ürün Fiyatınız: {transaction.Price:N2}₺\n\n";
-                var buyerOfferText = transaction.ProposedPriceByBuyer.HasValue ? $"💰 Alıcının Teklifi: {transaction.ProposedPriceByBuyer:N2}₺\n" : "💰 Alıcı henüz teklif vermedi\n";
-                var yourCounterText = transaction.CounterOfferBySeller.HasValue ? $"🔄 Sizin Karşı Teklifiniz: {transaction.CounterOfferBySeller:N2}₺\n\n" : "\n";
-                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
+                var originalPriceText = $"ğŸ“¦ ÃœrÃ¼n FiyatÄ±nÄ±z: {transaction.Price:N2}â‚º\n\n";
+                var buyerOfferText = transaction.ProposedPriceByBuyer.HasValue ? $"ğŸ’° AlÄ±cÄ±nÄ±n Teklifi: {transaction.ProposedPriceByBuyer:N2}â‚º\n" : "ğŸ’° AlÄ±cÄ± henÃ¼z teklif vermedi\n";
+                var yourCounterText = transaction.CounterOfferBySeller.HasValue ? $"ğŸ”„ Sizin KarÅŸÄ± Teklifiniz: {transaction.CounterOfferBySeller:N2}â‚º\n\n" : "\n";
+                var roundInfo = transaction.NegotiationRoundCount > 0 ? $"ğŸ“Š PazarlÄ±k Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}\n\n" : "";
 
-                var amountText = await Application.Current.MainPage.DisplayPromptAsync(
-                    "🔄 Karşı Teklif",
-                    $"{originalPriceText}{buyerOfferText}{yourCounterText}{roundInfo}Karşı teklifiniz nedir?",
-                    "Gönder",
-                    "İptal",
-                    placeholder: "Örn: 175",
+                var amountText = await Shell.Current.CurrentPage.DisplayPromptAsync(
+                    "ğŸ”„ KarÅŸÄ± Teklif",
+                    $"{originalPriceText}{buyerOfferText}{yourCounterText}{roundInfo}KarÅŸÄ± teklifiniz nedir?",
+                    "GÃ¶nder",
+                    "Ä°ptal",
+                    placeholder: "Ã–rn: 175",
                     keyboard: Keyboard.Numeric
                 );
 
@@ -1275,13 +1250,13 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(amountText.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir fiyat girin (sıfırdan büyük)", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "GeÃ§erli bir fiyat girin (sÄ±fÄ±rdan bÃ¼yÃ¼k)", "Tamam");
                     return;
                 }
 
                 if (transaction.CounterOfferBySeller.HasValue && Math.Abs(transaction.CounterOfferBySeller.Value - amount) < 0.01m)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bilgi", "Bu karşı teklifi zaten gönderdiniz. Farklı bir tutar deneyin.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu karÅŸÄ± teklifi zaten gÃ¶nderdiniz. FarklÄ± bir tutar deneyin.", "Tamam");
                     return;
                 }
 
@@ -1292,16 +1267,16 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert("✅ Başarılı", $"Karşı teklifiniz ({amount:N2}₺) alıcıya iletildi!", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", $"KarÅŸÄ± teklifiniz ({amount:N2}â‚º) alÄ±cÄ±ya iletildi!", "Tamam");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Hata", ex.Message, "Tamam");
+                await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", ex.Message, "Tamam");
             }
             finally
             {
@@ -1312,3 +1287,4 @@ namespace KamPay.ViewModels
         #endregion
     }
 }
+

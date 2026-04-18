@@ -22,7 +22,7 @@ namespace KamPay.Services
         public FirebaseNotificationService(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseNotificationService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseNotificationService oluşturuldu (DI ile)");
         }
 
         private async Task CheckAndBroadcastUnreadStatus(string userId)

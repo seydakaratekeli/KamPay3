@@ -19,9 +19,7 @@ namespace KamPay.Services
         Task<ServiceResult<bool>> CompleteServiceRequestAsync(string transactionId, string providerId);
         Task<ServiceResult<bool>> ProviderFinishServiceAsync(string requestId, string providerId);
         Task<ServiceResult<bool>> RequesterConfirmServiceAsync(string requestId, string requesterId);
-        Task<ServiceResult<PaymentDto>> CreatePaymentSimulationAsync(string requestId, string method);
-        Task<ServiceResult<bool>> ConfirmPaymentSimulationAsync(string requestId, string paymentId, string? otp = null);
-        Task<ServiceResult<bool>> SimulatePaymentAndCompleteAsync(string requestId);
+
         Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string? newName, string? newPhotoUrl);
         Task<ServiceResult<string>> StartConversationForRequestAsync(string requestId, string currentUserId);
         Task<ServiceResult<bool>> ProposePrice(string requestId, decimal proposedPrice, string currentUserId);

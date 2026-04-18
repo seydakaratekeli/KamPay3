@@ -21,7 +21,8 @@ namespace KamPay.Models
         None = 0,              // Ödeme yöntemi seçilmedi
         CardSim = 1,           // Kredi Kartı (Simülasyon - OTP ile)
         BankTransferSim = 2,   // Havale/EFT (Simülasyon - Referans kodu ile)
-        WalletSim = 3          // Cüzdan (Gelecekte kullanılabilir)
+        WalletSim = 3,         // Cüzdan (Gelecekte kullanılabilir)
+        Cash = 4               // Elden (Nakit / Yüz Yüze) Ödeme
     }
 
     /// <summary>
@@ -76,5 +77,14 @@ namespace KamPay.Models
         /// Ödeme oluşturulma zamanı (UTC)
         /// </summary>
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// OTP simülasyonu için geçici model
+    /// </summary>
+    public class TempOtpModel
+    {
+        public string Otp { get; set; } = string.Empty;
+        public DateTime ExpiresAt { get; set; }
     }
 }

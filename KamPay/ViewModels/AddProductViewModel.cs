@@ -275,7 +275,7 @@ namespace KamPay.ViewModels
             {
                 Location = Res["LocationError"];
                 OnPropertyChanged(nameof(HasLocation));
-                Console.WriteLine($"❌ Konum Hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Konum Hatası: {ex.Message}");
             }
             finally
             {
@@ -413,8 +413,8 @@ namespace KamPay.ViewModels
                 }
 
                 // 2. Hız Sınırı (Rate Limit) kontrolü yapıyoruz
-                // RateLimiters.ProductCreation: Saatte 10 ürün ekleme sınırıdır.
-                var limitCheck = RateLimiters.ProductCreation.CheckLimit(currentUser.UserId); //
+                // SecureRateLimiters.ProductCreation: Saatte 5 ürün ekleme sınırıdır.
+                var limitCheck = KamPay.Helpers.SecureRateLimiters.ProductCreation.CheckRequest(currentUser.UserId); //
                 if (!limitCheck.IsAllowed)
                 {
                     await Shell.Current.DisplayAlert(Res["Error"], limitCheck.Message, Res["Ok"]); //
@@ -467,21 +467,6 @@ namespace KamPay.ViewModels
                     ImageUrls = new List<string>()
                 };
 
-                // --- RESİM YÜKLEME HIZ SINIRI KONTROLÜ ---
-                // Kullanıcının kalan yükleme hakkını alıyoruz
-                int remainingQuota = RateLimiters.ImageUpload.GetRemainingRequests(currentUser.UserId);
-
-                // Eğer yüklenmek istenen resim sayısı kalan kotadan fazlaysa işlemi durdur
-                if (remainingQuota < ImagePaths.Count)
-                {
-                    var resetTime = RateLimiters.ImageUpload.GetResetTime(currentUser.UserId);
-                    var deniedResult = RateLimitResult.Denied(resetTime); // Bekleme süresini içeren mesajı üretir
-
-                    await Shell.Current.DisplayAlert("Sınır Aşıldı",
-                        $"Resim yükleme limitine yaklaştınız. {deniedResult.Message}", "Tamam");
-                    return;
-                }
-
                 // --- YÜKLEME İŞLEMİNİ KAYDET ---
                 // Gerçek yükleme döngüsü içinde her başarılı işlem için sayacı tetikliyoruz
                 UploadPercentage = 10;
@@ -493,7 +478,8 @@ namespace KamPay.ViewModels
                     for (int i = 0; i < Math.Min(ImagePaths.Count, 5); i++)
                     {
                         // IsRequestAllowed çağrısı sayacı 1 artırır
-                        if (RateLimiters.ImageUpload.IsRequestAllowed(currentUser.UserId))
+                        var limitCheckImage = KamPay.Helpers.SecureRateLimiters.ImageUpload.CheckRequest(currentUser.UserId);
+                        if (limitCheckImage.IsAllowed)
                         {
                             var result = await _storageService.UploadProductImageAsync(ImagePaths[i], productId, i);
                             if (result.Success && result.Data != null) urls.Add(result.Data);
@@ -597,4 +583,5 @@ namespace KamPay.ViewModels
         }
     }
 }
+
 

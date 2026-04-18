@@ -25,7 +25,7 @@ namespace KamPay.Services
         public FirebaseObserverService(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseObserverService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseObserverService oluşturuldu (DI ile)");
         }
 
         public IObservable<Product> ObserveProductChanges()

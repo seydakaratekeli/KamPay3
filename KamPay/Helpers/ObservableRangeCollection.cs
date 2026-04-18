@@ -21,11 +21,16 @@ namespace KamPay.Helpers
                 throw new System.ArgumentNullException(nameof(collection));
 
             CheckReentrancy();
-            foreach (var item in collection)
+            var startIndex = Count;
+            var addedItems = new List<T>(collection);
+            foreach (var item in addedItems)
             {
                 Items.Add(item);
             }
-            RaiseChangeNotificationEvents();
+
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, addedItems, startIndex));
         }
 
         public void RemoveRange(IEnumerable<T> collection)
@@ -34,11 +39,15 @@ namespace KamPay.Helpers
                 throw new System.ArgumentNullException(nameof(collection));
 
             CheckReentrancy();
-            foreach (var item in collection)
+            var removedItems = new List<T>(collection);
+            foreach (var item in removedItems)
             {
                 Items.Remove(item);
             }
-            RaiseChangeNotificationEvents();
+
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public void ReplaceRange(IEnumerable<T> collection)
@@ -52,11 +61,7 @@ namespace KamPay.Helpers
             {
                 Items.Add(item);
             }
-            RaiseChangeNotificationEvents();
-        }
 
-        private void RaiseChangeNotificationEvents()
-        {
             OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));

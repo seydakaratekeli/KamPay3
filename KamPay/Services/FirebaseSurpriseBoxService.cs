@@ -33,62 +33,62 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine($"🔍 Sürpriz kutu açılıyor - UserId: {userId}");
+                KamPay.Helpers.AppLogger.DebugLog($"🔍 Sürpriz kutu açılıyor - UserId: {userId}");
 
                 // 1. Kullanıcı bilgilerini al
                 var currentUserResult = await _userProfileService.GetUserProfileAsync(userId);
                 if (!currentUserResult.Success || currentUserResult.Data == null)
                 {
-                    Console.WriteLine($"❌ Kullanıcı profili alınamadı: {currentUserResult.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"❌ Kullanıcı profili alınamadı: {currentUserResult.Message}");
                     return ServiceResult<Product>.FailureResult("Kullanıcı bilgisi alınamadı.");
                 }
                 var currentUser = currentUserResult.Data;
-                Console.WriteLine($"✅ Kullanıcı profili alındı: {currentUser.FullName}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Kullanıcı profili alındı: {currentUser.FullName}");
 
                 // 2. Kullanıcının puanını kontrol et - DEBUG EKLENDI
                 var userStatsResult = await _userProfileService.GetUserStatsAsync(userId);
 
                 //  DEBUG: Result kontrolü
-                Console.WriteLine($"🔍 GetUserStatsAsync - Success: {userStatsResult.Success}");
-                Console.WriteLine($"🔍 GetUserStatsAsync - Message: {userStatsResult.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"🔍 GetUserStatsAsync - Success: {userStatsResult.Success}");
+                KamPay.Helpers.AppLogger.DebugLog($"🔍 GetUserStatsAsync - Message: {userStatsResult.Message}");
 
                 if (!userStatsResult.Success)
                 {
-                    Console.WriteLine($"❌ İstatistikler alınamadı: {userStatsResult.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"❌ İstatistikler alınamadı: {userStatsResult.Message}");
                     return ServiceResult<Product>.FailureResult("Kullanıcı istatistikleri alınamadı.", userStatsResult.Message);
                 }
 
                 //  DEBUG: Data null kontrolü
                 if (userStatsResult.Data == null)
                 {
-                    Console.WriteLine("❌ UserStats Data NULL!");
+                    KamPay.Helpers.AppLogger.DebugLog("❌ UserStats Data NULL!");
                     return ServiceResult<Product>.FailureResult("Kullanıcı istatistikleri bulunamadı.");
                 }
 
                 var userStats = userStatsResult.Data;
 
                 //  DEBUG: Puan bilgisi
-                Console.WriteLine($"💰 Kullanıcı Puanı: {userStats.Points}");
-                Console.WriteLine($"💰 Gerekli Puan: {BoxCost}");
-                Console.WriteLine($"💰 Yeterli mi?: {userStats.Points >= BoxCost}");
+                KamPay.Helpers.AppLogger.DebugLog($"💰 Kullanıcı Puanı: {userStats.Points}");
+                KamPay.Helpers.AppLogger.DebugLog($"💰 Gerekli Puan: {BoxCost}");
+                KamPay.Helpers.AppLogger.DebugLog($"💰 Yeterli mi?: {userStats.Points >= BoxCost}");
 
                 if (userStats.Points < BoxCost)
                 {
-                    Console.WriteLine($"❌ Yetersiz puan! Mevcut: {userStats.Points}, Gerekli: {BoxCost}");
+                    KamPay.Helpers.AppLogger.DebugLog($"❌ Yetersiz puan! Mevcut: {userStats.Points}, Gerekli: {BoxCost}");
                     return ServiceResult<Product>.FailureResult(
                         "Yetersiz Puan!",
                         $"Bu işlem için {BoxCost} puana ihtiyacınız var. Mevcut puanınız: {userStats.Points}"
                     );
                 }
 
-                Console.WriteLine("✅ Puan kontrolü başarılı, ürünler sorgulanıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Puan kontrolü başarılı, ürünler sorgulanıyor...");
 
                 // 3. Uygun ürünleri sorgula
                 var surpriseBoxProducts = await _firebaseClient
                     .Child(Constants.ProductsCollection)
                     .OnceAsync<Product>();
 
-                Console.WriteLine($"🔍 Toplam ürün sayısı: {surpriseBoxProducts.Count}");
+                KamPay.Helpers.AppLogger.DebugLog($"🔍 Toplam ürün sayısı: {surpriseBoxProducts.Count}");
 
                 var availableDonations = surpriseBoxProducts
                     .Where(p => p.Object != null &&
@@ -103,7 +103,7 @@ namespace KamPay.Services
                     })
                     .ToList();
 
-                Console.WriteLine($"🎁 Sürpriz kutusu için uygun ürün sayısı: {availableDonations.Count}");
+                KamPay.Helpers.AppLogger.DebugLog($"🎁 Sürpriz kutusu için uygun ürün sayısı: {availableDonations.Count}");
 
                 if (availableDonations.Count == 0)
                 {
@@ -116,10 +116,10 @@ namespace KamPay.Services
                 var previousOwnerId = surpriseProduct.UserId;
                 var previousOwnerName = surpriseProduct.UserName;
 
-                Console.WriteLine($"🎲 Seçilen ürün: {surpriseProduct.Title}");
+                KamPay.Helpers.AppLogger.DebugLog($"🎲 Seçilen ürün: {surpriseProduct.Title}");
 
                 // 5. Puanı düş
-                Console.WriteLine($"💳 {BoxCost} puan düşülüyor...");
+                KamPay.Helpers.AppLogger.DebugLog($"💳 {BoxCost} puan düşülüyor...");
                 var pointsDeducted = await _userProfileService.AddPointsAsync(
                     userId,
                     -BoxCost,
@@ -128,11 +128,11 @@ namespace KamPay.Services
 
                 if (!pointsDeducted.Success)
                 {
-                    Console.WriteLine($"❌ Puan düşülemedi: {pointsDeducted.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"❌ Puan düşülemedi: {pointsDeducted.Message}");
                     return ServiceResult<Product>.FailureResult("Hata", "Puan düşülürken bir sorun oluştu.");
                 }
 
-                Console.WriteLine("✅ Puan başarıyla düşüldü");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Puan başarıyla düşüldü");
 
                 // 6. Ürün sahipliğini güncelle
                 var ownerUpdated = await _productService.UpdateProductOwnerAsync(
@@ -143,7 +143,7 @@ namespace KamPay.Services
 
                 if (!ownerUpdated.Success)
                 {
-                    Console.WriteLine("⚠️ Sahiplik güncellenemedi, puan iade ediliyor...");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ Sahiplik güncellenemedi, puan iade ediliyor...");
                     await _userProfileService.AddPointsAsync(userId, BoxCost, "Sürpriz Kutu hatası (puan iadesi)");
                     return ServiceResult<Product>.FailureResult("Hata", "Ürün sahipliği güncellenemedi. Puanınız iade edildi.");
                 }
@@ -223,7 +223,7 @@ namespace KamPay.Services
                     await CheckAndAwardBadges(previousOwnerId, donorStatsResult.Data);
                 }
 
-                Console.WriteLine($"✅ Sürpriz kutu başarıyla açıldı: {surpriseProduct.Title}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Sürpriz kutu başarıyla açıldı: {surpriseProduct.Title}");
 
                 return ServiceResult<Product>.SuccessResult(
                     surpriseProduct,
@@ -232,8 +232,8 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Sürpriz kutu hatası: {ex.Message}");
-                Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Sürpriz kutu hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ StackTrace: {ex.StackTrace}");
                 return ServiceResult<Product>.FailureResult("Beklenmedik Hata", ex.Message);
             }
         }
@@ -280,7 +280,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Rozet kontrolü hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Rozet kontrolü hatası: {ex.Message}");
             }
         }
 
@@ -315,7 +315,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Badge oluşturma hatası ({badgeName}): {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Badge oluşturma hatası ({badgeName}): {ex.Message}");
             }
         }
     }

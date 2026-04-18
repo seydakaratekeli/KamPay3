@@ -1,4 +1,4 @@
-using KamPay.ViewModels;
+﻿using KamPay.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Projections;
@@ -91,7 +91,7 @@ namespace KamPay.Views
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Map initialization error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Map initialization error: {ex.Message}");
             }
         }
 
@@ -107,7 +107,7 @@ namespace KamPay.Views
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Map update error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Map update error: {ex.Message}");
             }
         }
 
@@ -136,3 +136,4 @@ namespace KamPay.Views
         }
     }
 }
+

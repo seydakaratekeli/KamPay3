@@ -1,19 +1,19 @@
-using Firebase.Database;
+ï»¿using Firebase.Database;
 using KamPay.Helpers;
 using KamPay.Models;
 
 namespace KamPay.Services.Payment;
 
 /// <summary>
-/// ? Havale/EFT simülasyon provider'ý
-/// Banka referans kodu oluþturur
+/// ? Havale/EFT simÃ¼lasyon provider'Ä±
+/// Banka referans kodu oluÅŸturur
 /// </summary>
 public class BankTransferPaymentProvider : IPaymentProvider
 {
     private readonly FirebaseClient _firebaseClient;
     
     public PaymentMethodType MethodType => PaymentMethodType.BankTransferSim;
-    public string ProviderName => "Havale/EFT Simülasyonu";
+    public string ProviderName => "Havale/EFT SimÃ¼lasyonu";
     
     public BankTransferPaymentProvider(FirebaseClient firebaseClient)
     {
@@ -33,19 +33,19 @@ public class BankTransferPaymentProvider : IPaymentProvider
                 Currency = currency,
                 Status = ServicePaymentStatus.Initiated,
                 Method = MethodType,
-                BankName = "Ziraat Bankasý",
+                BankName = "Ziraat BankasÄ±",
                 BankReference = GenerateBankReference()
             };
             
-            System.Diagnostics.Debug.WriteLine(
-                $"? {ProviderName}: Referans oluþturuldu - {payment.BankReference}");
+            KamPay.Helpers.AppLogger.DebugLog(
+                $"? {ProviderName}: Referans oluÅŸturuldu - {payment.BankReference}");
             
             return ServiceResult<PaymentDto>.SuccessResult(payment, 
-                $"Havale bilgileri oluþturuldu. Referans: {payment.BankReference}");
+                $"Havale bilgileri oluÅŸturuldu. Referans: {payment.BankReference}");
         }
         catch (Exception ex)
         {
-            return ServiceResult<PaymentDto>.FailureResult("Ödeme baþlatýlamadý", ex.Message);
+            return ServiceResult<PaymentDto>.FailureResult("Ã–deme baÅŸlatÄ±lamadÄ±", ex.Message);
         }
     }
     
@@ -53,12 +53,12 @@ public class BankTransferPaymentProvider : IPaymentProvider
         string paymentId, 
         string? verificationData = null)
     {
-        // Havale/EFT için manuel onay - otomatik onay simülasyonu
-        System.Diagnostics.Debug.WriteLine(
-            $"? {ProviderName}: Manuel onay simüle edildi (PaymentId: {paymentId})");
+        // Havale/EFT iÃ§in manuel onay - otomatik onay simÃ¼lasyonu
+        KamPay.Helpers.AppLogger.DebugLog(
+            $"? {ProviderName}: Manuel onay simÃ¼le edildi (PaymentId: {paymentId})");
         
         return Task.FromResult(ServiceResult<bool>.SuccessResult(true, 
-            "Havale/EFT ödemesi kaydedildi (Manuel onay bekleniyor)"));
+            "Havale/EFT Ã¶demesi kaydedildi (Manuel onay bekleniyor)"));
     }
     
     public Task<ServiceResult<PaymentDto>> GetPaymentStatusAsync(string paymentId)
@@ -72,3 +72,4 @@ public class BankTransferPaymentProvider : IPaymentProvider
         return $"BTX-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
     }
 }
+

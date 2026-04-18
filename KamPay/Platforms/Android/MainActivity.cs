@@ -1,4 +1,4 @@
-using Android.App;
+﻿using Android.App;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
@@ -12,7 +12,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         try
         {
-            // ⚠️ SADECE DEBUG İÇİN: SSL sertifika doğrulamasını devre dışı bırak
+            // âš ï¸ SADECE DEBUG Ä°Ã‡Ä°N: SSL sertifika doÄŸrulamasÄ±nÄ± devre dÄ±ÅŸÄ± bÄ±rak
 #if DEBUG
 #pragma warning disable SYSLIB0014 // Type or member is obsolete
             System.Net.ServicePointManager.ServerCertificateValidationCallback = 
@@ -22,18 +22,18 @@ public class MainActivity : MauiAppCompatActivity
 
             base.OnCreate(savedInstanceState);
 
-            // HATA YAKALAYICI: Kablosuz modda hataları görmek için
+            // HATA YAKALAYICI: Kablosuz modda hatalarÄ± gÃ¶rmek iÃ§in
             AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
             {
-                System.Diagnostics.Debug.WriteLine($"[FATAL ERROR] Unhandled Exception: {args.Exception.Message}");
-                System.Diagnostics.Debug.WriteLine($"[FATAL ERROR] StackTrace: {args.Exception.StackTrace}");
+                KamPay.Helpers.AppLogger.DebugLog($"[FATAL ERROR] Unhandled Exception: {args.Exception.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"[FATAL ERROR] StackTrace: {args.Exception.StackTrace}");
                 
-                // Hatayı logla
+                // HatayÄ± logla
                 Android.Util.Log.Error("KamPay", $"Unhandled Exception: {args.Exception}");
                 
-                args.Handled = true; // Uygulamanın kapanmasını engellemeye çalış
+                args.Handled = true; // UygulamanÄ±n kapanmasÄ±nÄ± engellemeye Ã§alÄ±ÅŸ
 
-                // Hata mesajını ana thread'de göster
+                // Hata mesajÄ±nÄ± ana thread'de gÃ¶ster
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     try
@@ -41,7 +41,7 @@ public class MainActivity : MauiAppCompatActivity
 #pragma warning disable CS0618 // Type or member is obsolete
                         if (App.Current?.MainPage != null)
                         {
-                            await App.Current.MainPage.DisplayAlert("Hata Oluştu!",
+                            await App.Current.MainPage.DisplayAlert("Hata OluÅŸtu!",
                                 $"Hata: {args.Exception.Message}\n\nDetay: {args.Exception.InnerException?.Message ?? "Yok"}",
                                 "Tamam");
                         }
@@ -49,32 +49,33 @@ public class MainActivity : MauiAppCompatActivity
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[ERROR] Could not show alert: {ex.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"[ERROR] Could not show alert: {ex.Message}");
                     }
                 });
             };
 
-            // TaskScheduler hataları için
+            // TaskScheduler hatalarÄ± iÃ§in
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
-                System.Diagnostics.Debug.WriteLine($"[TASK ERROR] Unobserved Exception: {args.Exception.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"[TASK ERROR] Unobserved Exception: {args.Exception.Message}");
                 Android.Util.Log.Error("KamPay", $"Unobserved Task Exception: {args.Exception}");
                 args.SetObserved();
             };
 
-            // AppDomain hataları için
+            // AppDomain hatalarÄ± iÃ§in
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var exception = args.ExceptionObject as Exception;
-                System.Diagnostics.Debug.WriteLine($"[DOMAIN ERROR] Unhandled Exception: {exception?.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"[DOMAIN ERROR] Unhandled Exception: {exception?.Message}");
                 Android.Util.Log.Error("KamPay", $"AppDomain Exception: {exception}");
             };
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[CRITICAL] OnCreate Error: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"[CRITICAL] OnCreate Error: {ex.Message}");
             Android.Util.Log.Error("KamPay", $"OnCreate Exception: {ex}");
             throw;
         }
     }
 }
+

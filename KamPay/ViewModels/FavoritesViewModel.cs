@@ -46,7 +46,7 @@ namespace KamPay.ViewModels
         {
             if (_isInitialized)
             {
-                Console.WriteLine("✅ Favoriler cache'den gösteriliyor");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Favoriler cache'den gösteriliyor");
                 return;
             }
 
@@ -120,20 +120,20 @@ namespace KamPay.ViewModels
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"❌ Favorite event hatası: {ex.Message}");
+                                    KamPay.Helpers.AppLogger.DebugLog($"❌ Favorite event hatası: {ex.Message}");
                                 }
                             });
                         },
                         error =>
                         {
-                            Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
+                            KamPay.Helpers.AppLogger.DebugLog($"❌ Firebase listener hatası: {error.Message}");
                         });
 
-                Console.WriteLine(" Favoriler real-time listener başlatıldı");
+                KamPay.Helpers.AppLogger.DebugLog(" Favoriler real-time listener başlatıldı");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Favoriler yüklenirken hata: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Favoriler yüklenirken hata: {ex.Message}");
                 EmptyMessage = "Favoriler yüklenemedi.";
                 IsLoading = false;
             }
@@ -221,7 +221,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Favori çıkarma hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Favori çıkarma hatası: {ex.Message}");
             }
         }
 
@@ -243,7 +243,7 @@ namespace KamPay.ViewModels
 
         public void Dispose()
         {
-            Console.WriteLine("🧹 FavoritesViewModel dispose ediliyor...");
+            KamPay.Helpers.AppLogger.DebugLog("🧹 FavoritesViewModel dispose ediliyor...");
             _favoritesSubscription?.Dispose();
             _favoritesSubscription = null;
             _favoriteIds.Clear();

@@ -1,4 +1,4 @@
-using KamPay.ViewModels;
+ï»¿using KamPay.ViewModels;
 using Microsoft.Maui.Controls;
 using System.ComponentModel;
 
@@ -13,7 +13,7 @@ namespace KamPay.Views
             InitializeComponent();
             BindingContext = vm;
 
-            // ?? Artýk manuel doðrulama yok, PropertyChanged dinlemeye gerek yok
+            // ?? ArtÄ±k manuel doÄŸrulama yok, PropertyChanged dinlemeye gerek yok
         }
 
         protected override async void OnAppearing()
@@ -32,13 +32,13 @@ namespace KamPay.Views
         {
             try
             {
-                // Baþlangýç durumlarýný ayarla
+                // BaÅŸlangÄ±Ã§ durumlarÄ±nÄ± ayarla
                 HeaderSection.Opacity = 0;
                 HeaderSection.TranslationY = -30;
                 RegisterFormCard.Opacity = 0;
                 RegisterFormCard.TranslationY = 50;
 
-                // Arka plan animasyonunu baþlat
+                // Arka plan animasyonunu baÅŸlat
                 StartBackgroundAnimations();
 
                 // Header animasyonu
@@ -49,7 +49,7 @@ namespace KamPay.Views
 
                 await Task.Delay(150);
 
-                // Kayýt formu animasyonu
+                // KayÄ±t formu animasyonu
                 await Task.WhenAll(
                     RegisterFormCard.FadeTo(1, 700, Easing.CubicOut),
                     RegisterFormCard.TranslateTo(0, 0, 700, Easing.CubicOut)
@@ -57,17 +57,17 @@ namespace KamPay.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Initial Animation Error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Initial Animation Error: {ex.Message}");
             }
         }
 
         private void StartBackgroundAnimations()
         {
-            // Circle 1: Saat yönünde sürekli dönüþ
+            // Circle 1: Saat yÃ¶nÃ¼nde sÃ¼rekli dÃ¶nÃ¼ÅŸ
             var animation1 = new Animation(v => Circle1.Rotation = v, 0, 360);
             animation1.Commit(this, "Circle1Rotation", 16, 25000, Easing.Linear, repeat: () => true);
 
-            // Circle 2: Saat yönü tersine sürekli dönüþ
+            // Circle 2: Saat yÃ¶nÃ¼ tersine sÃ¼rekli dÃ¶nÃ¼ÅŸ
             var animation2 = new Animation(v => Circle2.Rotation = v, 0, -360);
             animation2.Commit(this, "Circle2Rotation", 16, 20000, Easing.Linear, repeat: () => true);
         }
@@ -75,7 +75,7 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // Sayfadan çýkýldýðýnda animasyonlarý durdur
+            // Sayfadan Ã§Ä±kÄ±ldÄ±ÄŸÄ±nda animasyonlarÄ± durdur
             this.AbortAnimation("Circle1Rotation");
             this.AbortAnimation("Circle2Rotation");
         }

@@ -60,6 +60,11 @@
 		<MauiImage Remove="Resources\Images\dotnet_bot.png" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Content Include=".github\skills\maui-collectionview - Kopyala\evals\evals.json" />
+	  <Content Include=".github\skills\maui-current-apis - Kopyala\evals\evals.json" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<EmbeddedResource Update="Resources\Languages\AppResources.resx">
@@ -198,7 +203,81 @@
 
 	<ItemGroup>
 	  <None Include=".github\instructions\dotnet-maui.instructions.md" />
+	  <None Include=".github\skills\maui-accessibility - Kopyala\references\accessibility-api.md" />
+	  <None Include=".github\skills\maui-accessibility - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-animations - Kopyala\references\animations-api.md" />
+	  <None Include=".github\skills\maui-animations - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-app-icons-splash - Kopyala\references\icons-splash-api.md" />
+	  <None Include=".github\skills\maui-app-icons-splash - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-app-lifecycle - Kopyala\references\lifecycle-api.md" />
+	  <None Include=".github\skills\maui-app-lifecycle - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-aspire - Kopyala\references\aspire-api.md" />
+	  <None Include=".github\skills\maui-aspire - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-authentication - Kopyala\references\authentication-api.md" />
+	  <None Include=".github\skills\maui-authentication - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-collectionview - Kopyala\references\collectionview-api.md" />
+	  <None Include=".github\skills\maui-collectionview - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-current-apis - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-custom-handlers - Kopyala\references\custom-handlers-api.md" />
+	  <None Include=".github\skills\maui-custom-handlers - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-data-binding - Kopyala\references\data-binding-api.md" />
+	  <None Include=".github\skills\maui-data-binding - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-deep-linking - Kopyala\references\deep-linking-api.md" />
+	  <None Include=".github\skills\maui-deep-linking - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-dependency-injection - Kopyala\references\dependency-injection-api.md" />
+	  <None Include=".github\skills\maui-dependency-injection - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-file-handling - Kopyala\references\file-handling-api.md" />
+	  <None Include=".github\skills\maui-file-handling - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-geolocation - Kopyala\references\geolocation-api.md" />
+	  <None Include=".github\skills\maui-geolocation - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-gestures - Kopyala\references\gestures-api.md" />
+	  <None Include=".github\skills\maui-gestures - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-graphics-drawing - Kopyala\references\graphics-drawing-api.md" />
+	  <None Include=".github\skills\maui-graphics-drawing - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-hot-reload-diagnostics - Kopyala\references\hot-reload-setup.md" />
+	  <None Include=".github\skills\maui-hot-reload-diagnostics - Kopyala\scripts\diagnose-hot-reload.sh" />
+	  <None Include=".github\skills\maui-hot-reload-diagnostics - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-hybridwebview - Kopyala\references\hybridwebview-api.md" />
+	  <None Include=".github\skills\maui-hybridwebview - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-local-notifications - Kopyala\references\local-notifications-api.md" />
+	  <None Include=".github\skills\maui-local-notifications - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-localization - Kopyala\references\localization-api.md" />
+	  <None Include=".github\skills\maui-localization - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-maps - Kopyala\references\maps-api.md" />
+	  <None Include=".github\skills\maui-maps - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-media-picker - Kopyala\references\media-picker-api.md" />
+	  <None Include=".github\skills\maui-media-picker - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-performance - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-permissions - Kopyala\references\permissions-api.md" />
+	  <None Include=".github\skills\maui-permissions - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-platform-invoke - Kopyala\references\platform-invoke-api.md" />
+	  <None Include=".github\skills\maui-platform-invoke - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-push-notifications - Kopyala\references\push-notifications-api.md" />
+	  <None Include=".github\skills\maui-push-notifications - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-rest-api - Kopyala\references\rest-api-reference.md" />
+	  <None Include=".github\skills\maui-rest-api - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-safe-area - Kopyala\references\safe-area-api.md" />
+	  <None Include=".github\skills\maui-safe-area - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-secure-storage - Kopyala\references\secure-storage-api.md" />
+	  <None Include=".github\skills\maui-secure-storage - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-shell-navigation - Kopyala\references\shell-navigation-api.md" />
+	  <None Include=".github\skills\maui-shell-navigation - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-speech-to-text - Kopyala\references\speech-to-text-api.md" />
+	  <None Include=".github\skills\maui-speech-to-text - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-sqlite-database - Kopyala\references\sqlite-database-api.md" />
+	  <None Include=".github\skills\maui-sqlite-database - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-theming - Kopyala\references\theming-api.md" />
+	  <None Include=".github\skills\maui-theming - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\maui-unit-testing - Kopyala\references\unit-testing-api.md" />
+	  <None Include=".github\skills\maui-unit-testing - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\turkish-description-method - Kopyala\SKILL.md" />
 	  <None Include=".github\skills\turkish-description-method\SKILL.md" />
+	  <None Include=".github\skills\xamarin-android-migration - Kopyala\references\android-migration-api.md" />
+	  <None Include=".github\skills\xamarin-android-migration - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\xamarin-forms-migration - Kopyala\references\forms-migration-api.md" />
+	  <None Include=".github\skills\xamarin-forms-migration - Kopyala\SKILL.md" />
+	  <None Include=".github\skills\xamarin-ios-migration - Kopyala\references\ios-migration-api.md" />
+	  <None Include=".github\skills\xamarin-ios-migration - Kopyala\SKILL.md" />
 	</ItemGroup>
 
 </Project>

@@ -18,7 +18,7 @@ namespace KamPay
 
                 // MainPage'i önce ata
                 MainPage = appShell;
-                System.Diagnostics.Debug.WriteLine("✓ MainPage (AppShell) atandı");
+                KamPay.Helpers.AppLogger.DebugLog("✓ MainPage (AppShell) atandı");
 
                 // Localization'ı daha güvenli başlat - hata olsa bile devam et
                 _ = Task.Run(async () =>
@@ -30,7 +30,7 @@ namespace KamPay
                         
                         // Kaydedilmiş dil tercihini al (Language preference'i güvenli değil, Preferences'ta kalabilir)
                         var savedLanguage = Preferences.Get("AppLanguage", "tr");
-                        System.Diagnostics.Debug.WriteLine($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚙️ Kaydedilmiş dil tercihi: {savedLanguage}");
                         
                         // Culture ayarla - MainThread'de çalıştır
                         await MainThread.InvokeOnMainThreadAsync(() =>
@@ -41,31 +41,31 @@ namespace KamPay
                                 if (LocalizationResourceManager.Instance != null)
                                 {
                                     LocalizationResourceManager.Instance.SetCulture(savedLanguage);
-                                    System.Diagnostics.Debug.WriteLine($"✓ Dil ayarlandı: {savedLanguage}");
+                                    KamPay.Helpers.AppLogger.DebugLog($"✓ Dil ayarlandı: {savedLanguage}");
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"⚠️ LocalizationResourceManager instance null");
+                                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ LocalizationResourceManager instance null");
                                 }
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"⚠️ Dil ayarlama hatası (fallback kullanılıyor): {ex.Message}");
-                                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Dil ayarlama hatası (fallback kullanılıyor): {ex.Message}");
+                                KamPay.Helpers.AppLogger.DebugLog($"⚠️ StackTrace: {ex.StackTrace}");
                             }
                         });
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"⚠️ Localization başlatma hatası: {ex.Message}");
-                        System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ Localization başlatma hatası: {ex.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ StackTrace: {ex.StackTrace}");
                     }
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: App constructor hatası: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ KRITIK: App constructor hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ StackTrace: {ex.StackTrace}");
                 throw; // Constructor'da kritik hatalar yeniden fırlatılmalı
             }
         }
@@ -99,7 +99,7 @@ namespace KamPay
                                 }
                                 catch (Exception ex)
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"[Back Navigation Error] {ex.Message}");
+                                    KamPay.Helpers.AppLogger.DebugLog($"[Back Navigation Error] {ex.Message}");
                                 }
                             })
                         });
@@ -107,7 +107,7 @@ namespace KamPay
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Navigation Handler Error] {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"[Navigation Handler Error] {ex.Message}");
                 }
             };
         }
@@ -123,12 +123,12 @@ namespace KamPay
         {
             try
             {
-                Console.WriteLine("🔐 Otomatik giriş kontrolü yapılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("🔐 Otomatik giriş kontrolü yapılıyor...");
 
                 var authService = _serviceProvider.GetService<IAuthenticationService>();
                 if (authService == null)
                 {
-                    Console.WriteLine("⚠️ AuthenticationService bulunamadı");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ AuthenticationService bulunamadı");
                     return;
                 }
 
@@ -136,14 +136,14 @@ namespace KamPay
                 
                 if (result.Success)
                 {
-                    Console.WriteLine($"✅ Otomatik giriş başarılı: {result.Data?.Email}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ Otomatik giriş başarılı: {result.Data?.Email}");
                     
                     // UserStateService'i güncelle
                     var userStateService = _serviceProvider.GetService<IUserStateService>();
                     if (userStateService != null && result.Data != null)
                     {
                         userStateService.SetUser(result.Data);
-                        Console.WriteLine("✅ UserStateService güncellendi");
+                        KamPay.Helpers.AppLogger.DebugLog("✅ UserStateService güncellendi");
                     }
                     
                     // Ana ekrana yönlendir
@@ -152,22 +152,22 @@ namespace KamPay
                         try
                         {
                             await Shell.Current.GoToAsync("//MainApp");
-                            Console.WriteLine("✅ Ana ekrana yönlendirildi");
+                            KamPay.Helpers.AppLogger.DebugLog("✅ Ana ekrana yönlendirildi");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"⚠️ Navigation hatası: {ex.Message}");
+                            KamPay.Helpers.AppLogger.DebugLog($"⚠️ Navigation hatası: {ex.Message}");
                         }
                     });
                 }
                 else
                 {
-                    Console.WriteLine($"⏭️ Otomatik giriş yapılmadı: {result.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⏭️ Otomatik giriş yapılmadı: {result.Message}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ TryAutoLoginAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ TryAutoLoginAsync hatası: {ex.Message}");
             }
         }
     }

@@ -1,4 +1,4 @@
-using KamPay.Models;
+﻿using KamPay.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace KamPay.Services
         /// <inheritdoc/>
         public string CurrentUserId => _currentUser?.UserId ?? string.Empty;
 
-        // UI'ın ve diğer ViewModel'lerin dinlediği olay
+        // UI'Ä±n ve diÄŸer ViewModel'lerin dinlediÄŸi olay
         public event EventHandler<User?>? UserProfileChanged;
 
         public UserStateService(
@@ -51,7 +51,7 @@ namespace KamPay.Services
         public void SetUser(User user)
         {
             _currentUser = user;
-            // Olayı tetikle (Bu sayede ProfileViewModel gibi dinleyiciler UI'ı yeniler)
+            // OlayÄ± tetikle (Bu sayede ProfileViewModel gibi dinleyiciler UI'Ä± yeniler)
             UserProfileChanged?.Invoke(this, _currentUser);
         }
 
@@ -60,7 +60,7 @@ namespace KamPay.Services
             try
             {
                 var user = await _authService.GetCurrentUserAsync();
-                if (user == null) return ServiceResult<User>.FailureResult("Kullanıcı oturumu bulunamadı");
+                if (user == null) return ServiceResult<User>.FailureResult("KullanÄ±cÄ± oturumu bulunamadÄ±");
 
                 var profileResult = await _profileService.GetUserProfileAsync(user.UserId);
 
@@ -81,8 +81,8 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                if (_currentUser != null) return ServiceResult<User>.SuccessResult(_currentUser, "Önbellek kullanıldı");
-                return ServiceResult<User>.FailureResult("Kullanıcı bilgileri yüklenemedi", ex.Message);
+                if (_currentUser != null) return ServiceResult<User>.SuccessResult(_currentUser, "Ã–nbellek kullanÄ±ldÄ±");
+                return ServiceResult<User>.FailureResult("KullanÄ±cÄ± bilgileri yÃ¼klenemedi", ex.Message);
             }
         }
 
@@ -96,41 +96,41 @@ namespace KamPay.Services
 
             try
             {
-                // 1. Firebase Ana Güncelleme (users ve user_profiles koleksiyonları)
-                // Not: profileService.UpdateUserProfileAsync içinde FullName hesaplanıp gönderilmelidir.
+                // 1. Firebase Ana GÃ¼ncelleme (users ve user_profiles koleksiyonlarÄ±)
+                // Not: profileService.UpdateUserProfileAsync iÃ§inde FullName hesaplanÄ±p gÃ¶nderilmelidir.
                 var result = await _profileService.UpdateUserProfileAsync(
                     CurrentUser.UserId, firstName, lastName, username, profileImageUrl);
 
                 if (!result.Success) return result;
 
-                // 2. Yerel Nesneyi Güncelle (ObservableProperty sayesinde UI anında tepki verir)
+                // 2. Yerel Nesneyi GÃ¼ncelle (ObservableProperty sayesinde UI anÄ±nda tepki verir)
                 if (!string.IsNullOrWhiteSpace(firstName)) CurrentUser.FirstName = firstName;
                 if (!string.IsNullOrWhiteSpace(lastName)) CurrentUser.LastName = lastName;
                 if (!string.IsNullOrWhiteSpace(username)) CurrentUser.Username = username;
                 if (!string.IsNullOrWhiteSpace(profileImageUrl)) CurrentUser.ProfileImageUrl = profileImageUrl;
 
-                // ✅ 3. Senkronize Edilmiş FullName ile Diğer Tabloları Güncelle
-                // CurrentUser.FullName artık FirstName ve LastName'den otomatik oluşur.
+                // âœ… 3. Senkronize EdilmiÅŸ FullName ile DiÄŸer TablolarÄ± GÃ¼ncelle
+                // CurrentUser.FullName artÄ±k FirstName ve LastName'den otomatik oluÅŸur.
                 string updatedFullName = CurrentUser.FullName;
                 string updatedPhotoUrl = CurrentUser.ProfileImageUrl;
 
-                // Paralel olarak diğer veritabanı düğümlerini (Ürünler, Mesajlar vb.) güncelle
+                // Paralel olarak diÄŸer veritabanÄ± dÃ¼ÄŸÃ¼mlerini (ÃœrÃ¼nler, Mesajlar vb.) gÃ¼ncelle
                 await RunBulkUpdatesAsync(updatedFullName, updatedPhotoUrl);
 
-                // 4. Global UI Bildirimi (Diğer ViewModel'leri haberdar et)
+                // 4. Global UI Bildirimi (DiÄŸer ViewModel'leri haberdar et)
                 SetUser(CurrentUser);
 
-                return ServiceResult<bool>.SuccessResult(true, "Profil başarıyla güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, "Profil baÅŸarÄ±yla gÃ¼ncellendi");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Profil güncellenirken hata oluştu", ex.Message);
+                return ServiceResult<bool>.FailureResult("Profil gÃ¼ncellenirken hata oluÅŸtu", ex.Message);
             }
         }
 
         private async Task RunBulkUpdatesAsync(string fullName, string photoUrl)
         {
-            // Veritabanındaki tüm ilişkili kayıtlarda isim ve fotoğrafı modernize et
+            // VeritabanÄ±ndaki tÃ¼m iliÅŸkili kayÄ±tlarda isim ve fotoÄŸrafÄ± modernize et
             var tasks = new List<Task<ServiceResult<bool>>>
             {
                 _productService.UpdateUserInfoInProductsAsync(CurrentUser.UserId, fullName, photoUrl),
@@ -146,8 +146,8 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                // Bulk update hataları kritik değildir, logla ama ana işlemi bozma
-                System.Diagnostics.Debug.WriteLine($"⚠️ Bulk update senkronizasyon hatası: {ex.Message}");
+                // Bulk update hatalarÄ± kritik deÄŸildir, logla ama ana iÅŸlemi bozma
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Bulk update senkronizasyon hatasÄ±: {ex.Message}");
             }
         }
 

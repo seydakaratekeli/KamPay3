@@ -81,7 +81,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ LoadNotifications hatası: {ex}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ LoadNotifications hatası: {ex}");
                 await Shell.Current.DisplayAlert(Res["Error"], $"{Res["NotificationsLoadError"]}: {ex.Message}", Res["Ok"]);
             }
             finally
@@ -117,7 +117,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkAsRead hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ MarkAsRead hatası: {ex.Message}");
                 notification.IsRead = false;
             }
         }
@@ -148,7 +148,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MarkAllAsRead hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ MarkAllAsRead hatası: {ex.Message}");
                 await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
@@ -183,7 +183,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ DeleteNotification hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ DeleteNotification hatası: {ex.Message}");
                 await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally
@@ -231,7 +231,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ClearAll hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ ClearAll hatası: {ex.Message}");
                 await Shell.Current.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
             }
             finally

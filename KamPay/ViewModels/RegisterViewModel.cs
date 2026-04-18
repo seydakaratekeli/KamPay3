@@ -110,7 +110,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ RegisterAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ RegisterAsync hatası: {ex.Message}");
                 ErrorMessage = $"Beklenmeyen hata: {ex.Message}";
             }
             finally
@@ -152,7 +152,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ResendVerificationAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ ResendVerificationAsync hatası: {ex.Message}");
                 ErrorMessage = $"Beklenmeyen hata: {ex.Message}";
             }
             finally

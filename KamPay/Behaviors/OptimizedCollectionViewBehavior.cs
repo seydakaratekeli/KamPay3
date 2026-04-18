@@ -1,4 +1,4 @@
-using Microsoft.Maui.Controls;
+ï»¿using Microsoft.Maui.Controls;
 
 #if ANDROID
 using AndroidX.RecyclerView.Widget;
@@ -8,12 +8,12 @@ using Microsoft.Maui.Handlers;
 namespace KamPay.Behaviors
 {
     /// <summary>
-    /// CollectionView için RecyclerView optimizasyonlarýný uygular
-    /// KULLANIM: XAML'de CollectionView.Behaviors altýna ekleyin
+    /// CollectionView iÃ§in RecyclerView optimizasyonlarÄ±nÄ± uygular
+    /// KULLANIM: XAML'de CollectionView.Behaviors altÄ±na ekleyin
     /// </summary>
     public class OptimizedCollectionViewBehavior : Behavior<CollectionView>
     {
-        // ? XAML'den yapýlandýrýlabilir özellikler
+        // ? XAML'den yapÄ±landÄ±rÄ±labilir Ã¶zellikler
         public static readonly BindableProperty ItemCacheSizeProperty =
             BindableProperty.Create(
                 nameof(ItemCacheSize),
@@ -51,14 +51,14 @@ namespace KamPay.Behaviors
                 ApplyOptimizations(bindable);
             }
 
-            System.Diagnostics.Debug.WriteLine($"? OptimizedCollectionViewBehavior attached (ItemCache: {ItemCacheSize}, Prefetch: {PrefetchItemCount})");
+            KamPay.Helpers.AppLogger.DebugLog($"? OptimizedCollectionViewBehavior attached (ItemCache: {ItemCacheSize}, Prefetch: {PrefetchItemCount})");
         }
 
         protected override void OnDetachingFrom(CollectionView bindable)
         {
             base.OnDetachingFrom(bindable);
             bindable.HandlerChanged -= OnHandlerChanged;
-            System.Diagnostics.Debug.WriteLine("?? OptimizedCollectionViewBehavior detached");
+            KamPay.Helpers.AppLogger.DebugLog("?? OptimizedCollectionViewBehavior detached");
         }
 
         private void OnHandlerChanged(object? sender, EventArgs e)
@@ -74,53 +74,54 @@ namespace KamPay.Behaviors
 #if ANDROID
             try
             {
-                // Platform-specific View'a eriþim için reflection veya Handler API kullan
+                // Platform-specific View'a eriÅŸim iÃ§in reflection veya Handler API kullan
                 if (collectionView.Handler?.PlatformView is RecyclerView recyclerView)
                 {
                     // ? 1. Item View Cache Size
                     recyclerView.SetItemViewCacheSize(ItemCacheSize);
-                    System.Diagnostics.Debug.WriteLine($"  ? Item cache: {ItemCacheSize}");
+                    KamPay.Helpers.AppLogger.DebugLog($"  ? Item cache: {ItemCacheSize}");
 
                     // ? 2. Nested Scrolling
                     recyclerView.NestedScrollingEnabled = false;
-                    System.Diagnostics.Debug.WriteLine("  ? Nested scrolling: false");
+                    KamPay.Helpers.AppLogger.DebugLog("  ? Nested scrolling: false");
 
                     // ? 3. RecycledViewPool
                     var viewPool = new RecyclerView.RecycledViewPool();
                     viewPool.SetMaxRecycledViews(0, ItemCacheSize + 10);
                     recyclerView.SetRecycledViewPool(viewPool);
-                    System.Diagnostics.Debug.WriteLine($"  ? View pool: {ItemCacheSize + 10} items");
+                    KamPay.Helpers.AppLogger.DebugLog($"  ? View pool: {ItemCacheSize + 10} items");
 
-                    // ? 4. Layout Manager Optimizasyonlarý
+                    // ? 4. Layout Manager OptimizasyonlarÄ±
                     if (recyclerView.GetLayoutManager() is LinearLayoutManager layoutManager)
                     {
                         layoutManager.InitialPrefetchItemCount = PrefetchItemCount;
-                        System.Diagnostics.Debug.WriteLine($"  ? Prefetch count: {PrefetchItemCount}");
+                        KamPay.Helpers.AppLogger.DebugLog($"  ? Prefetch count: {PrefetchItemCount}");
                     }
 
-                    // ? 5. Item Animator (hýzlý animasyonlar)
+                    // ? 5. Item Animator (hÄ±zlÄ± animasyonlar)
                     if (recyclerView.GetItemAnimator() is DefaultItemAnimator animator)
                     {
                         animator.AddDuration = 150;
                         animator.RemoveDuration = 150;
                         animator.MoveDuration = 150;
                         animator.ChangeDuration = 150;
-                        System.Diagnostics.Debug.WriteLine("  ? Animation duration: 150ms");
+                        KamPay.Helpers.AppLogger.DebugLog("  ? Animation duration: 150ms");
                     }
 
                     // ? 6. Over Scroll Mode
                     recyclerView.OverScrollMode = Android.Views.OverScrollMode.Never;
 
-                    System.Diagnostics.Debug.WriteLine($"?? RecyclerView optimizasyonlarý uygulandý");
+                    KamPay.Helpers.AppLogger.DebugLog($"?? RecyclerView optimizasyonlarÄ± uygulandÄ±");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"?? RecyclerView optimizasyon hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"?? RecyclerView optimizasyon hatasÄ±: {ex.Message}");
             }
 #else
-            System.Diagnostics.Debug.WriteLine("?? OptimizedCollectionViewBehavior sadece Android'de çalýþýr");
+            KamPay.Helpers.AppLogger.DebugLog("?? OptimizedCollectionViewBehavior sadece Android'de Ã§alÄ±ÅŸÄ±r");
 #endif
         }
     }
 }
+

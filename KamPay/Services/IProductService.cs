@@ -17,7 +17,9 @@ namespace KamPay.Services
     /// </summary>
     public interface IProductService : IProductQueryService, IProductCommandService, IProductValidationService
     {
-        // ✅ Tüm metodlar alt interface'lerden geliyor
-        // Bu interface sadece "marker" görevi görüyor - backward compatibility için
+        /// <summary>
+        /// Önbellekte kaydedilmiş son ürün listesini döndürür. Null/boş ise cache yok.
+        /// </summary>
+        Task<List<Product>?> GetCachedProductsAsync();
     }
 }

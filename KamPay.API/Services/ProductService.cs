@@ -17,6 +17,11 @@ namespace KamPay.API.Services
             return await _productRepository.GetAllAsync();
         }
 
+        public async Task<PagedResult<Product>> GetProductsPagedAsync(int pageSize, string? cursor, ProductQueryOptions? options = null)
+        {
+            return await _productRepository.GetPagedAsync(pageSize, cursor, options);
+        }
+
         public async Task<List<Product>> GetUserProductsAsync(string userId)
         {
             return await _productRepository.GetByUserIdAsync(userId);
@@ -31,7 +36,6 @@ namespace KamPay.API.Services
         {
             product.UserId = userId;
             product.CreatedAt = DateTime.UtcNow;
-
             return await _productRepository.AddAsync(product);
         }
 
@@ -39,9 +43,7 @@ namespace KamPay.API.Services
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
             if (existingProduct == null || existingProduct.UserId != userId)
-            {
-                return false; // Yetkisiz veya bulunamadı
-            }
+                return false;
 
             existingProduct.Title = updatedProduct.Title;
             existingProduct.Price = updatedProduct.Price;
@@ -56,9 +58,7 @@ namespace KamPay.API.Services
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
             if (existingProduct == null || existingProduct.UserId != userId)
-            {
-                return false; // Yetkisiz veya bulunamadı
-            }
+                return false;
 
             await _productRepository.DeleteAsync(id);
             return true;

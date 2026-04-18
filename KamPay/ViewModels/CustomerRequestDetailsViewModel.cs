@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+ï»¿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KamPay.Models;
 using KamPay.Services;
@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace KamPay.ViewModels
 {
     /// <summary>
-    /// ?? ARMUT MODELÝ: Müþteri talebi detay sayfasý
-    /// Profesyoneller buradan teklif gönderebilir
-    /// Müþteriler buradan gelen teklifleri görebilir
+    /// ?? ARMUT MODELÄ°: MÃ¼ÅŸteri talebi detay sayfasÄ±
+    /// Profesyoneller buradan teklif gÃ¶nderebilir
+    /// MÃ¼ÅŸteriler buradan gelen teklifleri gÃ¶rebilir
     /// </summary>
     [QueryProperty(nameof(RequestId), "requestId")]
     public partial class CustomerRequestDetailsViewModel : ObservableObject
@@ -34,12 +34,12 @@ namespace KamPay.ViewModels
         private bool isCurrentUserCustomer; // Talep sahibi mi?
 
         [ObservableProperty]
-        private bool canSendProposal; // Profesyonel teklif gönderebilir mi?
+        private bool canSendProposal; // Profesyonel teklif gÃ¶nderebilir mi?
 
         [ObservableProperty]
-        private bool hasAlreadySentProposal; // Daha önce teklif gönderdi mi?
+        private bool hasAlreadySentProposal; // Daha Ã¶nce teklif gÃ¶nderdi mi?
 
-        // Teklif gönderme formu
+        // Teklif gÃ¶nderme formu
         [ObservableProperty]
         private decimal proposalPrice;
 
@@ -52,7 +52,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isProposalFormVisible;
 
-        // Gelen teklifler (Müþteri için)
+        // Gelen teklifler (MÃ¼ÅŸteri iÃ§in)
         public ObservableCollection<ProviderProposal> Proposals { get; } = new();
 
         public CustomerRequestDetailsViewModel(
@@ -74,7 +74,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Talep detaylarýný yükle
+        /// Talep detaylarÄ±nÄ± yÃ¼kle
         /// </summary>
         [RelayCommand]
         private async Task LoadRequestDetailsAsync()
@@ -86,7 +86,7 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Oturum açýlmamýþ", "Tamam");
+                    await Shell.Current.DisplayAlert("Hata", "Oturum aÃ§Ä±lmamÄ±ÅŸ", "Tamam");
                     return;
                 }
 
@@ -95,25 +95,25 @@ namespace KamPay.ViewModels
 
                 if (!requestResult.Success || requestResult.Data == null)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Talep bulunamadý", "Tamam");
+                    await Shell.Current.DisplayAlert("Hata", "Talep bulunamadÄ±", "Tamam");
                     await Shell.Current.GoToAsync("..");
                     return;
                 }
 
                 CustomerRequest = requestResult.Data;
 
-                // Kullanýcý rolünü belirle
+                // KullanÄ±cÄ± rolÃ¼nÃ¼ belirle
                 IsCurrentUserCustomer = CustomerRequest.CustomerId == currentUser.UserId;
 
                 if (IsCurrentUserCustomer)
                 {
-                    // Müþteri ise teklifleri yükle
+                    // MÃ¼ÅŸteri ise teklifleri yÃ¼kle
                     await LoadProposalsAsync();
                     CanSendProposal = false;
                 }
                 else
                 {
-                    // Profesyonel ise daha önce teklif göndermiþ mi kontrol et
+                    // Profesyonel ise daha Ã¶nce teklif gÃ¶ndermiÅŸ mi kontrol et
                     var myProposals = await _serviceService.GetProposalsForRequestAsync(RequestId);
                     
                     if (myProposals.Success && myProposals.Data != null)
@@ -139,7 +139,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Teklifleri yükle (Müþteri için)
+        /// Teklifleri yÃ¼kle (MÃ¼ÅŸteri iÃ§in)
         /// </summary>
         private async Task LoadProposalsAsync()
         {
@@ -158,12 +158,12 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LoadProposalsAsync hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? LoadProposalsAsync hatasÄ±: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Teklif formunu aç
+        /// Teklif formunu aÃ§
         /// </summary>
         [RelayCommand]
         private void OpenProposalForm()
@@ -181,7 +181,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Teklif gönder
+        /// Teklif gÃ¶nder
         /// </summary>
         [RelayCommand]
         private async Task SendProposalAsync()
@@ -191,19 +191,19 @@ namespace KamPay.ViewModels
                 // Validasyon
                 if (ProposalPrice <= 0)
                 {
-                    await Shell.Current.DisplayAlert("Uyarý", "Geçerli bir fiyat girin", "Tamam");
+                    await Shell.Current.DisplayAlert("UyarÄ±", "GeÃ§erli bir fiyat girin", "Tamam");
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(ProposalMessage))
                 {
-                    await Shell.Current.DisplayAlert("Uyarý", "Teklif mesajý gerekli", "Tamam");
+                    await Shell.Current.DisplayAlert("UyarÄ±", "Teklif mesajÄ± gerekli", "Tamam");
                     return;
                 }
 
                 if (EstimatedDays <= 0)
                 {
-                    await Shell.Current.DisplayAlert("Uyarý", "Geçerli bir tamamlanma süresi girin", "Tamam");
+                    await Shell.Current.DisplayAlert("UyarÄ±", "GeÃ§erli bir tamamlanma sÃ¼resi girin", "Tamam");
                     return;
                 }
 
@@ -216,7 +216,7 @@ namespace KamPay.ViewModels
                 var statsResult = await _userProfileService.GetUserStatsAsync(currentUser.UserId);
                 var stats = statsResult.Success ? statsResult.Data : new UserStats();
 
-                // Teklif oluþtur
+                // Teklif oluÅŸtur
                 var proposal = new ProviderProposal
                 {
                     CustomerRequestId = RequestId,
@@ -229,7 +229,7 @@ namespace KamPay.ViewModels
                     Price = ProposalPrice,
                     Message = ProposalMessage.Trim(),
                     EstimatedDays = EstimatedDays,
-                    Rating = 0, // Þimdilik varsayýlan deðer
+                    Rating = 0, // Åžimdilik varsayÄ±lan deÄŸer
                     CompletedJobsCount = stats.CompletedTrades // TotalProducts yerine CompletedTrades
                 };
 
@@ -238,8 +238,8 @@ namespace KamPay.ViewModels
                 if (result.Success)
                 {
                     await Shell.Current.DisplayAlert(
-                        "Baþarýlý",
-                        "Teklifiniz müþteriye gönderildi!",
+                        "BaÅŸarÄ±lÄ±",
+                        "Teklifiniz mÃ¼ÅŸteriye gÃ¶nderildi!",
                         "Harika!"
                     );
 
@@ -265,7 +265,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Teklifi kabul et (Müþteri)
+        /// Teklifi kabul et (MÃ¼ÅŸteri)
         /// </summary>
         [RelayCommand]
         private async Task AcceptProposalAsync(ProviderProposal proposal)
@@ -274,10 +274,10 @@ namespace KamPay.ViewModels
 
             var confirm = await Shell.Current.DisplayAlert(
                 "Teklifi Kabul Et",
-                $"{proposal.ProviderName} tarafýndan gönderilen {proposal.Price:N2}? teklifini kabul ediyor musunuz?\n\n" +
-                $"Bu iþlem geri alýnamaz ve diðer tüm teklifler otomatik olarak reddedilecektir.",
+                $"{proposal.ProviderName} tarafÄ±ndan gÃ¶nderilen {proposal.Price:N2}? teklifini kabul ediyor musunuz?\n\n" +
+                $"Bu iÅŸlem geri alÄ±namaz ve diÄŸer tÃ¼m teklifler otomatik olarak reddedilecektir.",
                 "Evet, Kabul Et",
-                "Hayýr"
+                "HayÄ±r"
             );
 
             if (!confirm) return;
@@ -294,12 +294,12 @@ namespace KamPay.ViewModels
                 if (result.Success)
                 {
                     await Shell.Current.DisplayAlert(
-                        "Baþarýlý",
+                        "BaÅŸarÄ±lÄ±",
                         "Teklif kabul edildi! Profesyonel bilgilendirildi.",
                         "Tamam"
                     );
 
-                    // Sayfayý yenile
+                    // SayfayÄ± yenile
                     await LoadRequestDetailsAsync();
                 }
                 else
@@ -318,7 +318,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Teklifi reddet (Müþteri)
+        /// Teklifi reddet (MÃ¼ÅŸteri)
         /// </summary>
         [RelayCommand]
         private async Task RejectProposalAsync(ProviderProposal proposal)
@@ -328,12 +328,12 @@ namespace KamPay.ViewModels
             var reason = await Shell.Current.DisplayPromptAsync(
                 "Teklifi Reddet",
                 "Teklifi reddetme nedeninizi belirtebilirsiniz (opsiyonel):",
-                "Gönder",
-                "Ýptal",
-                placeholder: "Örn: Fiyat yüksek"
+                "GÃ¶nder",
+                "Ä°ptal",
+                placeholder: "Ã–rn: Fiyat yÃ¼ksek"
             );
 
-            if (reason == null) return; // Ýptal
+            if (reason == null) return; // Ä°ptal
 
             try
             {
@@ -350,7 +350,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Shell.Current.DisplayAlert("Baþarýlý", "Teklif reddedildi", "Tamam");
+                    await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", "Teklif reddedildi", "Tamam");
                     await LoadProposalsAsync();
                 }
                 else
@@ -369,7 +369,7 @@ namespace KamPay.ViewModels
         }
 
         /// <summary>
-        /// Konumu haritada göster
+        /// Konumu haritada gÃ¶ster
         /// </summary>
         [RelayCommand]
         private async Task OpenLocationAsync()
@@ -391,7 +391,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Hata", $"Harita açýlamadý: {ex.Message}", "Tamam");
+                await Shell.Current.DisplayAlert("Hata", $"Harita aÃ§Ä±lamadÄ±: {ex.Message}", "Tamam");
             }
         }
 
@@ -412,3 +412,4 @@ namespace KamPay.ViewModels
         }
     }
 }
+

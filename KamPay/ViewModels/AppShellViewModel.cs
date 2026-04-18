@@ -1,4 +1,4 @@
-// KamPay/ViewModels/AppShellViewModel.cs
+﻿// KamPay/ViewModels/AppShellViewModel.cs
 
 using System;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private IDisposable? _messageSubscription;
 
-        // FirebaseClient'ı her seferinde yeniden oluşturmak yerine bir kere oluşturup kullanmak daha verimlidir.
+        // FirebaseClient'Ä± her seferinde yeniden oluÅŸturmak yerine bir kere oluÅŸturup kullanmak daha verimlidir.
         private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
 
 
@@ -61,7 +61,7 @@ namespace KamPay.ViewModels
             // Initialize with fallback values first to prevent crashes
             HomeTitle = "Ana Sayfa";
             ServicesTitle = "Hizmetler";
-            GoodDeedBoardTitle = "İyilik Panosu";
+            GoodDeedBoardTitle = "Ä°yilik Panosu";
             MessagesTitle = "Mesajlar";
             ProfileTitle = "Profil";
             FavoritesTitle = "Favoriler";
@@ -76,7 +76,7 @@ namespace KamPay.ViewModels
                 HasUnreadNotifications = m.Value;
             });
 
-            // Mesaj bildirimlerini dinle (Bu mesaj şu anki kodda kullanılmıyor, ancak gelecekte kullanılabilir)
+            // Mesaj bildirimlerini dinle (Bu mesaj ÅŸu anki kodda kullanÄ±lmÄ±yor, ancak gelecekte kullanÄ±labilir)
             WeakReferenceMessenger.Default.Register<UnreadMessageStatusMessage>(this, (r, m) =>
             {
                 HasUnreadMessages = m.Value;
@@ -85,22 +85,22 @@ namespace KamPay.ViewModels
             // Language change message listener
             WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
             {
-                // UI thread'de güncelleme yap
+                // UI thread'de gÃ¼ncelleme yap
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     UpdateTabTitles();
                 });
             });
 
-            // Kullanıcı giriş / çıkış yaptığında asenkron olarak tepki ver
+            // KullanÄ±cÄ± giriÅŸ / Ã§Ä±kÄ±ÅŸ yaptÄ±ÄŸÄ±nda asenkron olarak tepki ver
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
             {
-                if (m.Value) // Giriş yapıldı
+                if (m.Value) // GiriÅŸ yapÄ±ldÄ±
                 {
-                    // Async işlemi başlat ama constructor'ı bloklamadan
+                    // Async iÅŸlemi baÅŸlat ama constructor'Ä± bloklamadan
                     _ = Task.Run(async () => await StartListeningForMessagesAsync());
                 }
-                else // Çıkış yapıldı
+                else // Ã‡Ä±kÄ±ÅŸ yapÄ±ldÄ±
                 {
                     StopListeningForMessages();
                     HasUnreadMessages = false;
@@ -129,11 +129,11 @@ namespace KamPay.ViewModels
                             try
                             {
                                 UpdateTabTitles();
-                                System.Diagnostics.Debug.WriteLine("✓ Tab titles updated successfully");
+                                KamPay.Helpers.AppLogger.DebugLog("âœ“ Tab titles updated successfully");
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"⚠️ UpdateTabTitles deferred error: {ex.Message}");
+                                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ UpdateTabTitles deferred error: {ex.Message}");
                             }
                         });
                         return;
@@ -141,11 +141,11 @@ namespace KamPay.ViewModels
                 }
                 
                 // If resources still not initialized after all attempts, keep fallback values
-                System.Diagnostics.Debug.WriteLine("⚠️ Resources not initialized after max attempts, using fallback values");
+                KamPay.Helpers.AppLogger.DebugLog("âš ï¸ Resources not initialized after max attempts, using fallback values");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ InitializeTabTitlesAsync error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ InitializeTabTitlesAsync error: {ex.Message}");
             }
         }
 
@@ -156,21 +156,21 @@ namespace KamPay.ViewModels
                 var res = LocalizationResourceManager.Instance;
                 if (res == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("LocalizationResourceManager.Instance is null");
+                    KamPay.Helpers.AppLogger.DebugLog("LocalizationResourceManager.Instance is null");
                     return;
                 }
 
                 // Try to get localized strings with fallback
                 HomeTitle = GetLocalizedString(res, "Home", "Ana Sayfa");
                 ServicesTitle = GetLocalizedString(res, "Services", "Hizmetler");
-                GoodDeedBoardTitle = GetLocalizedString(res, "GoodDeedBoard", "İyilik Panosu");
+                GoodDeedBoardTitle = GetLocalizedString(res, "GoodDeedBoard", "Ä°yilik Panosu");
                 MessagesTitle = GetLocalizedString(res, "Messages", "Mesajlar");
                 ProfileTitle = GetLocalizedString(res, "Profile", "Profil");
                 FavoritesTitle = GetLocalizedString(res, "Favorites", "Favoriler");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"UpdateTabTitles error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"UpdateTabTitles error: {ex.Message}");
                 // Keep fallback values that were set in constructor
             }
         }
@@ -189,7 +189,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"GetLocalizedString error for key '{key}': {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"GetLocalizedString error for key '{key}': {ex.Message}");
                 return fallback;
             }
         }
@@ -198,12 +198,12 @@ namespace KamPay.ViewModels
         {
             try
             {
-                StopListeningForMessages(); // Önceki dinleyiciyi durdur
+                StopListeningForMessages(); // Ã–nceki dinleyiciyi durdur
 
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null) return;
 
-                // Uygulama açıldığında ilk kontrol yap
+                // Uygulama aÃ§Ä±ldÄ±ÄŸÄ±nda ilk kontrol yap
                 var initialCheckResult = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
                 if (initialCheckResult.Success)
                 {
@@ -213,7 +213,7 @@ namespace KamPay.ViewModels
                     });
                 }
 
-                // Gerçek zamanlı dinleyiciyi başlat
+                // GerÃ§ek zamanlÄ± dinleyiciyi baÅŸlat
                 _messageSubscription = _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .AsObservable<Conversation>()
@@ -222,7 +222,7 @@ namespace KamPay.ViewModels
                                  (e.Object.User1Id == currentUser.UserId || e.Object.User2Id == currentUser.UserId))
                     .Subscribe(async entry =>
                     {
-                        // Kullanıcıya ait bir konuşma güncellendiğinde, toplam okunmamış sayısını yeniden kontrol et
+                        // KullanÄ±cÄ±ya ait bir konuÅŸma gÃ¼ncellendiÄŸinde, toplam okunmamÄ±ÅŸ sayÄ±sÄ±nÄ± yeniden kontrol et
                         var result = await _messagingService.GetTotalUnreadMessageCountAsync(currentUser.UserId);
                         if (result.Success)
                         {
@@ -236,7 +236,7 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 // Hata logla veya sessizce yut
-                System.Diagnostics.Debug.WriteLine($"Error in StartListeningForMessagesAsync: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Error in StartListeningForMessagesAsync: {ex.Message}");
             }
         }
 
@@ -254,7 +254,7 @@ namespace KamPay.ViewModels
         }
     }
 
-    // --- Mesaj Sınıfları ---
+    // --- Mesaj SÄ±nÄ±flarÄ± ---
     
     public class UnreadGeneralNotificationStatusMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<bool>
     {
@@ -271,3 +271,4 @@ namespace KamPay.ViewModels
         public UserSessionChangedMessage(bool isLoggedIn) : base(isLoggedIn) { }
     }
 }
+

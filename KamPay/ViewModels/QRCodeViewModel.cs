@@ -116,7 +116,7 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 // Hata oluşursa logla ve uygulamanın çökmesini engelle
-                System.Diagnostics.Debug.WriteLine($"❌ Receive Metodunda Hata: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Receive Metodunda Hata: {ex.Message}");
 
                 // İsteğe bağlı: Kullanıcıya hata mesajı gösterilebilir
                 if (Application.Current?.MainPage != null)
@@ -167,23 +167,23 @@ namespace KamPay.ViewModels
                 bool isFirstDelivery = !myDeliveryCompleted && !otherDeliveryCompleted;
                 bool isSecondDelivery = myDeliveryCompleted && !otherDeliveryCompleted;
 
-                System.Diagnostics.Debug.WriteLine($"🔍 [TAKAS AKIŞ] Teslimat Durumu:");
-                System.Diagnostics.Debug.WriteLine($"   MyDelivery.IsUsed: {myDeliveryCompleted}");
-                System.Diagnostics.Debug.WriteLine($"   OtherDelivery.IsUsed: {otherDeliveryCompleted}");
-                System.Diagnostics.Debug.WriteLine($"   İlk Teslimat: {isFirstDelivery}");
-                System.Diagnostics.Debug.WriteLine($"   İkinci Teslimat: {isSecondDelivery}");
+                KamPay.Helpers.AppLogger.DebugLog($"🔍 [TAKAS AKIŞ] Teslimat Durumu:");
+                KamPay.Helpers.AppLogger.DebugLog($"   MyDelivery.IsUsed: {myDeliveryCompleted}");
+                KamPay.Helpers.AppLogger.DebugLog($"   OtherDelivery.IsUsed: {otherDeliveryCompleted}");
+                KamPay.Helpers.AppLogger.DebugLog($"   İlk Teslimat: {isFirstDelivery}");
+                KamPay.Helpers.AppLogger.DebugLog($"   İkinci Teslimat: {isSecondDelivery}");
 
                 // 3️⃣ ✅ ROL BELİRLEME
                 bool isSeller = CurrentTransaction?.SellerId == MyDelivery?.SellerId;
                 string myRole = isSeller ? "SATICI" : "ALICI";
-                System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] Rol: {myRole}");
-                System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] Ben Satıcıyım: {isSeller}");
+                KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] Rol: {myRole}");
+                KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] Ben Satıcıyım: {isSeller}");
 
                 // 4️⃣ ✅ SADECE ALICI İÇİN KONTROL: Satıcı henüz almadıysa ALICI taratamaz
                 if (!isSeller && !myDeliveryCompleted && Application.Current?.MainPage != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] ❌ ALICI henüz taratamaz - Satıcı önce almalı");
-                    System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] Benim sıram: Hayır (Önce satıcı teslim almalı)");
+                    KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] ❌ ALICI henüz taratamaz - Satıcı önce almalı");
+                    KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] Benim sıram: Hayır (Önce satıcı teslim almalı)");
                     
                     await Application.Current.MainPage.DisplayAlert(
                         "⚠️ Satıcı Henüz Teslim Almadı", 
@@ -196,13 +196,13 @@ namespace KamPay.ViewModels
                     return;
                 }
                 
-                System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] ✅ Sıra kontrolü geçti - Tarama işlemine devam");
-                System.Diagnostics.Debug.WriteLine($"   [TAKAS AKIŞ] Benim sıram: Evet");
+                KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] ✅ Sıra kontrolü geçti - Tarama işlemine devam");
+                KamPay.Helpers.AppLogger.DebugLog($"   [TAKAS AKIŞ] Benim sıram: Evet");
 
                 // 5️⃣ İLK TESLİMAT: Konum + PIN + Fotoğraf Gerekli (SATICI TARAR)
                 if (isFirstDelivery)
                 {
-                    System.Diagnostics.Debug.WriteLine("✅ İLK TESLİMAT: PIN ve konum doğrulaması ile tarama (SATICI)");
+                    KamPay.Helpers.AppLogger.DebugLog("✅ İLK TESLİMAT: PIN ve konum doğrulaması ile tarama (SATICI)");
 
                     // Konum al
                     try
@@ -245,7 +245,7 @@ namespace KamPay.ViewModels
                                     ? "Karşı tarafın size verdiği 6 haneli PIN kodunu girin:"
                                     : $"Yanlış PIN! Kalan deneme: {MAX_PIN_ATTEMPTS - pinAttempts - 1}\n\nLütfen doğru PIN kodunu girin:";
 
-                                System.Diagnostics.Debug.WriteLine($"[PIN DOĞRULAMA] Deneme: {pinAttempts + 1}/{MAX_PIN_ATTEMPTS}");
+                                KamPay.Helpers.AppLogger.DebugLog($"[PIN DOĞRULAMA] Deneme: {pinAttempts + 1}/{MAX_PIN_ATTEMPTS}");
 
                                 VerificationPin = await Application.Current.MainPage.DisplayPromptAsync(
                                     "🔐 PIN Doğrulama (İlk Teslimat)",
@@ -276,11 +276,11 @@ namespace KamPay.ViewModels
                                 if (scanResult.Success)
                                 {
                                     pinVerified = true;
-                                    System.Diagnostics.Debug.WriteLine($"[PIN DOĞRULAMA] ✅ Başarılı - Deneme: {pinAttempts}");
+                                    KamPay.Helpers.AppLogger.DebugLog($"[PIN DOĞRULAMA] ✅ Başarılı - Deneme: {pinAttempts}");
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"[PIN DOĞRULAMA] ❌ Başarısız - Deneme: {pinAttempts}, Hata: {scanResult.Message}");
+                                    KamPay.Helpers.AppLogger.DebugLog($"[PIN DOĞRULAMA] ❌ Başarısız - Deneme: {pinAttempts}, Hata: {scanResult.Message}");
                                     
                                     // Eğer backend QR kodu iptal ettiyse (max attempt aşıldı), döngüyü kır
                                     // Note: Ideally this should use error codes instead of string matching for reliability
@@ -361,7 +361,7 @@ namespace KamPay.ViewModels
                 // 5️⃣ İKİNCİ TESLİMAT: PIN ve Fotoğraf Olmadan Direkt Onay
                 else if (isSecondDelivery)
                 {
-                    System.Diagnostics.Debug.WriteLine("✅ İKİNCİ TESLİMAT: PIN ve fotoğraf gerektirmeden onaylama");
+                    KamPay.Helpers.AppLogger.DebugLog("✅ İKİNCİ TESLİMAT: PIN ve fotoğraf gerektirmeden onaylama");
                     
                     var result = await _qrCodeService.CompleteDeliveryAsync(OtherUserDelivery.QRCodeId);
                     if (result.Success)
@@ -393,7 +393,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ QR tarama hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ QR tarama hatası: {ex.Message}");
                 if (Application.Current?.MainPage != null)
                     await Application.Current.MainPage.DisplayAlert("Hata", $"QR kod işlenirken hata oluştu: {ex.Message}", "Tamam");
             }
@@ -625,7 +625,7 @@ namespace KamPay.ViewModels
 
         private void UpdateUIState()
         {
-            System.Diagnostics.Debug.WriteLine($"🔄 [UI STATE UPDATE] Başlatılıyor...");
+            KamPay.Helpers.AppLogger.DebugLog($"🔄 [UI STATE UPDATE] Başlatılıyor...");
             
             bool myDeliveryCompleted = MyDelivery?.IsUsed ?? false;
             bool otherDeliveryCompleted = OtherUserDelivery?.IsUsed ?? false;
@@ -644,20 +644,20 @@ namespace KamPay.ViewModels
             // ✅ YENİ SATIR (Property'ye atama yapın):
             CanReceive = myDeliveryCompleted && !otherDeliveryCompleted;
 
-            System.Diagnostics.Debug.WriteLine($"🔄 [UI STATE UPDATE] Durum Analizi:");
-            System.Diagnostics.Debug.WriteLine($"   Rol: {myRole}");
-            System.Diagnostics.Debug.WriteLine($"   Ben Satıcıyım: {isSeller}");
-            System.Diagnostics.Debug.WriteLine($"   MyDelivery Tamamlandı: {myDeliveryCompleted}");
-            System.Diagnostics.Debug.WriteLine($"   OtherDelivery Tamamlandı: {otherDeliveryCompleted}");
-            System.Diagnostics.Debug.WriteLine($"   Benim Sıram: {myTurnToDeliver}");
-            System.Diagnostics.Debug.WriteLine($"   Alabilirim: {CanReceive}");
-            System.Diagnostics.Debug.WriteLine($"   Her İkisi Tamamlandı: {bothCompleted}");
+            KamPay.Helpers.AppLogger.DebugLog($"🔄 [UI STATE UPDATE] Durum Analizi:");
+            KamPay.Helpers.AppLogger.DebugLog($"   Rol: {myRole}");
+            KamPay.Helpers.AppLogger.DebugLog($"   Ben Satıcıyım: {isSeller}");
+            KamPay.Helpers.AppLogger.DebugLog($"   MyDelivery Tamamlandı: {myDeliveryCompleted}");
+            KamPay.Helpers.AppLogger.DebugLog($"   OtherDelivery Tamamlandı: {otherDeliveryCompleted}");
+            KamPay.Helpers.AppLogger.DebugLog($"   Benim Sıram: {myTurnToDeliver}");
+            KamPay.Helpers.AppLogger.DebugLog($"   Alabilirim: {CanReceive}");
+            KamPay.Helpers.AppLogger.DebugLog($"   Her İkisi Tamamlandı: {bothCompleted}");
             
             // ✅ YENİ: MyDelivery ve OtherUserDelivery bilgilerini de logla
-            System.Diagnostics.Debug.WriteLine($"   MyDelivery.ProductId: {MyDelivery?.ProductId ?? "NULL"}");
-            System.Diagnostics.Debug.WriteLine($"   MyDelivery.ProductTitle: {MyDelivery?.ProductTitle ?? "NULL"}");
-            System.Diagnostics.Debug.WriteLine($"   OtherDelivery.ProductId: {OtherUserDelivery?.ProductId ?? "NULL"}");
-            System.Diagnostics.Debug.WriteLine($"   OtherDelivery.ProductTitle: {OtherUserDelivery?.ProductTitle ?? "NULL"}");
+            KamPay.Helpers.AppLogger.DebugLog($"   MyDelivery.ProductId: {MyDelivery?.ProductId ?? "NULL"}");
+            KamPay.Helpers.AppLogger.DebugLog($"   MyDelivery.ProductTitle: {MyDelivery?.ProductTitle ?? "NULL"}");
+            KamPay.Helpers.AppLogger.DebugLog($"   OtherDelivery.ProductId: {OtherUserDelivery?.ProductId ?? "NULL"}");
+            KamPay.Helpers.AppLogger.DebugLog($"   OtherDelivery.ProductTitle: {OtherUserDelivery?.ProductTitle ?? "NULL"}");
 
             // ✅ KRİTİK FİX: QR tarama butonu kontrolü
             // SATICI: İlk başta tarayabilir (isFirstDelivery && isSeller)
@@ -673,7 +673,7 @@ namespace KamPay.ViewModels
                 CanScanOtherQR = CanReceive;
             }
             
-            System.Diagnostics.Debug.WriteLine($"   ✅ CanScanOtherQR SET EDİLDİ: {CanScanOtherQR}");
+            KamPay.Helpers.AppLogger.DebugLog($"   ✅ CanScanOtherQR SET EDİLDİ: {CanScanOtherQR}");
 
             if (bothCompleted)
             {
@@ -722,29 +722,29 @@ namespace KamPay.ViewModels
                 CanScanOtherQR = false;
             }
             
-            System.Diagnostics.Debug.WriteLine($"   📋 [UI STATE UPDATE] SON DURUM:");
-            System.Diagnostics.Debug.WriteLine($"      PageTitle: {PageTitle}");
-            System.Diagnostics.Debug.WriteLine($"      ScanButtonText: {ScanButtonText}");
-            System.Diagnostics.Debug.WriteLine($"      CanScanOtherQR: {CanScanOtherQR}");
+            KamPay.Helpers.AppLogger.DebugLog($"   📋 [UI STATE UPDATE] SON DURUM:");
+            KamPay.Helpers.AppLogger.DebugLog($"      PageTitle: {PageTitle}");
+            KamPay.Helpers.AppLogger.DebugLog($"      ScanButtonText: {ScanButtonText}");
+            KamPay.Helpers.AppLogger.DebugLog($"      CanScanOtherQR: {CanScanOtherQR}");
 
             // Fotoğraf durumunu güncelle
             PhotoRequired = MyDelivery?.PhotoRequired ?? false;
             IsPhotoUploaded = !string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoUrl);
             
-            System.Diagnostics.Debug.WriteLine($"      PhotoRequired: {PhotoRequired}");
-            System.Diagnostics.Debug.WriteLine($"      IsPhotoUploaded: {IsPhotoUploaded}");
+            KamPay.Helpers.AppLogger.DebugLog($"      PhotoRequired: {PhotoRequired}");
+            KamPay.Helpers.AppLogger.DebugLog($"      IsPhotoUploaded: {IsPhotoUploaded}");
             
             if (!string.IsNullOrEmpty(MyDelivery?.DeliveryPhotoThumbnailUrl))
             {
                 DeliveryPhotoSource = ImageSource.FromUri(new Uri(MyDelivery.DeliveryPhotoThumbnailUrl));
-                System.Diagnostics.Debug.WriteLine($"      DeliveryPhotoSource: {MyDelivery.DeliveryPhotoThumbnailUrl}");
+                KamPay.Helpers.AppLogger.DebugLog($"      DeliveryPhotoSource: {MyDelivery.DeliveryPhotoThumbnailUrl}");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"      DeliveryPhotoSource: NULL");
+                KamPay.Helpers.AppLogger.DebugLog($"      DeliveryPhotoSource: NULL");
             }
             
-            System.Diagnostics.Debug.WriteLine($"🔄 [UI STATE UPDATE] Tamamlandı");
+            KamPay.Helpers.AppLogger.DebugLog($"🔄 [UI STATE UPDATE] Tamamlandı");
         }
 
         // : Fotoğraf komutları
@@ -805,7 +805,7 @@ namespace KamPay.ViewModels
             
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] Başlatılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] Başlatılıyor...");
                 
                 using var stream = await photo.OpenReadAsync();
                 using var ms = new MemoryStream();
@@ -824,8 +824,8 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] QR Kod ID: {MyDelivery.QRCodeId}");
-                System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] Fotoğraf boyutu: {ms.Length} bytes");
+                KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] QR Kod ID: {MyDelivery.QRCodeId}");
+                KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] Fotoğraf boyutu: {ms.Length} bytes");
 
                 var result = await _qrCodeService.UploadDeliveryPhotoAsync(
                     MyDelivery.QRCodeId, 
@@ -834,17 +834,17 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] ✅ Başarılı - URL: {result.Data}");
+                    KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] ✅ Başarılı - URL: {result.Data}");
                     
                     // 1. Backend verilerini yeniden yükle
                     // Note: LoadTransactionAndQRCodesAsync() internally calls UpdateUIState()
                     await LoadTransactionAndQRCodesAsync();
                     
                     // 2. UI state verification - UpdateUIState() was called by LoadTransactionAndQRCodesAsync()
-                    System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] UI Durumu Güncellendi:");
-                    System.Diagnostics.Debug.WriteLine($"   PhotoRequired: {PhotoRequired}");
-                    System.Diagnostics.Debug.WriteLine($"   IsPhotoUploaded: {IsPhotoUploaded}");
-                    System.Diagnostics.Debug.WriteLine($"   DeliveryPhotoSource: {(DeliveryPhotoSource != null ? "SET" : "NULL")}");
+                    KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] UI Durumu Güncellendi:");
+                    KamPay.Helpers.AppLogger.DebugLog($"   PhotoRequired: {PhotoRequired}");
+                    KamPay.Helpers.AppLogger.DebugLog($"   IsPhotoUploaded: {IsPhotoUploaded}");
+                    KamPay.Helpers.AppLogger.DebugLog($"   DeliveryPhotoSource: {(DeliveryPhotoSource != null ? "SET" : "NULL")}");
                     
                     // 3. Kullanıcıya başarı mesajı göster
                     await Application.Current.MainPage.DisplayAlert("✅ Başarılı", 
@@ -852,14 +852,14 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] ❌ Başarısız - Hata: {result.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] ❌ Başarısız - Hata: {result.Message}");
                     await Application.Current.MainPage.DisplayAlert("Hata", 
                         $"Fotoğraf yüklenemedi.\n\n{result.Message}\n\nLütfen tekrar deneyin.", "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[FOTOĞRAF YÜKLEME] ❌ İstisna: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"[FOTOĞRAF YÜKLEME] ❌ İstisna: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hata", 
                     $"Fotoğraf yüklenirken hata oluştu:\n\n{ex.Message}", "Tamam");
             }

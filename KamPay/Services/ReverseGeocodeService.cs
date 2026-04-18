@@ -56,7 +56,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Adres çözümleme hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Adres çözümleme hatası: {ex.Message}");
                 return "Adres bilgisi alınamadı.";
             }
         }

@@ -1,4 +1,4 @@
-using Firebase.Database;
+ï»¿using Firebase.Database;
 using KamPay.Models;
 using System;
 using System.Threading.Tasks;
@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 namespace KamPay.Services.Payment
 {
     /// <summary>
-    /// ?? EFT/HAVALE SÝMÜLASYONU PROVIDER
+    /// ?? EFT/HAVALE SÄ°MÃœLASYONU PROVIDER
     /// 
-    /// OCP Prensibi: Bu sýnýfý deðiþtirmeden yeni provider ekleyebilirsin.
+    /// OCP Prensibi: Bu sÄ±nÄ±fÄ± deÄŸiÅŸtirmeden yeni provider ekleyebilirsin.
     /// </summary>
     public class BankTransferSimulationProvider : IPaymentProvider
     {
@@ -34,18 +34,18 @@ namespace KamPay.Services.Payment
                     Method = MethodType,
                     Status = ServicePaymentStatus.Initiated,
                     CreatedAt = DateTime.UtcNow,
-                    BankName = "Ziraat Bankasý", // Simülasyon
+                    BankName = "Ziraat BankasÄ±", // SimÃ¼lasyon
                     BankReference = GenerateBankReference()
                 };
 
-                System.Diagnostics.Debug.WriteLine($"? EFT simülasyonu baþlatýldý. Referans: {payment.BankReference}");
+                KamPay.Helpers.AppLogger.DebugLog($"? EFT simÃ¼lasyonu baÅŸlatÄ±ldÄ±. Referans: {payment.BankReference}");
 
-                return await Task.FromResult(ServiceResult<PaymentDto>.SuccessResult(payment, "EFT referansý oluþturuldu"));
+                return await Task.FromResult(ServiceResult<PaymentDto>.SuccessResult(payment, "EFT referansÄ± oluÅŸturuldu"));
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"? BankTransferSim hatasý: {ex.Message}");
-                return ServiceResult<PaymentDto>.FailureResult("EFT simülasyonu baþlatýlamadý", ex.Message);
+                KamPay.Helpers.AppLogger.DebugLog($"? BankTransferSim hatasÄ±: {ex.Message}");
+                return ServiceResult<PaymentDto>.FailureResult("EFT simÃ¼lasyonu baÅŸlatÄ±lamadÄ±", ex.Message);
             }
         }
 
@@ -53,15 +53,15 @@ namespace KamPay.Services.Payment
         {
             try
             {
-                // ?? EFT için otomatik onay (gerçek sistemde banka API'si kontrol eder)
-                await Task.Delay(100); // Simüle edilmiþ banka kontrolü
+                // ?? EFT iÃ§in otomatik onay (gerÃ§ek sistemde banka API'si kontrol eder)
+                await Task.Delay(100); // SimÃ¼le edilmiÅŸ banka kontrolÃ¼
                 
-                System.Diagnostics.Debug.WriteLine($"? EFT simülasyonu doðrulandý: {paymentId}");
-                return ServiceResult<bool>.SuccessResult(true, "EFT simülasyonu onaylandý.");
+                KamPay.Helpers.AppLogger.DebugLog($"? EFT simÃ¼lasyonu doÄŸrulandÄ±: {paymentId}");
+                return ServiceResult<bool>.SuccessResult(true, "EFT simÃ¼lasyonu onaylandÄ±.");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("EFT doðrulama hatasý", ex.Message);
+                return ServiceResult<bool>.FailureResult("EFT doÄŸrulama hatasÄ±", ex.Message);
             }
         }
 
@@ -69,7 +69,7 @@ namespace KamPay.Services.Payment
         {
             try
             {
-                // Simülasyon için basit durum kontrolü
+                // SimÃ¼lasyon iÃ§in basit durum kontrolÃ¼
                 return await Task.FromResult(ServiceResult<PaymentDto>.SuccessResult(
                     new PaymentDto 
                     { 
@@ -80,7 +80,7 @@ namespace KamPay.Services.Payment
             }
             catch (Exception ex)
             {
-                return ServiceResult<PaymentDto>.FailureResult("Durum sorgulanamadý", ex.Message);
+                return ServiceResult<PaymentDto>.FailureResult("Durum sorgulanamadÄ±", ex.Message);
             }
         }
 
@@ -90,3 +90,4 @@ namespace KamPay.Services.Payment
         }
     }
 }
+

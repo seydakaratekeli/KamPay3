@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
@@ -9,9 +9,9 @@ using KamPay.Models;
 namespace KamPay.Services;
 
 /// <summary>
-/// ✅ YENİ MAUI API GARSONU
-/// Firebase'e doğrudan bağlanmak yerine, arka planda çalışan kendi API'mize istek atar.
-/// SOLID Prensiplerine sadık kalarak IProductService arayüzünü uygular.
+/// âœ… YENÄ° MAUI API GARSONU
+/// Firebase'e doÄŸrudan baÄŸlanmak yerine, arka planda Ã§alÄ±ÅŸan kendi API'mize istek atar.
+/// SOLID Prensiplerine sadÄ±k kalarak IProductService arayÃ¼zÃ¼nÃ¼ uygular.
 /// </summary>
 public class ProductApiService : IProductService
 {
@@ -33,44 +33,36 @@ public class ProductApiService : IProductService
         _imageCoordinator = imageCoordinator ?? throw new ArgumentNullException(nameof(imageCoordinator));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
-        // Platform bazlı API adresi belirleme:
-        // - Android Emülatör: localhost yerine 10.0.2.2 kullanılmalı
-        // - Android Gerçek Cihaz (USB): Bilgisayarın LAN IP adresi kullanılmalı
-        // - Windows (MAUI): localhost doğrudan çalışır
-        // ⚠️ Android'de HTTP kullanıyoruz (SSL sertifika sorunu olmasın diye)
-        //    AndroidManifest.xml'de usesCleartextTraffic="true" zaten açık
-#if ANDROID
-        // 📱 GERÇEK CİHAZ TESTİ: Bilgisayarınızın IP adresini buraya yazın
-        // CMD'de "ipconfig" komutu ile öğrenebilirsiniz
-        var baseHost = "http://192.168.226.219:5011";
+        // Platform bazlÄ± API adresi belirleme:
+        // - Android EmÃ¼latÃ¶r: localhost yerine 10.0.2.2 kullanÄ±lmalÄ±
+        // - Android GerÃ§ek Cihaz (USB): BilgisayarÄ±n LAN IP adresi kullanÄ±lmalÄ±
+        // - Windows (MAUI): localhost doÄŸrudan Ã§alÄ±ÅŸÄ±r
+        // âš ï¸ Android'de HTTP kullanÄ±yoruz (SSL sertifika sorunu olmasÄ±n diye)
+        //    AndroidManifest.xml'de usesCleartextTraffic="true" zaten aÃ§Ä±k
 
-        // 🖥️ EMÜLATÖR TESTİ İÇİN: Yukarıdaki satırı yorum yapıp bunu açın
-        // var baseHost = "http://10.0.2.2:5011";
-#elif IOS
-        var baseHost = "http://192.168.226.219:5011";
-#else
-        var baseHost = "http://localhost:5011";
-#endif
+        // ğŸ”„ ArtÄ±k IP konfigÃ¼rasyonu merkezi Constants dosyasÄ±ndan okunuyor!
+        var baseHost = KamPay.Helpers.Constants.LocalApiBaseUrl;
+
         _baseUrl = $"{baseHost}/api/v1/products";
 
-        System.Diagnostics.Debug.WriteLine($"✅ ProductApiService oluşturuldu (API Garsonu devrede) → {_baseUrl}");
+        KamPay.Helpers.AppLogger.DebugLog($"âœ… ProductApiService oluÅŸturuldu (API Garsonu devrede) â†’ {_baseUrl}");
     }
 
-    // --- GİZLİ SİLAHIMIZ: İSTEKLERE TOKEN EKLEYEN METOT ---
+    // --- GÄ°ZLÄ° SÄ°LAHIMIZ: Ä°STEKLERE TOKEN EKLEYEN METOT ---
     private async Task SetAuthHeaderAsync()
     {
-        // 🌟 YENİ: Custom API JWT'mizi SecureStorage'dan alıyoruz
+        // ğŸŒŸ YENÄ°: Custom API JWT'mizi SecureStorage'dan alÄ±yoruz
         var token = await Microsoft.Maui.Storage.SecureStorage.GetAsync("KAMPAY_API_JWT");
 
         if (!string.IsNullOrEmpty(token))
         {
-            // API'nin kapısındaki [Authorize] duvarını geçmek için Token'ı Header'a ekliyoruz
+            // API'nin kapÄ±sÄ±ndaki [Authorize] duvarÄ±nÄ± geÃ§mek iÃ§in Token'Ä± Header'a ekliyoruz
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            System.Diagnostics.Debug.WriteLine($"🔑 Auth token ayarlandı: {token.Substring(0, Math.Min(20, token.Length))}...");
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ”‘ Auth token ayarlandÄ±: {token.Substring(0, Math.Min(20, token.Length))}...");
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine("⚠️ KAMPAY_API_JWT bulunamadı! Yetki gerektiren endpointler 401 hatası verebilir.");
+            KamPay.Helpers.AppLogger.DebugLog("âš ï¸ KAMPAY_API_JWT bulunamadÄ±! Yetki gerektiren endpointler 401 hatasÄ± verebilir.");
         }
     }
 
@@ -78,24 +70,11 @@ public class ProductApiService : IProductService
 
     public async Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            // Token'a gerek yok, herkes ürünleri görebilir. Direkt API'mizden çekiyoruz.
-            var response = await _httpClient.GetAsync(_baseUrl, cancellationToken);
-            if (response.IsSuccessStatusCode)
-            {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
-
-                return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>(), "Ürünler API'den çekildi");
-            }
-
-            return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"❌ GetAllProductsAsync hata: {ex.Message}");
-            return ServiceResult<List<Product>>.FailureResult("API bağlantı hatası", ex.Message);
-        }
+        // GetAllProductsAsync artÄ±k GetProductsPagedAsync'e delege ediyor (ilk sayfa)
+        var paged = await GetProductsPagedAsync(20, null, filter, cancellationToken);
+        if (paged.Success && paged.Data != null)
+            return ServiceResult<List<Product>>.SuccessResult(paged.Data.Items, paged.Message);
+        return ServiceResult<List<Product>>.FailureResult(paged.Message, paged.Errors?.ToArray());
     }
 
     public async Task<ServiceResult<Product>> GetProductByIdAsync(string productId, CancellationToken cancellationToken = default) 
@@ -111,11 +90,11 @@ public class ProductApiService : IProductService
                     return ServiceResult<Product>.SuccessResult(product);
                 }
             }
-            return ServiceResult<Product>.FailureResult($"API Hatası ({response.StatusCode})", response.ReasonPhrase);
+            return ServiceResult<Product>.FailureResult($"API HatasÄ± ({response.StatusCode})", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<Product>.FailureResult("API bağlantı hatası", ex.Message);
+            return ServiceResult<Product>.FailureResult("API baÄŸlantÄ± hatasÄ±", ex.Message);
         }
     }
 
@@ -123,18 +102,18 @@ public class ProductApiService : IProductService
     {
         try
         {
-            // API'de /user/{userId} rotasının olduğunu varsayıyoruz
+            // API'de /user/{userId} rotasÄ±nÄ±n olduÄŸunu varsayÄ±yoruz
             var response = await _httpClient.GetAsync($"{_baseUrl}/user/{userId}", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
             }
-            return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
+            return ServiceResult<List<Product>>.FailureResult("ÃœrÃ¼nler yÃ¼klenemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<List<Product>>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<List<Product>>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -149,37 +128,72 @@ public class ProductApiService : IProductService
                 var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
                 return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
             }
-            return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
+            return ServiceResult<List<Product>>.FailureResult("ÃœrÃ¼nler yÃ¼klenemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<List<Product>>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<List<Product>>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
-    public async Task<ServiceResult<List<Product>>> GetProductsPagedAsync(int pageSize = 20, string? lastKey = null, ProductFilter? filter = null, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<ProductPagedResponse>> GetProductsPagedAsync(int pageSize = 20, string? cursor = null, ProductFilter? filter = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            var query = $"?pageSize={pageSize}&lastKey={lastKey}";
-            var response = await _httpClient.GetAsync($"{_baseUrl}/paged{query}", cancellationToken);
+            var queryParams = new List<string> { $"pageSize={pageSize}" };
+
+            if (!string.IsNullOrEmpty(cursor))
+                queryParams.Add($"cursor={Uri.EscapeDataString(cursor)}");
+
+            if (!string.IsNullOrEmpty(filter?.CategoryId))
+                queryParams.Add($"categoryId={Uri.EscapeDataString(filter.CategoryId)}");
+
+            if (filter?.Type.HasValue == true)
+                queryParams.Add($"type={(int)filter.Type.Value}");
+
+            if (!string.IsNullOrEmpty(filter?.SearchText))
+                queryParams.Add($"search={Uri.EscapeDataString(filter.SearchText)}");
+
+            var url = $"{_baseUrl}?{string.Join("&", queryParams)}";
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ“„ GetProductsPagedAsync â†’ {url}");
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+
             if (response.IsSuccessStatusCode)
             {
-                var products = await response.Content.ReadFromJsonAsync<List<Product>>(_jsonOptions, cancellationToken);
-                return ServiceResult<List<Product>>.SuccessResult(products ?? new List<Product>());
+                var result = await response.Content.ReadFromJsonAsync<ProductPagedResponse>(_jsonOptions, cancellationToken);
+                return ServiceResult<ProductPagedResponse>.SuccessResult(result ?? new ProductPagedResponse(), "ÃœrÃ¼nler yÃ¼klendi");
             }
-            return ServiceResult<List<Product>>.FailureResult("Ürünler yüklenemedi", response.ReasonPhrase);
+
+            return ServiceResult<ProductPagedResponse>.FailureResult("ÃœrÃ¼nler yÃ¼klenemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<List<Product>>.FailureResult("API hatası", ex.Message);
+            KamPay.Helpers.AppLogger.DebugLog($"âŒ GetProductsPagedAsync hata: {ex.Message}");
+            return ServiceResult<ProductPagedResponse>.FailureResult("API baÄŸlantÄ± hatasÄ±", ex.Message);
         }
     }
 
     public Task<ServiceResult<List<Category>>> GetCategoriesAsync(CancellationToken cancellationToken = default)
     {
-        // Kategoriler de API'den gelecek şekilde güncellenecek
-        return Task.FromResult(ServiceResult<List<Category>>.SuccessResult(Category.GetDefaultCategories(), "Varsayılan Kategoriler"));
+        // Kategoriler de API'den gelecek ÅŸekilde gÃ¼ncellenecek
+        return Task.FromResult(ServiceResult<List<Category>>.SuccessResult(Category.GetDefaultCategories(), "VarsayÄ±lan Kategoriler"));
+    }
+
+    /// <summary>
+    /// Cache-first yÃ¼kleme iÃ§in: Ã–nbellekteki Ã¼rÃ¼nleri dÃ¶ndÃ¼rÃ¼r. Cache yoksa null.
+    /// </summary>
+    public async Task<List<Product>?> GetCachedProductsAsync()
+    {
+        try
+        {
+            var cached = await _cacheService.GetCachedProductsAsync();
+            return cached?.Count > 0 ? cached : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     #endregion
@@ -193,11 +207,11 @@ public class ProductApiService : IProductService
             var validation = ValidateProduct(request);
             if (!validation.IsValid)
             {
-                return ServiceResult<Product>.FailureResult("Geçersiz ürün", validation.Errors.ToArray());
+                return ServiceResult<Product>.FailureResult("GeÃ§ersiz Ã¼rÃ¼n", validation.Errors.ToArray());
             }
 
-            // 🛑 1. Resimleri İstemciden (MAUI) Doğrudan Firebase Storage'a Yükle
-            var tempProductId = Guid.NewGuid().ToString(); // Storage'da klasör adı veya ileride API'nin kabul edeceği ID
+            // ğŸ›‘ 1. Resimleri Ä°stemciden (MAUI) DoÄŸrudan Firebase Storage'a YÃ¼kle
+            var tempProductId = Guid.NewGuid().ToString(); // Storage'da klasÃ¶r adÄ± veya ileride API'nin kabul edeceÄŸi ID
             var uploadedImageUrls = new List<string>();
 
             if (request.ImagePaths != null && request.ImagePaths.Any())
@@ -205,13 +219,13 @@ public class ProductApiService : IProductService
                 var uploadResult = await _imageCoordinator.UploadProductImagesParallelAsync(request.ImagePaths, tempProductId);
                 if (!uploadResult.Success)
                 {
-                    return ServiceResult<Product>.FailureResult("Resimler yüklenemedi", uploadResult.Message);
+                    return ServiceResult<Product>.FailureResult("Resimler yÃ¼klenemedi", uploadResult.Message);
                 }
 
                 uploadedImageUrls = uploadResult.Data;
             }
 
-            // Örnek eşleme (API 'Product' modelini kabul ediyor)
+            // Ã–rnek eÅŸleme (API 'Product' modelini kabul ediyor)
             var newProduct = new Product
             {
                 ProductId = tempProductId,
@@ -234,31 +248,31 @@ public class ProductApiService : IProductService
                 ThumbnailUrl = uploadedImageUrls.FirstOrDefault() ?? string.Empty
             };
 
-            // Güvenlik headerı
+            // GÃ¼venlik headerÄ±
             await SetAuthHeaderAsync();
 
             var response = await _httpClient.PostAsJsonAsync(_baseUrl, newProduct);
 
             if (response.IsSuccessStatusCode)
             {
-                // API dönüşünde belki farklı ID veya Product gelebilir, duruma göre:
+                // API dÃ¶nÃ¼ÅŸÃ¼nde belki farklÄ± ID veya Product gelebilir, duruma gÃ¶re:
                 var apiProduct = await response.Content.ReadFromJsonAsync<Product>();
                 var finalProduct = apiProduct ?? newProduct;
 
-                // 🛑 Cache'e ekle
+                // ğŸ›‘ Cache'e ekle
                 if (_cacheService != null)
                 {
                     await _cacheService.UpdateProductInCacheAsync(finalProduct);
                 }
 
-                return ServiceResult<Product>.SuccessResult(finalProduct, "Ürün API üzerinden eklendi");
+                return ServiceResult<Product>.SuccessResult(finalProduct, "ÃœrÃ¼n API Ã¼zerinden eklendi");
             }
             var authHeaders = response.Headers.WwwAuthenticate.ToString();
-            return ServiceResult<Product>.FailureResult("Ürün eklenemedi", $"{response.StatusCode} - {authHeaders} - {response.ReasonPhrase}");
+            return ServiceResult<Product>.FailureResult("ÃœrÃ¼n eklenemedi", $"{response.StatusCode} - {authHeaders} - {response.ReasonPhrase}");
         }
         catch (Exception ex)
         {
-            return ServiceResult<Product>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<Product>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -270,13 +284,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}/{productId}", request);
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<Product>.SuccessResult(new Product(), "Ürün başarıyla güncellendi");
+                return ServiceResult<Product>.SuccessResult(new Product(), "ÃœrÃ¼n baÅŸarÄ±yla gÃ¼ncellendi");
             }
-            return ServiceResult<Product>.FailureResult("Ürün güncellenemedi", response.ReasonPhrase);
+            return ServiceResult<Product>.FailureResult("ÃœrÃ¼n gÃ¼ncellenemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<Product>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<Product>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -288,13 +302,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.DeleteAsync($"{_baseUrl}/{productId}");
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Ürün başarıyla silindi");
+                return ServiceResult<bool>.SuccessResult(true, "ÃœrÃ¼n baÅŸarÄ±yla silindi");
             }
-            return ServiceResult<bool>.FailureResult("Ürün silinemedi", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("ÃœrÃ¼n silinemedi", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -307,13 +321,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/owner", body);
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Ürün sahibi güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, "ÃœrÃ¼n sahibi gÃ¼ncellendi");
             }
-            return ServiceResult<bool>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -325,13 +339,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/marksold", new { });
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Ürün satıldı olarak işaretlendi");
+                return ServiceResult<bool>.SuccessResult(true, "ÃœrÃ¼n satÄ±ldÄ± olarak iÅŸaretlendi");
             }
-            return ServiceResult<bool>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -343,13 +357,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/markexchanged", new { });
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Ürün takas edildi olarak işaretlendi");
+                return ServiceResult<bool>.SuccessResult(true, "ÃœrÃ¼n takas edildi olarak iÅŸaretlendi");
             }
-            return ServiceResult<bool>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -362,13 +376,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/{productId}/markreserved", body);
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Ürün rezervasyon durumu güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, "ÃœrÃ¼n rezervasyon durumu gÃ¼ncellendi");
             }
-            return ServiceResult<bool>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -378,18 +392,18 @@ public class ProductApiService : IProductService
         {
             await SetAuthHeaderAsync();
             
-            System.Diagnostics.Debug.WriteLine($"📤 SaveProductDirectly → {_baseUrl}");
-            System.Diagnostics.Debug.WriteLine($"📤 Product: {product.Title}, UserId: {product.UserId}");
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ“¤ SaveProductDirectly â†’ {_baseUrl}");
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ“¤ Product: {product.Title}, UserId: {product.UserId}");
             
             var response = await _httpClient.PostAsJsonAsync(_baseUrl, product);
             var responseContent = await response.Content.ReadAsStringAsync();
             
-            System.Diagnostics.Debug.WriteLine($"📥 API Yanıt: {response.StatusCode} - {responseContent}");
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ“¥ API YanÄ±t: {response.StatusCode} - {responseContent}");
             
             if (response.IsSuccessStatusCode)
             {
-                // API { Message, ProductId } formatında dönüyor, Product değil.
-                // Bu yüzden gönderdiğimiz product objesini doğrudan kullanıyoruz.
+                // API { Message, ProductId } formatÄ±nda dÃ¶nÃ¼yor, Product deÄŸil.
+                // Bu yÃ¼zden gÃ¶nderdiÄŸimiz product objesini doÄŸrudan kullanÄ±yoruz.
                 try
                 {
                     var apiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
@@ -399,23 +413,23 @@ public class ProductApiService : IProductService
                         product.ProductId = pidProp.GetString() ?? product.ProductId;
                     }
                 }
-                catch { /* API yanıtı parse edilemezse orijinal ProductId'yi kullan */ }
+                catch { /* API yanÄ±tÄ± parse edilemezse orijinal ProductId'yi kullan */ }
 
-                // Önbelleğe de ekleyelim
+                // Ã–nbelleÄŸe de ekleyelim
                 if (_cacheService != null)
                 {
                     await _cacheService.UpdateProductInCacheAsync(product);
                 }
-                return ServiceResult<Product>.SuccessResult(product, "Ürün doğrudan kaydedildi");
+                return ServiceResult<Product>.SuccessResult(product, "ÃœrÃ¼n doÄŸrudan kaydedildi");
             }
 
             var authHeaders = response.Headers.WwwAuthenticate.ToString();
-            return ServiceResult<Product>.FailureResult("İşlem başarısız", $"{response.StatusCode} - {authHeaders} - {responseContent}");
+            return ServiceResult<Product>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", $"{response.StatusCode} - {authHeaders} - {responseContent}");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ SaveProductDirectly hata: {ex.Message}");
-            return ServiceResult<Product>.FailureResult("API hatası", ex.Message);
+            KamPay.Helpers.AppLogger.DebugLog($"âŒ SaveProductDirectly hata: {ex.Message}");
+            return ServiceResult<Product>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -428,13 +442,13 @@ public class ProductApiService : IProductService
             var response = await _httpClient.PatchAsJsonAsync($"{_baseUrl}/updateuserinfo", body);
             if (response.IsSuccessStatusCode)
             {
-                return ServiceResult<bool>.SuccessResult(true, "Kullanıcı bilgileri güncellendi");
+                return ServiceResult<bool>.SuccessResult(true, "KullanÄ±cÄ± bilgileri gÃ¼ncellendi");
             }
-            return ServiceResult<bool>.FailureResult("İşlem başarısız", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("Ä°ÅŸlem baÅŸarÄ±sÄ±z", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
@@ -448,21 +462,21 @@ public class ProductApiService : IProductService
 
         if (string.IsNullOrWhiteSpace(request.Title))
         {
-            result.AddError("Ürün başlığı boş olamaz");
+            result.AddError("ÃœrÃ¼n baÅŸlÄ±ÄŸÄ± boÅŸ olamaz");
         }
         else if (request.Title.Length > Constants.MaxProductTitleLength)
         {
-            result.AddError($"Başlık en fazla {Constants.MaxProductTitleLength} karakter olabilir");
+            result.AddError($"BaÅŸlÄ±k en fazla {Constants.MaxProductTitleLength} karakter olabilir");
         }
 
         if (string.IsNullOrWhiteSpace(request.Description))
         {
-            result.AddError("Ürün açıklaması boş olamaz");
+            result.AddError("ÃœrÃ¼n aÃ§Ä±klamasÄ± boÅŸ olamaz");
         }
 
         if (string.IsNullOrWhiteSpace(request.CategoryId))
         {
-            result.AddError("Kategori seçilmelidir");
+            result.AddError("Kategori seÃ§ilmelidir");
         }
 
         return result;
@@ -472,20 +486,21 @@ public class ProductApiService : IProductService
     {
         try
         {
-            // View count genelde herkes tarafından artırılabildiği için token gerekmeyebilir ancak endpoint dizaynına bağlıdır.
+            // View count genelde herkes tarafÄ±ndan artÄ±rÄ±labildiÄŸi iÃ§in token gerekmeyebilir ancak endpoint dizaynÄ±na baÄŸlÄ±dÄ±r.
             // await SetAuthHeaderAsync();
             var response = await _httpClient.PatchAsync($"{_baseUrl}/{productId}/incrementview", null);
             if (response.IsSuccessStatusCode)
             {
                 return ServiceResult<bool>.SuccessResult(true);
             }
-            return ServiceResult<bool>.FailureResult("Görüntülenme artırılamadı", response.ReasonPhrase);
+            return ServiceResult<bool>.FailureResult("GÃ¶rÃ¼ntÃ¼lenme artÄ±rÄ±lamadÄ±", response.ReasonPhrase);
         }
         catch (Exception ex)
         {
-            return ServiceResult<bool>.FailureResult("API hatası", ex.Message);
+            return ServiceResult<bool>.FailureResult("API hatasÄ±", ex.Message);
         }
     }
 
     #endregion
 }
+

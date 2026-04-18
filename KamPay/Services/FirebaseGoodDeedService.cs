@@ -14,7 +14,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
     public FirebaseGoodDeedService(FirebaseClient firebaseClient)
     {
         _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-        System.Diagnostics.Debug.WriteLine("✅ FirebaseGoodDeedService oluşturuldu (DI ile)");
+        KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseGoodDeedService oluşturuldu (DI ile)");
     }
 
     public async Task<ServiceResult<GoodDeedPost>> CreatePostAsync(GoodDeedPost post)
@@ -237,12 +237,12 @@ public class FirebaseGoodDeedService : IGoodDeedService
 
             await Task.WhenAll(tasks);
 
-            Console.WriteLine($"? {allPosts.Count()} pano PatchAsync ile güncellendi");
+            KamPay.Helpers.AppLogger.DebugLog($"? {allPosts.Count()} pano PatchAsync ile güncellendi");
             return ServiceResult<bool>.SuccessResult(true, $"{allPosts.Count()} pano güncellendi");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"? UpdateUserInfoInPosts hatası: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"? UpdateUserInfoInPosts hatası: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Panolar güncellenemedi", ex.Message);
         }
     }

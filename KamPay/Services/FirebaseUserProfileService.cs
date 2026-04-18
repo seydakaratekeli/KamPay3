@@ -17,7 +17,7 @@ namespace KamPay.Services
         public FirebaseUserProfileService(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseUserProfileService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseUserProfileService oluşturuldu (DI ile)");
         }
 
         /// Yeni kullanıcı için veritabanında profil ve başlangıç istatistiklerini oluşturur.
@@ -57,7 +57,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ CreateUserProfileAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ CreateUserProfileAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Profil oluşturulamadı.", ex.Message);
             }
         }
@@ -82,18 +82,18 @@ namespace KamPay.Services
                 }
                 
                 // ✅ Debug log - hangi alanların boş olduğunu görelim
-                Console.WriteLine($"📋 GetUserProfileAsync - UserId: {userId}");
-                Console.WriteLine($"   FirstName: '{profile.FirstName ?? "NULL"}'");
-                Console.WriteLine($"   LastName: '{profile.LastName ?? "NULL"}'");
-                Console.WriteLine($"   Username: '{profile.Username ?? "NULL"}'");
-                Console.WriteLine($"   Email: '{profile.Email ?? "NULL"}'");
-                Console.WriteLine($"   ProfileImageUrl: '{profile.ProfileImageUrl ?? "NULL"}'");
+                KamPay.Helpers.AppLogger.DebugLog($"📋 GetUserProfileAsync - UserId: {userId}");
+                KamPay.Helpers.AppLogger.DebugLog($"   FirstName: '{profile.FirstName ?? "NULL"}'");
+                KamPay.Helpers.AppLogger.DebugLog($"   LastName: '{profile.LastName ?? "NULL"}'");
+                KamPay.Helpers.AppLogger.DebugLog($"   Username: '{profile.Username ?? "NULL"}'");
+                KamPay.Helpers.AppLogger.DebugLog($"   Email: '{profile.Email ?? "NULL"}'");
+                KamPay.Helpers.AppLogger.DebugLog($"   ProfileImageUrl: '{profile.ProfileImageUrl ?? "NULL"}'");
                 
                 return ServiceResult<UserProfile>.SuccessResult(profile);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ GetUserProfileAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ GetUserProfileAsync hatası: {ex.Message}");
                 return ServiceResult<UserProfile>.FailureResult("Profil yüklenemedi.", ex.Message);
             }
         }

@@ -17,7 +17,7 @@ namespace KamPay.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            System.Diagnostics.Debug.WriteLine("✅ OffersPage: Aktif (Listener zaten çalışıyor)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ OffersPage: Aktif (Listener zaten çalışıyor)");
 
             // Animasyonları çalıştır
             if (!_hasAnimated)
@@ -86,14 +86,15 @@ namespace KamPay.Views
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            System.Diagnostics.Debug.WriteLine("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
+            KamPay.Helpers.AppLogger.DebugLog("⏸️ OffersPage: Arka plana alındı (Listener DEVAM EDİYOR)");
         }
 
         // Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
         ~OffersPage()
         {
             _viewModel?.Dispose();
-            System.Diagnostics.Debug.WriteLine("🗑️ OffersPage: Bellekten kaldırıldı, ViewModel dispose edildi");
+            KamPay.Helpers.AppLogger.DebugLog("🗑️ OffersPage: Bellekten kaldırıldı, ViewModel dispose edildi");
         }
     }
 }
+

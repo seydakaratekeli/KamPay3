@@ -1,47 +1,47 @@
-using KamPay.Models;
+ï»¿using KamPay.Models;
 
 namespace KamPay.Services.Payment;
 
 /// <summary>
-/// ? Ödeme sağlayıcı fabrikası - Open/Closed Principle uyumlu
-/// Yeni provider eklerken sadece factory'ye kayıt yapılır, switch/case değişmez!
+/// ? Ã–deme saÄŸlayÄ±cÄ± fabrikasÄ± - Open/Closed Principle uyumlu
+/// Yeni provider eklerken sadece factory'ye kayÄ±t yapÄ±lÄ±r, switch/case deÄŸiÅŸmez!
 /// </summary>
 public interface IPaymentProviderFactory
 {
     /// <summary>
-    /// Ödeme yöntemi string'ine göre doğru provider'ı döndürür
+    /// Ã–deme yÃ¶ntemi string'ine gÃ¶re doÄŸru provider'Ä± dÃ¶ndÃ¼rÃ¼r
     /// </summary>
     IPaymentProvider GetProvider(string method);
     
     /// <summary>
-    /// PaymentMethodType'a göre provider döndürür
+    /// PaymentMethodType'a gÃ¶re provider dÃ¶ndÃ¼rÃ¼r
     /// </summary>
     IPaymentProvider GetProvider(PaymentMethodType methodType);
     
     /// <summary>
-    /// Tüm mevcut provider'ları listeler
+    /// TÃ¼m mevcut provider'larÄ± listeler
     /// </summary>
     IEnumerable<IPaymentProvider> GetAllProviders();
 }
 
 /// <summary>
-/// ? Factory implementasyonu - DI ile provider'ları alır
+/// ? Factory implementasyonu - DI ile provider'larÄ± alÄ±r
 /// </summary>
 public class PaymentProviderFactory : IPaymentProviderFactory
 {
     private readonly IEnumerable<IPaymentProvider> _providers;
     
     /// <summary>
-    /// Constructor - DI ile tüm IPaymentProvider implementasyonlarını alır
+    /// Constructor - DI ile tÃ¼m IPaymentProvider implementasyonlarÄ±nÄ± alÄ±r
     /// </summary>
     public PaymentProviderFactory(IEnumerable<IPaymentProvider> providers)
     {
         _providers = providers ?? throw new ArgumentNullException(nameof(providers));
         
-        System.Diagnostics.Debug.WriteLine($"? PaymentProviderFactory: {_providers.Count()} provider kaydedildi");
+        KamPay.Helpers.AppLogger.DebugLog($"? PaymentProviderFactory: {_providers.Count()} provider kaydedildi");
         foreach (var provider in _providers)
         {
-            System.Diagnostics.Debug.WriteLine($"   - {provider.ProviderName} ({provider.MethodType})");
+            KamPay.Helpers.AppLogger.DebugLog($"   - {provider.ProviderName} ({provider.MethodType})");
         }
     }
     
@@ -58,8 +58,8 @@ public class PaymentProviderFactory : IPaymentProviderFactory
         if (provider == null)
         {
             throw new NotSupportedException(
-                $"Ödeme yöntemi desteklenmiyor: {methodType}. " +
-                $"Mevcut yöntemler: {string.Join(", ", _providers.Select(p => p.ProviderName))}");
+                $"Ã–deme yÃ¶ntemi desteklenmiyor: {methodType}. " +
+                $"Mevcut yÃ¶ntemler: {string.Join(", ", _providers.Select(p => p.ProviderName))}");
         }
         
         return provider;
@@ -74,7 +74,8 @@ public class PaymentProviderFactory : IPaymentProviderFactory
             "cardsim" or "card" => PaymentMethodType.CardSim,
             "banktransfersim" or "eft" or "havale" or "transfer" => PaymentMethodType.BankTransferSim,
             "walletsim" or "wallet" => PaymentMethodType.WalletSim,
-            _ => throw new ArgumentException($"Geçersiz ödeme yöntemi: {method}")
+            _ => throw new ArgumentException($"GeÃ§ersiz Ã¶deme yÃ¶ntemi: {method}")
         };
     }
 }
+

@@ -47,7 +47,7 @@ namespace KamPay.ViewModels
                 );
                 return;
             }
-            
+
             // ✅ TransactionId null kontrolü
             if (string.IsNullOrWhiteSpace(Transaction.TransactionId))
             {
@@ -56,6 +56,33 @@ namespace KamPay.ViewModels
                     "İşlem ID'si bulunamadı. Lütfen tekrar deneyin.", 
                     Res["Ok"]
                 );
+                return;
+            }
+
+            // Eğer yöntem nakit (elden) ise doğrudan bitir (Uygulama dışı ödeme senaryosu)
+            if (method == "cash")
+            {
+                bool confirmed = await Shell.Current.DisplayAlert(
+                    "Elden (Nakit) Ödeme", 
+                    "Elden ödemeyi seçiyorsunuz. Teslimat sırasında satıcıyla yüz yüze buluşarak ödemeyi elden vermeyi ve ardından uygulamanın QR kodunu kullanarak işlemi onaylamayı kabul ediyor musunuz?", 
+                    "Evet, Onaylıyorum", "Vazgeç");
+
+                if (!confirmed) return;
+
+                IsLoading = true;
+                var setCashResult = await _transactionService.SetPaymentMethodAsCashAsync(Transaction.TransactionId);
+                IsLoading = false;
+
+                if (setCashResult.Success)
+                {
+                    await Shell.Current.DisplayAlert("Başarılı", "Elden ödeme metodunu seçtiniz.\nSatıcıyla buluştuğunuzda QR kod ile teslim işlemi yapabilirsiniz.", "Tamam");
+                    WeakReferenceMessenger.Default.Send(new PaymentCompletedMessage());
+                    await Shell.Current.GoToAsync("..");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert(Res["Error"], setCashResult.Message, Res["Ok"]);
+                }
                 return;
             }
 

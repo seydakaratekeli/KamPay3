@@ -53,7 +53,7 @@ namespace KamPay.Services
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _securityAudit = securityAudit; 
             
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseAuthService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseAuthService oluşturuldu (DI ile)");
         }
 
         #region Registration
@@ -111,12 +111,12 @@ namespace KamPay.Services
                 {
                     await _authProvider.SendEmailVerificationAsync(authResult.FirebaseToken);
                     
-                    System.Diagnostics.Debug.WriteLine($"✅ Firebase email verification gönderildi: {user.Email}");
-                    System.Diagnostics.Debug.WriteLine($"📧 Kullanıcı e-postasındaki linke tıklayarak doğrulayacak");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ Firebase email verification gönderildi: {user.Email}");
+                    KamPay.Helpers.AppLogger.DebugLog($"📧 Kullanıcı e-postasındaki linke tıklayarak doğrulayacak");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Firebase email verification gönderilemedi: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ Firebase email verification gönderilemedi: {ex.Message}");
                     return ServiceResult<AppUser>.FailureResult("E-posta doğrulama hatası", "Doğrulama e-postası gönderilemedi");
                 }
 
@@ -124,7 +124,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ RegisterAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ RegisterAsync hatası: {ex.Message}");
                 return ServiceResult<AppUser>.FailureResult("Kayıt hatası", ex.Message);
             }
         }
@@ -148,8 +148,6 @@ namespace KamPay.Services
                         request.Email.ToLower(),
                         request.Password
                     );
-                    // Geliştirme aşaması için Token'ı konsola yazdır (Postman'de kullanmak için):
-                    System.Diagnostics.Debug.WriteLine($"\n\n=== POSTMAN ICIN BEARER TOKEN ===\n{_authLink.FirebaseToken}\n=================================\n\n");
 
                     // 🌟 YENİ: Firebase Token'ını KamPay.API'ye gönderip kendi Custom JWT'mizi alıyoruz 🌟
                     try
@@ -159,7 +157,7 @@ namespace KamPay.Services
                         // NOT: Geliştirme ortamında (localhost) test ediyorsanız doğru IP'yi (örn; Android emülatör için 10.0.2.2) ayarlamalısınız.
                         // Canlı sunucunuz varsa direkt onun URL'sini yazın: https://YOUR_API_DOMAIN/api/Auth/login
                         // https://localhost:7143/api/Auth/login YERİNE:
-                        string apiUrl = "http://192.168.226.219:5011/api/Auth/login"; // Kendi IP'nizi ve API portunuzu yazın. SSL sorunu yaşamamak için http tavsiye edilir
+                        string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; // Artık IP'yi Constants dosyasından alıyoruz
 
                         var loginPayload = new { IdToken = _authLink.FirebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
@@ -171,23 +169,23 @@ namespace KamPay.Services
                             if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
                             {
                                 await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
-                                System.Diagnostics.Debug.WriteLine($"✅ KamPay API JWT başarıyla alındı ve kaydedildi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                                KamPay.Helpers.AppLogger.DebugLog($"✅ KamPay API JWT başarıyla alındı ve kaydedildi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
                             }
                             else
                             {
-                                System.Diagnostics.Debug.WriteLine("⚠️ API başarılı yanıt döndü ama Token okunamadı (NULL)!");
+                                KamPay.Helpers.AppLogger.DebugLog("⚠️ API başarılı yanıt döndü ama Token okunamadı (NULL)!");
                             }
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"⚠️ API Login Hatası: {apiResponse.StatusCode}");
+                            KamPay.Helpers.AppLogger.DebugLog($"⚠️ API Login Hatası: {apiResponse.StatusCode}");
                             var errorRaw = await apiResponse.Content.ReadAsStringAsync();
-                            System.Diagnostics.Debug.WriteLine($"API DETAY: {errorRaw}");
+                            KamPay.Helpers.AppLogger.DebugLog($"API DETAY: {errorRaw}");
                         }
                     }
                     catch (Exception apiEx)
                     {
-                        System.Diagnostics.Debug.WriteLine($"⚠️ API'ye erişilirken hata oluştu: {apiEx.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ API'ye erişilirken hata oluştu: {apiEx.Message}");
                     }
                 }
                 catch (FirebaseAuthException ex)
@@ -205,7 +203,7 @@ namespace KamPay.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"⚠️ Yeniden doğrulama e-postası gönderilemedi: {ex.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ Yeniden doğrulama e-postası gönderilemedi: {ex.Message}");
                     }
 
                     return ServiceResult<AppUser>.FailureResult(
@@ -271,7 +269,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ LoginAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ LoginAsync hatası: {ex.Message}");
                 return ServiceResult<AppUser>.FailureResult("Giriş sırasında hata", ex.Message);
             }
         }
@@ -288,7 +286,7 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine("🔐 Otomatik giriş kontrolü başlatılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("🔐 Otomatik giriş kontrolü başlatılıyor...");
 
                 // 1️⃣ "Beni Hatırla" kontrolü - SecureStorage'dan al
                 var rememberMeStr = await SecureStorage.GetAsync(KEY_REMEMBER_ME);
@@ -296,7 +294,7 @@ namespace KamPay.Services
                 
                 if (!rememberMe)
                 {
-                    Console.WriteLine("⏭️ Beni Hatırla işaretli değil, otomatik giriş yapılmayacak");
+                    KamPay.Helpers.AppLogger.DebugLog("⏭️ Beni Hatırla işaretli değil, otomatik giriş yapılmayacak");
                     return ServiceResult<AppUser>.FailureResult("Otomatik giriş yok", "Kullanıcı beni hatırla seçeneğini işaretlememiş");
                 }
 
@@ -307,18 +305,18 @@ namespace KamPay.Services
 
                 if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(firebaseToken))
                 {
-                    Console.WriteLine("⚠️ Session bilgileri eksik");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ Session bilgileri eksik");
                     return ServiceResult<AppUser>.FailureResult("Session yok", "Kaydedilmiş oturum bulunamadı");
                 }
 
-                Console.WriteLine($"✅ SecureStorage'dan session bilgileri alındı: UserId={userId.Substring(0, Math.Min(8, userId.Length))}...");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ SecureStorage'dan session bilgileri alındı: UserId={userId.Substring(0, Math.Min(8, userId.Length))}...");
 
                 // 3️⃣ Token süresini kontrol et
                 if (!string.IsNullOrEmpty(tokenExpiryStr) && DateTime.TryParse(tokenExpiryStr, out var tokenExpiry))
                 {
                     if (DateTime.UtcNow >= tokenExpiry)
                     {
-                        Console.WriteLine("🔄 Token süresi dolmuş, yenileniyor...");
+                        KamPay.Helpers.AppLogger.DebugLog("🔄 Token süresi dolmuş, yenileniyor...");
                         
                         // Token yenileme
                         try
@@ -333,13 +331,13 @@ namespace KamPay.Services
                             _authLink = refreshedAuth;
                             await SaveUserSessionAsync(null, refreshedAuth.FirebaseToken, true, refreshedAuth.ExpiresIn);
 
-                            Console.WriteLine("✅ Token başarıyla yenilendi");
+                            KamPay.Helpers.AppLogger.DebugLog("✅ Token başarıyla yenilendi");
 
                             // 🌟 YENİ: Firebase Token yenilendiğinde kendi API'mize de bildirip API JWT'mizi yeniliyoruz 🌟
                             try
                             {
                                 using var apiHttpClient = new System.Net.Http.HttpClient();
-                                string apiUrl = "http://192.168.226.219:5011/api/Auth/login"; 
+                                string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; 
                                 var loginPayload = new { IdToken = refreshedAuth.FirebaseToken };
                                 var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 
@@ -350,18 +348,18 @@ namespace KamPay.Services
                                     if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
                                     {
                                         await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
-                                        System.Diagnostics.Debug.WriteLine($"✅ KamPay API JWT başarıyla yenilendi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                                        KamPay.Helpers.AppLogger.DebugLog($"✅ KamPay API JWT başarıyla yenilendi.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
                                     }
                                 }
                             }
                             catch (Exception apiEx)
                             {
-                                System.Diagnostics.Debug.WriteLine($"⚠️ API Token yenilerken hata: {apiEx.Message}");
+                                KamPay.Helpers.AppLogger.DebugLog($"⚠️ API Token yenilerken hata: {apiEx.Message}");
                             }
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"❌ Token yenileme hatası: {ex.Message}");
+                            KamPay.Helpers.AppLogger.DebugLog($"❌ Token yenileme hatası: {ex.Message}");
                             await ClearUserSessionAsync();
                             return ServiceResult<AppUser>.FailureResult("Token yenilenemedi", "Lütfen tekrar giriş yapın");
                         }
@@ -371,7 +369,7 @@ namespace KamPay.Services
                 // 4️⃣ İnternet kontrolü
                 if (!NetworkHelper.HasInternetConnection())
                 {
-                    Console.WriteLine("⚠️ İnternet bağlantısı yok, cache'den kullanıcı yükleniyor");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ İnternet bağlantısı yok, cache'den kullanıcı yükleniyor");
                     
                     // Cache'den kullanıcı bilgilerini al (offline destek)
                     var cachedEmail = await SecureStorage.GetAsync(KEY_USER_EMAIL);
@@ -396,7 +394,7 @@ namespace KamPay.Services
 
                 if (user == null)
                 {
-                    Console.WriteLine("❌ Kullanıcı bulunamadı");
+                    KamPay.Helpers.AppLogger.DebugLog("❌ Kullanıcı bulunamadı");
                     await ClearUserSessionAsync();
                     return ServiceResult<AppUser>.FailureResult("Kullanıcı bulunamadı", "Hesap silinmiş veya devre dışı bırakılmış olabilir");
                 }
@@ -404,7 +402,7 @@ namespace KamPay.Services
                 // 6️⃣ Hesap aktiflik kontrolü
                 if (!user.IsActive)
                 {
-                    Console.WriteLine("❌ Hesap devre dışı");
+                    KamPay.Helpers.AppLogger.DebugLog("❌ Hesap devre dışı");
                     await ClearUserSessionAsync();
                     return ServiceResult<AppUser>.FailureResult("Hesap devre dışı", "Hesabınız yönetici tarafından devre dışı bırakılmış");
                 }
@@ -427,7 +425,7 @@ namespace KamPay.Services
                     try
                     {
                         using var apiHttpClient = new System.Net.Http.HttpClient();
-                        string apiUrl = "http://192.168.226.219:5011/api/Auth/login"; 
+                        string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; // ✅ FAZ1: Hardcoded IP kaldırıldı 
                         var loginPayload = new { IdToken = firebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 
@@ -438,30 +436,30 @@ namespace KamPay.Services
                             if (responseData != null && !string.IsNullOrEmpty(responseData.Token))
                             {
                                 await Microsoft.Maui.Storage.SecureStorage.SetAsync("KAMPAY_API_JWT", responseData.Token);
-                                System.Diagnostics.Debug.WriteLine($"✅ TryAutoLogin: KamPay API JWT yeniden alındı.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
+                                KamPay.Helpers.AppLogger.DebugLog($"✅ TryAutoLogin: KamPay API JWT yeniden alındı.\n\n=== SİZİN API'NIZIN JWT'Sİ ===\n{responseData.Token}\n============================\n\n");
                             }
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"⚠️ TryAutoLogin API Login Hatası: {apiResponse.StatusCode}");
+                            KamPay.Helpers.AppLogger.DebugLog($"⚠️ TryAutoLogin API Login Hatası: {apiResponse.StatusCode}");
                             var errorRaw = await apiResponse.Content.ReadAsStringAsync();
-                            System.Diagnostics.Debug.WriteLine($"API DETAY: {errorRaw}");
+                            KamPay.Helpers.AppLogger.DebugLog($"API DETAY: {errorRaw}");
                         }
                     }
                     catch (Exception apiEx)
                     {
-                        System.Diagnostics.Debug.WriteLine($"⚠️ TryAutoLogin API çağırma hatası: {apiEx.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ TryAutoLogin API çağırma hatası: {apiEx.Message}");
                     }
                 }
 
-                Console.WriteLine($"✅ Otomatik giriş başarılı: {user.Email}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Otomatik giriş başarılı: {user.Email}");
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(true));
 
                 return ServiceResult<AppUser>.SuccessResult(user, "Otomatik giriş başarılı");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ TryAutoLoginAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ TryAutoLoginAsync hatası: {ex.Message}");
                 await ClearUserSessionAsync();
                 return ServiceResult<AppUser>.FailureResult("Otomatik giriş hatası", ex.Message);
             }
@@ -490,7 +488,7 @@ namespace KamPay.Services
 
                 await _authProvider.SendEmailVerificationAsync(_authLink.FirebaseToken);
 
-                System.Diagnostics.Debug.WriteLine($"✅ Firebase doğrulama linki yeniden gönderildi: {email}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Firebase doğrulama linki yeniden gönderildi: {email}");
 
                 return ServiceResult<bool>.SuccessResult(
                     true,
@@ -499,7 +497,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ SendVerificationCodeAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ SendVerificationCodeAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Doğrulama linki gönderilemedi", ex.Message);
             }
         }
@@ -565,7 +563,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ VerifyEmailAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ VerifyEmailAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Doğrulama hatası", ex.Message);
             }
         }
@@ -588,7 +586,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult("Bağlantı Hatası", "İnternet yok");
 
                 // Rate limiting
-                var limitCheck = RateLimiters.PasswordReset.CheckLimit(email);
+                var limitCheck = KamPay.Helpers.SecureRateLimiters.PasswordReset.CheckRequest(email);
                 if (!limitCheck.IsAllowed)
                     return ServiceResult<bool>.FailureResult("Çok fazla deneme", limitCheck.Message);
 
@@ -597,11 +595,11 @@ namespace KamPay.Services
                 {
                     await _authProvider.SendPasswordResetEmailAsync(email.ToLower());
                     
-                    System.Diagnostics.Debug.WriteLine($"✅ Firebase şifre sıfırlama linki gönderildi: {email}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ Firebase şifre sıfırlama linki gönderildi: {email}");
                 }
                 catch (FirebaseAuthException ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"❌ Firebase password reset hatası: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"❌ Firebase password reset hatası: {ex.Message}");
                     return ServiceResult<bool>.FailureResult("Hata", GetFriendlyErrorMessage(ex));
                 }
 
@@ -612,7 +610,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ SendPasswordResetEmailAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ SendPasswordResetEmailAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
@@ -692,7 +690,7 @@ namespace KamPay.Services
                         .Child(user.UserId)
                         .PutAsync(user);
 
-                    System.Diagnostics.Debug.WriteLine($"✅ E-posta değiştirildi: {currentEmail} → {newEmail}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ E-posta değiştirildi: {currentEmail} → {newEmail}");
                 }
 
                 // 4️⃣ Yeni e-postaya doğrulama linki gönder
@@ -701,11 +699,11 @@ namespace KamPay.Services
                     var refreshedAuth = await _authProvider.RefreshAuthAsync(authLink);
                     await _authProvider.SendEmailVerificationAsync(refreshedAuth.FirebaseToken);
                     
-                    System.Diagnostics.Debug.WriteLine($"📧 Yeni e-postaya doğrulama linki gönderildi: {newEmail}");
+                    KamPay.Helpers.AppLogger.DebugLog($"📧 Yeni e-postaya doğrulama linki gönderildi: {newEmail}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Doğrulama linki gönderilemedi: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ Doğrulama linki gönderilemedi: {ex.Message}");
                 }
 
                 return ServiceResult<bool>.SuccessResult(
@@ -715,7 +713,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ ChangeEmailAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ ChangeEmailAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
@@ -758,7 +756,7 @@ namespace KamPay.Services
                     var authLink = await _authProvider.SignInWithEmailAndPasswordAsync(email.ToLower(), currentPassword);
                     await _authProvider.ChangeUserPassword(authLink.FirebaseToken, newPassword);
 
-                    System.Diagnostics.Debug.WriteLine($"✅ Şifre değiştirildi: {email}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ Şifre değiştirildi: {email}");
 
                     return ServiceResult<bool>.SuccessResult(true, "Şifreniz başarıyla değiştirildi!");
                 }
@@ -769,7 +767,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ ChangePasswordAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ ChangePasswordAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Hata", ex.Message);
             }
         }
@@ -782,7 +780,7 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine("🔓 Çıkış işlemi başlatılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("🔓 Çıkış işlemi başlatılıyor...");
 
                 _currentUser = null;
                 _authLink = null;
@@ -803,18 +801,18 @@ namespace KamPay.Services
                 }
                 catch (Exception cacheEx)
                 {
-                    Console.WriteLine($"⚠️ Cache temizleme hatası: {cacheEx.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ Cache temizleme hatası: {cacheEx.Message}");
                 }
 
                 WeakReferenceMessenger.Default.Send(new UserSessionChangedMessage(false));
 
-                Console.WriteLine("✅ Çıkış başarıyla tamamlandı");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Çıkış başarıyla tamamlandı");
 
                 return ServiceResult<bool>.SuccessResult(true, "Çıkış başarılı");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ LogoutAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ LogoutAsync hatası: {ex.Message}");
                 return ServiceResult<bool>.FailureResult("Çıkış yapılamadı", ex.Message);
             }
         }
@@ -843,7 +841,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ GetCurrentUser hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ GetCurrentUser hatası: {ex.Message}");
                 return _currentUser;
             }
         }
@@ -870,7 +868,7 @@ namespace KamPay.Services
                     }
                 }
 
-                System.Diagnostics.Debug.WriteLine("🔄 Token süresi bitmek üzere, arka planda yenileniyor...");
+                KamPay.Helpers.AppLogger.DebugLog("🔄 Token süresi bitmek üzere, arka planda yenileniyor...");
 
                 // Süre dolmuşsa veya 5 dakikadan az kalmışsa yeni bir token iste
                 var refreshedAuth = await _authProvider.RefreshAuthAsync(new FirebaseAuthLink(_authProvider, new Firebase.Auth.FirebaseAuth
@@ -888,12 +886,12 @@ namespace KamPay.Services
 
                 await SaveUserSessionAsync(_currentUser, refreshedAuth.FirebaseToken, rememberMe, refreshedAuth.ExpiresIn);
 
-                System.Diagnostics.Debug.WriteLine("✅ Yeni Token başarıyla oluşturuldu.");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Yeni Token başarıyla oluşturuldu.");
                 return refreshedAuth.FirebaseToken;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ GetValidTokenAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ GetValidTokenAsync hatası: {ex.Message}");
                 // Bir nedenden yenilenemezse (internet yok vs.) elimizdeki son token'ı dönmeyi deneriz.
                 return await SecureStorage.GetAsync(KEY_FIREBASE_TOKEN);
             }
@@ -987,14 +985,14 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine("💾 Session kaydediliyor (SecureStorage)...");
+                KamPay.Helpers.AppLogger.DebugLog("💾 Session kaydediliyor (SecureStorage)...");
 
                 // User bilgilerini kaydet
                 if (user != null)
                 {
                     await SecureStorage.SetAsync(KEY_USER_ID, user.UserId);
                     await SecureStorage.SetAsync(KEY_USER_EMAIL, user.Email);
-                    Console.WriteLine($"✅ User bilgileri SecureStorage'a kaydedildi: {user.Email}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✅ User bilgileri SecureStorage'a kaydedildi: {user.Email}");
                 }
 
                 // Firebase token'ı kaydet
@@ -1007,11 +1005,11 @@ namespace KamPay.Services
                 var expiryTime = DateTime.UtcNow.AddSeconds(expiresIn ?? 3600);
                 await SecureStorage.SetAsync(KEY_TOKEN_EXPIRY, expiryTime.ToString("O")); // ISO 8601 format
 
-                Console.WriteLine($"✅ Session güvenli şekilde kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Session güvenli şekilde kaydedildi - RememberMe: {rememberMe}, Token Expiry: {expiryTime:g}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ SaveUserSessionAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ SaveUserSessionAsync hatası: {ex.Message}");
                 throw; // Kritik hata, üst katmana ilet
             }
         }
@@ -1023,7 +1021,7 @@ namespace KamPay.Services
         {
             try
             {
-                Console.WriteLine("🗑️ Session temizleniyor (SecureStorage)...");
+                KamPay.Helpers.AppLogger.DebugLog("🗑️ Session temizleniyor (SecureStorage)...");
 
                 SecureStorage.Remove(KEY_USER_ID);
                 SecureStorage.Remove(KEY_USER_EMAIL);
@@ -1031,13 +1029,13 @@ namespace KamPay.Services
                 SecureStorage.Remove(KEY_REMEMBER_ME);
                 SecureStorage.Remove(KEY_TOKEN_EXPIRY);
 
-                Console.WriteLine("✅ Session güvenli şekilde temizlendi");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Session güvenli şekilde temizlendi");
                 
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ClearUserSessionAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ ClearUserSessionAsync hatası: {ex.Message}");
             }
         }
 
@@ -1060,3 +1058,4 @@ namespace KamPay.Services
         #endregion
     }
 }
+

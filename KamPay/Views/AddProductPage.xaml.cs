@@ -118,7 +118,7 @@ namespace KamPay.Views
             {
                 if (ProductMap == null)
                 {
-                    Console.WriteLine("⚠️ ProductMap null!");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ ProductMap null!");
                     return;
                 }
 
@@ -143,11 +143,11 @@ namespace KamPay.Views
                 // İlk konumu ayarla
                 UpdateMapLocation();
 
-                Console.WriteLine("✅ Harita başarıyla başlatıldı");
+                KamPay.Helpers.AppLogger.DebugLog("✅ Harita başarıyla başlatıldı");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Map initialization error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Map initialization error: {ex.Message}");
             }
         }
 
@@ -155,13 +155,13 @@ namespace KamPay.Views
         {
             if (ProductMap?.Map == null)
             {
-                Console.WriteLine("⚠️ UpdateMapLocation: Map null");
+                KamPay.Helpers.AppLogger.DebugLog("⚠️ UpdateMapLocation: Map null");
                 return;
             }
 
             if (!_viewModel.Latitude.HasValue || !_viewModel.Longitude.HasValue)
             {
-                Console.WriteLine("⚠️ UpdateMapLocation: Koordinatlar null");
+                KamPay.Helpers.AppLogger.DebugLog("⚠️ UpdateMapLocation: Koordinatlar null");
                 return;
             }
 
@@ -171,11 +171,11 @@ namespace KamPay.Views
                 ProductMap.Map.Navigator.CenterOn(new MPoint(mercator.x, mercator.y));
                 ProductMap.Map.Navigator.ZoomTo(3); // Zoom seviyesini düşürdük (daha yakın)
 
-                Console.WriteLine($"✅ Harita konumu güncellendi: {_viewModel.Latitude}, {_viewModel.Longitude}");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Harita konumu güncellendi: {_viewModel.Latitude}, {_viewModel.Longitude}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Map location update error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Map location update error: {ex.Message}");
             }
         }
 

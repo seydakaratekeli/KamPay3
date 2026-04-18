@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,36 +9,36 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
-    // İşlem geçmişi takibi için Firebase uygulaması
+    // Ä°ÅŸlem geÃ§miÅŸi takibi iÃ§in Firebase uygulamasÄ±
     public class FirebaseTransactionHistoryService : ITransactionHistoryService
     {
         private readonly FirebaseClient _firebaseClient;
         private const string TRANSACTION_HISTORY_COLLECTION = "transaction_history";
 
-        // ✅ Constructor DI ile FirebaseClient alıyor
+        // âœ… Constructor DI ile FirebaseClient alÄ±yor
         public FirebaseTransactionHistoryService(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseTransactionHistoryService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… FirebaseTransactionHistoryService oluÅŸturuldu (DI ile)");
         }
 
-        // Bir işlemi geçmişe kaydeder
+        // Bir iÅŸlemi geÃ§miÅŸe kaydeder
         public async Task<ServiceResult<TransactionHistory>> LogTransactionAsync(TransactionHistory transaction)
         {
             try
             {
                 if (transaction == null)
                 {
-                    return ServiceResult<TransactionHistory>.FailureResult("İşlem bilgisi boş olamaz");
+                    return ServiceResult<TransactionHistory>.FailureResult("Ä°ÅŸlem bilgisi boÅŸ olamaz");
                 }
 
-                // Kimliğin ayarlandığından emin olun
+                // KimliÄŸin ayarlandÄ±ÄŸÄ±ndan emin olun
                 if (string.IsNullOrEmpty(transaction.TransactionHistoryId))
                 {
                     transaction.TransactionHistoryId = Guid.NewGuid().ToString();
                 }
 
-                // Zaman damgası ayarlanmamışsa ayarlayın
+                // Zaman damgasÄ± ayarlanmamÄ±ÅŸsa ayarlayÄ±n
                 if (transaction.CreatedAt == default)
                 {
                     transaction.CreatedAt = DateTime.UtcNow;
@@ -49,24 +49,24 @@ namespace KamPay.Services
                     .Child(transaction.TransactionHistoryId)
                     .PutAsync(transaction);
 
-                return ServiceResult<TransactionHistory>.SuccessResult(transaction, "İşlem kaydedildi");
+                return ServiceResult<TransactionHistory>.SuccessResult(transaction, "Ä°ÅŸlem kaydedildi");
             }
             catch (Exception ex)
             {
                 return ServiceResult<TransactionHistory>.FailureResult(
-                    "İşlem kaydedilemedi",
+                    "Ä°ÅŸlem kaydedilemedi",
                     ex.Message
                 );
             }
         }
 
-        // Belirli bir kullanıcı için işlem geçmişini (hem gönderilen hem de alınan) alır.
+        // Belirli bir kullanÄ±cÄ± iÃ§in iÅŸlem geÃ§miÅŸini (hem gÃ¶nderilen hem de alÄ±nan) alÄ±r.
 
-        // NOT: Büyük veri kümeleriyle üretimde kullanım için,
+        // NOT: BÃ¼yÃ¼k veri kÃ¼meleriyle Ã¼retimde kullanÄ±m iÃ§in,
 
-        // uygun indeksleme ile Firebase sorguları kullanarak sunucu tarafı filtrelemeyi uygulamayı düşünün.
+        // uygun indeksleme ile Firebase sorgularÄ± kullanarak sunucu tarafÄ± filtrelemeyi uygulamayÄ± dÃ¼ÅŸÃ¼nÃ¼n.
 
-        // Mevcut uygulama tüm işlemleri getirir ve bellekte filtreler.
+        // Mevcut uygulama tÃ¼m iÅŸlemleri getirir ve bellekte filtreler.
 
         public async Task<ServiceResult<List<TransactionHistory>>> GetUserTransactionHistoryAsync(string userId, int limit = 50)
         {
@@ -74,15 +74,15 @@ namespace KamPay.Services
             {
                 if (string.IsNullOrWhiteSpace(userId))
                 {
-                    return ServiceResult<List<TransactionHistory>>.FailureResult("Kullanıcı ID gerekli");
+                    return ServiceResult<List<TransactionHistory>>.FailureResult("KullanÄ±cÄ± ID gerekli");
                 }
 
-                // Tüm işlemleri al
+                // TÃ¼m iÅŸlemleri al
                 var allTransactions = await _firebaseClient
                     .Child(TRANSACTION_HISTORY_COLLECTION)
                     .OnceAsync<TransactionHistory>();
 
-                // Kullanıcının gönderici veya alıcı olduğu işlemleri filtrele
+                // KullanÄ±cÄ±nÄ±n gÃ¶nderici veya alÄ±cÄ± olduÄŸu iÅŸlemleri filtrele
                 var userTransactions = allTransactions
                     .Select(t => t.Object)
                     .Where(t => t.FromUserId == userId || t.ToUserId == userId)
@@ -92,26 +92,26 @@ namespace KamPay.Services
 
                 return ServiceResult<List<TransactionHistory>>.SuccessResult(
                     userTransactions,
-                    "İşlem geçmişi alındı"
+                    "Ä°ÅŸlem geÃ§miÅŸi alÄ±ndÄ±"
                 );
             }
             catch (Exception ex)
             {
                 return ServiceResult<List<TransactionHistory>>.FailureResult(
-                    "İşlem geçmişi alınamadı",
+                    "Ä°ÅŸlem geÃ§miÅŸi alÄ±namadÄ±",
                     ex.Message
                 );
             }
         }
 
-        // Kimliğe göre belirli bir işlemi alır
+        // KimliÄŸe gÃ¶re belirli bir iÅŸlemi alÄ±r
         public async Task<ServiceResult<TransactionHistory>> GetTransactionByIdAsync(string transactionHistoryId)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(transactionHistoryId))
                 {
-                    return ServiceResult<TransactionHistory>.FailureResult("İşlem ID gerekli");
+                    return ServiceResult<TransactionHistory>.FailureResult("Ä°ÅŸlem ID gerekli");
                 }
 
                 var transaction = await _firebaseClient
@@ -121,24 +121,24 @@ namespace KamPay.Services
 
                 if (transaction == null)
                 {
-                    return ServiceResult<TransactionHistory>.FailureResult("İşlem bulunamadı");
+                    return ServiceResult<TransactionHistory>.FailureResult("Ä°ÅŸlem bulunamadÄ±");
                 }
 
-                return ServiceResult<TransactionHistory>.SuccessResult(transaction, "İşlem alındı");
+                return ServiceResult<TransactionHistory>.SuccessResult(transaction, "Ä°ÅŸlem alÄ±ndÄ±");
             }
             catch (Exception ex)
             {
                 return ServiceResult<TransactionHistory>.FailureResult(
-                    "İşlem alınamadı",
+                    "Ä°ÅŸlem alÄ±namadÄ±",
                     ex.Message
                 );
             }
         }
 
-        // Belirli bir referans (örneğin, ürün, hizmet) için işlem geçmişini alır.
-        // NOT: Büyük veri kümeleriyle üretim ortamında kullanım için,
-        // uygun indeksleme ile Firebase sorguları kullanarak sunucu tarafı filtrelemeyi uygulamayı düşünün.
-        // Mevcut uygulama tüm işlemleri getirir ve bellekte filtreler.
+        // Belirli bir referans (Ã¶rneÄŸin, Ã¼rÃ¼n, hizmet) iÃ§in iÅŸlem geÃ§miÅŸini alÄ±r.
+        // NOT: BÃ¼yÃ¼k veri kÃ¼meleriyle Ã¼retim ortamÄ±nda kullanÄ±m iÃ§in,
+        // uygun indeksleme ile Firebase sorgularÄ± kullanarak sunucu tarafÄ± filtrelemeyi uygulamayÄ± dÃ¼ÅŸÃ¼nÃ¼n.
+        // Mevcut uygulama tÃ¼m iÅŸlemleri getirir ve bellekte filtreler.
 
         public async Task<ServiceResult<List<TransactionHistory>>> GetTransactionsByReferenceAsync(string referenceId, string referenceType)
         {
@@ -162,16 +162,17 @@ namespace KamPay.Services
 
                 return ServiceResult<List<TransactionHistory>>.SuccessResult(
                     referenceTransactions,
-                    "İşlem geçmişi alındı"
+                    "Ä°ÅŸlem geÃ§miÅŸi alÄ±ndÄ±"
                 );
             }
             catch (Exception ex)
             {
                 return ServiceResult<List<TransactionHistory>>.FailureResult(
-                    "İşlem geçmişi alınamadı",
+                    "Ä°ÅŸlem geÃ§miÅŸi alÄ±namadÄ±",
                     ex.Message
                 );
             }
         }
     }
 }
+

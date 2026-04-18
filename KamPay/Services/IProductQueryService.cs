@@ -1,25 +1,26 @@
 using KamPay.Models;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace KamPay.Services
 {
     /// <summary>
-    /// ? ISP (Interface Segregation Principle): Sadece ürün sorgulama metodlarý
-    /// Read-only iþlemler için ayrý interface
+    /// ISP: Sadece Ã¼rÃ¼n sorgulama metodlarÄ±.
     /// </summary>
     public interface IProductQueryService
     {
         Task<ServiceResult<Product>> GetProductByIdAsync(string productId, CancellationToken cancellationToken = default);
         Task<ServiceResult<List<Product>>> GetAllProductsAsync(ProductFilter? filter = null, CancellationToken cancellationToken = default);
         Task<ServiceResult<List<Product>>> GetUserProductsAsync(string userId, CancellationToken cancellationToken = default);
-        Task<ServiceResult<List<Product>>> GetProductsAsync(string? categoryId = null, string? searchText = null, CancellationToken cancellationToken = default);
-        Task<ServiceResult<List<Product>>> GetProductsPagedAsync(
+        Task<ServiceResult<List<Category>>> GetCategoriesAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Cursor-based sayfalama. cursor=null â†’ ilk sayfa; cursor deÄŸeri â†’ sonraki sayfa.
+        /// </summary>
+        Task<ServiceResult<ProductPagedResponse>> GetProductsPagedAsync(
             int pageSize = 20,
-            string? lastKey = null,
+            string? cursor = null,
             ProductFilter? filter = null,
             CancellationToken cancellationToken = default);
-        Task<ServiceResult<List<Category>>> GetCategoriesAsync(CancellationToken cancellationToken = default);
     }
 }

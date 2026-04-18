@@ -25,7 +25,7 @@
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
-            <converters:IsAcceptedConverter x:Key="IsAcceptedConverter" />
+            <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter" />
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter" />
@@ -211,7 +211,7 @@
         CornerRadius="22"
         FontSize="14"
         FontAttributes="Bold"
-        IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
 
 
                                         </Grid>
@@ -318,7 +318,7 @@
                                                 CornerRadius="22"
                                                 FontSize="14"
                                                 FontAttributes="Bold"
-                                                IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
@@ -496,7 +496,7 @@
                                                 CornerRadius="22"
                                                 FontSize="14"
                                                 FontAttributes="Bold"
-                                                IsVisible="{Binding Status, Converter={StaticResource IsAcceptedConverter}}"/>
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>

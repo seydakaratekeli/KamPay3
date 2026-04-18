@@ -118,7 +118,7 @@ namespace KamPay.Views
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Scroll hatası: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"Scroll hatası: {ex.Message}");
                 }
             });
         }

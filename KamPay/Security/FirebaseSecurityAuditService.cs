@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,19 +9,19 @@ using KamPay.Helpers;
 namespace KamPay.Security
 {
     /// <summary>
-    /// ?? Firebase tabanlý Güvenlik Denetim Servisi
+    /// ?? Firebase tabanlÄ± GÃ¼venlik Denetim Servisi
     /// OWASP Best Practices: Logging, Monitoring, Account Lockout
     /// </summary>
     public class FirebaseSecurityAuditService : ISecurityAuditService
     {
         private readonly FirebaseClient _firebaseClient;
         
-        // ?? Güvenlik Politikalarý (Production ortamý için optimize edilmiþ)
-        private const int MAX_FAILED_ATTEMPTS_BEFORE_LOCK = 3;  // ? Daha sýký: 3 baþarýsýz deneme
-        private const int FAILED_ATTEMPTS_WINDOW_MINUTES = 30;  // ? 30 dakikalýk pencere
+        // ?? GÃ¼venlik PolitikalarÄ± (Production ortamÄ± iÃ§in optimize edilmiÅŸ)
+        private const int MAX_FAILED_ATTEMPTS_BEFORE_LOCK = 3;  // ? Daha sÄ±kÄ±: 3 baÅŸarÄ±sÄ±z deneme
+        private const int FAILED_ATTEMPTS_WINDOW_MINUTES = 30;  // ? 30 dakikalÄ±k pencere
         private const int ACCOUNT_LOCK_DURATION_MINUTES = 60;   // ? 1 saat kilitleme
-        private const int CRITICAL_FAILED_ATTEMPTS = 5;         // ? 5 baþarýsýz deneme = kritik
-        private const int SUSPICIOUS_IP_THRESHOLD = 10;         // ? IP baþýna 10 baþarýsýz = þüpheli
+        private const int CRITICAL_FAILED_ATTEMPTS = 5;         // ? 5 baÅŸarÄ±sÄ±z deneme = kritik
+        private const int SUSPICIOUS_IP_THRESHOLD = 10;         // ? IP baÅŸÄ±na 10 baÅŸarÄ±sÄ±z = ÅŸÃ¼pheli
 
         public FirebaseSecurityAuditService(FirebaseClient firebaseClient)
         {
@@ -40,7 +40,7 @@ namespace KamPay.Security
                     IpAddress = ipAddress,
                     DeviceInfo = deviceInfo,
                     EventType = SecurityEventType.FailedLogin,
-                    EventDetails = $"Baþarýsýz giriþ denemesi: {email}",
+                    EventDetails = $"BaÅŸarÄ±sÄ±z giriÅŸ denemesi: {email}",
                     SuspicionLevel = SuspicionLevel.Low,
                     Timestamp = DateTime.UtcNow
                 };
@@ -49,23 +49,23 @@ namespace KamPay.Security
                     .Child("security_audit_logs")
                     .PostAsync(log);
 
-                // ?? Otomatik þüpheli aktivite kontrolü
+                // ?? Otomatik ÅŸÃ¼pheli aktivite kontrolÃ¼
                 var recentFails = await GetRecentFailedAttemptsAsync(email, hours: 1);
                 if (recentFails.Count >= CRITICAL_FAILED_ATTEMPTS)
                 {
                     await LogSuspiciousActivityAsync(
                         null, 
                         "Repeated Failed Logins", 
-                        $"{recentFails.Count} baþarýsýz giriþ denemesi son 1 saatte",
+                        $"{recentFails.Count} baÅŸarÄ±sÄ±z giriÅŸ denemesi son 1 saatte",
                         SuspicionLevel.Critical
                     );
                 }
 
-                Console.WriteLine($"?? Baþarýsýz giriþ kaydedildi: {email} (IP: {ipAddress})");
+                KamPay.Helpers.AppLogger.DebugLog($"?? BaÅŸarÄ±sÄ±z giriÅŸ kaydedildi: {email} (IP: {ipAddress})");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LogFailedLoginAttempt hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? LogFailedLoginAttempt hatasÄ±: {ex.Message}");
             }
         }
 
@@ -80,7 +80,7 @@ namespace KamPay.Security
                     IpAddress = ipAddress,
                     DeviceInfo = deviceInfo,
                     EventType = SecurityEventType.SuccessfulLogin,
-                    EventDetails = $"Baþarýlý giriþ: {email}",
+                    EventDetails = $"BaÅŸarÄ±lÄ± giriÅŸ: {email}",
                     SuspicionLevel = SuspicionLevel.Low,
                     Timestamp = DateTime.UtcNow
                 };
@@ -89,14 +89,14 @@ namespace KamPay.Security
                     .Child("security_audit_logs")
                     .PostAsync(log);
 
-                // ?? Baþarýlý giriþten sonra baþarýsýz deneme sayacýný sýfýrla
+                // ?? BaÅŸarÄ±lÄ± giriÅŸten sonra baÅŸarÄ±sÄ±z deneme sayacÄ±nÄ± sÄ±fÄ±rla
                 await ResetFailedAttemptsAsync(email);
 
-                Console.WriteLine($"? Baþarýlý giriþ kaydedildi: {email}");
+                KamPay.Helpers.AppLogger.DebugLog($"? BaÅŸarÄ±lÄ± giriÅŸ kaydedildi: {email}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LogSuccessfulLogin hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? LogSuccessfulLogin hatasÄ±: {ex.Message}");
             }
         }
 
@@ -117,11 +117,11 @@ namespace KamPay.Security
                     .Child("security_audit_logs")
                     .PostAsync(log);
 
-                Console.WriteLine($"?? Þüpheli aktivite kaydedildi: {activityType} (Seviye: {level})");
+                KamPay.Helpers.AppLogger.DebugLog($"?? ÅžÃ¼pheli aktivite kaydedildi: {activityType} (Seviye: {level})");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LogSuspiciousActivity hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? LogSuspiciousActivity hatasÄ±: {ex.Message}");
             }
         }
 
@@ -151,7 +151,7 @@ namespace KamPay.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? GetRecentFailedAttempts hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? GetRecentFailedAttempts hatasÄ±: {ex.Message}");
                 return new List<SecurityAuditLog>();
             }
         }
@@ -182,7 +182,7 @@ namespace KamPay.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? IsIpAddressSuspicious hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? IsIpAddressSuspicious hatasÄ±: {ex.Message}");
                 return false;
             }
         }
@@ -195,7 +195,7 @@ namespace KamPay.Security
         {
             try
             {
-                // Önceden kilitli mi kontrol et
+                // Ã–nceden kilitli mi kontrol et
                 var lockInfo = await GetAccountLockInfoAsync(email);
                 if (lockInfo.IsLocked)
                 {
@@ -206,7 +206,7 @@ namespace KamPay.Security
                     return (true, remaining, lockInfo.Reason);
                 }
 
-                // Son X dakikadaki baþarýsýz denemeleri kontrol et
+                // Son X dakikadaki baÅŸarÄ±sÄ±z denemeleri kontrol et
                 var cutoffTime = DateTime.UtcNow.AddMinutes(-FAILED_ATTEMPTS_WINDOW_MINUTES);
                 var recentFails = await GetRecentFailedAttemptsAsync(email, hours: 1);
                 var failsInWindow = recentFails.Count(f => f.Timestamp >= cutoffTime);
@@ -214,7 +214,7 @@ namespace KamPay.Security
                 if (failsInWindow >= MAX_FAILED_ATTEMPTS_BEFORE_LOCK)
                 {
                     var lockDuration = TimeSpan.FromMinutes(ACCOUNT_LOCK_DURATION_MINUTES);
-                    var reason = $"{failsInWindow} baþarýsýz giriþ denemesi ({FAILED_ATTEMPTS_WINDOW_MINUTES} dakikada)";
+                    var reason = $"{failsInWindow} baÅŸarÄ±sÄ±z giriÅŸ denemesi ({FAILED_ATTEMPTS_WINDOW_MINUTES} dakikada)";
                     return (true, lockDuration, reason);
                 }
 
@@ -222,7 +222,7 @@ namespace KamPay.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? ShouldLockAccount hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? ShouldLockAccount hatasÄ±: {ex.Message}");
                 return (false, TimeSpan.Zero, string.Empty);
             }
         }
@@ -255,11 +255,11 @@ namespace KamPay.Security
                     SuspicionLevel.High
                 );
 
-                Console.WriteLine($"?? Hesap kilitlendi: {email} ({duration.TotalMinutes} dakika)");
+                KamPay.Helpers.AppLogger.DebugLog($"?? Hesap kilitlendi: {email} ({duration.TotalMinutes} dakika)");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? LockAccountTemporarily hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? LockAccountTemporarily hatasÄ±: {ex.Message}");
             }
         }
 
@@ -272,11 +272,11 @@ namespace KamPay.Security
                     .Child(GetSafeKey(email))
                     .DeleteAsync();
 
-                Console.WriteLine($"? Hesap kilidi kaldýrýldý: {email}");
+                KamPay.Helpers.AppLogger.DebugLog($"? Hesap kilidi kaldÄ±rÄ±ldÄ±: {email}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? UnlockAccount hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? UnlockAccount hatasÄ±: {ex.Message}");
             }
         }
 
@@ -289,10 +289,10 @@ namespace KamPay.Security
                 if (!lockInfo.IsLocked)
                     return (false, null, null);
 
-                // Kilitleme süresi dolmuþ mu kontrol et
+                // Kilitleme sÃ¼resi dolmuÅŸ mu kontrol et
                 if (lockInfo.UnlockAt.HasValue && DateTime.UtcNow >= lockInfo.UnlockAt.Value)
                 {
-                    // Otomatik kilidi kaldýr
+                    // Otomatik kilidi kaldÄ±r
                     await UnlockAccountAsync(email);
                     return (false, null, null);
                 }
@@ -301,7 +301,7 @@ namespace KamPay.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? IsAccountLocked hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? IsAccountLocked hatasÄ±: {ex.Message}");
                 return (false, null, null);
             }
         }
@@ -327,7 +327,7 @@ namespace KamPay.Security
         {
             try
             {
-                // Eski baþarýsýz deneme kayýtlarýný "resolved" olarak iþaretle
+                // Eski baÅŸarÄ±sÄ±z deneme kayÄ±tlarÄ±nÄ± "resolved" olarak iÅŸaretle
                 var recentFails = await GetRecentFailedAttemptsAsync(email, hours: 24);
                 
                 foreach (var log in recentFails)
@@ -335,11 +335,11 @@ namespace KamPay.Security
                     log.IsResolved = true;
                 }
 
-                Console.WriteLine($"? Baþarýsýz deneme sayacý sýfýrlandý: {email}");
+                KamPay.Helpers.AppLogger.DebugLog($"? BaÅŸarÄ±sÄ±z deneme sayacÄ± sÄ±fÄ±rlandÄ±: {email}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? ResetFailedAttempts hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? ResetFailedAttempts hatasÄ±: {ex.Message}");
             }
         }
 
@@ -348,7 +348,7 @@ namespace KamPay.Security
         #region Helper Methods
 
         /// <summary>
-        /// E-posta adresini Firebase key olarak kullanmak için güvenli hale getirir
+        /// E-posta adresini Firebase key olarak kullanmak iÃ§in gÃ¼venli hale getirir
         /// Firebase keys cannot contain: . $ # [ ] /
         /// </summary>
         private string GetSafeKey(string email)
@@ -365,3 +365,4 @@ namespace KamPay.Security
         #endregion
     }
 }
+

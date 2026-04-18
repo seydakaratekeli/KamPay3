@@ -1,12 +1,12 @@
-using KamPay.Models;
+ï»¿using KamPay.Models;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace KamPay.Services
 {
     /// <summary>
-    /// ? OCP (Open/Closed Principle): Hizmet türü handler'larý için factory
-    /// Yeni hizmet türü eklerken sadece yeni handler eklenir, factory deðiþmez
+    /// ? OCP (Open/Closed Principle): Hizmet tÃ¼rÃ¼ handler'larÄ± iÃ§in factory
+    /// Yeni hizmet tÃ¼rÃ¼ eklerken sadece yeni handler eklenir, factory deÄŸiÅŸmez
     /// </summary>
     public interface IServiceTypeHandlerFactory
     {
@@ -24,7 +24,7 @@ namespace KamPay.Services
         public ServiceTypeHandlerFactory(IEnumerable<IServiceTypeHandler> handlers)
         {
             _handlers = handlers ?? throw new System.ArgumentNullException(nameof(handlers));
-            System.Diagnostics.Debug.WriteLine($"? ServiceTypeHandlerFactory oluþturuldu - {_handlers.Count()} handler kayýtlý");
+            KamPay.Helpers.AppLogger.DebugLog($"? ServiceTypeHandlerFactory oluÅŸturuldu - {_handlers.Count()} handler kayÄ±tlÄ±");
         }
         
         public IServiceTypeHandler GetHandler(ServiceCategory category)
@@ -46,7 +46,7 @@ namespace KamPay.Services
     }
     
     /// <summary>
-    /// ? Varsayýlan handler - özel handler olmayan kategoriler için
+    /// ? VarsayÄ±lan handler - Ã¶zel handler olmayan kategoriler iÃ§in
     /// </summary>
     public class DefaultServiceTypeHandler : IServiceTypeHandler
     {
@@ -56,10 +56,10 @@ namespace KamPay.Services
         {
             // Temel validasyon - model'de olan property'leri kullan
             if (string.IsNullOrWhiteSpace(offer.Title))
-                return ServiceResult<bool>.FailureResult("Baþlýk boþ olamaz");
+                return ServiceResult<bool>.FailureResult("BaÅŸlÄ±k boÅŸ olamaz");
             
             if (string.IsNullOrWhiteSpace(offer.Description))
-                return ServiceResult<bool>.FailureResult("Açýklama boþ olamaz");
+                return ServiceResult<bool>.FailureResult("AÃ§Ä±klama boÅŸ olamaz");
             
             // ServiceOffer'da Price property'si var
             if (offer.Price < 0)
@@ -70,8 +70,9 @@ namespace KamPay.Services
         
         public async Task<ServiceResult<bool>> OnServiceCompletedAsync(ServiceRequest request)
         {
-            // Varsayýlan davranýþ - özel iþlem yok
+            // VarsayÄ±lan davranÄ±ÅŸ - Ã¶zel iÅŸlem yok
             return await Task.FromResult(ServiceResult<bool>.SuccessResult(true));
         }
     }
 }
+

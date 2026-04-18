@@ -18,7 +18,7 @@ namespace KamPay.Services
         public RealtimeSnapshotService(FirebaseClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            System.Diagnostics.Debug.WriteLine($"✅ RealtimeSnapshotService<{typeof(T).Name}> oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog($"✅ RealtimeSnapshotService<{typeof(T).Name}> oluşturuldu (DI ile)");
         }
 
         public async Task<Dictionary<string, T>> LoadSnapshotAsync(string path)
@@ -40,3 +40,4 @@ namespace KamPay.Services
         public void Stop() => _subscription?.Dispose();
     }
 }
+

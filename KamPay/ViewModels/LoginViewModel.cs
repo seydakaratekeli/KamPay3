@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -46,10 +46,10 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task LoginAsync()
         {
-            // AĞ KONTROLÜ: İşlem başlamadan önce interneti kontrol et
+            // AÄ KONTROLÃœ: Ä°ÅŸlem baÅŸlamadan Ã¶nce interneti kontrol et
             if (!NetworkHelper.HasInternetConnection())
             {
-                ErrorMessage = "İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.";
+                ErrorMessage = "Ä°nternet baÄŸlantÄ±sÄ± yok. LÃ¼tfen baÄŸlantÄ±nÄ±zÄ± kontrol edin.";
                 return;
             }
 
@@ -58,11 +58,11 @@ namespace KamPay.ViewModels
                 IsLoading = true;
                 ErrorMessage = string.Empty;
 
-                // Rate Limiting Kontrolü: 15 dakikada en fazla 5 deneme
-                var limitCheck = RateLimiters.Login.CheckLimit(Email);
+                // Rate Limiting KontrolÃ¼: 15 dakikada en fazla 3 deneme
+                var limitCheck = KamPay.Helpers.SecureRateLimiters.Login.CheckRequest(Email);
                 if (!limitCheck.IsAllowed)
                 {
-                    ErrorMessage = limitCheck.Message; // "Çok fazla deneme yaptınız... X dakika bekleyin"
+                    ErrorMessage = limitCheck.Message; // "Ã‡ok fazla deneme yaptÄ±nÄ±z... X dakika bekleyin"
                     return;
                 }
 
@@ -77,15 +77,15 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    // Giriş başarılıysa deneme sayacını sıfırla
-                    RateLimiters.Login.Reset(Email);
+                    // GiriÅŸ baÅŸarÄ±lÄ±ysa deneme sayacÄ±nÄ± sÄ±fÄ±rla
+                    KamPay.Helpers.SecureRateLimiters.Login.RemoveBan(Email);
                     
-                    // ✅ CRITICAL FIX: Yeni kullanıcı girişinde tüm static cache'leri temizle
-                    Console.WriteLine("✅ Yeni kullanıcı girişi - tüm cache'ler temizleniyor...");
+                    // âœ… CRITICAL FIX: Yeni kullanÄ±cÄ± giriÅŸinde tÃ¼m static cache'leri temizle
+                    KamPay.Helpers.AppLogger.DebugLog("âœ… Yeni kullanÄ±cÄ± giriÅŸi - tÃ¼m cache'ler temizleniyor...");
                     
                     // ChatViewModel cache'ini temizle
                     ChatViewModel.ClearCache();
-                    Console.WriteLine("✅ ChatViewModel cache temizlendi");
+                    KamPay.Helpers.AppLogger.DebugLog("âœ… ChatViewModel cache temizlendi");
                     
                     // ProductCacheService'i temizle
                     try
@@ -94,12 +94,12 @@ namespace KamPay.ViewModels
                         if (productCacheService != null)
                         {
                             await productCacheService.InvalidateCacheAsync();
-                            Console.WriteLine("✅ ProductCache temizlendi");
+                            KamPay.Helpers.AppLogger.DebugLog("âœ… ProductCache temizlendi");
                         }
                     }
                     catch (Exception cacheEx)
                     {
-                        Console.WriteLine($"⚠️ ProductCache temizleme hatası: {cacheEx.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ ProductCache temizleme hatasÄ±: {cacheEx.Message}");
                     }
 
                     await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
@@ -108,12 +108,12 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    // ✅ FIX: Tüm hataları detaylı şekilde göster
+                    // âœ… FIX: TÃ¼m hatalarÄ± detaylÄ± ÅŸekilde gÃ¶ster
                     if (result.Errors != null && result.Errors.Any())
                     {
-                        // Hataları madde işareti ile listele
-                        var errorList = new List<string> { result.Message ?? "Giriş bilgilerinde hatalar var:" };
-                        errorList.AddRange(result.Errors.Select(e => $"• {e}"));
+                        // HatalarÄ± madde iÅŸareti ile listele
+                        var errorList = new List<string> { result.Message ?? "GiriÅŸ bilgilerinde hatalar var:" };
+                        errorList.AddRange(result.Errors.Select(e => $"â€¢ {e}"));
                         ErrorMessage = string.Join("\n", errorList);
                     }
                     else
@@ -135,7 +135,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task GoToRegisterAsync()
         {
-            // Yığını sıfırlama
+            // YÄ±ÄŸÄ±nÄ± sÄ±fÄ±rlama
             await Shell.Current.GoToAsync(nameof(RegisterPage)); 
         }
 
@@ -146,10 +146,10 @@ namespace KamPay.ViewModels
             {
                 // E-posta adresi sor
                 var email = await Application.Current.MainPage.DisplayPromptAsync(
-                    "Şifremi Unuttum",
+                    "Åifremi Unuttum",
                     "E-posta adresinizi girin:",
-                    "Gönder",
-                    "İptal",
+                    "GÃ¶nder",
+                    "Ä°ptal",
                     placeholder: "ornek@bartin.edu.tr",
                     keyboard: Keyboard.Email
                 );
@@ -160,27 +160,27 @@ namespace KamPay.ViewModels
                 IsLoading = true;
                 ErrorMessage = string.Empty;
 
-                // 🔥 Firebase native şifre sıfırlama linki gönder
+                // ğŸ”¥ Firebase native ÅŸifre sÄ±fÄ±rlama linki gÃ¶nder
                 var result = await _authService.SendPasswordResetEmailAsync(email);
 
                 if (result.Success)
                 {
                     await Application.Current.MainPage.DisplayAlert(
-                        "Başarılı! 📧",
-                        "Şifre sıfırlama linki e-postanıza gönderildi.\n\n" +
-                        "Lütfen e-postanızı kontrol edin ve linke tıklayarak yeni şifrenizi belirleyin.\n\n" +
-                        "Link 1 saat geçerlidir.",
+                        "BaÅŸarÄ±lÄ±! ğŸ“§",
+                        "Åifre sÄ±fÄ±rlama linki e-postanÄ±za gÃ¶nderildi.\n\n" +
+                        "LÃ¼tfen e-postanÄ±zÄ± kontrol edin ve linke tÄ±klayarak yeni ÅŸifrenizi belirleyin.\n\n" +
+                        "Link 1 saat geÃ§erlidir.",
                         "Tamam"
                     );
 
-                    // E-posta alanını doldur (kullanıcı sıfırladıktan sonra giriş yapabilsin)
+                    // E-posta alanÄ±nÄ± doldur (kullanÄ±cÄ± sÄ±fÄ±rladÄ±ktan sonra giriÅŸ yapabilsin)
                     Email = email;
                 }
                 else
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         "Hata",
-                        result.Message ?? "Şifre sıfırlama linki gönderilemedi.",
+                        result.Message ?? "Åifre sÄ±fÄ±rlama linki gÃ¶nderilemedi.",
                         "Tamam"
                     );
                 }
@@ -189,7 +189,7 @@ namespace KamPay.ViewModels
             {
                 await Application.Current.MainPage.DisplayAlert(
                     "Hata",
-                    $"Bir hata oluştu: {ex.Message}",
+                    $"Bir hata oluÅŸtu: {ex.Message}",
                     "Tamam"
                 );
             }
@@ -200,3 +200,4 @@ namespace KamPay.ViewModels
         }
     }
 }
+

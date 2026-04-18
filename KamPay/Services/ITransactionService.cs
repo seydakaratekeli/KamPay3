@@ -28,6 +28,11 @@ namespace KamPay.Services
         Task<ServiceResult<Transaction>> CompletePaymentAsync(string transactionId, string buyerId); 
 
         Task<ServiceResult<Transaction>> ConfirmDonationAsync(string transactionId, string buyerId);
+
+        /// <summary>
+        /// Satis islemlerinde 'Elden/Nakit' ödemeyi kaydeder.
+        /// </summary>
+        Task<ServiceResult<bool>> SetPaymentMethodAsCashAsync(string transactionId);
         Task<ServiceResult<Transaction>> CompleteManualSaleAsync(string transactionId, string sellerId);
 
         /// <summary>

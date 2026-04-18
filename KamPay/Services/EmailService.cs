@@ -34,7 +34,7 @@ namespace KamPay.Services
                 Debug.WriteLine($"To: {toEmail}");
                 Debug.WriteLine($"Kod: {verificationCode}");
                 Debug.WriteLine("==========================================");
-                Console.WriteLine($"📧 E-posta gönderiliyor: {toEmail}");
+                KamPay.Helpers.AppLogger.DebugLog($"📧 E-posta gönderiliyor: {toEmail}");
 
                 // ✅ GERÇEK SMTP GÖNDERİMİ
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
@@ -57,7 +57,7 @@ namespace KamPay.Services
                 await client.SendMailAsync(message);
 
                 Debug.WriteLine($"✅ E-posta başarıyla gönderildi: {toEmail}");
-                Console.WriteLine($"✅ Doğrulama kodu e-postaya gönderildi!");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Doğrulama kodu e-postaya gönderildi!");
                 
                 return true;
             }
@@ -65,20 +65,20 @@ namespace KamPay.Services
             {
                 Debug.WriteLine($"❌ SMTP Hatası: {smtpEx.Message}");
                 Debug.WriteLine($"StatusCode: {smtpEx.StatusCode}");
-                Console.WriteLine($"❌ E-posta gönderilemedi (SMTP): {smtpEx.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ E-posta gönderilemedi (SMTP): {smtpEx.Message}");
                 
                 // ⚠️ Hata durumunda konsola yine de kodu yazdır (geliştirme için)
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Kod: {verificationCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Kod: {verificationCode}");
                 
                 return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ E-posta gönderim hatası: {ex.Message}");
-                Console.WriteLine($"❌ E-posta gönderilemedi: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ E-posta gönderilemedi: {ex.Message}");
                 
                 // ⚠️ Hata durumunda konsola yine de kodu yazdır (geliştirme için)
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Kod: {verificationCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Kod: {verificationCode}");
                 
                 return false;
             }
@@ -106,7 +106,7 @@ namespace KamPay.Services
                 Debug.WriteLine($"To: {toEmail}");
                 Debug.WriteLine($"Kod: {resetCode}");
                 Debug.WriteLine("==========================================");
-                Console.WriteLine($"📧 Şifre sıfırlama e-postası gönderiliyor: {toEmail}");
+                KamPay.Helpers.AppLogger.DebugLog($"📧 Şifre sıfırlama e-postası gönderiliyor: {toEmail}");
 
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
                 {
@@ -128,22 +128,22 @@ namespace KamPay.Services
                 await client.SendMailAsync(message);
 
                 Debug.WriteLine($"✅ Şifre sıfırlama e-postası gönderildi: {toEmail}");
-                Console.WriteLine($"✅ Şifre sıfırlama kodu e-postaya gönderildi!");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ Şifre sıfırlama kodu e-postaya gönderildi!");
                 
                 return true;
             }
             catch (SmtpException smtpEx)
             {
                 Debug.WriteLine($"❌ SMTP Hatası: {smtpEx.Message}");
-                Console.WriteLine($"❌ Şifre sıfırlama e-postası gönderilemedi (SMTP): {smtpEx.Message}");
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Şifre Sıfırlama Kodu: {resetCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Şifre sıfırlama e-postası gönderilemedi (SMTP): {smtpEx.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Şifre Sıfırlama Kodu: {resetCode}");
                 return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ E-posta gönderim hatası: {ex.Message}");
-                Console.WriteLine($"❌ Şifre sıfırlama e-postası gönderilemedi: {ex.Message}");
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Şifre Sıfırlama Kodu: {resetCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Şifre sıfırlama e-postası gönderilemedi: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Şifre Sıfırlama Kodu: {resetCode}");
                 return false;
             }
         }
@@ -170,7 +170,7 @@ namespace KamPay.Services
                 Debug.WriteLine($"To: {newEmail}");
                 Debug.WriteLine($"Kod: {verificationCode}");
                 Debug.WriteLine("=======================================================");
-                Console.WriteLine($"📧 E-posta değişikliği doğrulama kodu gönderiliyor: {newEmail}");
+                KamPay.Helpers.AppLogger.DebugLog($"📧 E-posta değişikliği doğrulama kodu gönderiliyor: {newEmail}");
 
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
                 {
@@ -192,24 +192,25 @@ namespace KamPay.Services
                 await client.SendMailAsync(message);
 
                 Debug.WriteLine($"✅ E-posta değişikliği doğrulama kodu gönderildi: {newEmail}");
-                Console.WriteLine($"✅ E-posta değişikliği doğrulama kodu gönderildi!");
+                KamPay.Helpers.AppLogger.DebugLog($"✅ E-posta değişikliği doğrulama kodu gönderildi!");
                 
                 return true;
             }
             catch (SmtpException smtpEx)
             {
                 Debug.WriteLine($"❌ SMTP Hatası: {smtpEx.Message}");
-                Console.WriteLine($"❌ E-posta değişikliği doğrulama kodu gönderilemedi (SMTP): {smtpEx.Message}");
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Doğrulama Kodu: {verificationCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ E-posta değişikliği doğrulama kodu gönderilemedi (SMTP): {smtpEx.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Doğrulama Kodu: {verificationCode}");
                 return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ E-posta gönderim hatası: {ex.Message}");
-                Console.WriteLine($"❌ E-posta değişikliği doğrulama kodu gönderilemedi: {ex.Message}");
-                Console.WriteLine($"⚠️ GELİŞTİRME MODU - Doğrulama Kodu: {verificationCode}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ E-posta değişikliği doğrulama kodu gönderilemedi: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ GELİŞTİRME MODU - Doğrulama Kodu: {verificationCode}");
                 return false;
             }
         }
     }
 }
+

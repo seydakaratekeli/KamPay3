@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Views;
+﻿using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Services;
 using KamPay.ViewModels;
@@ -16,7 +16,7 @@ public partial class ProductDetailPage : ContentPage
     private readonly IServiceProvider _serviceProvider;
     private readonly ProductDetailViewModel _viewModel;
 
-    // Default location (Bartın, Turkey)
+    // Default location (BartÄ±n, Turkey)
     private const double DefaultLatitude = 41.5810;
     private const double DefaultLongitude = 32.4610;
     // Optimized zoom resolutions for better user experience
@@ -61,8 +61,8 @@ public partial class ProductDetailPage : ContentPage
         // Subscribe to property changes to know when product is loaded
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
-        // NOT: Mapsui varsayılan olarak çift tıklama ile zoom özelliğine sahiptir.
-        // Manuel event ekleme kodu (DoubleTapped) burada hataya sebep olduğu için kaldırıldı.
+        // NOT: Mapsui varsayÄ±lan olarak Ã§ift tÄ±klama ile zoom Ã¶zelliÄŸine sahiptir.
+        // Manuel event ekleme kodu (DoubleTapped) burada hataya sebep olduÄŸu iÃ§in kaldÄ±rÄ±ldÄ±.
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -84,7 +84,7 @@ public partial class ProductDetailPage : ContentPage
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         WeakReferenceMessenger.Default.Unregister<ShowTradeOfferPopupMessage>(this);
 
-        // Event aboneliği yukarıda kaldırıldığı için burada da çıkarma işlemine gerek yok.
+        // Event aboneliÄŸi yukarÄ±da kaldÄ±rÄ±ldÄ±ÄŸÄ± iÃ§in burada da Ã§Ä±karma iÅŸlemine gerek yok.
     }
 
     private Task InitializeMapAsync()
@@ -132,13 +132,13 @@ public partial class ProductDetailPage : ContentPage
 
             _isMapInitialized = true;
 
-            Console.WriteLine($"✅ ProductDetailPage haritası başlatıldı: {lat}, {lon}");
+            KamPay.Helpers.AppLogger.DebugLog($"âœ… ProductDetailPage haritasÄ± baÅŸlatÄ±ldÄ±: {lat}, {lon}");
             
             return Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ ProductDetailPage harita başlatma hatası: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"âŒ ProductDetailPage harita baÅŸlatma hatasÄ±: {ex.Message}");
             return Task.CompletedTask;
         }
     }
@@ -156,7 +156,7 @@ public partial class ProductDetailPage : ContentPage
         _pinLayer.DataHasChanged();
     }
 
-    // Double-tap metodu Mapsui ile uyumsuz olduğu için kaldırıldı.
+    // Double-tap metodu Mapsui ile uyumsuz olduÄŸu iÃ§in kaldÄ±rÄ±ldÄ±.
 
     // Event handlers for XAML buttons
     private void OnZoomInClicked(object? sender, EventArgs e)
@@ -215,8 +215,8 @@ public partial class ProductDetailPage : ContentPage
 
             if (status != PermissionStatus.Granted)
             {
-                await Shell.Current.DisplayAlert("İzin Gerekli",
-                    "Konumunuza gitmek için konum iznine ihtiyacımız var.", "Tamam");
+                await Shell.Current.DisplayAlert("Ä°zin Gerekli",
+                    "Konumunuza gitmek iÃ§in konum iznine ihtiyacÄ±mÄ±z var.", "Tamam");
                 return;
             }
 
@@ -235,8 +235,8 @@ public partial class ProductDetailPage : ContentPage
             }
             else
             {
-                await Shell.Current.DisplayAlert("Konum Alınamadı",
-                    "Şu anda konumunuz belirlenemiyor. Lütfen GPS'in açık olduğundan emin olun.", "Tamam");
+                await Shell.Current.DisplayAlert("Konum AlÄ±namadÄ±",
+                    "Åu anda konumunuz belirlenemiyor. LÃ¼tfen GPS'in aÃ§Ä±k olduÄŸundan emin olun.", "Tamam");
             }
         }
         catch (FeatureNotSupportedException)
@@ -246,14 +246,14 @@ public partial class ProductDetailPage : ContentPage
         }
         catch (PermissionException)
         {
-            await Shell.Current.DisplayAlert("İzin Hatası",
+            await Shell.Current.DisplayAlert("Ä°zin HatasÄ±",
                 "Konum izni verilmedi.", "Tamam");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Konum alınamadı: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"Konum alÄ±namadÄ±: {ex.Message}");
             await Shell.Current.DisplayAlert("Hata",
-                "Konumunuz alınırken bir hata oluştu.", "Tamam");
+                "Konumunuz alÄ±nÄ±rken bir hata oluÅŸtu.", "Tamam");
         }
     }
 

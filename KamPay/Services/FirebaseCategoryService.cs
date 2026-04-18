@@ -18,7 +18,7 @@ namespace KamPay.Services
         public FirebaseCategoryService(FirebaseClient firebaseClient)
         {
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            System.Diagnostics.Debug.WriteLine("✅ FirebaseCategoryService oluşturuldu (DI ile)");
+            KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseCategoryService oluşturuldu (DI ile)");
         }
 
         public async Task<IEnumerable<Category>> GetCategoriesAsync()

@@ -72,7 +72,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Puan yükleme hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Puan yükleme hatası: {ex.Message}");
             }
         }
 
@@ -116,7 +116,7 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = "Beklenmedik bir hata oluştu.";
-                Console.WriteLine($"❌ RedeemBox hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ RedeemBox hatası: {ex.Message}");
                 RedemptionCompleted?.Invoke(this, false);
             }
             finally

@@ -1,4 +1,4 @@
-#if IOS || MACCATALYST
+ï»¿#if IOS || MACCATALYST
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using UIKit;
@@ -7,9 +7,9 @@ using Foundation;
 namespace KamPay.Handlers
 {
     /// <summary>
-    /// iOS için optimize edilmiþ görsel yükleme handler'ý
+    /// iOS iÃ§in optimize edilmiÅŸ gÃ¶rsel yÃ¼kleme handler'Ä±
     /// Native UIImage cache ile performans
-    /// NOT: Þu an için FFImageLoading kullanýlýyor (özel handler gerekli deðil)
+    /// NOT: Åžu an iÃ§in FFImageLoading kullanÄ±lÄ±yor (Ã¶zel handler gerekli deÄŸil)
     /// </summary>
     public class OptimizedImageHandler : ImageHandler
     {
@@ -31,7 +31,7 @@ namespace KamPay.Handlers
         {
             if (VirtualView?.Source == null) return;
 
-            // ? URI Source (web görsel)
+            // ? URI Source (web gÃ¶rsel)
             if (VirtualView.Source is UriImageSource uriSource)
             {
                 var nsUrl = new NSUrl(uriSource.Uri.ToString());
@@ -48,7 +48,7 @@ namespace KamPay.Handlers
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"?? iOS Image yükleme hatasý: {ex.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"?? iOS Image yÃ¼kleme hatasÄ±: {ex.Message}");
                         return null;
                     }
                 });
@@ -60,7 +60,7 @@ namespace KamPay.Handlers
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             imageView.Image = t.Result;
-                            System.Diagnostics.Debug.WriteLine($"? iOS: Görsel yüklendi - {uriSource.Uri}");
+                            KamPay.Helpers.AppLogger.DebugLog($"? iOS: GÃ¶rsel yÃ¼klendi - {uriSource.Uri}");
                         });
                     }
                 }, TaskScheduler.Default);
@@ -71,9 +71,9 @@ namespace KamPay.Handlers
                 var image = UIImage.FromFile(fileSource.File);
                 imageView.Image = image;
                 
-                System.Diagnostics.Debug.WriteLine($"? iOS: Yerel görsel yüklendi - {fileSource.File}");
+                KamPay.Helpers.AppLogger.DebugLog($"? iOS: Yerel gÃ¶rsel yÃ¼klendi - {fileSource.File}");
             }
-            // ? Stream Source (bellek akýþý)
+            // ? Stream Source (bellek akÄ±ÅŸÄ±)
             else if (VirtualView.Source is StreamImageSource streamSource)
             {
                 var cancellationToken = System.Threading.CancellationToken.None;
@@ -98,3 +98,4 @@ namespace KamPay.Handlers
     }
 }
 #endif
+

@@ -69,8 +69,8 @@ namespace KamPay.ViewModels
         private PostType? filterPostType = null;
 
         // : UI koleksiyonları
-        public ObservableCollection<GoodDeedPost> Posts { get; } = new();
-        public ObservableCollection<GoodDeedPost> FilteredPosts { get; } = new();
+        public ObservableRangeCollection<GoodDeedPost> Posts { get; } = new();
+        public ObservableRangeCollection<GoodDeedPost> FilteredPosts { get; } = new();
         public List<PostType> PostTypes { get; } = Enum.GetValues(typeof(PostType)).Cast<PostType>().ToList();
 
         // : Filtre için kategori listesi (null = "Hepsi" seçeneği dahil)
@@ -225,12 +225,8 @@ namespace KamPay.ViewModels
             // Tarihe göre sırala (en yeni önce)
             query = query.OrderByDescending(p => p.CreatedAt);
 
-            // Filtrelenmiş listeyi güncelle
-            FilteredPosts.Clear();
-            foreach (var post in query)
-            {
-                FilteredPosts.Add(post);
-            }
+            // Filtrelenmiş listeyi performanslı şekilde güncelle
+            FilteredPosts.ReplaceRange(query);
         }
 
         [RelayCommand]
@@ -359,7 +355,7 @@ namespace KamPay.ViewModels
                 else
                     post.LikeCount++;
 
-                System.Diagnostics.Debug.WriteLine($"❌ Beğeni hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ Beğeni hatası: {ex.Message}");
             }
         }
         

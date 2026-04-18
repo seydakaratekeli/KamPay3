@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -18,7 +18,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     private readonly IStorageService _storageService;
     private bool _disposed = false;
 
-    // ✅ Cache Yönetimi
+    // âœ… Cache YÃ¶netimi
     private bool _isDataLoaded = false;
     private DateTime _lastLoadTime = DateTime.MinValue;
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
@@ -56,7 +56,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         _profileService = profileService;
         _storageService = storageService;
 
-        // ✅ Global durum değişikliklerini dinle
+        // âœ… Global durum deÄŸiÅŸikliklerini dinle
         _userStateService.UserProfileChanged += OnUserProfileChanged;
 
         WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
@@ -76,7 +76,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         });
     }
 
-    // ✅ Kullanıcı verisi değiştiğinde (EditProfile'dan dönüldüğünde) tetiklenir
+    // âœ… KullanÄ±cÄ± verisi deÄŸiÅŸtiÄŸinde (EditProfile'dan dÃ¶nÃ¼ldÃ¼ÄŸÃ¼nde) tetiklenir
     private void OnUserProfileChanged(object? sender, User? updatedUser)
     {
         if (updatedUser == null)
@@ -88,7 +88,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             CurrentUser = updatedUser;
             HasProfileImage = !string.IsNullOrWhiteSpace(updatedUser.ProfileImageUrl);
 
-            // Veri değiştiği için cache'i geçersiz kılıyoruz ki InitializeAsync gerekirse yenilesin
+            // Veri deÄŸiÅŸtiÄŸi iÃ§in cache'i geÃ§ersiz kÄ±lÄ±yoruz ki InitializeAsync gerekirse yenilesin
             _isDataLoaded = false;
         }
         OnPropertyChanged(nameof(CurrentUser));
@@ -99,10 +99,10 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         if (_userStateService.CurrentUser == null && !_authService.IsUserLoggedIn())
             return;
 
-        // Cache kontrolü: Veri yüklü ve süresi dolmadıysa Firebase'e tekrar gitme
+        // Cache kontrolÃ¼: Veri yÃ¼klÃ¼ ve sÃ¼resi dolmadÄ±ysa Firebase'e tekrar gitme
         if (_isDataLoaded && (DateTime.UtcNow - _lastLoadTime) < _cacheExpiration)
         {
-            Console.WriteLine("✅ Profil cache'den yüklendi");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… Profil cache'den yÃ¼klendi");
             return;
         }
 
@@ -116,7 +116,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         {
             IsLoading = true;
 
-            // 1. Kullanıcı bilgilerini servisten tazele
+            // 1. KullanÄ±cÄ± bilgilerini servisten tazele
             var userResult = await _userStateService.RefreshCurrentUserAsync();
             if (userResult.Success && userResult.Data != null)
             {
@@ -131,17 +131,17 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
             HasProfileImage = !string.IsNullOrWhiteSpace(CurrentUser.ProfileImageUrl);
 
-            // 2. PARALEL YÜKLEME: İstatistik, Ürünler ve Rozetler
+            // 2. PARALEL YÃœKLEME: Ä°statistik, ÃœrÃ¼nler ve Rozetler
             var statsTask = _profileService.GetUserStatsAsync(CurrentUser.UserId);
             var productsTask = _productService.GetUserProductsAsync(CurrentUser.UserId);
             var badgesTask = _profileService.GetUserBadgesAsync(CurrentUser.UserId);
 
             await Task.WhenAll(statsTask, productsTask, badgesTask);
 
-            // Sonuçları işle
+            // SonuÃ§larÄ± iÅŸle
             UserStats = statsTask.Result.Success ? statsTask.Result.Data : new UserStats();
 
-            // Ürünler (İlk 10 ürünü göster)
+            // ÃœrÃ¼nler (Ä°lk 10 Ã¼rÃ¼nÃ¼ gÃ¶ster)
             if (productsTask.Result.Success && productsTask.Result.Data != null)
             {
                 MyProducts.Clear();
@@ -162,11 +162,11 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
 
             _isDataLoaded = true;
             _lastLoadTime = DateTime.UtcNow;
-            Console.WriteLine("✅ Profil verileri Firebase'den çekildi ve cache'lendi");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… Profil verileri Firebase'den Ã§ekildi ve cache'lendi");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ LoadProfileAsync hatası: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"âŒ LoadProfileAsync hatasÄ±: {ex.Message}");
             await Application.Current.MainPage.DisplayAlert(Res["Error"], ex.Message, Res["Ok"]);
         }
         finally
@@ -184,13 +184,13 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         IsRefreshing = false;
     }
 
-    // ✅ YENİ: Ayrı Sayfaya Yönlendirme Komutu (Eski EditProfileAsync yerine)
+    // âœ… YENÄ°: AyrÄ± Sayfaya YÃ¶nlendirme Komutu (Eski EditProfileAsync yerine)
     [RelayCommand]
     private async Task GoToEditProfileAsync()
     {
         if (CurrentUser == null) return;
 
-        // Düzenleme sayfası için UserProfile modelini hazırla
+        // DÃ¼zenleme sayfasÄ± iÃ§in UserProfile modelini hazÄ±rla
         var profileData = new UserProfile
         {
             UserId = CurrentUser.UserId,
@@ -223,7 +223,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
             _userStateService.ClearUser();
             await _authService.LogoutAsync();
 
-            // Tüm statik ve dinamik cache'leri temizle
+            // TÃ¼m statik ve dinamik cache'leri temizle
             ChatViewModel.ClearCache();
             var productCache = Application.Current?.Handler?.MauiContext?.Services.GetService<IProductCacheService>();
             if (productCache != null) await productCache.InvalidateCacheAsync();
@@ -246,10 +246,10 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         UserStats = new UserStats();
         CurrentUser = new User();
         HasProfileImage = false;
-        Console.WriteLine("🧹 ProfileViewModel: State temizlendi.");
+        KamPay.Helpers.AppLogger.DebugLog("ğŸ§¹ ProfileViewModel: State temizlendi.");
     }
 
-    // ✅ Navigasyon Komutları
+    // âœ… Navigasyon KomutlarÄ±
     [RelayCommand] private async Task ViewAllProductsAsync() => await Shell.Current.GoToAsync($"myproducts?userId={CurrentUser.UserId}");
     [RelayCommand] private async Task GoToOffersAsync() => await Shell.Current.GoToAsync(nameof(OffersPage));
     [RelayCommand] private async Task GoToFavoritesAsync() => await Shell.Current.GoToAsync(nameof(FavoritesPage));
@@ -272,7 +272,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ChangeLanguageAsync()
     {
-        var action = await Application.Current.MainPage.DisplayActionSheet(Res["SelectLanguage"], Res["Cancel"], null, "Türkçe", "English");
+        var action = await Application.Current.MainPage.DisplayActionSheet(Res["SelectLanguage"], Res["Cancel"], null, "TÃ¼rkÃ§e", "English");
         if (string.IsNullOrEmpty(action) || action == Res["Cancel"]) return;
 
         var cultureCode = action == "English" ? "en" : "tr";
@@ -287,7 +287,7 @@ public partial class ProfileViewModel : ObservableObject, IDisposable
         await Share.RequestAsync(new ShareTextRequest
         {
             Title = Res["ShareProfile"],
-            Text = $"{CurrentUser.FullName}\n🎯 {UserStats?.Points ?? 0} {Res["Points"]}\n📦 {UserStats?.TotalProducts ?? 0} {Res["Product"]}\n\nKamPay"
+            Text = $"{CurrentUser.FullName}\nğŸ¯ {UserStats?.Points ?? 0} {Res["Points"]}\nğŸ“¦ {UserStats?.TotalProducts ?? 0} {Res["Product"]}\n\nKamPay"
         });
     }
 

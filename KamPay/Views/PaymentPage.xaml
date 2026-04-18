@@ -155,6 +155,36 @@
                     </Border>
                 </Grid>
 
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="White"
+                        StrokeThickness="0"
+                        HeightRequest="80"
+                        Margin="0,5,0,0">
+                    <Border.Shadow>
+                        <Shadow Brush="#43A047" Opacity="0.2" Radius="12" Offset="0,4"/>
+                    </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding StartPaymentCommand}" CommandParameter="cash"/>
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="20" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Border BackgroundColor="#E8F5E9"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 25">
+                            <Label Text="💵" 
+                                   FontSize="28" 
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="Elden (Yüz Yüze) Ödeme" 
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"
+                               TextColor="#43A047"/>
+                    </HorizontalStackLayout>
+                </Border>
+
                 <!-- Credit Card Payment Section -->
                 <Border IsVisible="{Binding IsCardSelected}"
                         BackgroundColor="White"

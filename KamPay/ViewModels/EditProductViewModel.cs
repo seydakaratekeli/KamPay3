@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
@@ -59,7 +59,7 @@ namespace KamPay.ViewModels
 
         // HasLocation property - checks if a valid location is set
         public bool HasLocation => !string.IsNullOrEmpty(Location) &&
-                                   Location != "Konum alınıyor..." &&
+                                   Location != "Konum alÄ±nÄ±yor..." &&
                                    Latitude.HasValue &&
                                    Longitude.HasValue;
 
@@ -119,7 +119,7 @@ namespace KamPay.ViewModels
             }
             else
             {
-                ErrorMessage = "Düzenlenecek ürün yüklenemedi.";
+                ErrorMessage = "DÃ¼zenlenecek Ã¼rÃ¼n yÃ¼klenemedi.";
             }
             IsLoading = false;
         }
@@ -165,7 +165,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
                 ErrorMessage = string.Empty;
-                Location = "Konum alınıyor...";
+                Location = "Konum alÄ±nÄ±yor...";
                 OnPropertyChanged(nameof(HasLocation));
 
                 var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
@@ -178,7 +178,7 @@ namespace KamPay.ViewModels
                 {
                     Location = string.Empty;
                     OnPropertyChanged(nameof(HasLocation));
-                    await Shell.Current.DisplayAlert("İzin Gerekli", "Konum almak için izin vermeniz gerekmektedir.", "Tamam");
+                    await Shell.Current.DisplayAlert("Ä°zin Gerekli", "Konum almak iÃ§in izin vermeniz gerekmektedir.", "Tamam");
                     return;
                 }
 
@@ -191,7 +191,7 @@ namespace KamPay.ViewModels
                     Latitude = deviceLocation.Latitude;
                     Longitude = deviceLocation.Longitude;
 
-                    // Harita güncelleme mesajı gönder
+                    // Harita gÃ¼ncelleme mesajÄ± gÃ¶nder
                     WeakReferenceMessenger.Default.Send(new MapLocationUpdateMessage(
                         deviceLocation.Latitude,
                         deviceLocation.Longitude));
@@ -200,7 +200,7 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    Location = "Konum alınamadı. GPS'inizi kontrol edin.";
+                    Location = "Konum alÄ±namadÄ±. GPS'inizi kontrol edin.";
                     OnPropertyChanged(nameof(HasLocation));
                 }
             }
@@ -216,9 +216,9 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Location = "Konum alınırken hata oluştu.";
+                Location = "Konum alÄ±nÄ±rken hata oluÅŸtu.";
                 OnPropertyChanged(nameof(HasLocation));
-                Console.WriteLine($"❌ Konum Hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ Konum HatasÄ±: {ex.Message}");
             }
             finally
             {
@@ -226,7 +226,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // Koordinatlardan adres çözümleme
+        // Koordinatlardan adres Ã§Ã¶zÃ¼mleme
         public async Task UpdateLocationFromCoordinatesAsync(double latitude, double longitude)
         {
             try
@@ -240,7 +240,7 @@ namespace KamPay.ViewModels
             {
                 Location = $"{latitude:F4}, {longitude:F4}";
                 OnPropertyChanged(nameof(HasLocation));
-                Console.WriteLine($"Adres çözümleme hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"Adres Ã§Ã¶zÃ¼mleme hatasÄ±: {ex.Message}");
             }
         }
 
@@ -267,12 +267,12 @@ namespace KamPay.ViewModels
 
             if (result.Success)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Başarılı", "Ürün güncellendi.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("BaÅŸarÄ±lÄ±", "ÃœrÃ¼n gÃ¼ncellendi.", "Tamam");
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                ErrorMessage = result.Message ?? "Ürün güncellenemedi.";
+                ErrorMessage = result.Message ?? "ÃœrÃ¼n gÃ¼ncellenemedi.";
             }
             IsLoading = false;
         }
@@ -290,29 +290,29 @@ namespace KamPay.ViewModels
             {
                 var photos = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
-                    Title = "Ürün Görseli Seçin"
+                    Title = "ÃœrÃ¼n GÃ¶rseli SeÃ§in"
                 });
 
                 if (photos != null)
                 {
-                    // Maksimum görsel sayısı kontrolü
+                    // Maksimum gÃ¶rsel sayÄ±sÄ± kontrolÃ¼
                     if (ImagePaths.Count >= 5)
                     {
                         await Application.Current!.MainPage!.DisplayAlert(
-                            "Uyarı",
-                            "En fazla 5 görsel ekleyebilirsiniz",
+                            "UyarÄ±",
+                            "En fazla 5 gÃ¶rsel ekleyebilirsiniz",
                             "Tamam"
                         );
                         return;
                     }
 
-                    // Görseli listeye ekle
+                    // GÃ¶rseli listeye ekle
                     ImagePaths.Add(photos.FullPath);
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Görsel seçilirken hata oluştu: {ex.Message}";
+                ErrorMessage = $"GÃ¶rsel seÃ§ilirken hata oluÅŸtu: {ex.Message}";
             }
         }
 
@@ -325,7 +325,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Seçili görseli tam ekran önizle
+        //  SeÃ§ili gÃ¶rseli tam ekran Ã¶nizle
         [RelayCommand]
         private async Task PreviewImageAsync(string imagePath)
         {

@@ -31,7 +31,7 @@ public partial class FavoritesPage : ContentPage
             {
                 _ = _viewModel.InitializeAsync();
                 _isFirstLoad = false;
-                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
+                KamPay.Helpers.AppLogger.DebugLog("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
             }
         }
         else
@@ -40,11 +40,11 @@ public partial class FavoritesPage : ContentPage
             {
                 _ = _viewModel.InitializeAsync();
                 _isFirstLoad = false;
-                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
+                KamPay.Helpers.AppLogger.DebugLog("✅ FavoritesPage: İlk yükleme (Real-time listener aktif)");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("✅ FavoritesPage: Cache'den gösterildi (Listener zaten aktif)");
+                KamPay.Helpers.AppLogger.DebugLog("✅ FavoritesPage: Cache'den gösterildi (Listener zaten aktif)");
             }
         }
     }
@@ -102,13 +102,13 @@ public partial class FavoritesPage : ContentPage
     {
         base.OnDisappearing(); //  DOĞRU METHOD!
         //  Dispose ETME - Listener çalışmaya devam etsin
-        System.Diagnostics.Debug.WriteLine("⏸️ FavoritesPage: Arka plana alındı (Listener aktif)");
+        KamPay.Helpers.AppLogger.DebugLog("⏸️ FavoritesPage: Arka plana alındı (Listener aktif)");
     }
 
     //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
     ~FavoritesPage()
     {
         _viewModel?.Dispose();
-        System.Diagnostics.Debug.WriteLine("🗑️ FavoritesPage: Dispose edildi");
+        KamPay.Helpers.AppLogger.DebugLog("🗑️ FavoritesPage: Dispose edildi");
     }
 }

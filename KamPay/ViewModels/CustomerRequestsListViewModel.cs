@@ -123,7 +123,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? UltraFastLoadAsync Error: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"? UltraFastLoadAsync Error: {ex.Message}");
                 IsLoading = false;
             }
         }
@@ -348,3 +348,4 @@ namespace KamPay.ViewModels
         }
     }
 }
+

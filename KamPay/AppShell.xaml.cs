@@ -15,28 +15,28 @@ namespace KamPay
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("⚙️ AppShell başlatılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("⚙️ AppShell başlatılıyor...");
                 
                 InitializeComponent();
-                System.Diagnostics.Debug.WriteLine("✓ AppShell.InitializeComponent tamamlandı");
+                KamPay.Helpers.AppLogger.DebugLog("✓ AppShell.InitializeComponent tamamlandı");
                 
                 _viewModel = vm;
                 BindingContext = vm;
-                System.Diagnostics.Debug.WriteLine("✓ AppShell.BindingContext atandı");
+                KamPay.Helpers.AppLogger.DebugLog("✓ AppShell.BindingContext atandı");
 
                 // Rota Kayıtları (Mevcut kodun aynısı)
                 RegisterRoutes();
-                System.Diagnostics.Debug.WriteLine("✓ AppShell rotaları kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("✓ AppShell rotaları kaydedildi");
                 
                 // Tab title'ları ayarla
                 SetupTabTitles();
                 
-                System.Diagnostics.Debug.WriteLine("✓ AppShell başarıyla başlatıldı");
+                KamPay.Helpers.AppLogger.DebugLog("✓ AppShell başarıyla başlatıldı");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: AppShell constructor hatası: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ KRITIK: AppShell constructor hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ StackTrace: {ex.StackTrace}");
                 throw; // Constructor'da kritik hatalar yeniden fırlatılmalı
             }
         }
@@ -64,7 +64,7 @@ namespace KamPay
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Tab title setup hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Tab title setup hatası: {ex.Message}");
             }
         }
 
@@ -92,7 +92,7 @@ namespace KamPay
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Tab title güncelleme hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Tab title güncelleme hatası: {ex.Message}");
             }
         }
 
@@ -147,7 +147,7 @@ namespace KamPay
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"⚠️ SecureStorage okuma hatası: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ SecureStorage okuma hatası: {ex.Message}");
                 }
 
                 if (!string.IsNullOrEmpty(userId))
@@ -163,7 +163,7 @@ namespace KamPay
                             // Eğer UserStateService'de kullanıcı yoksa, logout yapılmış demektir
                             if (currentUser == null)
                             {
-                                Console.WriteLine("⚠️ UserStateService'de kullanıcı yok - login ekranına yönlendiriliyor");
+                                KamPay.Helpers.AppLogger.DebugLog("⚠️ UserStateService'de kullanıcı yok - login ekranına yönlendiriliyor");
                                 
                                 // 🔒 GÜVENLIK: SecureStorage'ı temizle
                                 SecureStorage.Remove("secure_user_id");
@@ -181,7 +181,7 @@ namespace KamPay
                                 // Kullanıcı geçerli - ana ekrana yönlendir (eğer login sayfasındaysa)
                                 if (CurrentState?.Location?.ToString().Contains("LoginPage") == true)
                                 {
-                                    Console.WriteLine("✅ Geçerli kullanıcı var - ana ekrana yönlendiriliyor");
+                                    KamPay.Helpers.AppLogger.DebugLog("✅ Geçerli kullanıcı var - ana ekrana yönlendiriliyor");
                                     await GoToAsync("//MainApp");
                                 }
                             }
@@ -189,7 +189,7 @@ namespace KamPay
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"⚠️ Kullanıcı doğrulama hatası: {ex.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"⚠️ Kullanıcı doğrulama hatası: {ex.Message}");
                         // Hata durumunda güvenli taraf: Login ekranında kal
                         await GoToAsync("//LoginPage");
                     }
@@ -197,12 +197,12 @@ namespace KamPay
                 else
                 {
                     // userId yoksa login ekranında kal
-                    Console.WriteLine("⏭️ userId yok, login ekranında kalınıyor");
+                    KamPay.Helpers.AppLogger.DebugLog("⏭️ userId yok, login ekranında kalınıyor");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ AppShell.OnAppearing hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"❌ AppShell.OnAppearing hatası: {ex.Message}");
             }
             finally
             {

@@ -1,4 +1,4 @@
-#if ANDROID
+ï»¿#if ANDROID
 using Android.Hardware.Camera2;
 using Android.Views;
 using Microsoft.Maui.Handlers;
@@ -8,8 +8,8 @@ using ZXing.Net.Maui.Controls;
 namespace KamPay.Handlers
 {
     /// <summary>
-    /// Android için optimize edilmiþ QR kod tarama handler'ý
-    /// Camera2 API ile native performans (ZXing.Net.Maui'den 2-3x daha hýzlý)
+    /// Android iÃ§in optimize edilmiÅŸ QR kod tarama handler'Ä±
+    /// Camera2 API ile native performans (ZXing.Net.Maui'den 2-3x daha hÄ±zlÄ±)
     /// </summary>
     public class FastQRScannerHandler : ViewHandler<CameraBarcodeReaderView, Android.Views.View>
     {
@@ -26,11 +26,11 @@ namespace KamPay.Handlers
 
         protected override Android.Views.View CreatePlatformView()
         {
-            // ? TextureView ile native kamera görünümü
+            // ? TextureView ile native kamera gÃ¶rÃ¼nÃ¼mÃ¼
             _textureView = new TextureView(Context);
             _textureView.SurfaceTextureListener = new CameraSurfaceTextureListener(this);
             
-            System.Diagnostics.Debug.WriteLine("? FastQRScannerHandler: TextureView oluþturuldu");
+            KamPay.Helpers.AppLogger.DebugLog("? FastQRScannerHandler: TextureView oluÅŸturuldu");
             return _textureView;
         }
 
@@ -38,13 +38,13 @@ namespace KamPay.Handlers
         {
             base.ConnectHandler(platformView);
             
-            // Kamera izinleri kontrol edilmeli (önceden alýnmýþ olmalý)
+            // Kamera izinleri kontrol edilmeli (Ã¶nceden alÄ±nmÄ±ÅŸ olmalÄ±)
             InitializeCamera();
         }
 
         protected override void DisconnectHandler(Android.Views.View platformView)
         {
-            // Kamera kaynaklarýný temizle
+            // Kamera kaynaklarÄ±nÄ± temizle
             CloseCamera();
             base.DisconnectHandler(platformView);
         }
@@ -56,7 +56,7 @@ namespace KamPay.Handlers
                 _cameraManager = (CameraManager?)Context.GetSystemService(Android.Content.Context.CameraService);
                 if (_cameraManager == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("?? CameraManager alýnamadý");
+                    KamPay.Helpers.AppLogger.DebugLog("?? CameraManager alÄ±namadÄ±");
                     return;
                 }
 
@@ -64,18 +64,18 @@ namespace KamPay.Handlers
                 var cameraId = GetBackCameraId();
                 if (string.IsNullOrEmpty(cameraId))
                 {
-                    System.Diagnostics.Debug.WriteLine("?? Arka kamera bulunamadý");
+                    KamPay.Helpers.AppLogger.DebugLog("?? Arka kamera bulunamadÄ±");
                     return;
                 }
 
-                // ? Kamerayý aç (callback ile)
+                // ? KamerayÄ± aÃ§ (callback ile)
                 _cameraManager.OpenCamera(cameraId, new CameraStateCallback(this), null);
                 
-                System.Diagnostics.Debug.WriteLine($"? Kamera açýlýyor: {cameraId}");
+                KamPay.Helpers.AppLogger.DebugLog($"? Kamera aÃ§Ä±lÄ±yor: {cameraId}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"?? Kamera baþlatma hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"?? Kamera baÅŸlatma hatasÄ±: {ex.Message}");
             }
         }
 
@@ -101,7 +101,7 @@ namespace KamPay.Handlers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"?? Kamera ID alýnamadý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"?? Kamera ID alÄ±namadÄ±: {ex.Message}");
             }
 
             return null;
@@ -117,11 +117,11 @@ namespace KamPay.Handlers
                 _cameraDevice?.Close();
                 _cameraDevice = null;
 
-                System.Diagnostics.Debug.WriteLine("? Kamera kaynaklarý temizlendi");
+                KamPay.Helpers.AppLogger.DebugLog("? Kamera kaynaklarÄ± temizlendi");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"?? Kamera kapatma hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"?? Kamera kapatma hatasÄ±: {ex.Message}");
             }
         }
 
@@ -139,21 +139,21 @@ namespace KamPay.Handlers
             {
                 _handler._cameraDevice = camera;
                 _handler.StartCameraPreview();
-                System.Diagnostics.Debug.WriteLine("? Kamera açýldý");
+                KamPay.Helpers.AppLogger.DebugLog("? Kamera aÃ§Ä±ldÄ±");
             }
 
             public override void OnDisconnected(CameraDevice camera)
             {
                 camera.Close();
                 _handler._cameraDevice = null;
-                System.Diagnostics.Debug.WriteLine("?? Kamera baðlantýsý kesildi");
+                KamPay.Helpers.AppLogger.DebugLog("?? Kamera baÄŸlantÄ±sÄ± kesildi");
             }
 
             public override void OnError(CameraDevice camera, CameraError error)
             {
                 camera.Close();
                 _handler._cameraDevice = null;
-                System.Diagnostics.Debug.WriteLine($"? Kamera hatasý: {error}");
+                KamPay.Helpers.AppLogger.DebugLog($"? Kamera hatasÄ±: {error}");
             }
         }
 
@@ -188,7 +188,7 @@ namespace KamPay.Handlers
             {
                 if (_cameraDevice == null || _textureView?.SurfaceTexture == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("?? Kamera veya texture hazýr deðil");
+                    KamPay.Helpers.AppLogger.DebugLog("?? Kamera veya texture hazÄ±r deÄŸil");
                     return;
                 }
 
@@ -196,7 +196,7 @@ namespace KamPay.Handlers
                 var captureRequestBuilder = _cameraDevice.CreateCaptureRequest(CameraTemplate.Preview);
                 captureRequestBuilder?.AddTarget(surface);
 
-                // ? Otomatik fokus ve ýþýk ayarlarý
+                // ? Otomatik fokus ve Ä±ÅŸÄ±k ayarlarÄ±
                 if (CaptureRequest.ControlAfMode != null)
                     captureRequestBuilder?.Set(CaptureRequest.ControlAfMode, (int)ControlAFMode.ContinuousPicture);
                 if (CaptureRequest.ControlAeMode != null)
@@ -209,11 +209,11 @@ namespace KamPay.Handlers
                     null);
 #pragma warning restore CA1422
 
-                System.Diagnostics.Debug.WriteLine("? Kamera önizleme baþlatýldý");
+                KamPay.Helpers.AppLogger.DebugLog("? Kamera Ã¶nizleme baÅŸlatÄ±ldÄ±");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"?? Önizleme baþlatma hatasý: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"?? Ã–nizleme baÅŸlatma hatasÄ±: {ex.Message}");
             }
         }
 
@@ -235,15 +235,16 @@ namespace KamPay.Handlers
                 if (_builder != null)
                 {
                     session.SetRepeatingRequest(_builder.Build(), null, null);
-                    System.Diagnostics.Debug.WriteLine("? Capture session yapýlandýrýldý");
+                    KamPay.Helpers.AppLogger.DebugLog("? Capture session yapÄ±landÄ±rÄ±ldÄ±");
                 }
             }
 
             public override void OnConfigureFailed(CameraCaptureSession session)
             {
-                System.Diagnostics.Debug.WriteLine("? Capture session yapýlandýrma baþarýsýz");
+                KamPay.Helpers.AppLogger.DebugLog("? Capture session yapÄ±landÄ±rma baÅŸarÄ±sÄ±z");
             }
         }
     }
 }
 #endif
+

@@ -28,7 +28,7 @@ public class LocalizationResourceManager : ILocalizationService
     public static void EnsureInitialized()
     {
         var _ = Instance;
-        System.Diagnostics.Debug.WriteLine($"✓ LocalizationResourceManager zorla başlatıldı - IsInitialized: {Instance.IsInitialized}");
+        KamPay.Helpers.AppLogger.DebugLog($"✓ LocalizationResourceManager zorla başlatıldı - IsInitialized: {Instance.IsInitialized}");
     }
     
     public bool IsInitialized => _isInitialized;
@@ -40,33 +40,33 @@ public class LocalizationResourceManager : ILocalizationService
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("⚙️ LocalizationResourceManager başlatılıyor...");
+            KamPay.Helpers.AppLogger.DebugLog("⚙️ LocalizationResourceManager başlatılıyor...");
             
             try
             {
                 AppResources.Culture = null;
-                System.Diagnostics.Debug.WriteLine("✓ Neutral culture ayarlandı (başlangıç)");
+                KamPay.Helpers.AppLogger.DebugLog("✓ Neutral culture ayarlandı (başlangıç)");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Culture ayarlama hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Culture ayarlama hatası: {ex.Message}");
             }
             
             var resourceManager = AppResources.ResourceManager;
             if (resourceManager == null)
             {
-                System.Diagnostics.Debug.WriteLine("⚠️ UYARI: ResourceManager null");
+                KamPay.Helpers.AppLogger.DebugLog("⚠️ UYARI: ResourceManager null");
                 _isInitialized = false;
                 return;
             }
             
-            System.Diagnostics.Debug.WriteLine("✓ ResourceManager başarıyla erişildi");
+            KamPay.Helpers.AppLogger.DebugLog("✓ ResourceManager başarıyla erişildi");
             _isInitialized = true;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ LocalizationResourceManager başlatma hatası: {ex.GetType().Name}");
-            System.Diagnostics.Debug.WriteLine($"   Mesaj: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"⚠️ LocalizationResourceManager başlatma hatası: {ex.GetType().Name}");
+            KamPay.Helpers.AppLogger.DebugLog($"   Mesaj: {ex.Message}");
             _isInitialized = true;
         }
     }
@@ -79,7 +79,7 @@ public class LocalizationResourceManager : ILocalizationService
             {
                 if (string.IsNullOrEmpty(key))
                 {
-                    System.Diagnostics.Debug.WriteLine("⚠️ Boş anahtar ile kaynak erişimi denendi");
+                    KamPay.Helpers.AppLogger.DebugLog("⚠️ Boş anahtar ile kaynak erişimi denendi");
                     return string.Empty;
                 }
 
@@ -87,7 +87,7 @@ public class LocalizationResourceManager : ILocalizationService
                 
                 if (resourceManager == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ ResourceManager null - fallback key döndürülüyor: {key}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ ResourceManager null - fallback key döndürülüyor: {key}");
                     return key;
                 }
 
@@ -99,7 +99,7 @@ public class LocalizationResourceManager : ILocalizationService
 
                 if (string.IsNullOrEmpty(value))
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Kaynak bulunamadı: {key}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ Kaynak bulunamadı: {key}");
                     return key;
                 }
 
@@ -107,7 +107,7 @@ public class LocalizationResourceManager : ILocalizationService
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Kaynak erişim hatası: {key}, Hata: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Kaynak erişim hatası: {key}, Hata: {ex.Message}");
                 return key;
             }
         }
@@ -117,13 +117,13 @@ public class LocalizationResourceManager : ILocalizationService
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine($"⚙️ Culture ayarlanıyor: {cultureCode}");
+            KamPay.Helpers.AppLogger.DebugLog($"⚙️ Culture ayarlanıyor: {cultureCode}");
             
             if (string.IsNullOrEmpty(cultureCode) || cultureCode == "tr")
             {
                 AppResources.Culture = null;
                 cultureCode = "tr";
-                System.Diagnostics.Debug.WriteLine("✓ Neutral culture (Türkçe) ayarlandı");
+                KamPay.Helpers.AppLogger.DebugLog("✓ Neutral culture (Türkçe) ayarlandı");
             }
             else if (cultureCode == "en")
             {
@@ -131,11 +131,11 @@ public class LocalizationResourceManager : ILocalizationService
                 {
                     var englishCulture = new CultureInfo("en");
                     AppResources.Culture = englishCulture;
-                    System.Diagnostics.Debug.WriteLine("✓ İngilizce kültür ayarlandı");
+                    KamPay.Helpers.AppLogger.DebugLog("✓ İngilizce kültür ayarlandı");
                 }
                 catch (Exception cultureEx)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ İngilizce culture ayarlama hatası: {cultureEx.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ İngilizce culture ayarlama hatası: {cultureEx.Message}");
                     AppResources.Culture = null;
                 }
             }
@@ -145,11 +145,11 @@ public class LocalizationResourceManager : ILocalizationService
                 {
                     var culture = new CultureInfo(cultureCode);
                     AppResources.Culture = culture;
-                    System.Diagnostics.Debug.WriteLine($"✓ Kültür ayarlandı: {culture.Name}");
+                    KamPay.Helpers.AppLogger.DebugLog($"✓ Kültür ayarlandı: {culture.Name}");
                 }
                 catch (CultureNotFoundException)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Geçersiz culture kodu: {cultureCode}, neutral kullanılıyor");
+                    KamPay.Helpers.AppLogger.DebugLog($"⚠️ Geçersiz culture kodu: {cultureCode}, neutral kullanılıyor");
                     AppResources.Culture = null;
                 }
             }
@@ -167,12 +167,12 @@ public class LocalizationResourceManager : ILocalizationService
             }
             catch (Exception msgEx)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Message gönderme hatası: {msgEx.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"⚠️ Message gönderme hatası: {msgEx.Message}");
             }
         }
         catch (System.Resources.MissingManifestResourceException mmrEx)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ UYARI: Kaynak dosyası bulunamadı: {mmrEx.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"⚠️ UYARI: Kaynak dosyası bulunamadı: {mmrEx.Message}");
             try
             {
                 AppResources.Culture = null;
@@ -181,7 +181,7 @@ public class LocalizationResourceManager : ILocalizationService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ SetCulture hatası: {ex.GetType().Name} - {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"⚠️ SetCulture hatası: {ex.GetType().Name} - {ex.Message}");
             try
             {
                 AppResources.Culture = null;
@@ -205,7 +205,7 @@ public class LocalizationResourceManager : ILocalizationService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"GetCurrentCulture hatası: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"GetCurrentCulture hatası: {ex.Message}");
             return "tr";
         }
     }
@@ -229,7 +229,7 @@ public class LocalizationResourceManager : ILocalizationService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"GetString hatası: {key}, Hata: {ex.Message}");
+            KamPay.Helpers.AppLogger.DebugLog($"GetString hatası: {key}, Hata: {ex.Message}");
             return key;
         }
     }

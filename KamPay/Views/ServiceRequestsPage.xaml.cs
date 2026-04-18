@@ -24,7 +24,7 @@ namespace KamPay.Views
                 if (_viewModel != null)
                 {
                     _viewModel.SelectedPaymentMethod = option.Method;
-                    System.Diagnostics.Debug.WriteLine($"💳 Ödeme yöntemi seçildi: {option.DisplayName}");
+                    KamPay.Helpers.AppLogger.DebugLog($"💳 Ödeme yöntemi seçildi: {option.DisplayName}");
                 }
             }
         }
@@ -45,11 +45,11 @@ namespace KamPay.Views
             if (_isFirstLoad)
             {
                 _isFirstLoad = false;
-                System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsPage: İlk yükleme (Real-time listener aktif)");
+                KamPay.Helpers.AppLogger.DebugLog("✅ ServiceRequestsPage: İlk yükleme (Real-time listener aktif)");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsPage: Cache'den gösterildi (Listener zaten aktif)");
+                KamPay.Helpers.AppLogger.DebugLog("✅ ServiceRequestsPage: Cache'den gösterildi (Listener zaten aktif)");
             }
         }
 
@@ -115,14 +115,14 @@ namespace KamPay.Views
         {
             base.OnDisappearing();
             //  Dispose ETME - Listener çalışmaya devam etsin
-            System.Diagnostics.Debug.WriteLine("⏸️ ServiceRequestsPage: Arka plana alındı (Listener aktif)");
+            KamPay.Helpers.AppLogger.DebugLog("⏸️ ServiceRequestsPage: Arka plana alındı (Listener aktif)");
         }
 
         //  Sayfa bellekten tamamen kaldırılınca otomatik çağrılır
         ~ServiceRequestsPage()
         {
             _viewModel?.Dispose();
-            System.Diagnostics.Debug.WriteLine("🗑️ ServiceRequestsPage: Dispose edildi");
+            KamPay.Helpers.AppLogger.DebugLog("🗑️ ServiceRequestsPage: Dispose edildi");
         }
     }
 }

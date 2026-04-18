@@ -1,4 +1,4 @@
-// KamPay/Views/GoodDeedBoardPage.xaml.cs
+﻿// KamPay/Views/GoodDeedBoardPage.xaml.cs
 using KamPay.ViewModels;
 using System.Diagnostics;
 
@@ -23,7 +23,7 @@ public partial class GoodDeedBoardPage : ContentPage
         if (!_hasAnimated)
         {
             _hasAnimated = true;
-            // UI Thread animasyon için temiz bırakılıyor
+            // UI Thread animasyon iÃ§in temiz bÄ±rakÄ±lÄ±yor
             await Task.Delay(350);
             await AnimatePageAsync();
             SafeStartListening();
@@ -44,10 +44,10 @@ public partial class GoodDeedBoardPage : ContentPage
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ GoodDeedBoardPage OnAppearing hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ GoodDeedBoardPage OnAppearing hatasÄ±: {ex.Message}");
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    await DisplayAlert("Hata", "Sayfa yüklenirken bir hata oluştu.", "Tamam");
+                    await DisplayAlert("Hata", "Sayfa yÃ¼klenirken bir hata oluÅŸtu.", "Tamam");
                 });
             }
         }
@@ -94,8 +94,8 @@ public partial class GoodDeedBoardPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        // Sayfa gizlendiğinde sadece dinleyicileri durdur, Dispose çağırma.
-        // Bu sayede sayfa tekrar göründüğünde listener'lar yeniden başlatılabilir.
+        // Sayfa gizlendiÄŸinde sadece dinleyicileri durdur, Dispose Ã§aÄŸÄ±rma.
+        // Bu sayede sayfa tekrar gÃ¶rÃ¼ndÃ¼ÄŸÃ¼nde listener'lar yeniden baÅŸlatÄ±labilir.
         if (_viewModel != null)
         {
             _viewModel.StopListening();

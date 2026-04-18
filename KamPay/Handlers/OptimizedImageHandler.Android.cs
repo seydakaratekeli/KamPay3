@@ -1,4 +1,4 @@
-#if ANDROID
+ï»¿#if ANDROID
 using Android.Widget;
 using Bumptech.Glide;
 using Bumptech.Glide.Load.Engine;
@@ -9,8 +9,8 @@ using Microsoft.Maui.Platform;
 namespace KamPay.Handlers
 {
     /// <summary>
-    /// Android için optimize edilmiþ görsel yükleme handler'ý
-    /// Glide kütüphanesi ile native performans
+    /// Android iÃ§in optimize edilmiÅŸ gÃ¶rsel yÃ¼kleme handler'Ä±
+    /// Glide kÃ¼tÃ¼phanesi ile native performans
     /// </summary>
     public class OptimizedImageHandler : ImageHandler
     {
@@ -35,18 +35,18 @@ namespace KamPay.Handlers
             var context = imageView.Context;
             if (context == null) return;
 
-            // ? URI Source (web görsel)
+            // ? URI Source (web gÃ¶rsel)
             if (VirtualView.Source is UriImageSource uriSource)
             {
                 Glide.With(context!)
                     .Load(uriSource.Uri.ToString())
                     .Apply(RequestOptions.DiskCacheStrategyOf(DiskCacheStrategy.All!)) // Disk cache
                     .Placeholder(Android.Resource.Drawable.IcMenuGallery) // Placeholder
-                    .Error(Android.Resource.Drawable.StatNotifyError) // Hata görseli
+                    .Error(Android.Resource.Drawable.StatNotifyError) // Hata gÃ¶rseli
                     .CenterCrop() // AspectFill
                     .Into(imageView);
 
-                System.Diagnostics.Debug.WriteLine($"? Glide: Görsel yüklendi - {uriSource.Uri}");
+                KamPay.Helpers.AppLogger.DebugLog($"? Glide: GÃ¶rsel yÃ¼klendi - {uriSource.Uri}");
             }
             // ? File Source (yerel dosya)
             else if (VirtualView.Source is FileImageSource fileSource)
@@ -57,12 +57,12 @@ namespace KamPay.Handlers
                     .CenterCrop()
                     .Into(imageView);
 
-                System.Diagnostics.Debug.WriteLine($"? Glide: Yerel görsel yüklendi - {fileSource.File}");
+                KamPay.Helpers.AppLogger.DebugLog($"? Glide: Yerel gÃ¶rsel yÃ¼klendi - {fileSource.File}");
             }
-            // ? Stream Source (bellek akýþý)
+            // ? Stream Source (bellek akÄ±ÅŸÄ±)
             else if (VirtualView.Source is StreamImageSource streamSource)
             {
-                // Stream'i byte array'e çevir (Glide byte[] kabul eder)
+                // Stream'i byte array'e Ã§evir (Glide byte[] kabul eder)
                 var cancellationToken = System.Threading.CancellationToken.None;
                 var streamTask = streamSource.Stream(cancellationToken);
 
@@ -87,3 +87,4 @@ namespace KamPay.Handlers
     }
 }
 #endif
+

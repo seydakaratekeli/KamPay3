@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui;
+﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
 using FFImageLoading.Maui;
 using KamPay.Services;
@@ -14,10 +14,11 @@ using System.Reflection;
 using System.Text.Json;
 using KamPay.Resources.Languages;
 using Firebase.Database; 
-using Firebase.Auth; // ✅ YENİ EKLEME
+using Firebase.Auth; // âœ… YENÄ° EKLEME
 using KamPay.Helpers;
 using KamPay.Security;
-using KamPay.Services.Payment; // ✅ EKLEME: Payment namespace
+using KamPay.Services.Payment; // âœ… EKLEME: Payment namespace
+using KamPay.Services.ServiceSharing; // âœ… FAZ 3.2
 
 
 namespace KamPay
@@ -28,28 +29,28 @@ namespace KamPay
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("⚙️ MauiApp başlatılıyor...");
+                KamPay.Helpers.AppLogger.DebugLog("âš™ï¸ MauiApp baÅŸlatÄ±lÄ±yor...");
 
-                //  Türkçe karakter desteği için encoding provider'ı kaydet
+                //  TÃ¼rkÃ§e karakter desteÄŸi iÃ§in encoding provider'Ä± kaydet
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                System.Diagnostics.Debug.WriteLine("✓ Encoding provider kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("âœ“ Encoding provider kaydedildi");
 
-                // ⚠️ ÖNEMLI: Culture ayarını daha minimalist yap
-                // Sadece neutral culture kullan, satellite assembly yüklenmesini bekle
+                // âš ï¸ Ã–NEMLI: Culture ayarÄ±nÄ± daha minimalist yap
+                // Sadece neutral culture kullan, satellite assembly yÃ¼klenmesini bekle
                 try
                 {
-                    // Invariant culture ile başla, sonra LocalizationResourceManager ayarlayacak
+                    // Invariant culture ile baÅŸla, sonra LocalizationResourceManager ayarlayacak
                     CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
                     CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
-                    System.Diagnostics.Debug.WriteLine("✓ Invariant culture ayarlandi (geçici)");
+                    KamPay.Helpers.AppLogger.DebugLog("âœ“ Invariant culture ayarlandi (geÃ§ici)");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Culture ayarlama hatası: {ex.Message}");
+                    KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Culture ayarlama hatasÄ±: {ex.Message}");
                 }
 
                 var builder = MauiApp.CreateBuilder();
-                System.Diagnostics.Debug.WriteLine("✓ MauiApp builder oluştu");
+                KamPay.Helpers.AppLogger.DebugLog("âœ“ MauiApp builder oluÅŸtu");
 
                 builder
                     .UseMauiApp<App>()
@@ -63,58 +64,58 @@ namespace KamPay
                         fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                         fonts.AddFont("MaterialIcons-Regular.ttf", "MaterialIcons");
                     })
-                    // ✅ CUSTOM HANDLERS: Native performance optimizations
+                    // âœ… CUSTOM HANDLERS: Native performance optimizations
                     .ConfigureMauiHandlers(handlers =>
                     {
 #if ANDROID
-                        System.Diagnostics.Debug.WriteLine("🚀 Android Custom Handlers kaydediliyor...");
+                        KamPay.Helpers.AppLogger.DebugLog("ğŸš€ Android Custom Handlers kaydediliyor...");
 
-                        // 1️⃣ Glide ile optimize edilmiş görsel yükleme
+                        // 1ï¸âƒ£ Glide ile optimize edilmiÅŸ gÃ¶rsel yÃ¼kleme
                         // handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
-                        // System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (Glide) kaydedildi");
+                        // KamPay.Helpers.AppLogger.DebugLog("  âœ“ OptimizedImageHandler (Glide) kaydedildi");
 
-                        // 2️⃣ RecyclerView ile optimize edilmiş liste/koleksiyon
-                        // ⚠️ ŞU AN KAPALI: Derleme hatası nedeniyle (type constraint sorunu)
-                        // TODO: .NET MAUI 8 CollectionViewHandler implementation'ını kontrol et
+                        // 2ï¸âƒ£ RecyclerView ile optimize edilmiÅŸ liste/koleksiyon
+                        // âš ï¸ ÅU AN KAPALI: Derleme hatasÄ± nedeniyle (type constraint sorunu)
+                        // TODO: .NET MAUI 8 CollectionViewHandler implementation'Ä±nÄ± kontrol et
                         // handlers.AddHandler<CollectionView, KamPay.Handlers.OptimizedCollectionViewHandler>();
-                        // System.Diagnostics.Debug.WriteLine("  ✓ OptimizedCollectionViewHandler (RecyclerView) kaydedildi");
+                        // KamPay.Helpers.AppLogger.DebugLog("  âœ“ OptimizedCollectionViewHandler (RecyclerView) kaydedildi");
                         
-                        // 3️⃣ Camera2 API ile hızlı QR tarama (opsiyonel - ZXing.Net.Maui yerine)
-                        // ⚠️ DİKKAT: Şu an kapalı (ZXing.Net.Maui zaten yeterince hızlı)
+                        // 3ï¸âƒ£ Camera2 API ile hÄ±zlÄ± QR tarama (opsiyonel - ZXing.Net.Maui yerine)
+                        // âš ï¸ DÄ°KKAT: Åu an kapalÄ± (ZXing.Net.Maui zaten yeterince hÄ±zlÄ±)
                         // handlers.AddHandler<ZXing.Net.Maui.Controls.CameraBarcodeReaderView, KamPay.Handlers.FastQRScannerHandler>();
-                        // System.Diagnostics.Debug.WriteLine("  ✓ FastQRScannerHandler (Camera2) kaydedildi");
+                        // KamPay.Helpers.AppLogger.DebugLog("  âœ“ FastQRScannerHandler (Camera2) kaydedildi");
                         
 #elif IOS || MACCATALYST
-                        System.Diagnostics.Debug.WriteLine("🚀 iOS Custom Handlers kaydediliyor...");
+                        KamPay.Helpers.AppLogger.DebugLog("ğŸš€ iOS Custom Handlers kaydediliyor...");
                         
-                        // 1️⃣ SDWebImage ile optimize edilmiş görsel yükleme
+                        // 1ï¸âƒ£ SDWebImage ile optimize edilmiÅŸ gÃ¶rsel yÃ¼kleme
                         handlers.AddHandler<Image, KamPay.Handlers.OptimizedImageHandler>();
-                        System.Diagnostics.Debug.WriteLine("  ✓ OptimizedImageHandler (SDWebImage) kaydedildi");
+                        KamPay.Helpers.AppLogger.DebugLog("  âœ“ OptimizedImageHandler (SDWebImage) kaydedildi");
 #endif
                     });
 
 
-                // ✅ E-posta Ayarları - appsettings.json'dan yükleniyor
-                var emailSettings = LoadEmailSettings();
-                System.Diagnostics.Debug.WriteLine($"✓ Email ayarları yüklendi: {emailSettings.SmtpHost}");
+                // âœ… appsettings.json'dan ayarlarÄ± yÃ¼kle
+                var appConfig = LoadAppConfig();
+                var emailSettings = appConfig.EmailSettings ?? GetDefaultEmailSettings();
+                KamPay.Helpers.AppLogger.DebugLog($"âœ“ Email ayarlarÄ± yÃ¼klendi: {emailSettings.SmtpHost}");
 
-                // 🔥 Firebase Configuration - appsettings.json'dan yükleniyor
-                var firebaseConfig = LoadFirebaseConfig();
-                System.Diagnostics.Debug.WriteLine($"✓ Firebase config yüklendi: {firebaseConfig.ProjectId}");
+                var firebaseConfig = appConfig.FirebaseConfig ?? GetDefaultFirebaseConfig();
+                KamPay.Helpers.AppLogger.DebugLog($"âœ“ Firebase config yÃ¼klendi: {firebaseConfig.ProjectId}");
 
-                // 🧪 TEST: Email ayarlarını logla ve test modu uyarısı göster
+                // ğŸ§ª TEST: Email ayarlarÄ±nÄ± logla ve test modu uyarÄ±sÄ± gÃ¶ster
                 EmailTestHelper.LogEmailSettings(emailSettings);
                 EmailTestHelper.ShowTestModeWarning(emailSettings);
 
-                // Servislerin DI kaydı
+                // Servislerin DI kaydÄ±
                 builder.Services.AddSingleton(emailSettings);
                 builder.Services.AddSingleton(firebaseConfig);
                 
-                // ✅ YENİ: Firebase temel servislerini DI'ye kaydet
+                // âœ… YENÄ°: Firebase temel servislerini DI'ye kaydet
                 builder.Services.AddSingleton<FirebaseClient>(sp =>
                 {
                     var client = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-                    System.Diagnostics.Debug.WriteLine($"✅ FirebaseClient oluşturuldu: {Constants.FirebaseRealtimeDbUrl}");
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… FirebaseClient oluÅŸturuldu: {Constants.FirebaseRealtimeDbUrl}");
                     return client;
                 });
 
@@ -122,27 +123,27 @@ namespace KamPay
                 {
                     var config = sp.GetRequiredService<FirebaseConfigSettings>();
                     var provider = new FirebaseAuthProvider(new FirebaseConfig(config.ApiKey));
-                    System.Diagnostics.Debug.WriteLine($"✅ FirebaseAuthProvider oluşturuldu");
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… FirebaseAuthProvider oluÅŸturuldu");
                     return provider;
                 });
 
-                // ✅ İYİLEŞTİRME 1: Localization Service DI'ye kaydet
+                // âœ… Ä°YÄ°LEÅTÄ°RME 1: Localization Service DI'ye kaydet
                 builder.Services.AddSingleton<ILocalizationService, LocalizationResourceManager>();
-                System.Diagnostics.Debug.WriteLine("✅ ILocalizationService DI'ye kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("âœ… ILocalizationService DI'ye kaydedildi");
 
-                // ✅ İYİLEŞTİRME 2: RealtimeSnapshotService Generic Factory
+                // âœ… Ä°YÄ°LEÅTÄ°RME 2: RealtimeSnapshotService Generic Factory
                 builder.Services.AddTransient(typeof(IRealtimeSnapshotService<>), typeof(RealtimeSnapshotService<>));
-                System.Diagnostics.Debug.WriteLine("✅ IRealtimeSnapshotService<T> DI'ye kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("âœ… IRealtimeSnapshotService<T> DI'ye kaydedildi");
 
                 builder.Services.AddSingleton<IEmailService, EmailService>();
 
-                // ✅ IUserProfileService'i önce kaydet
+                // âœ… IUserProfileService'i Ã¶nce kaydet
                 builder.Services.AddSingleton<IUserProfileService, FirebaseUserProfileService>();
                 
-                // ✅ INotificationService'i kaydet (IMessagingService bağımlı)
+                // âœ… INotificationService'i kaydet (IMessagingService baÄŸÄ±mlÄ±)
                 builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
 
-                // 🔥 Firebase Authentication Service (FirebaseAuthProvider DI'den geliyor)
+                // ğŸ”¥ Firebase Authentication Service (FirebaseAuthProvider DI'den geliyor)
                 builder.Services.AddSingleton<IAuthenticationService, FirebaseAuthService>();
 
                 // AppShell ve App
@@ -150,56 +151,66 @@ namespace KamPay
                 builder.Services.AddSingleton<App>();
 
                 // Product ve Storage servisleri
-                builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // ✅ Görsel koordinatörü
-                builder.Services.AddSingleton<IProductCreationCoordinator, ProductCreationCoordinator>(); // ✅ YENİ: Ürün oluşturma koordinatörü
+                builder.Services.AddSingleton<IProductImageCoordinator, ProductImageCoordinator>(); // âœ… GÃ¶rsel koordinatÃ¶rÃ¼
+                builder.Services.AddSingleton<IProductCreationCoordinator, ProductCreationCoordinator>(); // âœ… YENÄ°: ÃœrÃ¼n oluÅŸturma koordinatÃ¶rÃ¼
 
-                // ✅ YENİ API BAĞLANTISI (Garson) - Artık doğrudan Firebase ile değil, kendi API'miz ile haberleşiyoruz
-                // ⚠️ Development: Self-signed SSL sertifikası bypass (Android emülatör + localhost için)
+                // âœ… YENÄ° API BAÄLANTISI (Garson) - ArtÄ±k doÄŸrudan Firebase ile deÄŸil, kendi API'miz ile haberleÅŸiyoruz
+                // âš ï¸ Development: Self-signed SSL sertifikasÄ± bypass (Android emÃ¼latÃ¶r + localhost iÃ§in)
                 builder.Services.AddSingleton<HttpClient>(sp =>
                 {
 #if DEBUG
                     var handler = new HttpClientHandler
                     {
-                        // Development ortamında localhost'un self-signed sertifikasını kabul et
+                        // Development ortamÄ±nda localhost'un self-signed sertifikasÄ±nÄ± kabul et
                         ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
                     };
                     var client = new HttpClient(handler);
-                    System.Diagnostics.Debug.WriteLine("⚠️ HttpClient: SSL sertifika doğrulaması KAPALI (Development)");
+                    KamPay.Helpers.AppLogger.DebugLog("âš ï¸ HttpClient: SSL sertifika doÄŸrulamasÄ± KAPALI (Development)");
 #else
                     var client = new HttpClient();
-                    System.Diagnostics.Debug.WriteLine("🔒 HttpClient: SSL sertifika doğrulaması AKTİF (Production)");
+                    KamPay.Helpers.AppLogger.DebugLog("ğŸ”’ HttpClient: SSL sertifika doÄŸrulamasÄ± AKTÄ°F (Production)");
 #endif
                     client.Timeout = TimeSpan.FromSeconds(30);
                     return client;
                 });
                 builder.Services.AddSingleton<IProductService, KamPay.Services.ProductApiService>();
 
-                // Eski servis (Yorum Satırında)
+                // Eski servis (Yorum SatÄ±rÄ±nda)
                 // builder.Services.AddSingleton<IProductService, FirebaseProductService>();
 
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 
-                // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
+                // âœ… YENÄ°: ARMUT MODELÄ° - MÃ¼ÅŸteri ve Profesyonel YÃ¶netimi
                 builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
                 builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
                 
-                // IMessagingService (INotificationService ve FirebaseClient'a bağımlı)
+                // IMessagingService (INotificationService ve FirebaseClient'a baÄŸÄ±mlÄ±)
                 builder.Services.AddSingleton<IMessagingService>(sp =>
                     new FirebaseMessagingService(
-                        sp.GetRequiredService<FirebaseClient>(), // ✅ FIX: FirebaseClient eklendi
+                        sp.GetRequiredService<FirebaseClient>(), // âœ… FIX: FirebaseClient eklendi
                         sp.GetRequiredService<INotificationService>()));
 
-                // ✅ YENİ: Mesaj medya koordinatörü
+                // âœ… YENÄ°: Mesaj medya koordinatÃ¶rÃ¼
                 builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();
 
-                // IFavoriteService (INotificationService'e bağımlı)
+                // IFavoriteService (INotificationService'e baÄŸÄ±mlÄ±)
                 builder.Services.AddSingleton<IFavoriteService>(sp =>
                     new FirebaseFavoriteService(sp.GetRequiredService<INotificationService>()));
                 
-                // IQRCodeService (IUserProfileService ve IStorageService'e bağımlı)
-                builder.Services.AddSingleton<IQRCodeService, FirebaseQRCodeService>();
+                // IQRCodeService (IUserProfileService, IStorageService ve TransactionCompletionHelper'a baÄŸÄ±mlÄ±)
+                builder.Services.AddSingleton<IQRCodeService>(sp => 
+                    new FirebaseQRCodeService(
+                        sp.GetRequiredService<FirebaseClient>(),
+                        sp.GetRequiredService<IUserProfileService>(),
+                        sp.GetRequiredService<IStorageService>(),
+                        sp.GetRequiredService<KamPay.Services.Shared.TransactionCompletionHelper>()
+                    )
+                );
 
-                // Diğer servisler
+                // âœ… FAZ2: PaylaÅŸÄ±lan transaction tamamlama yardÄ±mcÄ±sÄ±
+                builder.Services.AddSingleton<KamPay.Services.Shared.TransactionCompletionHelper>();
+
+                // DiÄŸer servisler
                 builder.Services.AddSingleton<IFirebaseObserverService, FirebaseObserverService>();
                 builder.Services.AddSingleton<IProductCacheService, ProductCacheService>();
                 builder.Services.AddSingleton<IReverseGeocodeService, ReverseGeocodeService>();
@@ -216,62 +227,52 @@ namespace KamPay
                 // IGoodDeedService
                 builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
-                // IServiceSharingService (tüm bağımlılıkları hazır)
-                builder.Services.AddSingleton<IServiceSharingService>(sp =>
-                    new FirebaseServiceSharingService(
-                        sp.GetRequiredService<FirebaseClient>(),
-                        sp.GetRequiredService<INotificationService>(),
-                        sp.GetRequiredService<IUserProfileService>(),
-                        sp.GetRequiredService<IMessagingService>(),
-                        sp.GetRequiredService<ICustomerRequestManager>() // ✅ YENİ
-                    )
-                );
+                // âœ… FAZ 3.2: ServiceSharing Services ParÃ§alama
+                builder.Services.AddSingleton<ServiceOfferService>();
+                builder.Services.AddSingleton<ServiceRequestService>();
+                builder.Services.AddSingleton<IServiceSharingService, ServiceSharingFacade>();
 
-                // ITransactionService (tüm bağımlılıkları hazır)
-                builder.Services.AddSingleton<ITransactionService>(sp =>
-                    new FirebaseTransactionService(
-                        sp.GetRequiredService<INotificationService>(),
-                        sp.GetRequiredService<IProductService>(),
-                        sp.GetRequiredService<IQRCodeService>(),
-                        sp.GetRequiredService<IUserProfileService>(),
-                        sp.GetRequiredService<FirebaseClient>(),
-                        sp.GetRequiredService<IPaymentProviderFactory>() // ✅ YENİ PARAMETRE
-                    )
-                );
-
-                // ✅ YENİ: ÖDEME SİSTEMİ - OCP PRENSİBİ
-                System.Diagnostics.Debug.WriteLine("✅ Ödeme sistemi kaydediliyor (OCP Pattern)...");
+                // âœ… FAZ 3: Transaction Services ParÃ§alama
+                builder.Services.AddSingleton<TransactionCrudService>();
+                builder.Services.AddSingleton<TransactionPaymentService>();
+                builder.Services.AddSingleton<TransactionNegotiationService>();
+                builder.Services.AddSingleton<TransactionCompletionService>();
                 
-                // Provider'ları DI'ye kaydet (IEnumerable<IPaymentProvider> olarak inject edilecek)
+                builder.Services.AddSingleton<ITransactionService, KamPay.Services.Transactions.TransactionFacade>();
+
+                // âœ… YENÄ°: Ã–DEME SÄ°STEMÄ° - OCP PRENSÄ°BÄ°
+                KamPay.Helpers.AppLogger.DebugLog("âœ… Ã–deme sistemi kaydediliyor (OCP Pattern)...");
+                
+                // Provider'larÄ± DI'ye kaydet (IEnumerable<IPaymentProvider> olarak inject edilecek)
                 builder.Services.AddSingleton<IPaymentProvider, CardSimulationProvider>();
                 builder.Services.AddSingleton<IPaymentProvider, BankTransferSimulationProvider>();
                 
                 // Factory'yi kaydet (Constructor'da IEnumerable<IPaymentProvider> alacak)
                 builder.Services.AddSingleton<IPaymentProviderFactory, PaymentProviderFactory>();
                 
-                System.Diagnostics.Debug.WriteLine("  ✓ IPaymentProviderFactory kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("  âœ“ IPaymentProviderFactory kaydedildi");
 
-                // ✅ KOORDINATÖRLER - Orkestrasyon Servisleri (Bağımlılıklardan SONRA kaydedilmeli)
-                System.Diagnostics.Debug.WriteLine("✅ Koordinatörler kaydediliyor...");
+                // âœ… KOORDINATÃ–RLER - Orkestrasyon Servisleri (BaÄŸÄ±mlÄ±lÄ±klardan SONRA kaydedilmeli)
+                KamPay.Helpers.AppLogger.DebugLog("âœ… KoordinatÃ¶rler kaydediliyor...");
                 
-                // CacheCoordinator - IProductCacheService'e bağımlı
+                // CacheCoordinator - IProductCacheService'e baÄŸÄ±mlÄ±
                 builder.Services.AddSingleton<ICacheCoordinator, CacheCoordinator>();
-                System.Diagnostics.Debug.WriteLine("  ✓ ICacheCoordinator kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("  âœ“ ICacheCoordinator kaydedildi");
                 
-                // ValidationCoordinator - IProductService'e bağımlı
+                // ValidationCoordinator - IProductService'e baÄŸÄ±mlÄ±
                 builder.Services.AddSingleton<IValidationCoordinator, ValidationCoordinator>();
-                System.Diagnostics.Debug.WriteLine("  ✓ IValidationCoordinator kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("  âœ“ IValidationCoordinator kaydedildi");
                 
-                // NotificationCoordinator - INotificationService'e bağımlı
+                // NotificationCoordinator - INotificationService'e baÄŸÄ±mlÄ±
                 builder.Services.AddSingleton<INotificationCoordinator, NotificationCoordinator>();
-                System.Diagnostics.Debug.WriteLine("  ✓ INotificationCoordinator kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("  âœ“ INotificationCoordinator kaydedildi");
                 
-                // TransactionOrchestrator - ITransactionService, INotificationService, IProductService, IUserProfileService'e bağımlı
+                // TransactionOrchestrator - ITransactionService, INotificationService, IProductService, IUserProfileService'e baÄŸÄ±mlÄ±
                 builder.Services.AddSingleton<ITransactionOrchestrator, TransactionOrchestrator>();
-                System.Diagnostics.Debug.WriteLine("  ✓ ITransactionOrchestrator kaydedildi");
+                KamPay.Helpers.AppLogger.DebugLog("  âœ“ ITransactionOrchestrator kaydedildi");
 
-                // UserStateService - Singleton olarak global kullanıcı durumu yönetimi
-                //  Tüm bağımlı servisler yukarıda kayıtlı olduğu için burada tanımlanıyor
+                // UserStateService - Singleton olarak global kullanÄ±cÄ± durumu yÃ¶netimi
+                //  TÃ¼m baÄŸÄ±mlÄ± servisler yukarÄ±da kayÄ±tlÄ± olduÄŸu iÃ§in burada tanÄ±mlanÄ±yor
                 builder.Services.AddSingleton<IUserStateService>(sp =>
                     new UserStateService(
                         sp.GetRequiredService<IAuthenticationService>(),
@@ -282,7 +283,7 @@ namespace KamPay
                         sp.GetRequiredService<IMessagingService>())
                 );
 
-                // Security Audit Service kaydı
+                // Security Audit Service kaydÄ±
                 builder.Services.AddSingleton<ISecurityAuditService, FirebaseSecurityAuditService>(); 
 
                 // ViewModels
@@ -310,12 +311,12 @@ namespace KamPay
                 builder.Services.AddTransient<EditProfileViewModel>();
                 builder.Services.AddTransient<OffersViewModel>();
 
-                // 🎯 ARMUT MODELİ: Yeni ViewModels
+                // ğŸ¯ ARMUT MODELÄ°: Yeni ViewModels
                 builder.Services.AddTransient<CreateCustomerRequestViewModel>();
                 builder.Services.AddTransient<CustomerRequestsListViewModel>();
                 builder.Services.AddTransient<CustomerRequestDetailsViewModel>();
                 
-                // ✅ Pages - Tüm parametreli constructor'a sahip sayfalar
+                // âœ… Pages - TÃ¼m parametreli constructor'a sahip sayfalar
                 builder.Services.AddTransient<LoginPage>();
                 builder.Services.AddTransient<RegisterPage>();
                 builder.Services.AddTransient<MainPage>();
@@ -340,36 +341,36 @@ namespace KamPay
                 builder.Services.AddTransient<SurpriseBoxPage>();
                 builder.Services.AddTransient<TradeOfferView>();
 
-                // 🎯 ARMUT MODELİ: Yeni Pages
+                // ğŸ¯ ARMUT MODELÄ°: Yeni Pages
                 builder.Services.AddTransient<CreateCustomerRequestPage>();
                 builder.Services.AddTransient<CustomerRequestsListPage>();
                 builder.Services.AddTransient<CustomerRequestDetailsPage>();
 
-                //  Singleton yaptık: Sayfa ve ViewModel bir kere oluşturulur ve hafızada kalır.
+                //  Singleton yaptÄ±k: Sayfa ve ViewModel bir kere oluÅŸturulur ve hafÄ±zada kalÄ±r.
                 builder.Services.AddSingleton<ICategoryService, FirebaseCategoryService>();
 
 #if DEBUG
                 builder.Logging.AddDebug();
 #endif
                 LocalizationResourceManager.EnsureInitialized();
-                System.Diagnostics.Debug.WriteLine("⚙️ MauiApp build ediliyor...");
+                KamPay.Helpers.AppLogger.DebugLog("âš™ï¸ MauiApp build ediliyor...");
                 var app = builder.Build();
-                System.Diagnostics.Debug.WriteLine("✓ MauiApp başarılıyla oluşturuldu");
+                KamPay.Helpers.AppLogger.DebugLog("âœ“ MauiApp baÅŸarÄ±lÄ±yla oluÅŸturuldu");
 
                 return app;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ KRITIK: MauiProgram.CreateMauiApp hatası: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"⚠️ StackTrace: {ex.StackTrace}");
-                throw; // Kritik hatalar yeniden fırlatılmalı
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ KRITIK: MauiProgram.CreateMauiApp hatasÄ±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ StackTrace: {ex.StackTrace}");
+                throw; // Kritik hatalar yeniden fÄ±rlatÄ±lmalÄ±
             }
         }
 
         /// <summary>
-        /// appsettings.json dosyasından EmailSettings yükler
+        /// appsettings.json'dan ayarlarÄ± yÃ¼kler
         /// </summary>
-        private static EmailSettings LoadEmailSettings()
+        private static AppConfig LoadAppConfig()
         {
             try
             {
@@ -377,107 +378,49 @@ namespace KamPay
                 var resourceName = "KamPay.appsettings.json";
                 
                 using var stream = assembly.GetManifestResourceStream(resourceName);
-                
                 if (stream == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ {resourceName} bulunamadı, varsayılan ayarlar kullanılıyor");
-                    return GetDefaultEmailSettings();
+                    KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ {resourceName} bulunamadÄ±");
+                    return new AppConfig();
                 }
 
                 using var reader = new StreamReader(stream);
                 var json = reader.ReadToEnd();
                 
-                var options = new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
-                };
-                
-                var config = JsonSerializer.Deserialize<AppConfig>(json, options);
-                
-                if (config?.EmailSettings == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("⚠️ EmailSettings null, varsayılan ayarlar kullanılıyor");
-                    return GetDefaultEmailSettings();
-                }
-
-                System.Diagnostics.Debug.WriteLine($"✅ appsettings.json'dan email ayarları yüklendi");
-                return config.EmailSettings;
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<AppConfig>(json, options) ?? new AppConfig();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ appsettings.json okunamadı: {ex.Message}");
-                return GetDefaultEmailSettings();
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ appsettings.json okunamadÄ±: {ex.Message}");
+                return new AppConfig();
             }
         }
 
         /// <summary>
-        /// appsettings.json'dan Firebase Config yükler
-        /// </summary>
-        private static FirebaseConfigSettings LoadFirebaseConfig()
-        {
-            try
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                var resourceName = "KamPay.appsettings.json";
-                
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                
-                if (stream == null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"⚠️ Firebase config bulunamadı");
-                    return GetDefaultFirebaseConfig();
-                }
-
-                using var reader = new StreamReader(stream);
-                var json = reader.ReadToEnd();
-                
-                var options = new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
-                };
-                
-                var config = JsonSerializer.Deserialize<AppConfig>(json, options);
-                
-                if (config?.FirebaseConfig == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("⚠️ FirebaseConfig null, varsayılan ayarlar kullanılıyor");
-                    return GetDefaultFirebaseConfig();
-                }
-
-                System.Diagnostics.Debug.WriteLine($"✅ Firebase config yüklendi");
-                return config.FirebaseConfig;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Firebase config okunamadı: {ex.Message}");
-                return GetDefaultFirebaseConfig();
-            }
-        }
-
-        /// <summary>
-        /// Varsayılan email ayarları (appsettings.json okunamazsa)
+        /// VarsayÄ±lan email ayarlarÄ± (appsettings.json okunamazsa)
         /// </summary>
         private static EmailSettings GetDefaultEmailSettings()
         {
-            System.Diagnostics.Debug.WriteLine("⚠️ Varsayılan SMTP ayarları kullanılıyor (PLACEHOLDER)");
+            KamPay.Helpers.AppLogger.DebugLog("âš ï¸ VarsayÄ±lan SMTP ayarlarÄ± kullanÄ±lÄ±yor (PLACEHOLDER)");
             return new EmailSettings
             {
                 SmtpHost = "smtp.bartin.edu.tr",
                 SmtpPort = 587,
                 UseSsl = true,
                 FromEmail = "kampay@bartin.edu.tr",
-                FromName = "KamPay Doğrulama",
+                FromName = "KamPay DoÄŸrulama",
                 Username = "kampay@bartin.edu.tr",
-                Password = "SMTP_PAROLASI_BURAYA" // ⚠️ appsettings.json'da gerçek şifre olmalı
+                Password = "SMTP_PAROLASI_BURAYA" // âš ï¸ appsettings.json'da gerÃ§ek ÅŸifre olmalÄ±
             };
         }
 
         /// <summary>
-        /// Varsayılan Firebase config
+        /// VarsayÄ±lan Firebase config
         /// </summary>
         private static FirebaseConfigSettings GetDefaultFirebaseConfig()
         {
-            System.Diagnostics.Debug.WriteLine("⚠️ Varsayılan Firebase config kullanılıyor");
+            KamPay.Helpers.AppLogger.DebugLog("âš ï¸ VarsayÄ±lan Firebase config kullanÄ±lÄ±yor");
             return new FirebaseConfigSettings
             {
                 ApiKey = "YOUR_API_KEY_HERE",
@@ -489,7 +432,7 @@ namespace KamPay
         }
 
         /// <summary>
-        /// appsettings.json deserializasyon için model
+        /// appsettings.json deserializasyon iÃ§in model
         /// </summary>
         private class AppConfig
         {
@@ -510,3 +453,4 @@ namespace KamPay
         public string StorageBucket { get; set; } = string.Empty;
     }
 }
+

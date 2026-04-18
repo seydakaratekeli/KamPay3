@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
@@ -22,7 +22,7 @@ namespace KamPay.ViewModels
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
-        // ✅ DIP FIX: FirebaseClient artık DI'den geliyor (new keyword kaldırıldı)
+        // âœ… DIP FIX: FirebaseClient artÄ±k DI'den geliyor (new keyword kaldÄ±rÄ±ldÄ±)
         private readonly FirebaseClient _firebaseClient;
         private IDisposable? _requestsSubscription;
         private string? _currentUserId;
@@ -44,19 +44,19 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isOutgoingSelected = false;
 
-        // Zaman aşımı ayarları
+        // Zaman aÅŸÄ±mÄ± ayarlarÄ±
         private CancellationTokenSource? _loadingTimeoutCts;
         private const int LoadingTimeoutMs = 5000; // 5 saniye
 
-        // Empty View mesajları için kontrol property'leri
+        // Empty View mesajlarÄ± iÃ§in kontrol property'leri
         [ObservableProperty]
-        private bool _hasOutgoingRequests; // HasOutgoingRequests özelliğini üretir
+        private bool _hasOutgoingRequests; // HasOutgoingRequests Ã¶zelliÄŸini Ã¼retir
         [ObservableProperty]
-        private bool _hasIncomingRequests; // HasIncomingRequests özelliğini üretir
+        private bool _hasIncomingRequests; // HasIncomingRequests Ã¶zelliÄŸini Ã¼retir
       
         private void UpdateHasRequests()
         {
-            // Property isimlerini kullanıyoruz (Source generator tarafından üretilenler)
+            // Property isimlerini kullanÄ±yoruz (Source generator tarafÄ±ndan Ã¼retilenler)
             HasIncomingRequests = IncomingRequests.Any();
             HasOutgoingRequests = OutgoingRequests.Any();
         }
@@ -70,20 +70,20 @@ namespace KamPay.ViewModels
             IServiceSharingService serviceService, 
             IAuthenticationService authService, 
             IUserStateService userStateService,
-            FirebaseClient firebaseClient) // ✅ DIP FIX: YENİ PARAMETRE
+            FirebaseClient firebaseClient) // âœ… DIP FIX: YENÄ° PARAMETRE
         {
             _serviceService = serviceService;
             _authService = authService;
             _userStateService = userStateService;
-            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // ✅ DIP FIX: DI'den inject
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // âœ… DIP FIX: DI'den inject
 
             PaymentMethods = new ObservableCollection<PaymentOption>
             {
-                new PaymentOption { Method = PaymentMethodType.CardSim, DisplayName = "Kart (Simülasyon)" },
-                new PaymentOption { Method = PaymentMethodType.BankTransferSim, DisplayName = "EFT / Havale (Simülasyon)" }
+                new PaymentOption { Method = PaymentMethodType.CardSim, DisplayName = "Kart (SimÃ¼lasyon)" },
+                new PaymentOption { Method = PaymentMethodType.BankTransferSim, DisplayName = "EFT / Havale (SimÃ¼lasyon)" }
             };
 
-            // Kullanıcı profil değişikliklerini dinle
+            // KullanÄ±cÄ± profil deÄŸiÅŸikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (r, m) =>
@@ -109,7 +109,7 @@ namespace KamPay.ViewModels
                 });
             });
 
-            System.Diagnostics.Debug.WriteLine("✅ ServiceRequestsViewModel oluşturuldu (DIP uyumlu - FirebaseClient DI'den)");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… ServiceRequestsViewModel oluÅŸturuldu (DIP uyumlu - FirebaseClient DI'den)");
             _ = InitializeAsync();
         }
 
@@ -117,10 +117,10 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            //  Kritik: UI'da anlık güncelleme için MainThread'de çalıştırılmalıdır.
+            //  Kritik: UI'da anlÄ±k gÃ¼ncelleme iÃ§in MainThread'de Ã§alÄ±ÅŸtÄ±rÄ±lmalÄ±dÄ±r.
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Gelen taleplerdeki talep eden kişi bilgilerini güncelle
+                // Gelen taleplerdeki talep eden kiÅŸi bilgilerini gÃ¼ncelle
                 foreach (var request in IncomingRequests.Where(r => r.RequesterId == updatedUser.UserId))
                 {
                     request.RequesterName = updatedUser.FullName;
@@ -157,7 +157,7 @@ namespace KamPay.ViewModels
             {
                 _currentUserId = currentUser.UserId;
                 
-                // ✅ Snapshot + listener'ı başlat, loading indicator hızlı kapansın
+                // âœ… Snapshot + listener'Ä± baÅŸlat, loading indicator hÄ±zlÄ± kapansÄ±n
                 await StartListeningForRequestsAsync();
             }
             else
@@ -166,28 +166,28 @@ namespace KamPay.ViewModels
             }
         }
 
-        // ✅ Snapshot yükleme ve listener başlatma ayrıldı
+        // âœ… Snapshot yÃ¼kleme ve listener baÅŸlatma ayrÄ±ldÄ±
         private async Task StartListeningForRequestsAsync()
         {
             if (_requestsSubscription != null || string.IsNullOrEmpty(_currentUserId)) return;
 
-            // Timeout mekanizmasını sıfırla
+            // Timeout mekanizmasÄ±nÄ± sÄ±fÄ±rla
             _loadingTimeoutCts?.Cancel();
             _loadingTimeoutCts = new CancellationTokenSource();
             var token = _loadingTimeoutCts.Token;
 
             try
             {
-                // 1️⃣ SNAPSHOT: Hızlı veri yükleme
+                // 1ï¸âƒ£ SNAPSHOT: HÄ±zlÄ± veri yÃ¼kleme
                 var snapshotTask = LoadInitialSnapshotAsync(token);
                 
-                // 2️⃣ LISTENER: Realtime güncellemeler için
+                // 2ï¸âƒ£ LISTENER: Realtime gÃ¼ncellemeler iÃ§in
                 StartRealtimeListener();
                 
-                // 3️⃣ Snapshot yüklenene kadar bekle
+                // 3ï¸âƒ£ Snapshot yÃ¼klenene kadar bekle
                 await snapshotTask;
                 
-                // ✅ Loading'i hemen kapat (snapshot yüklendi, liste dolu ya da boş)
+                // âœ… Loading'i hemen kapat (snapshot yÃ¼klendi, liste dolu ya da boÅŸ)
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     if (!_initialLoadComplete)
@@ -195,13 +195,13 @@ namespace KamPay.ViewModels
                         _initialLoadComplete = true;
                         IsLoading = false;
                         UpdateHasRequests();
-                        Console.WriteLine("✅ Snapshot yüklendi, loading kapatıldı");
+                        KamPay.Helpers.AppLogger.DebugLog("âœ… Snapshot yÃ¼klendi, loading kapatÄ±ldÄ±");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ StartListeningForRequestsAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ StartListeningForRequestsAsync hatasÄ±: {ex.Message}");
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     IsLoading = false;
@@ -234,7 +234,7 @@ namespace KamPay.ViewModels
                 var incomingData = results[0];
                 var outgoingData = results[1];
 
-                // ✅ Verileri UI'a ekle
+                // âœ… Verileri UI'a ekle
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     // Gelen talepler
@@ -263,16 +263,16 @@ namespace KamPay.ViewModels
                         }
                     }
 
-                    // Sıralama
+                    // SÄ±ralama
                     SortRequestsInPlace(IncomingRequests);
                     SortRequestsInPlace(OutgoingRequests);
 
-                    Console.WriteLine($"📊 Snapshot yüklendi: {IncomingRequests.Count} gelen, {OutgoingRequests.Count} giden talep");
+                    KamPay.Helpers.AppLogger.DebugLog($"ğŸ“Š Snapshot yÃ¼klendi: {IncomingRequests.Count} gelen, {OutgoingRequests.Count} giden talep");
                 });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Snapshot yükleme hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Snapshot yÃ¼kleme hatasÄ±: {ex.Message}");
             }
         }
 
@@ -295,13 +295,13 @@ namespace KamPay.ViewModels
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"❌ Request batch hatası: {ex.Message}");
+                                KamPay.Helpers.AppLogger.DebugLog($"âŒ Request batch hatasÄ±: {ex.Message}");
                             }
                         });
                     },
                     error =>
                     {
-                        Console.WriteLine($"❌ Firebase listener hatası: {error.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"âŒ Firebase listener hatasÄ±: {error.Message}");
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             IsLoading = false;
@@ -320,7 +320,7 @@ namespace KamPay.ViewModels
                 var request = e.Object;
                 request.RequestId = e.Key;
 
-                // Gelen talep mi?  (ben hizmet sağlayıcıyım)
+                // Gelen talep mi?  (ben hizmet saÄŸlayÄ±cÄ±yÄ±m)
                 if (request.ProviderId == _currentUserId)
                 {
                     if (UpdateRequestInCollection(IncomingRequests, _incomingRequestIds, request, e.EventType))
@@ -338,7 +338,7 @@ namespace KamPay.ViewModels
                 }
             }
 
-            //  Sadece değişenler için sıralama
+            //  Sadece deÄŸiÅŸenler iÃ§in sÄ±ralama
             if (hasIncomingChanges)
             {
                 SortRequestsInPlace(IncomingRequests);
@@ -364,7 +364,7 @@ namespace KamPay.ViewModels
                 case FirebaseEventType.InsertOrUpdate:
                     if (existing != null)
                     {
-                        // Güncelleme
+                        // GÃ¼ncelleme
                         var index = collection.IndexOf(existing);
                         collection[index] = request;
                         return true;
@@ -394,7 +394,7 @@ namespace KamPay.ViewModels
             return false;
         }
 
-        //  In-place sorting (en yeni üstte)
+        //  In-place sorting (en yeni Ã¼stte)
         private void SortRequestsInPlace(ObservableCollection<ServiceRequest> collection)
         {
             var sorted = collection.OrderByDescending(r => r.RequestedAt).ToList();
@@ -409,7 +409,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // SAĞLAYICI İÇİN
+        // SAÄLAYICI Ä°Ã‡Ä°N
         [RelayCommand]
         private async Task FinishServiceAsync(ServiceRequest request)
         {
@@ -418,22 +418,22 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                 return;
             }
 
-            var confirm = await Shell.Current.DisplayAlert("Tamamla", "Hizmeti bitirdiğinizi bildirmek istiyor musunuz?", "Evet", "Hayır");
+            var confirm = await Shell.Current.DisplayAlert("Tamamla", "Hizmeti bitirdiÄŸinizi bildirmek istiyor musunuz?", "Evet", "HayÄ±r");
             if (!confirm) return;
 
             IsLoading = true;
             var result = await _serviceService.ProviderFinishServiceAsync(request.RequestId, currentUser.UserId);
             if (result.Success)
-                await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
         }
 
-        // TALEP EDEN İÇİN
+        // TALEP EDEN Ä°Ã‡Ä°N
         [RelayCommand]
         private async Task ConfirmServiceAsync(ServiceRequest request)
         {
@@ -442,17 +442,17 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                 return;
             }
 
-            var confirm = await Shell.Current.DisplayAlert("Onayla", "Hizmeti aldığınızı onaylıyor musunuz? (Krediler transfer edilecektir)", "Evet", "Hayır");
+            var confirm = await Shell.Current.DisplayAlert("Onayla", "Hizmeti aldÄ±ÄŸÄ±nÄ±zÄ± onaylÄ±yor musunuz? (Krediler transfer edilecektir)", "Evet", "HayÄ±r");
             if (!confirm) return;
 
             IsLoading = true;
             var result = await _serviceService.RequesterConfirmServiceAsync(request.RequestId, currentUser.UserId);
             if (result.Success)
-                await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
             IsLoading = false;
             await LoadRequestsAsync();
         }
@@ -466,23 +466,23 @@ namespace KamPay.ViewModels
             {
                 IsRefreshing = true;
 
-                // Listener'ı durdur
+                // Listener'Ä± durdur
                 _requestsSubscription?.Dispose();
                 _requestsSubscription = null;
 
-                // State'i sıfırla
+                // State'i sÄ±fÄ±rla
                 _incomingRequestIds.Clear();
                 _outgoingRequestIds.Clear();
                 IncomingRequests.Clear();
                 OutgoingRequests.Clear();
                 _initialLoadComplete = false;
 
-                // Listener'ı yeniden başlat (snapshot + realtime)
+                // Listener'Ä± yeniden baÅŸlat (snapshot + realtime)
                 await StartListeningForRequestsAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Refresh hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ Refresh hatasÄ±: {ex.Message}");
             }
             finally
             {
@@ -493,7 +493,7 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task LoadRequestsAsync()
         {
-            // Eğer veriler zaten yüklendiyse ve listener aktifse bir şey yapma
+            // EÄŸer veriler zaten yÃ¼klendiyse ve listener aktifse bir ÅŸey yapma
             if (_initialLoadComplete && _requestsSubscription != null)
             {
                 return;
@@ -503,7 +503,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                // Eğer listener bir şekilde durduysa veya hiç başlamadıysa yeniden başlat
+                // EÄŸer listener bir ÅŸekilde durduysa veya hiÃ§ baÅŸlamadÄ±ysa yeniden baÅŸlat
                 if (_requestsSubscription == null)
                 {
                     await StartListeningForRequestsAsync();
@@ -511,7 +511,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ LoadRequestsAsync hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ LoadRequestsAsync hatasÄ±: {ex.Message}");
                 IsLoading = false;
             }
         }
@@ -538,9 +538,9 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    // Real-time listener otomatik güncelleyecek
+                    // Real-time listener otomatik gÃ¼ncelleyecek
                     var message = accepted ? "Talep kabul edildi" : "Talep reddedildi";
-                    await Shell.Current.DisplayAlert("Başarılı", message, "Tamam");
+                    await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", message, "Tamam");
                 }
                 else
                 {
@@ -580,27 +580,27 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                 return;
             }
 
-            // QuotedPrice varsa onu, yoksa Price'ı kullan
+            // QuotedPrice varsa onu, yoksa Price'Ä± kullan
             decimal price = request.QuotedPrice ?? request.Price;
 
-            // ✅ YENİ AKIŞ: Ücretli hizmet için PaymentPage'e yönlendir
+            // âœ… YENÄ° AKIÅ: Ãœcretli hizmet iÃ§in PaymentPage'e yÃ¶nlendir
             if (price > 0)
             {
                 try
                 {
                     IsLoading = true;
 
-                    // ServiceRequest'i Transaction modeline dönüştür
+                    // ServiceRequest'i Transaction modeline dÃ¶nÃ¼ÅŸtÃ¼r
                     var transaction = new Transaction
                     {
                         TransactionId = $"service_{request.RequestId}",
                         ProductId = request.ServiceId,
                         ProductTitle = request.ServiceTitle,
-                        Type = ProductType.Satis, // Hizmet de satış gibi işleniyor
+                        Type = ProductType.Satis, // Hizmet de satÄ±ÅŸ gibi iÅŸleniyor
                         SellerId = request.ProviderId,
                         SellerName = request.ProviderName,
                         BuyerId = request.RequesterId,
@@ -613,16 +613,16 @@ namespace KamPay.ViewModels
                         UpdatedAt = DateTime.UtcNow
                     };
 
-                    // ✅ KRİTİK: Transaction'ı Firebase'e kaydet
+                    // âœ… KRÄ°TÄ°K: Transaction'Ä± Firebase'e kaydet
                     var firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
                     await firebaseClient
                         .Child(Constants.TransactionsCollection)
                         .Child(transaction.TransactionId)
                         .PutAsync(transaction);
 
-                    Console.WriteLine($"✅ Hizmet için geçici transaction oluşturuldu: {transaction.TransactionId}");
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… Hizmet iÃ§in geÃ§ici transaction oluÅŸturuldu: {transaction.TransactionId}");
 
-                    // PaymentPage'e git (Ürün satışı ile aynı akış)
+                    // PaymentPage'e git (ÃœrÃ¼n satÄ±ÅŸÄ± ile aynÄ± akÄ±ÅŸ)
                     var navigationParameter = new Dictionary<string, object>
                     {
                         { "Transaction", transaction }
@@ -632,8 +632,8 @@ namespace KamPay.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Transaction oluşturma hatası: {ex.Message}");
-                    await Shell.Current.DisplayAlert("Hata", "Ödeme sayfası açılamadı: " + ex.Message, "Tamam");
+                    KamPay.Helpers.AppLogger.DebugLog($"âŒ Transaction oluÅŸturma hatasÄ±: {ex.Message}");
+                    await Shell.Current.DisplayAlert("Hata", "Ã–deme sayfasÄ± aÃ§Ä±lamadÄ±: " + ex.Message, "Tamam");
                 }
                 finally
                 {
@@ -642,16 +642,16 @@ namespace KamPay.ViewModels
             }
             else
             {
-                // ✅ Ücretsiz/Zaman Kredisi: Eski akış (değişiklik yok)
+                // âœ… Ãœcretsiz/Zaman Kredisi: Eski akÄ±ÅŸ (deÄŸiÅŸiklik yok)
                 string priceInfo = request.TimeCreditValue > 0
-                    ? $"Bu hizmet için {request.TimeCreditValue} saat kredi transfer edilecektir.\n\n"
+                    ? $"Bu hizmet iÃ§in {request.TimeCreditValue} saat kredi transfer edilecektir.\n\n"
                     : "";
 
                 var confirm = await Shell.Current.DisplayAlert(
                     "Onay",
-                    $"{priceInfo}Hizmeti aldığınızı onaylıyor musunuz?",
+                    $"{priceInfo}Hizmeti aldÄ±ÄŸÄ±nÄ±zÄ± onaylÄ±yor musunuz?",
                     "Evet, Onayla",
-                    "Hayır"
+                    "HayÄ±r"
                 );
 
                 if (!confirm) return;
@@ -665,7 +665,7 @@ namespace KamPay.ViewModels
 
                     if (result.Success)
                     {
-                        await Shell.Current.DisplayAlert("Başarılı", "Hizmet başarıyla tamamlandı!", "Tamam");
+                        await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", "Hizmet baÅŸarÄ±yla tamamlandÄ±!", "Tamam");
                     }
                     else
                     {
@@ -683,7 +683,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Mesajlaşma Başlatma Komutu
+        //  MesajlaÅŸma BaÅŸlatma Komutu
         [RelayCommand]
         private async Task StartConversationAsync(ServiceRequest request)
         {
@@ -696,7 +696,7 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                    await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                     return;
                 }
 
@@ -704,8 +704,8 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    //  : ChatPage kullanılıyor, MessagingPage değil
-                    Console.WriteLine($"✅ Konuşma ID'si: {result.Data}");
+                    //  : ChatPage kullanÄ±lÄ±yor, MessagingPage deÄŸil
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… KonuÅŸma ID'si: {result.Data}");
                     await Shell.Current.GoToAsync($"{nameof(Views.ChatPage)}?conversationId={result.Data}");
                 }
                 else
@@ -715,7 +715,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ StartConversation hatası: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ StartConversation hatasÄ±: {ex.Message}");
                 await Shell.Current.DisplayAlert("Hata", ex.Message, "Tamam");
             }
             finally
@@ -724,7 +724,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Fiyat Teklifi Gönderme Komutu
+        //  Fiyat Teklifi GÃ¶nderme Komutu
         [RelayCommand]
         private async Task ProposePriceAsync(ServiceRequest request)
         {
@@ -733,7 +733,7 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null || request.RequesterId != currentUser.UserId)
             {
-                await Shell.Current.DisplayAlert("Uyarı", "Sadece talep eden kişi fiyat teklif edebilir.", "Tamam");
+                await Shell.Current.DisplayAlert("UyarÄ±", "Sadece talep eden kiÅŸi fiyat teklif edebilir.", "Tamam");
                 return;
             }
 
@@ -741,9 +741,9 @@ namespace KamPay.ViewModels
             {
                 string priceInput = await Shell.Current.DisplayPromptAsync(
                     "Fiyat Teklifi",
-                    $"'{request.ServiceTitle}' için teklif etmek istediğiniz fiyatı girin:\n(Mevcut fiyat: {request.Price} ₺)",
-                    "Gönder",
-                    "İptal",
+                    $"'{request.ServiceTitle}' iÃ§in teklif etmek istediÄŸiniz fiyatÄ± girin:\n(Mevcut fiyat: {request.Price} â‚º)",
+                    "GÃ¶nder",
+                    "Ä°ptal",
                     keyboard: Keyboard.Numeric,
                     initialValue: request.Price.ToString()
                 );
@@ -752,7 +752,7 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(priceInput, out decimal proposedPrice) || proposedPrice <= 0)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Geçerli bir fiyat giriniz.", "Tamam");
+                    await Shell.Current.DisplayAlert("Hata", "GeÃ§erli bir fiyat giriniz.", "Tamam");
                     return;
                 }
 
@@ -762,7 +762,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                    await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
                 }
                 else
                 {
@@ -779,7 +779,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        // : Karşı Teklif Gönderme Komutu
+        // : KarÅŸÄ± Teklif GÃ¶nderme Komutu
         [RelayCommand]
         private async Task SendCounterOfferAsync(ServiceRequest request)
         {
@@ -788,21 +788,21 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null || request.ProviderId != currentUser.UserId)
             {
-                await Shell.Current.DisplayAlert("Uyarı", "Sadece hizmet sağlayıcı karşı teklif verebilir.", "Tamam");
+                await Shell.Current.DisplayAlert("UyarÄ±", "Sadece hizmet saÄŸlayÄ±cÄ± karÅŸÄ± teklif verebilir.", "Tamam");
                 return;
             }
 
             try
             {
                 string priceInfo = request.ProposedPriceByRequester.HasValue
-                    ? $"Talep eden kişinin teklifi: {request.ProposedPriceByRequester} ₺\n"
+                    ? $"Talep eden kiÅŸinin teklifi: {request.ProposedPriceByRequester} â‚º\n"
                     : "";
 
                 string priceInput = await Shell.Current.DisplayPromptAsync(
-                    "Karşı Teklif",
-                    $"{priceInfo}Karşı teklifinizi girin:\n(Orijinal fiyat: {request.Price} ₺)",
-                    "Gönder",
-                    "İptal",
+                    "KarÅŸÄ± Teklif",
+                    $"{priceInfo}KarÅŸÄ± teklifinizi girin:\n(Orijinal fiyat: {request.Price} â‚º)",
+                    "GÃ¶nder",
+                    "Ä°ptal",
                     keyboard: Keyboard.Numeric,
                     initialValue: request.Price.ToString()
                 );
@@ -811,7 +811,7 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(priceInput, out decimal counterOffer) || counterOffer <= 0)
                 {
-                    await Shell.Current.DisplayAlert("Hata", "Geçerli bir fiyat giriniz.", "Tamam");
+                    await Shell.Current.DisplayAlert("Hata", "GeÃ§erli bir fiyat giriniz.", "Tamam");
                     return;
                 }
 
@@ -821,7 +821,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                    await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
                 }
                 else
                 {
@@ -838,7 +838,7 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Anlaşılan Fiyatı Kabul Etme Komutu
+        //  AnlaÅŸÄ±lan FiyatÄ± Kabul Etme Komutu
         [RelayCommand]
         private async Task AcceptNegotiatedPriceAsync(ServiceRequest request)
         {
@@ -847,20 +847,20 @@ namespace KamPay.ViewModels
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alınamadı.", "Tamam");
+                await Shell.Current.DisplayAlert("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
                 return;
             }
 
             try
             {
-                // Anlaşılan fiyatı belirle (karşı teklif > teklif > orijinal fiyat)
+                // AnlaÅŸÄ±lan fiyatÄ± belirle (karÅŸÄ± teklif > teklif > orijinal fiyat)
                 decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? request.Price;
 
                 bool confirm = await Shell.Current.DisplayAlert(
-                    "Fiyat Kabulü",
-                    $"'{request.ServiceTitle}' hizmeti için {agreedPrice} ₺ fiyatı kabul ediyor musunuz?",
+                    "Fiyat KabulÃ¼",
+                    $"'{request.ServiceTitle}' hizmeti iÃ§in {agreedPrice} â‚º fiyatÄ± kabul ediyor musunuz?",
                     "Evet",
-                    "Hayır"
+                    "HayÄ±r"
                 );
 
                 if (!confirm) return;
@@ -871,7 +871,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                    await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
                 }
                 else
                 {
@@ -890,9 +890,9 @@ namespace KamPay.ViewModels
 
         public void Dispose()
         {
-            Console.WriteLine("🧹 ServiceRequestsViewModel dispose ediliyor...");
+            KamPay.Helpers.AppLogger.DebugLog("ğŸ§¹ ServiceRequestsViewModel dispose ediliyor...");
 
-            // Zaman aşımı işlemini iptal et ve temizle
+            // Zaman aÅŸÄ±mÄ± iÅŸlemini iptal et ve temizle
             _loadingTimeoutCts?.Cancel();
             _loadingTimeoutCts?.Dispose();
 
