@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;               // OpenApiInfo, OpenApiSecurityScheme vs. (v2+ namespace)
 using KamPay.API.Repositories;
-using KamPay.API.Services;
 using KamPay.API.Middlewares;
 using System.Text;
+using KamPay.API.Services.Auth;
+using KamPay.API.Services.products;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,7 +3,6 @@ using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
-using KamPay.Services;
 using KamPay.Services.Payment; // âœ… EKLEME: Payment provider'larÄ± iÃ§in
 using KamPay.Views;
 using System;
@@ -11,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using KamPay.Services.Products;
+using KamPay.Services.QRCode;
 
 namespace KamPay.Services
 {

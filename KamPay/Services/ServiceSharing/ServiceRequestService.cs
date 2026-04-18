@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
+using KamPay.Services.Messaging;
 
 namespace KamPay.Services.ServiceSharing
 {
@@ -53,11 +54,7 @@ namespace KamPay.Services.ServiceSharing
             try
             {
                 if (offer == null || requester == null)
-                    return new ServiceResult<ServiceRequest>
-                    {
-                        Success = false,
-                        Message = "Hizmet veya kullanÄ±cÄ± bilgisi eksik."
-                    };
+                    return ServiceResult<ServiceRequest>.FailureResult("Hizmet veya kullanÄ±cÄ± bilgisi eksik.");
 
                 // ?? Yeni ServiceRequest nesnesi oluÅŸturuluyor
                 var request = new ServiceRequest
@@ -87,20 +84,11 @@ namespace KamPay.Services.ServiceSharing
                     .Child(request.RequestId)
                     .PutAsync(request);
 
-                return new ServiceResult<ServiceRequest>
-                {
-                    Success = true,
-                    Message = "Hizmet talebiniz baÅŸarÄ±yla oluÅŸturuldu.",
-                    Data = request
-                };
+                return ServiceResult<ServiceRequest>.SuccessResult(request, "Hizmet talebiniz baÅŸarÄ±yla oluÅŸturuldu.");
             }
             catch (Exception ex)
             {
-                return new ServiceResult<ServiceRequest>
-                {
-                    Success = false,
-                    Message = $"Talep oluÅŸturulamadÄ±: {ex.Message}"
-                };
+                return ServiceResult<ServiceRequest>.FailureResult($"Talep oluÅŸturulamadÄ±: {ex.Message}");
             }
         }
 

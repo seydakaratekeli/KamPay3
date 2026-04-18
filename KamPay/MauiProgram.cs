@@ -18,7 +18,13 @@ using Firebase.Auth; // âœ… YENÄ° EKLEME
 using KamPay.Helpers;
 using KamPay.Security;
 using KamPay.Services.Payment; // âœ… EKLEME: Payment namespace
-using KamPay.Services.ServiceSharing; // âœ… FAZ 3.2
+using KamPay.Services.ServiceSharing;
+using KamPay.Services.Auth;
+using KamPay.Services.Products;
+using KamPay.Services.Messaging;
+using KamPay.Services.QRCode;
+using KamPay.Services.Products.Coordinators;
+using KamPay.Services.Transactions; // âœ… FAZ 3.2
 
 
 namespace KamPay
@@ -173,7 +179,8 @@ namespace KamPay
                     client.Timeout = TimeSpan.FromSeconds(30);
                     return client;
                 });
-                builder.Services.AddSingleton<IProductService, KamPay.Services.ProductApiService>();
+
+builder.Services.AddSingleton<IProductService, Services.Products.ProductApiService>();
 
                 // Eski servis (Yorum SatÄ±rÄ±nda)
                 // builder.Services.AddSingleton<IProductService, FirebaseProductService>();

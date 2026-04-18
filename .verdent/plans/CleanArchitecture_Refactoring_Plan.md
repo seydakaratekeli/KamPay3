@@ -354,7 +354,8 @@ Her catch bloğunda tutarlı `ServiceResult` dönüşü sağla. Bazı yerlerde `
 ```
 KamPay/
 ├── Services/
-│   ├── Auth/
+│   ├── 0,
+Auth/
 │   │   ├── IAuthenticationService.cs
 │   │   └── FirebaseAuthService.cs
 │   ├── Products/

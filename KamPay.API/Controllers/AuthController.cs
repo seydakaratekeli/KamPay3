@@ -1,6 +1,6 @@
 using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
-using KamPay.API.Services;
+using KamPay.API.Services.Auth;
 
 namespace KamPay.API.Controllers
 {

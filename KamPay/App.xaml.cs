@@ -1,6 +1,7 @@
 ﻿using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
+using KamPay.Services.Auth;
 
 namespace KamPay
 {
