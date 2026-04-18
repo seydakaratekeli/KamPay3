@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:KamPay.Converters"
@@ -11,7 +11,7 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- 🎨 MODERN MAVİ TEMA PALETİ -->
+            <!-- ?? MODERN MAV� TEMA PALET� -->
             <Color x:Key="Primary">#1E88E5</Color>
             <Color x:Key="PrimaryDark">#1565C0</Color>
             <Color x:Key="PrimaryLight">#42A5F5</Color>
@@ -31,7 +31,7 @@
             <Color x:Key="GradientStart">#1E88E5</Color>
             <Color x:Key="GradientEnd">#1565C0</Color>
 
-            <!-- 🎭 MODERN STYLES -->
+            <!-- ?? MODERN STYLES -->
             <Style x:Key="ModernCard" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
                 <Setter Property="CornerRadius" Value="16"/>
@@ -113,9 +113,7 @@
             <converters:AllTrueConverter x:Key="AllTrueConverter"/>
             <converters:IsAcceptedConverter x:Key="IsAcceptedConverter"/>
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
-            <converters:IsSaleConverter x:Key="IsSaleConverter"/>
-            <converters:IsTradeConverter x:Key="IsTradeConverter"/>
-            <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
+                                    <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:LessThan100Converter x:Key="LessThan100Converter"/>
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>

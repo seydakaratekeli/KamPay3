@@ -29,9 +29,7 @@
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
-            <converters:IsSaleConverter x:Key="IsSaleConverter"/>
-            <converters:IsTradeConverter x:Key="IsTradeConverter"/>
-            <converters:AllTrueConverter x:Key="AllTrueConverter"/>
+                                    <converters:AllTrueConverter x:Key="AllTrueConverter"/>
             <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
             <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
@@ -255,7 +253,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Takas"/>
                                                             <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
@@ -274,7 +272,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
                                                             <!-- Pending VEYA Negotiating -->
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
@@ -444,7 +442,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Takas"/>
                                                             <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
@@ -463,7 +461,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
                                                                 <Binding Path="IsNegotiating"/>
@@ -485,7 +483,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsTradeConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Takas"/>
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
                                                                 <Binding Path="IsNegotiating"/>
@@ -520,7 +518,7 @@
                                                         Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
-                                                            <Binding Path="Type" Converter="{StaticResource IsSaleConverter}"/>
+                                                            <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
                                                             <Binding Path="Status" Converter="{StaticResource IsAcceptedConverter}"/>
                                                             <Binding Path="PaymentStatus" Converter="{StaticResource PaymentPendingConverter}"/>
                                                         </MultiBinding>
@@ -585,3 +583,5 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+
