@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
-using KamPay.Models.Messages;
+using KamPay.Models.EventMessages;
 using KamPay.Services;
 using KamPay.Services.Products;
 using System.Collections.ObjectModel;

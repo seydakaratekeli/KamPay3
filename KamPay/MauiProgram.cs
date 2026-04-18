@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
 using FFImageLoading.Maui;
 using KamPay.Services;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using Syncfusion.Maui.Core.Hosting;
 using System.Globalization;
 using System.Text;
 using System.Reflection;
@@ -60,6 +61,7 @@ namespace KamPay
 
                 builder
                     .UseMauiApp<App>()
+                    .ConfigureSyncfusionCore()
                     .UseSkiaSharp()
                     .UseBarcodeReader()
                     .UseMauiCommunityToolkit()
@@ -234,16 +236,33 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 // IGoodDeedService
                 builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
-                // âœ… FAZ 3.2: ServiceSharing Services ParÃ§alama
+                // ✅ FAZ 3.2: ServiceSharing Services Parçalama
                 builder.Services.AddSingleton<ServiceOfferService>();
-                builder.Services.AddSingleton<ServiceRequestService>();
+                builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
+                builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
+                builder.Services.AddSingleton<ServiceRequestCrudService>();
+                builder.Services.AddSingleton<ServiceRequestNegotiationService>();
+                builder.Services.AddSingleton<ServiceRequestCompletionService>();
                 builder.Services.AddSingleton<IServiceSharingService, ServiceSharingFacade>();
 
-                // âœ… FAZ 3: Transaction Services ParÃ§alama
-                builder.Services.AddSingleton<TransactionCrudService>();
-                builder.Services.AddSingleton<TransactionPaymentService>();
-                builder.Services.AddSingleton<TransactionNegotiationService>();
+                // ✅ FAZ 3: Transaction Services (Temizlenmiş - Tek Sorumluluk)
+                // Sıra önemli: CompletionService → PaymentService + NegotiationService → CrudService
                 builder.Services.AddSingleton<TransactionCompletionService>();
+                builder.Services.AddSingleton<TransactionCrudService>();
+                builder.Services.AddSingleton<TransactionNegotiationService>(sp =>
+                    new TransactionNegotiationService(
+                        sp.GetRequiredService<Firebase.Database.FirebaseClient>(),
+                        sp.GetRequiredService<INotificationService>(),
+                        sp.GetRequiredService<TransactionCrudService>()
+                    ));
+                builder.Services.AddSingleton<TransactionPaymentService>(sp =>
+                    new TransactionPaymentService(
+                        sp.GetRequiredService<Firebase.Database.FirebaseClient>(),
+                        sp.GetRequiredService<INotificationService>(),
+                        sp.GetRequiredService<IUserProfileService>(),
+                        sp.GetRequiredService<KamPay.Services.Payment.IPaymentProviderFactory>(),
+                        sp.GetRequiredService<TransactionCompletionService>()
+                    ));
                 
                 builder.Services.AddSingleton<ITransactionService, KamPay.Services.Transactions.TransactionFacade>();
 

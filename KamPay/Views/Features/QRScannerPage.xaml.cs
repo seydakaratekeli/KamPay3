@@ -1,5 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging;
-using KamPay.Models.Messages;
+ï»¿using CommunityToolkit.Mvvm.Messaging;
+using KamPay.Models.EventMessages;
 using ZXing.Net.Maui;
 
 namespace KamPay.Views;
@@ -16,30 +16,30 @@ public partial class QRScannerPage : ContentPage
             Multiple = false
         };
 
-        // Animasyonlarý baþlat
+        // AnimasyonlarÄ± baÅŸlat
         StartScanAnimations();
     }
 
-    // HATA DÜZELTMESÝ: Metodun adý XAML ile eþleþmesi için "BarcodesDetected" olarak deðiþtirildi.
+    // HATA DÃœZELTMESÄ°: Metodun adÄ± XAML ile eÅŸleÅŸmesi iÃ§in "BarcodesDetected" olarak deÄŸiÅŸtirildi.
     private void BarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
-            // Tekrar tekrar taramayý önlemek için kamerayý durdur
+            // Tekrar tekrar taramayÄ± Ã¶nlemek iÃ§in kamerayÄ± durdur
             barcodeReader.IsDetecting = false;
 
             if (e.Results.Any())
             {
                 string qrCodeData = e.Results[0].Value;
 
-                // Baþarý animasyonu
+                // BaÅŸarÄ± animasyonu
                 await ShowSuccessAnimation();
 
-                // Taranan QR kod verisini içeren bir mesaj GÖNDER
+                // Taranan QR kod verisini iÃ§eren bir mesaj GÃ–NDER
                 WeakReferenceMessenger.Default.Send(new QRCodeScannedMessage(qrCodeData));
             }
 
-            // Bir önceki sayfaya geri dön
+            // Bir Ã¶nceki sayfaya geri dÃ¶n
             await Shell.Current.GoToAsync("..");
         });
     }
@@ -49,10 +49,10 @@ public partial class QRScannerPage : ContentPage
         // Scan frame pulse animasyonu
         var pulseAnimation = new Animation(v => ScanFrame.Scale = v, 1, 1.05);
         
-        // Scan line yukarý aþaðý animasyonu
+        // Scan line yukarÄ± aÅŸaÄŸÄ± animasyonu
         var scanLineAnimation = new Animation(v => ScanLine.TranslationY = v, -120, 120);
 
-        // Animasyonlarý baþlat
+        // AnimasyonlarÄ± baÅŸlat
         while (true)
         {
             pulseAnimation.Commit(this, "Pulse", 16, 1500, Easing.CubicInOut, (v, c) => { }, () => true);
@@ -64,7 +64,7 @@ public partial class QRScannerPage : ContentPage
 
     private async Task ShowSuccessAnimation()
     {
-        // Frame'i yeþile çevir ve titret
+        // Frame'i yeÅŸile Ã§evir ve titret
         await ScanFrame.ScaleTo(1.1, 100);
         ScanFrame.Stroke = Color.FromArgb("#4CAF50");
         await ScanFrame.ScaleTo(1.0, 100);
@@ -73,10 +73,10 @@ public partial class QRScannerPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        // Sayfa açýldýðýnda taramayý baþlat
+        // Sayfa aÃ§Ä±ldÄ±ÄŸÄ±nda taramayÄ± baÅŸlat
         barcodeReader.IsDetecting = true;
         
-        // Scan line animasyonunu baþlat
+        // Scan line animasyonunu baÅŸlat
         ScanLine.TranslateTo(0, -120, 0);
         AnimateScanLine();
     }
@@ -84,7 +84,7 @@ public partial class QRScannerPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        // Sayfa kapandýðýnda taramayý durdur
+        // Sayfa kapandÄ±ÄŸÄ±nda taramayÄ± durdur
         barcodeReader.IsDetecting = false;
     }
 

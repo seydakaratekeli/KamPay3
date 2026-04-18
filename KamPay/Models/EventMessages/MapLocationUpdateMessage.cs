@@ -1,7 +1,7 @@
-namespace KamPay.Models.Messages
+ï»¿namespace KamPay.Models.EventMessages
 {
     
-    // Harita konumunun güncellenmesi gerektiğinde gönderilen mesaj.
+    // Harita konumunun gÃ¼ncellenmesi gerektiÄŸinde gÃ¶nderilen mesaj.
     
     public class MapLocationUpdateMessage
     {

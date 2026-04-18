@@ -1,4 +1,4 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
 using KamPay.Services.Auth;
@@ -13,6 +13,9 @@ namespace KamPay
         {
             try
             {
+                // Syncfusion Lisans Kaydı
+                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjGyl/VkV+XU9AclRHQmJBYVF2R2VJelRzfV9EYkwxOX1dQl9lSXpSfkRkXXldc31cTmRXUkc=");
+                
                 InitializeComponent();
 
                 _serviceProvider = serviceProvider;

@@ -1,10 +1,10 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Projections;
 using Mapsui.UI.Maui;
 using CommunityToolkit.Mvvm.Messaging;
-using KamPay.Models.Messages;
+using KamPay.Models.EventMessages;
 using System;
 
 namespace KamPay.Views

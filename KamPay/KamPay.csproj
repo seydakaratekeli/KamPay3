@@ -97,6 +97,8 @@
 		<!-- <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" /> .NET 10'da Legacy Renderer yoksa kapalı olmalı, yavaşlatır -->
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="Syncfusion.Maui.Core" Version="33.1.49" />
+		<PackageReference Include="Syncfusion.Maui.ListView" Version="33.1.49" />
 		<PackageReference Include="ZXing.Net.Maui" Version="0.4.0" />
 		<PackageReference Include="ZXing.Net.Maui.Controls" Version="0.4.0" />
 

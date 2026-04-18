@@ -1,6 +1,6 @@
 using KamPay.API.Models;
 
-namespace KamPay.API.Services.products
+namespace KamPay.API.Services.Products
 {
     public interface IProductService
     {

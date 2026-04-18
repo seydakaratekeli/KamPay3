@@ -1,7 +1,7 @@
 using KamPay.API.Models;
 using KamPay.API.Repositories;
 
-namespace KamPay.API.Services.products
+namespace KamPay.API.Services.Products
 {
     public class ProductService : IProductService
     {

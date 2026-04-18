@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using KamPay.API.Models;
-using KamPay.API.Services.products;
+using KamPay.API.Services.Products;
 
 namespace KamPay.API.Controllers
 {

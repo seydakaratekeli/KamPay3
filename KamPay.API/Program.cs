@@ -8,7 +8,7 @@ using KamPay.API.Repositories;
 using KamPay.API.Middlewares;
 using System.Text;
 using KamPay.API.Services.Auth;
-using KamPay.API.Services.products;
+using KamPay.API.Services.Products;
 
 var builder = WebApplication.CreateBuilder(args);
 

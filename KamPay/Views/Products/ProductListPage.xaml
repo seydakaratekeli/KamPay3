@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
@@ -8,6 +8,7 @@
              xmlns:res="clr-namespace:KamPay.Services"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
              x:Class="KamPay.Views.ProductListPage"
              x:Name="ThisPage"
              Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Products]}"
@@ -216,56 +217,19 @@
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}">
 
-                <CollectionView ItemsSource="{Binding Products}"
-                                SelectionMode="None"
-                                ItemSizingStrategy="MeasureFirstItem"
-                                RemainingItemsThreshold="5"
-                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreProductsCommand}"
-                                Margin="15,0,15,15">
+                <syncfusion:SfListView ItemsSource="{Binding Products}"
+                                       SelectionMode="None"
+                                       ItemSize="285"
+                                       ItemSpacing="6"
+                                       Margin="15,0,15,15"
+                                       LoadMoreOption="Auto"
+                                       LoadMoreCommand="{Binding LoadMoreProductsCommand}">
 
-                    <!-- ✅ BEHAVIOR: RecyclerView Optimizasyonları -->
-                    <CollectionView.Behaviors>
-                        <behaviors:OptimizedCollectionViewBehavior 
-                            ItemCacheSize="20"
-                            PrefetchItemCount="4" />
-                    </CollectionView.Behaviors>
+                    <syncfusion:SfListView.ItemsLayout>
+                        <syncfusion:GridLayout SpanCount="2" />
+                    </syncfusion:SfListView.ItemsLayout>
 
-                    <CollectionView.EmptyView>
-                        <Grid VerticalOptions="Center" 
-                              HorizontalOptions="Center" 
-                              Padding="20" 
-                              IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
-                            <Border BackgroundColor="White"
-                                    StrokeThickness="0"
-                                    Padding="30"
-                                    WidthRequest="280"
-                                    HeightRequest="240">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="20"/>
-                                </Border.StrokeShape>
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                                </Border.Shadow>
-                                <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Label Text="📦" FontSize="70" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{extensions:Translate NoDataYet}" 
-                                           FontSize="16" 
-                                           TextColor="{StaticResource TextSecondary}" 
-                                           HorizontalTextAlignment="Center"
-                                           FontAttributes="Bold"/>
-                                </VerticalStackLayout>
-                            </Border>
-                        </Grid>
-                    </CollectionView.EmptyView>
-
-                    <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" 
-                                         Span="2" 
-                                         HorizontalItemSpacing="12" 
-                                         VerticalItemSpacing="12"/>
-                    </CollectionView.ItemsLayout>
-
-                    <CollectionView.ItemTemplate>
+                    <syncfusion:SfListView.ItemTemplate>
                         <DataTemplate x:DataType="models:Product">
                             <!-- Shadow kaldırıldı → Border stroke (GPU-friendly) -->
                             <Border StrokeShape="RoundRectangle 16"
@@ -378,8 +342,8 @@
                                 </Grid>
                             </Border>
                         </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                    </syncfusion:SfListView.ItemTemplate>
+                </syncfusion:SfListView>
             </RefreshView>
 
             <!-- Floating Action Buttons -->

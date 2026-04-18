@@ -4,7 +4,7 @@ using Firebase.Database.Query;
 using KamPay.Models;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Services;
-using KamPay.Models.Messages;
+using KamPay.Models.EventMessages;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
