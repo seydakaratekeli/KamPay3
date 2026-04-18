@@ -105,42 +105,38 @@ namespace KamPay.Services.ServiceSharing
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(lastKey))
-                    {
-                        items = await _firebaseClient
-                            .Child(Constants.ServiceOffersCollection)
-                            .OrderBy("CreatedAt")
-                            .StartAt(lastKey)
-                            .LimitToFirst(pageSize + 1)
-                            .OnceAsync<ServiceOffer>();
-                    }
-                    else
-                    {
-                        items = await _firebaseClient
-                            .Child(Constants.ServiceOffersCollection)
-                            .OrderBy("CreatedAt")
-                            .LimitToFirst(pageSize)
-                            .OnceAsync<ServiceOffer>();
-                    }
+                    // BUG-12 FİX: ".StartAt(lastKey)" kullanımı string hatası veriyordu.
+                    // Çünkü "CreatedAt" timestamp (long) ile orderBy yapılırken string "ServiceId" verilemez.
+                    // İstemci tarafında güvenli sayfalama kullanılarak sorun kalıcı olarak çözüldü.
+                    items = await _firebaseClient
+                        .Child(Constants.ServiceOffersCollection)
+                        .OnceAsync<ServiceOffer>();
 
-                    var offers = items.Select(o =>
-                    {
-                        var offer = o.Object;
-                        offer.ServiceId = o.Key;
-                        return offer;
-                    }).ToList();
-
-                    if (!string.IsNullOrEmpty(lastKey) && offers.Any() && offers.First().ServiceId == lastKey)
-                    {
-                        offers.RemoveAt(0);
-                    }
-
-                    offers = offers
+                    var allOffers = items
+                        .Select(o =>
+                        {
+                            var offer = o.Object;
+                            offer.ServiceId = o.Key;
+                            return offer;
+                        })
                         .Where(o => o.IsAvailable)
                         .OrderByDescending(o => o.CreatedAt)
                         .ToList();
 
-                    return ServiceResult<List<ServiceOffer>>.SuccessResult(offers);
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        var lastIndex = allOffers.FindIndex(o => o.ServiceId == lastKey);
+                        if (lastIndex >= 0)
+                        {
+                            allOffers = allOffers.Skip(lastIndex + 1).Take(pageSize).ToList();
+                        }
+                    }
+                    else
+                    {
+                        allOffers = allOffers.Take(pageSize).ToList();
+                    }
+
+                    return ServiceResult<List<ServiceOffer>>.SuccessResult(allOffers);
                 }
             }
             catch (Exception ex)

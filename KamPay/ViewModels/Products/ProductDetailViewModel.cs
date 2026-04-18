@@ -733,12 +733,13 @@ namespace KamPay.ViewModels
                     IsLoading = true;
                     var transactions = await _firebaseClient
                         .Child(Constants.TransactionsCollection)
+                        .OrderBy("ProductId")
+                        .EqualTo(ProductId)
                         .OnceAsync<Transaction>();
-                        
+
                     var productTransactions = transactions
                         .Select(t => t.Object)
-                        .Where(t => t.ProductId == ProductId && 
-                                   (t.Status == TransactionStatus.Accepted || t.Status == TransactionStatus.Pending))
+                        .Where(t => t.Status == TransactionStatus.Accepted || t.Status == TransactionStatus.Pending)
                         .ToList();
 
                     IsLoading = false;
@@ -897,7 +898,43 @@ namespace KamPay.ViewModels
 
             if (reason != null && reason != Res["Cancel"])
             {
-                await Application.Current.MainPage.DisplayAlert(Res["Info"], Res["ReportReceived"], Res["Ok"]);
+                try
+                {
+                    IsLoading = true;
+                    var currentUser = await _authService.GetCurrentUserAsync();
+                    if (currentUser != null)
+                    {
+                        var reportId = Guid.NewGuid().ToString();
+                        var reportData = new
+                        {
+                            ReportId = reportId,
+                            ProductId = Product.ProductId,
+                            ProductTitle = Product.Title,
+                            ReportedUserId = Product.UserId,
+                            ReporterUserId = currentUser.UserId,
+                            ReporterName = currentUser.FullName,
+                            Reason = reason,
+                            ReportedAt = DateTime.UtcNow,
+                            Status = "Pending"
+                        };
+
+                        await _firebaseClient
+                            .Child("reports")
+                            .Child(reportId)
+                            .PutAsync(reportData);
+                    }
+
+                    await Application.Current.MainPage.DisplayAlert(Res["Info"], Res["ReportReceived"], Res["Ok"]);
+                }
+                catch (Exception ex)
+                {
+                    KamPay.Helpers.AppLogger.DebugLog($"Şikayet kaydedilirken hata: {ex.Message}");
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], "Şikayetiniz gönderilirken bir hata oluştu.", Res["Ok"]);
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
             }
         }
 

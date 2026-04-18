@@ -1013,41 +1013,35 @@ namespace KamPay.Services.ServiceSharing
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(lastKey))
-                    {
-                        items = await _firebaseClient
-                            .Child(Constants.CustomerServiceRequestsCollection)
-                            .OrderBy("CreatedAt")
-                            .StartAt(lastKey)
-                            .LimitToFirst(pageSize + 1)
-                            .OnceAsync<CustomerServiceRequest>();
-                    }
-                    else
-                    {
-                        items = await _firebaseClient
-                            .Child(Constants.CustomerServiceRequestsCollection)
-                            .OrderBy("CreatedAt")
-                            .LimitToFirst(pageSize)
-                            .OnceAsync<CustomerServiceRequest>();
-                    }
+                    // BUG-12: İstemci tarafı sayfalama ile string-to-long StartAt hatası çözüldü.
+                    items = await _firebaseClient
+                        .Child(Constants.CustomerServiceRequestsCollection)
+                        .OnceAsync<CustomerServiceRequest>();
 
-                    var requests = items.Select(r => {
-                        var req = r.Object;
-                        req.RequestId = r.Key;
-                        return req;
-                    }).ToList();
-
-                    if (!string.IsNullOrEmpty(lastKey) && requests.Any() && requests.First().RequestId == lastKey)
-                    {
-                        requests.RemoveAt(0);
-                    }
-
-                    requests = requests
+                    var allRequests = items
+                        .Select(r => {
+                            var req = r.Object;
+                            req.RequestId = r.Key;
+                            return req;
+                        })
                         .Where(r => r.IsActive && r.Status == CustomerRequestStatus.Open)
                         .OrderByDescending(r => r.CreatedAt)
                         .ToList();
 
-                    return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(requests);
+                    if (!string.IsNullOrEmpty(lastKey))
+                    {
+                        var lastIndex = allRequests.FindIndex(r => r.RequestId == lastKey);
+                        if (lastIndex >= 0)
+                        {
+                            allRequests = allRequests.Skip(lastIndex + 1).Take(pageSize).ToList();
+                        }
+                    }
+                    else
+                    {
+                        allRequests = allRequests.Take(pageSize).ToList();
+                    }
+
+                    return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(allRequests);
                 }
             }
             catch (Exception ex)

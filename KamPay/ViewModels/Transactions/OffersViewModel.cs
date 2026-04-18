@@ -590,26 +590,24 @@ namespace KamPay.ViewModels
                     IsLoading = true;
 
                     var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
-                    
+
                     if (result.Success)
                     {
-                        Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
-                        
-                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
                         await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "SatÄ±n alma talebi kabul edildi! AlÄ±cÄ± Ã¶deme yapabilir." 
-                            : "SatÄ±n alma talebi reddedildi.";
+                            ? "Satın alma talebi kabul edildi! Alıcı ödeme yapabilir." 
+                            : "Satın alma talebi reddedildi.";
 
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("✅ Başarılı", successMessage, "Tamam");
                     }
                     else
                     {
                         await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
-                    
-                    IsLoading = false;
                     return;
                 }
 
@@ -654,26 +652,24 @@ namespace KamPay.ViewModels
                     IsLoading = true;
 
                     var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
-                    
+
                     if (result.Success)
                     {
-                        Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
-                        
-                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        Debug.WriteLine($"✅ Firebase'e yazıldı, listener güncelleyecek: {transaction.TransactionId}");
+
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
                         await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "PazarlÄ±k sonucu onaylandÄ±! AlÄ±cÄ± Ã¶deme yapabilir." 
+                            ? "Pazarlık sonucu onaylandı! Alıcı ödeme yapabilir." 
                             : "Teklif reddedildi.";
 
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("✅ Başarılı", successMessage, "Tamam");
                     }
                     else
                     {
                         await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
-                    
-                    IsLoading = false;
                     return;
                 }
 
@@ -702,26 +698,24 @@ namespace KamPay.ViewModels
                     IsLoading = true;
 
                     var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
-                    
+
                     if (result.Success)
                     {
-                        Debug.WriteLine($"âœ… TAKAS onaylandÄ±: {transaction.TransactionId}");
-                        
-                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        Debug.WriteLine($"✅ TAKAS onaylandı: {transaction.TransactionId}");
+
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
                         await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "Takas teklifi kabul edildi! QR kodlar oluÅŸturuldu." 
+                            ? "Takas teklifi kabul edildi! QR kodlar oluşturuldu." 
                             : "Takas teklifi reddedildi.";
 
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("✅ Başarılı", successMessage, "Tamam");
                     }
                     else
                     {
                         await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
-                    
-                    IsLoading = false;
                     return;
                 }
 
@@ -744,26 +738,24 @@ namespace KamPay.ViewModels
                     IsLoading = true;
 
                     var result = await _transactionService.RespondToOfferAsync(transaction.TransactionId, accept);
-                    
+
                     if (result.Success)
                     {
-                        Debug.WriteLine($"âœ… BAÄIÅ onaylandÄ±: {transaction.TransactionId}");
-                        
-                        // âœ… FIX: Manuel UI gÃ¼ncelleme - Firebase listener beklemeye gerek yok
+                        Debug.WriteLine($"✅ BAĞIŞ onaylandı: {transaction.TransactionId}");
+
+                        // ✅ FIX: Manuel UI güncelleme - Firebase listener beklemeye gerek yok
                         await UpdateOfferInUIAsync(transaction, result);
 
                         var successMessage = accept 
-                            ? "BaÄŸÄ±ÅŸ talebi kabul edildi!" 
-                            : "BaÄŸÄ±ÅŸ talebi reddedildi.";
+                            ? "Bağış talebi kabul edildi!" 
+                            : "Bağış talebi reddedildi.";
 
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", successMessage, "Tamam");
+                        await Shell.Current.CurrentPage.DisplayAlertAsync("✅ Başarılı", successMessage, "Tamam");
                     }
                     else
                     {
                         await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", result.Message, "Tamam");
                     }
-                    
-                    IsLoading = false;
                     return;
                 }
 
