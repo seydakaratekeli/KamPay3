@@ -903,6 +903,13 @@ namespace KamPay.ViewModels
                     if (Application.Current?.MainPage != null)
                         await Application.Current.MainPage.DisplayAlert(Res["Success"], Res["ProductMarkedAsSold"], Res["Ok"]);
 
+                    // Güncel ürün verisini çek ve listeye bildir
+                    var soldResult = await _productService.GetProductByIdAsync(ProductId);
+                    if (soldResult.Success && soldResult.Data != null)
+                    {
+                        WeakReferenceMessenger.Default.Send(new ProductUpdatedMessage(soldResult.Data));
+                    }
+
                     await LoadProductAsync();
                 }
                 else
@@ -1118,8 +1125,4 @@ namespace KamPay.ViewModels
         }
     }
 
-    public class FavoriteCountChangedMessage : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<Product>
-    {
-        public FavoriteCountChangedMessage(Product value) : base(value) { }
-    }
 }
