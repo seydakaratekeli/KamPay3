@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
 using FFImageLoading.Maui;
 using KamPay.Services;
@@ -245,7 +245,8 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                     new FirebaseSurpriseBoxService(
                         sp.GetRequiredService<IUserProfileService>(),
                         sp.GetRequiredService<IProductService>(),
-                        sp.GetRequiredService<INotificationService>()
+                        sp.GetRequiredService<INotificationService>(),
+                        sp.GetRequiredService<FirebaseClient>()
                     )
                 );
                 

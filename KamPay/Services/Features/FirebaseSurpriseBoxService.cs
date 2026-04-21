@@ -1,4 +1,4 @@
-﻿using Firebase.Database;
+using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
@@ -22,9 +22,10 @@ namespace KamPay.Services
         public FirebaseSurpriseBoxService(
             IUserProfileService userProfileService,
             IProductService productService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            FirebaseClient firebaseClient)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
             _userProfileService = userProfileService;
             _productService = productService;
             _notificationService = notificationService;
@@ -112,8 +113,7 @@ namespace KamPay.Services
                 }
 
                 // 4. Rastgele bir ürün seç
-                var random = new Random();
-                var surpriseProduct = availableDonations[random.Next(availableDonations.Count)];
+                var surpriseProduct = availableDonations[Random.Shared.Next(availableDonations.Count)];
                 var previousOwnerId = surpriseProduct.UserId;
                 var previousOwnerName = surpriseProduct.UserName;
 

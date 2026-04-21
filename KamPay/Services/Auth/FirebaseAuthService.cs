@@ -98,7 +98,7 @@ namespace KamPay.Services.Auth
                     FirstName = InputSanitizer.SanitizeName(request.FirstName?.Trim() ?? ""),
                     LastName = InputSanitizer.SanitizeName(request.LastName?.Trim() ?? ""),
                     Email = safeEmail,
-                    Username = $"{request.FirstName.ToLower().Replace(" ", "")}{new Random().Next(100, 999)}",
+                    Username = $"{request.FirstName.ToLower().Replace(" ", "")}{Random.Shared.Next(100, 999)}",
                     PhoneNumber = "",
                     PasswordHash = "", // Artık Firebase yönetiyor
                     IsEmailVerified = false,

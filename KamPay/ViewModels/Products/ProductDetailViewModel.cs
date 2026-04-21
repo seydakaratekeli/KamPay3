@@ -39,6 +39,7 @@ namespace KamPay.ViewModels
         private readonly IUserStateService _userStateService;
         // âœ… DIP FIX: FirebaseClient artÄ±k DI'den geliyor (new keyword kaldÄ±rÄ±ldÄ±)
         private readonly FirebaseClient _firebaseClient;
+        private readonly INotificationService _notificationService;
         private IDisposable? _transactionListener;
         private string? _lastLoadedProductId;
         private bool _disposed = false;
@@ -89,7 +90,8 @@ namespace KamPay.ViewModels
             IMessagingService messagingService,
             ITransactionService transactionService,
             IUserStateService userStateService,
-            FirebaseClient firebaseClient) // âœ… DIP FIX: YENÄ° PARAMETRE
+            FirebaseClient firebaseClient,
+            INotificationService notificationService)
         {
             _productService = productService;
             _authService = authService;
@@ -98,6 +100,7 @@ namespace KamPay.ViewModels
             _transactionService = transactionService;
             _userStateService = userStateService;
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // âœ… DIP FIX: DI'den inject
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
             
             // KullanÄ±cÄ± profil deÄŸiÅŸikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -427,22 +430,29 @@ namespace KamPay.ViewModels
                         
                     case ProductType.Bagis:
                         IsLoading = true;
-                        // âœ… BaÄŸÄ±ÅŸ akÄ±ÅŸÄ± (deÄŸiÅŸiklik yok)
+                        // BUG-17 FIX: Bagis akisi - alert + chat yonlendirmesi eklendi
                         var donationResult = await _transactionService.CreateRequestAsync(Product, currentUser);
-                        
+
                         if (donationResult.Success)
                         {
                             ActiveTransaction = donationResult.Data;
                             HasActiveTransaction = true;
-                            
-                            var message = "âœ… BaÄŸÄ±ÅŸ talebiniz gÃ¶nderildi!\n\n" +
-                                          "ÃœrÃ¼n sahibinin onayÄ±nÄ± bekleyin. OnaylandÄ±ktan sonra teslimat iÃ§in QR kod oluÅŸturulacak.";
-                            
+
+                            // Konusmayi baslat (satis/takas akisiyla tutarli)
+                            var donationConvResult = await _transactionService.StartConversationForTransactionAsync(
+                                ActiveTransaction.TransactionId, currentUser.UserId);
+
                             await Application.Current.MainPage.DisplayAlert(
-                                Res["Success"], 
-                                message, 
+                                Res["Success"],
+                                "Bagis talebiniz gonderildi! Urun sahibiyle mesajlasarak teslimatı koordine edebilirsiniz.",
                                 Res["Ok"]
                             );
+
+                            // BUG-17: Chat ekranina yonlendir
+                            if (donationConvResult.Success)
+                            {
+                                await Shell.Current.GoToAsync($"{nameof(ChatPage)}?conversationId={donationConvResult.Data}");
+                            }
                         }
                         else
                         {
@@ -803,6 +813,48 @@ namespace KamPay.ViewModels
             try
             {
                 IsLoading = true;
+
+                // BUG-18 FIX: Urun satilmadan once bekleyen/kabul edilmis
+                // transaction'lari iptal et ve alicilara bildirim gonder.
+                try
+                {
+                    var pendingTransactions = await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .OrderBy("ProductId")
+                        .EqualTo(ProductId)
+                        .OnceAsync<Transaction>();
+
+                    foreach (var txEntry in pendingTransactions)
+                    {
+                        var tx = txEntry.Object;
+                        tx.TransactionId = txEntry.Key;
+
+                        if (tx.Status == TransactionStatus.Pending || tx.Status == TransactionStatus.Accepted)
+                        {
+                            tx.Status = TransactionStatus.Cancelled;
+                            tx.UpdatedAt = DateTime.UtcNow;
+
+                            await _firebaseClient
+                                .Child(Constants.TransactionsCollection)
+                                .Child(tx.TransactionId)
+                                .PutAsync(tx);
+
+                            // Aliciya bildirim gonder
+                            await _notificationService.CreateNotificationAsync(new Notification
+                            {
+                                UserId = tx.BuyerId,
+                                Type = NotificationType.OfferRejected,
+                                Title = "Urun Satildi",
+                                Message = $"Uzerinde teklif verdiginiz '{tx.ProductTitle}' urunu uygulama disinda satildi.",
+                                ActionUrl = nameof(Views.OffersPage)
+                            });
+                        }
+                    }
+                }
+                catch (Exception cancelEx)
+                {
+                    KamPay.Helpers.AppLogger.DebugLog($"Bekleyen teklifler iptal edilirken hata: {cancelEx.Message}");
+                }
 
                 var result = await _productService.MarkAsSoldAsync(ProductId);
 

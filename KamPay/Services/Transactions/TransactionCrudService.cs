@@ -50,7 +50,7 @@ namespace KamPay.Services
                 ProductId = productId,
                 ProductTitle = productTitle,
                 QRCodeData = $"DELIVERY|{transactionId}|{productId}|{secureCode}",
-                VerificationPin = new Random().Next(100000, 999999).ToString(),
+                VerificationPin = Shared.OtpGenerator.GenerateSecureOtp(),
                 SellerId = giverId,
                 BuyerId = receiverId,
                 CreatedAt = DateTime.UtcNow,
