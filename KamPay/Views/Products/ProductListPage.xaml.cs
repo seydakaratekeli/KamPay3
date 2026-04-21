@@ -16,6 +16,17 @@ namespace KamPay.Views
             InitializeComponent();
             _viewModel = vm;
             BindingContext = vm;
+
+            // Faz 4: ViewModel scroll-to-top isteği gönderince SfListView'ı en başa konumla
+            _viewModel.ScrollToTopRequested += OnScrollToTopRequested;
+        }
+
+        private void OnScrollToTopRequested(object? sender, EventArgs e)
+        {
+            if (ProductsListView?.DataSource?.DisplayItems?.Count > 0)
+            {
+                ProductsListView.ScrollTo(0);
+            }
         }
 
         protected override async void OnAppearing()
@@ -35,6 +46,17 @@ namespace KamPay.Views
             base.OnDisappearing();
             // Sayfa kapanınca animasyonu durdur (kaynak sızıntısını önle)
             Circle1.AbortAnimation("CircleRotation");
+        }
+
+        protected override void OnHandlerChanged()
+        {
+            base.OnHandlerChanged();
+
+            // Sayfa dispose edilince event'i temizle (memory leak önlemi)
+            if (Handler == null)
+            {
+                _viewModel.ScrollToTopRequested -= OnScrollToTopRequested;
+            }
         }
 
         /// <summary>

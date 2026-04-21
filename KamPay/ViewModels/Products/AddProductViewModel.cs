@@ -524,6 +524,10 @@ namespace KamPay.ViewModels
                 await Shell.Current.DisplayAlert(Res["Success"], Res["ProductAddedSuccess"], Res["Ok"]); //
 
                 ClearForm(); //
+
+                // Faz 4: ProductListViewModel'e yeni ürünü bildir → scroll-to-top tetiklenir
+                WeakReferenceMessenger.Default.Send(new ProductAddedMessage(product));
+
                 await Shell.Current.GoToAsync(".."); //
             }
             catch (Exception ex)

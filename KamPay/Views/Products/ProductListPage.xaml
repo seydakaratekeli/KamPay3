@@ -208,7 +208,8 @@
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}">
 
-                <syncfusion:SfListView ItemsSource="{Binding Products}"
+                <syncfusion:SfListView x:Name="ProductsListView"
+                                       ItemsSource="{Binding Products}"
                                        SelectionMode="None"
                                        ItemSize="285"
                                        ItemSpacing="6"
@@ -247,7 +248,8 @@
                                                                     LoadingPlaceholder="loading_image.png"
                                                                     ErrorPlaceholder="error_image.png"
                                                                     DownsampleToViewSize="True"
-                                                                    CacheType="Disk"
+                                                                    CacheType="All"
+                                                                    CacheDuration="7"
                                                                     FadeAnimationEnabled="False"/>
 
                                         <!-- Status Badge -->

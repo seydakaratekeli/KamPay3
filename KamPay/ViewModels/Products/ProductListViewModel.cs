@@ -6,6 +6,7 @@ using Firebase.Database.Query;
 using Firebase.Database.Streaming;
 using KamPay.Helpers;
 using KamPay.Models;
+using KamPay.Models.EventMessages;
 using KamPay.Services;
 using KamPay.Services.Auth;
 using KamPay.Services.Products;
@@ -58,6 +59,11 @@ namespace KamPay.ViewModels
 
         public ObservableRangeCollection<Product> Products { get; } = new();
         public ObservableCollection<Category> Categories { get; } = new();
+
+        /// <summary>
+        /// Faz 4: ProductListPage.xaml.cs bu event'i dinler → sfListView.ScrollTo(0) çağırır.
+        /// </summary>
+        public event EventHandler? ScrollToTopRequested;
 
         // Sıralama picker için
         private readonly List<ProductSortOption> _sortOptionEnums =
@@ -116,6 +122,33 @@ namespace KamPay.ViewModels
 
             WeakReferenceMessenger.Default.Register<UnreadGeneralNotificationStatusMessage>(this, (_, m) =>
                 HasUnreadNotifications = m.Value);
+
+            // Faz 4: Ürün eklendi → listeye ekle + scroll-to-top
+            WeakReferenceMessenger.Default.Register<ProductAddedMessage>(this, (_, m) =>
+            {
+                var newProduct = m.Value;
+                if (newProduct == null) return;
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    // _allLoadedProducts'a da ekle
+                    lock (_allProductsLock)
+                    {
+                        var existsInAll = _allLoadedProducts.Any(p => p.ProductId == newProduct.ProductId);
+                        if (!existsInAll) _allLoadedProducts.Insert(0, newProduct);
+                    }
+
+                    // Görünür listeye ekle (realtime listener'dan önce gelirse duplikasyonu önle)
+                    var existsInProducts = Products.Any(p => p.ProductId == newProduct.ProductId);
+                    if (!existsInProducts)
+                    {
+                        Products.Insert(0, newProduct);
+                    }
+
+                    // Scroll-to-top tetikle
+                    ScrollToTopRequested?.Invoke(this, EventArgs.Empty);
+                });
+            });
 
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (_, m) =>
             {
@@ -214,7 +247,9 @@ namespace KamPay.ViewModels
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
                         if (reset)
-                            Products.ReplaceRange(items);
+                            // Faz 2: Cache'den zaten veri varsa SmartMerge kullan (flickering önlenir)
+                            // Cache yoksa (Products boş) direkt ReplaceRange daha hızlı
+                            SmartMergeProducts(items);
                         else
                             Products.AddRange(items);
 
@@ -266,6 +301,43 @@ namespace KamPay.ViewModels
             SearchText = SearchText
         };
 
+        /// <summary>
+        /// Faz 2: Cache'den yüklenen liste üzerine API verisini akıllıca birleştirir.
+        /// Yalnızca değişen property'ler güncellenir → CachedImage yeniden yüklenmez → flickering yok.
+        /// </summary>
+        private void SmartMergeProducts(List<Product> newItems)
+        {
+            // Products boşsa (cache yoktu) direkt ReplaceRange daha hızlı
+            if (Products.Count == 0)
+            {
+                Products.ReplaceRange(newItems);
+                return;
+            }
+
+            var newDict = newItems.ToDictionary(p => p.ProductId);
+            var existingIds = Products.Select(p => p.ProductId).ToHashSet();
+
+            // 1) Artık olmayan ürünleri sil
+            var toRemove = Products.Where(p => !newDict.ContainsKey(p.ProductId)).ToList();
+            foreach (var item in toRemove) Products.Remove(item);
+
+            // 2) Mevcut ürünleri yerinde güncelle (görsel yeniden yüklenmez)
+            foreach (var existing in Products)
+            {
+                if (newDict.TryGetValue(existing.ProductId, out var updated))
+                    UpdateProductProperties(existing, updated);
+            }
+
+            // 3) Yeni ürünleri doğru konuma ekle
+            for (int i = 0; i < newItems.Count; i++)
+            {
+                if (!existingIds.Contains(newItems[i].ProductId))
+                {
+                    Products.Insert(Math.Min(i, Products.Count), newItems[i]);
+                }
+            }
+        }
+
         private List<Product> ApplySorting(List<Product> items) => SelectedSortOption switch
         {
             ProductSortOption.PriceAsc => items.OrderBy(p => p.Price).ToList(),
@@ -308,6 +380,7 @@ namespace KamPay.ViewModels
             var product = evt.Object;
             product.ProductId = evt.Key;
 
+            // Faz 3: _allLoadedProducts'ı güncelle
             lock (_allProductsLock)
             {
                 var index = _allLoadedProducts.FindIndex(p => p.ProductId == product.ProductId);
@@ -323,12 +396,13 @@ namespace KamPay.ViewModels
                 }
             }
 
-            // 300ms debounce → birden fazla hızlı event gelirse tek UI güncellemesi
-            ScheduleDebouncedUiUpdate();
+            // Faz 3: Granüler UI güncellemesi — ReplaceRange yerine tek item işlemi
+            ScheduleGranularUiUpdate(product, evt.EventType);
         }
 
-        private void ScheduleDebouncedUiUpdate()
+        private void ScheduleGranularUiUpdate(Product product, FirebaseEventType eventType)
         {
+            // Debounce: Kısa sürede çok event gelirse son olanı uygula
             lock (_realtimeLock)
             {
                 _hasPendingRealtimeUpdate = true;
@@ -341,14 +415,76 @@ namespace KamPay.ViewModels
                         _hasPendingRealtimeUpdate = false;
                     }
 
-                    List<Product> snapshot;
-                    lock (_allProductsLock) { snapshot = _allLoadedProducts.ToList(); }
-                    snapshot = ApplySorting(snapshot);
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        // Mevcut listedeki index'i bul
+                        var existingIndex = -1;
+                        for (int i = 0; i < Products.Count; i++)
+                        {
+                            if (Products[i].ProductId == product.ProductId)
+                            {
+                                existingIndex = i;
+                                break;
+                            }
+                        }
 
-                    MainThread.BeginInvokeOnMainThread(() => Products.ReplaceRange(snapshot));
-                    Debug.WriteLine("✅ Debounced UI güncellendi (realtime)");
+                        if (eventType == FirebaseEventType.InsertOrUpdate)
+                        {
+                            if (existingIndex >= 0)
+                            {
+                                // Mevcut ürünü yerinde güncelle — görsel yeniden yüklenmez!
+                                UpdateProductProperties(Products[existingIndex], product);
+                            }
+                            else
+                            {
+                                // Yeni ürün: ProductAddedMessage ile zaten eklendiyse ekleme (duplikasyon önle)
+                                var alreadyAdded = Products.Any(p => p.ProductId == product.ProductId);
+                                if (!alreadyAdded)
+                                {
+                                    Products.Insert(0, product);
+                                }
+                            }
+                        }
+                        else if (eventType == FirebaseEventType.Delete && existingIndex >= 0)
+                        {
+                            Products.RemoveAt(existingIndex);
+                        }
+                    });
+
+                    Debug.WriteLine($"✅ Granüler UI güncellendi (realtime) — ProductId: {product.ProductId}");
                 }, null, 300, Timeout.Infinite);
             }
+        }
+
+        /// <summary>
+        /// Faz 3 yardımcı: Mevcut Product nesnesinin property'lerini yerinde günceller.
+        /// CachedImage binding'i değişince sadece değişen property için güncelleme olur,
+        /// tüm item yeniden render edilmez → flickering yok.
+        /// </summary>
+        private static void UpdateProductProperties(Product existing, Product updated)
+        {
+            if (existing.ThumbnailUrl != updated.ThumbnailUrl)
+                existing.ThumbnailUrl = updated.ThumbnailUrl;
+            if (existing.Title != updated.Title)
+                existing.Title = updated.Title;
+            if (existing.Price != updated.Price)
+                existing.Price = updated.Price;
+            if (existing.IsActive != updated.IsActive)
+                existing.IsActive = updated.IsActive;
+            if (existing.IsSold != updated.IsSold)
+                existing.IsSold = updated.IsSold;
+            if (existing.IsReserved != updated.IsReserved)
+                existing.IsReserved = updated.IsReserved;
+            if (existing.FavoriteCount != updated.FavoriteCount)
+                existing.FavoriteCount = updated.FavoriteCount;
+            if (existing.ViewCount != updated.ViewCount)
+                existing.ViewCount = updated.ViewCount;
+            if (existing.UserName != updated.UserName)
+                existing.UserName = updated.UserName;
+            if (existing.UserPhotoUrl != updated.UserPhotoUrl)
+                existing.UserPhotoUrl = updated.UserPhotoUrl;
+            if (existing.HasPendingOffer != updated.HasPendingOffer)
+                existing.HasPendingOffer = updated.HasPendingOffer;
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -401,6 +537,7 @@ namespace KamPay.ViewModels
             // Sıralama client-side — API'ye gitme
             List<Product> snapshot;
             lock (_allProductsLock) { snapshot = ApplySorting(_allLoadedProducts.ToList()); }
+            // Sıralama değişince tüm liste yeniden sıralanmalı → ReplaceRange burada doğru
             MainThread.BeginInvokeOnMainThread(() => Products.ReplaceRange(snapshot));
         }
 
