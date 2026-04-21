@@ -47,7 +47,8 @@ namespace KamPay.API.Repositories
             IFirebaseQuery query;
 
             if (!string.IsNullOrEmpty(cursor))
-                query = _firebaseClient.Child("products").OrderByKey().StartAt(cursor).LimitToFirst(fetchLimit + 1);
+                query = _firebaseClient.Child("products").OrderByKey().StartAt(cursor + "\0").LimitToFirst(fetchLimit);
+
             else
                 query = _firebaseClient.Child("products").OrderByKey().LimitToFirst(fetchLimit);
 
@@ -58,9 +59,7 @@ namespace KamPay.API.Repositories
                 .Where(p => p.IsActive && !p.IsSold)
                 .ToList();
 
-            // Cursor dahil geldiğinden ilk öğeyi atla
-            if (!string.IsNullOrEmpty(cursor) && products.Count > 0 && products[0].ProductId == cursor)
-                products.RemoveAt(0);
+            
 
             // Client-side filtreler
             if (options != null)
