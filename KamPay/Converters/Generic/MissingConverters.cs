@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using KamPay.Models;
 using Microsoft.Maui.Controls;
 
 namespace KamPay.Converters

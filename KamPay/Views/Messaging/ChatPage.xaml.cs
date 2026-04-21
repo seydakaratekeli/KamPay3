@@ -1,6 +1,7 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 using KamPay.Models;
 using CommunityToolkit.Mvvm.Messaging;
+using Syncfusion.Maui.ListView;
 
 namespace KamPay.Views
 {
@@ -113,7 +114,12 @@ namespace KamPay.Views
                     if (_viewModel.Messages.Count > 0)
                     {
                         var lastMessage = _viewModel.Messages.Last();
-                        MessagesCollectionView.ScrollTo(lastMessage, position: ScrollToPosition.End, animate: true);
+                        // Syncfusion SfListView ScrollTo kullanımı
+                        if (_viewModel.Messages.Count > 0)
+                        {
+                            var index = _viewModel.Messages.Count - 1;
+                            MessagesListView.ItemsLayout.ScrollToRowIndex(index, Microsoft.Maui.Controls.ScrollToPosition.End, true);
+                        }
                     }
                 }
                 catch (Exception ex)

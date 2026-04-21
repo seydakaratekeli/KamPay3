@@ -1,16 +1,17 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using KamPay.Services;
+using KamPay.Models.Configuration;
 
 namespace KamPay.Helpers
 {
     /// <summary>
-    /// E-posta test ve debug yardÄ±mcÄ± sÄ±nÄ±fÄ±
+    /// E-posta test ve debug yardýmcý sýnýfý
     /// </summary>
     public static class EmailTestHelper
     {
         /// <summary>
-        /// SMTP ayarlarÄ±nÄ± konsola yazdÄ±rÄ±r (ÅŸifre gizlenir)
+        /// SMTP ayarlarýný konsola yazdýrýr (þifre gizlenir)
         /// </summary>
         public static void LogEmailSettings(EmailSettings settings)
         {
@@ -32,12 +33,12 @@ namespace KamPay.Helpers
         }
 
         /// <summary>
-        /// Åžifreyi maskelenmiÅŸ olarak gÃ¶sterir (ilk 2 karakter + ***)
+        /// Þifreyi maskelenmiþ olarak gösterir (ilk 2 karakter + ***)
         /// </summary>
         private static string MaskPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
-                return "*** (BOÅž) ***";
+                return "*** (BOÞ) ***";
 
             if (password.Length <= 2)
                 return "***";
@@ -46,13 +47,13 @@ namespace KamPay.Helpers
         }
 
         /// <summary>
-        /// SMTP baÄŸlantÄ± testi (gerÃ§ek gÃ¶nderim yapmadan)
+        /// SMTP baðlantý testi (gerçek gönderim yapmadan)
         /// </summary>
         public static bool TestSmtpConnection(EmailSettings settings)
         {
             try
             {
-                Debug.WriteLine($"?? SMTP baÄŸlantÄ± testi baÅŸlatÄ±lÄ±yor: {settings.SmtpHost}:{settings.SmtpPort}");
+                Debug.WriteLine($"?? SMTP baðlantý testi baþlatýlýyor: {settings.SmtpHost}:{settings.SmtpPort}");
 
                 using var client = new System.Net.Mail.SmtpClient(settings.SmtpHost, settings.SmtpPort)
                 {
@@ -62,21 +63,21 @@ namespace KamPay.Helpers
                     Timeout = 10000 // 10 saniye
                 };
 
-                // NOT: SmtpClient'in TestConnection metodu yok, bu yÃ¼zden gerÃ§ek bir send denemesi yapmalÄ±yÄ±z
-                // Ancak burada sadece client oluÅŸturulabildiÄŸini kontrol ediyoruz
+                // NOT: SmtpClient'in TestConnection metodu yok, bu yüzden gerçek bir send denemesi yapmalýyýz
+                // Ancak burada sadece client oluþturulabildiðini kontrol ediyoruz
                 
-                Debug.WriteLine("? SMTP client baÅŸarÄ±yla oluÅŸturuldu");
+                Debug.WriteLine("? SMTP client baþarýyla oluþturuldu");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"? SMTP baÄŸlantÄ± testi baÅŸarÄ±sÄ±z: {ex.Message}");
+                Debug.WriteLine($"? SMTP baðlantý testi baþarýsýz: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// Mailtrap kullanÄ±ldÄ±ÄŸÄ±nÄ± kontrol eder
+        /// Mailtrap kullanýldýðýný kontrol eder
         /// </summary>
         public static bool IsMailtrapConfigured(EmailSettings settings)
         {
@@ -86,53 +87,53 @@ namespace KamPay.Helpers
         }
 
         /// <summary>
-        /// Test modu uyarÄ±sÄ± gÃ¶sterir
+        /// Test modu uyarýsý gösterir
         /// </summary>
         public static void ShowTestModeWarning(EmailSettings settings)
         {
             if (IsMailtrapConfigured(settings))
             {
                 Debug.WriteLine("?? ????????????????????????????????????????????????");
-                Debug.WriteLine("??  TEST MODU: Mailtrap kullanÄ±lÄ±yor!");
-                Debug.WriteLine("??  GerÃ§ek e-postalar gÃ¶nderilmeyecek.");
-                Debug.WriteLine("??  E-postalarÄ± gÃ¶rmek iÃ§in Mailtrap'e gidin:");
+                Debug.WriteLine("??  TEST MODU: Mailtrap kullanýlýyor!");
+                Debug.WriteLine("??  Gerçek e-postalar gönderilmeyecek.");
+                Debug.WriteLine("??  E-postalarý görmek için Mailtrap'e gidin:");
                 Debug.WriteLine("??  https://mailtrap.io/inboxes");
                 Debug.WriteLine("?? ????????????????????????????????????????????????");
 
-                KamPay.Helpers.AppLogger.DebugLog("\n?? TEST MODU AKTIF - Mailtrap kullanÄ±lÄ±yor\n");
+                KamPay.Helpers.AppLogger.DebugLog("\n?? TEST MODU AKTIF - Mailtrap kullanýlýyor\n");
             }
             else if (settings?.Password == "SMTP_PAROLASI_BURAYA" || 
                      settings?.Password == "MAILTRAP_PASSWORD_BURAYA" ||
                      settings?.Username == "MAILTRAP_USERNAME_BURAYA")
             {
                 Debug.WriteLine("?? ????????????????????????????????????????????????");
-                Debug.WriteLine("??  UYARI: SMTP ayarlarÄ± tamamlanmamÄ±ÅŸ!");
-                Debug.WriteLine("??  appsettings.json dosyasÄ±nÄ± kontrol edin.");
-                Debug.WriteLine("??  GerÃ§ek credentials girilmemiÅŸ.");
+                Debug.WriteLine("??  UYARI: SMTP ayarlarý tamamlanmamýþ!");
+                Debug.WriteLine("??  appsettings.json dosyasýný kontrol edin.");
+                Debug.WriteLine("??  Gerçek credentials girilmemiþ.");
                 Debug.WriteLine("?? ????????????????????????????????????????????????");
 
-                KamPay.Helpers.AppLogger.DebugLog("\n?? SMTP AYARLARI EKSÄ°K - appsettings.json kontrol edin\n");
+                KamPay.Helpers.AppLogger.DebugLog("\n?? SMTP AYARLARI EKSÝK - appsettings.json kontrol edin\n");
             }
             else
             {
-                Debug.WriteLine($"? ÃœRETIM MODU: {settings?.SmtpHost} kullanÄ±lÄ±yor");
+                Debug.WriteLine($"? ÜRETIM MODU: {settings?.SmtpHost} kullanýlýyor");
             }
         }
 
         /// <summary>
-        /// DoÄŸrulama kodu formatÄ±nÄ± kontrol eder
+        /// Doðrulama kodu formatýný kontrol eder
         /// </summary>
         public static bool IsValidVerificationCode(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
                 return false;
 
-            // 6 haneli sayÄ± olmalÄ±
+            // 6 haneli sayý olmalý
             return code.Length == 6 && int.TryParse(code, out _);
         }
 
         /// <summary>
-        /// Test iÃ§in rastgele geÃ§erli bir e-posta Ã¼retir
+        /// Test için rastgele geçerli bir e-posta üretir
         /// </summary>
         public static string GenerateTestEmail()
         {

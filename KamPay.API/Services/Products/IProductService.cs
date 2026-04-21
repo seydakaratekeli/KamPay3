@@ -9,7 +9,7 @@ namespace KamPay.API.Services.Products
         Task<List<Product>> GetUserProductsAsync(string userId);
         Task<Product?> GetProductByIdAsync(string id);
         Task<string> CreateProductAsync(Product product, string userId);
-        Task<bool> UpdateProductAsync(string id, Product updatedProduct, string userId);
-        Task<bool> DeleteProductAsync(string id, string userId);
+        Task<UpdateResult> UpdateProductAsync(string id, Product updatedProduct, string userId); // bool → UpdateResult
+        Task<DeleteResult> DeleteProductAsync(string id, string userId); // bool → DeleteResult
     }
 }

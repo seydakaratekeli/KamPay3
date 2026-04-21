@@ -11,19 +11,12 @@
     x:Class="KamPay.Views.ProductDetailPage"
     x:Name="ProductDetailPageRoot"
     Title="{extensions:Translate ProductDetailTitle}"
-    BackgroundColor="#F5F9FC"
-    Shell.BackgroundColor="#1E88E5"
+    BackgroundColor="{StaticResource Background}"
+    Shell.BackgroundColor="{StaticResource Primary}"
     Shell.ForegroundColor="White">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
-            <Color x:Key="Danger">#EF5350</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
@@ -72,7 +65,7 @@
                     </Grid>
 
                     <IndicatorView x:Name="indicatorView"
-                                   IndicatorColor="#E0E0E0"
+                                   IndicatorColor="{StaticResource Divider}"
                                    SelectedIndicatorColor="{StaticResource Primary}"
                                    HorizontalOptions="Center"
                                    VerticalOptions="End"
@@ -147,7 +140,7 @@
                                         StrokeThickness="0" 
                                         Padding="12" 
                                         StrokeShape="RoundRectangle 10">
-                                    <Label Text="{Binding Product.ExchangePreference}" TextColor="#1565C0" FontSize="14" />
+                                    <Label Text="{Binding Product.ExchangePreference}" TextColor="{StaticResource PrimaryDark}" FontSize="14" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -280,7 +273,7 @@
                         <!-- Seller Info -->
                         <Border StrokeShape="RoundRectangle 16"
                                 StrokeThickness="0"
-                                BackgroundColor="#F5F9FC"
+                                BackgroundColor="{StaticResource Background}"
                                 Padding="12"
                                 Margin="0,10,0,0">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
@@ -338,7 +331,7 @@
                     <Button Grid.Column="0" 
                             Text="{extensions:Translate Edit}" 
                             Command="{Binding EditProductCommand}" 
-                            BackgroundColor="#F5F9FC" 
+                            BackgroundColor="{StaticResource Background}" 
                             TextColor="{StaticResource TextPrimary}" 
                             CornerRadius="12" 
                             FontAttributes="Bold" 

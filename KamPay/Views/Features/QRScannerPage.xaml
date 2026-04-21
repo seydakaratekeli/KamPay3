@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:res="clr-namespace:KamPay.Services"
              x:Class="KamPay.Views.QRScannerPage"
-             Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}"
-             Shell.BackgroundColor="#1E88E5"
+             Title="{extensions:Translate ScanQRTitle}"
+             Shell.BackgroundColor="{StaticResource Primary}"
              Shell.ForegroundColor="White">
     
     <Grid RowDefinitions="*,Auto">
@@ -115,16 +116,16 @@
                 </Border>
 
                 <!-- Title -->
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRTitle]}"
-                       TextColor="#212121"
+                <Label Text="{extensions:Translate ScanQRTitle}"
+                       TextColor="{StaticResource TextPrimary}"
                        FontSize="22"
                        FontAttributes="Bold"
                        HorizontalOptions="Center"
                        HorizontalTextAlignment="Center"/>
 
                 <!-- Instruction Text -->
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ScanQRInstruction]}"
-                       TextColor="#757575"
+                <Label Text="{extensions:Translate ScanQRInstruction}"
+                       TextColor="{StaticResource TextSecondary}"
                        FontSize="15"
                        HorizontalOptions="Center"
                        HorizontalTextAlignment="Center"
@@ -158,3 +159,4 @@
         </Border>
     </Grid>
 </ContentPage>
+

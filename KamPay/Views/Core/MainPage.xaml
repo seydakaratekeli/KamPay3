@@ -1,4 +1,5 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:res="clr-namespace:KamPay.Services"
@@ -11,8 +12,8 @@
         <BoxView>
             <BoxView.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1E88E5" Offset="0.0" />
-                    <GradientStop Color="#1565C0" Offset="0.6" />
+                    <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="0.6" />
                     <GradientStop Color="#0D47A1" Offset="1.0" />
                 </LinearGradientBrush>
             </BoxView.Background>
@@ -42,8 +43,8 @@
 
                 <!-- Welcome Header -->
                 <VerticalStackLayout x:Name="HeaderSection" Spacing="8" Margin="0,40,0,30">
-                    <Label Text="👋" FontSize="40" HorizontalOptions="Start"/>
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WelcomeMessage]}"
+                    <Label Text="??" FontSize="40" HorizontalOptions="Start"/>
+                    <Label Text="{extensions:Translate WelcomeMessage}"
                            FontSize="28"
                            FontAttributes="Bold"
                            TextColor="White"
@@ -78,11 +79,11 @@
                             <TapGestureRecognizer Command="{Binding NavigateProductListCommand}"/>
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                            <Label Text="📦" FontSize="48" HorizontalOptions="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ProductList]}"
+                            <Label Text="??" FontSize="48" HorizontalOptions="Center"/>
+                            <Label Text="{extensions:Translate ProductList}"
                                    FontSize="14"
                                    FontAttributes="Bold"
-                                   TextColor="#1E88E5"
+                                   TextColor="{StaticResource Primary}"
                                    HorizontalOptions="Center"
                                    HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
@@ -103,8 +104,8 @@
                             <TapGestureRecognizer Command="{Binding NavigateFavoritesCommand}"/>
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                            <Label Text="❤️" FontSize="48" HorizontalOptions="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Favorites]}"
+                            <Label Text="??" FontSize="48" HorizontalOptions="Center"/>
+                            <Label Text="{extensions:Translate Favorites}"
                                    FontSize="14"
                                    FontAttributes="Bold"
                                    TextColor="#E91E63"
@@ -128,8 +129,8 @@
                             <TapGestureRecognizer Command="{Binding NavigateMessagesCommand}"/>
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                            <Label Text="💬" FontSize="48" HorizontalOptions="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Messages]}"
+                            <Label Text="??" FontSize="48" HorizontalOptions="Center"/>
+                            <Label Text="{extensions:Translate Messages}"
                                    FontSize="14"
                                    FontAttributes="Bold"
                                    TextColor="#00BCD4"
@@ -153,8 +154,8 @@
                             <TapGestureRecognizer Command="{Binding NavigateProfileCommand}"/>
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                            <Label Text="👤" FontSize="48" HorizontalOptions="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Profile]}"
+                            <Label Text="??" FontSize="48" HorizontalOptions="Center"/>
+                            <Label Text="{extensions:Translate Profile}"
                                    FontSize="14"
                                    FontAttributes="Bold"
                                    TextColor="#9C27B0"
@@ -176,8 +177,8 @@
                             <TapGestureRecognizer Command="{Binding LogoutCommand}"/>
                         </Border.GestureRecognizers>
                         <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-                            <Label Text="🚪" FontSize="24" VerticalOptions="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Logout]}"
+                            <Label Text="??" FontSize="24" VerticalOptions="Center"/>
+                            <Label Text="{extensions:Translate Logout}"
                                    FontSize="16"
                                    FontAttributes="Bold"
                                    TextColor="#EF5350"
@@ -198,3 +199,5 @@
         </ScrollView>
     </Grid>
 </ContentPage>
+
+

@@ -1,20 +1,57 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    
-    <Color x:Key="Primary">#4CAF50</Color>
-    <Color x:Key="Secondary">#2196F3</Color>
+    <!-- ?? MODERN BLUE THEME PALETTE -->
+    <Color x:Key="Primary">#1E88E5</Color>
+    <Color x:Key="PrimaryDark">#1565C0</Color>
+    <Color x:Key="PrimaryLight">#42A5F5</Color>
+    <Color x:Key="Accent">#64B5F6</Color>
+    <Color x:Key="Secondary">#26C6DA</Color>
     <Color x:Key="Tertiary">#FFE08A</Color>
-
-    <Color x:Key="Accent">#FF9800</Color>
+    
+    <!-- Status Colors -->
+    <Color x:Key="Success">#66BB6A</Color>
+    <Color x:Key="Warning">#FFA726</Color>
+    <Color x:Key="Error">#EF5350</Color>
     <Color x:Key="Danger">#F44336</Color>
+    <Color x:Key="Info">#2196F3</Color>
+
+    <!-- Aliases for Compatibility -->
+    <Color x:Key="AccentGreen">#4CAF50</Color>
+    <Color x:Key="AccentRed">#F44336</Color>
+    <Color x:Key="AccentOrange">#FF9800</Color>
+    <Color x:Key="AccentCyan">#00BCD4</Color>
+    <Color x:Key="AccentPurple">#9C27B0</Color>
+    <Color x:Key="SenderBubble">#1E88E5</Color>
+    <Color x:Key="ReceiverBubble">#FFFFFF</Color>
+    <Color x:Key="SystemMessageBg">#E3F2FD</Color>
+    <Color x:Key="LikeColor">#F44336</Color>
+    <Color x:Key="BorderColor">#E0E0E0</Color>
+    <Color x:Key="SurpriseBox">lightblue</Color>
+
+    <!-- Additional Background Tints -->
+    <Color x:Key="PrimaryLightBg">#E3F2FD</Color>
+    <Color x:Key="WarningLightBg">#FFF3E0</Color>
+    <Color x:Key="SuccessLightBg">#E8F5E9</Color>
+    <Color x:Key="DangerLightBg">#FFEBEE</Color>
+
+    <!-- Background & Surface -->
+    <Color x:Key="Background">#F5F9FC</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
     <Color x:Key="OffBlack">#1f1f1f</Color>
 
+    <!-- Text Colors -->
+    <Color x:Key="TextPrimary">#212121</Color>
+    <Color x:Key="TextSecondary">#757575</Color>
+    <Color x:Key="TextHint">#9E9E9E</Color>
+    <Color x:Key="Divider">#E0E0E0</Color>
+
+    <!-- Gray Palette (Keep for compatibility with existing styles) -->
     <Color x:Key="Gray">#9E9E9E</Color>
     <Color x:Key="Gray100">#F5F5F5</Color>
     <Color x:Key="Gray200">#EEEEEE</Color>
@@ -23,9 +60,12 @@
     <Color x:Key="Gray500">#9E9E9E</Color>
     <Color x:Key="Gray600">#757575</Color>
     <Color x:Key="Gray700">#75767B</Color>
-
     <Color x:Key="Gray800">#55565B</Color>
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
+
+    <!-- Gradient Colors -->
+    <Color x:Key="GradientStart">#1E88E5</Color>
+    <Color x:Key="GradientEnd">#1565C0</Color>
 
 </ResourceDictionary>

@@ -10,17 +10,10 @@
              x:Class="KamPay.Views.ServiceSharingPage"
              x:DataType="vm:ServiceSharingViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
@@ -36,8 +29,8 @@
             <BoxView Grid.RowSpan="2">
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -333,7 +326,7 @@
                                    HorizontalOptions="Center" 
                                    TextColor="{StaticResource TextPrimary}"/>
                             <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="#F5F9FC"
+                                    BackgroundColor="{StaticResource Background}"
                                     WidthRequest="40"
                                     HeightRequest="40"
                                     HorizontalOptions="End"
@@ -446,7 +439,7 @@
                                     <Button Grid.Column="0"
                                             Text="−"
                                             Command="{Binding DecrementTimeCreditsCommand}"
-                                            BackgroundColor="#F5F9FC"
+                                            BackgroundColor="{StaticResource Background}"
                                             TextColor="{StaticResource TextPrimary}"
                                             FontSize="20"
                                             CornerRadius="10"
@@ -531,7 +524,7 @@
                                    HorizontalOptions="Center" 
                                    TextColor="{StaticResource TextPrimary}"/>
                             <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="#F5F9FC"
+                                    BackgroundColor="{StaticResource Background}"
                                     WidthRequest="40"
                                     HeightRequest="40"
                                     HorizontalOptions="End"
@@ -762,7 +755,7 @@
         <!-- Loading Overlay -->
         <Grid Grid.RowSpan="2"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="#F5F9FC"
+              BackgroundColor="{StaticResource Background}"
               ZIndex="1100"
               InputTransparent="False">
             <Border BackgroundColor="White"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:services="clr-namespace:KamPay.Services"
@@ -54,7 +55,7 @@
                            FontSize="40"
                            HorizontalOptions="Center"/>
 
-                    <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Register]}" 
+                    <Label Text="{extensions:Translate Register}" 
                            FontSize="28"
                            FontAttributes="Bold"
                            TextColor="White"
@@ -97,7 +98,7 @@
                                 <Label Text="👤" FontSize="18" VerticalOptions="Center" Margin="0,0,12,0"/>
 
                                 <Entry Grid.Column="1"
-                                       Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[FirstName]}"
+                                       Placeholder="{extensions:Translate FirstName}"
                                        Text="{Binding FirstName}"
                                        TextColor="#212121"
                                        PlaceholderColor="#9E9E9E"
@@ -120,7 +121,7 @@
                                 <Label Text="👥" FontSize="18" VerticalOptions="Center" Margin="0,0,12,0"/>
 
                                 <Entry Grid.Column="1"
-                                       Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[LastName]}"
+                                       Placeholder="{extensions:Translate LastName}"
                                        Text="{Binding LastName}"
                                        TextColor="#212121"
                                        PlaceholderColor="#9E9E9E"
@@ -143,7 +144,7 @@
                                 <Label Text="📧" FontSize="18" VerticalOptions="Center" Margin="0,0,12,0"/>
 
                                 <Entry Grid.Column="1"
-                                       Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Email]}"
+                                       Placeholder="{extensions:Translate Email}"
                                        Text="{Binding Email}"
                                        Keyboard="Email"
                                        TextColor="#212121"
@@ -167,7 +168,7 @@
                                 <Label Text="🔒" FontSize="18" VerticalOptions="Center" Margin="0,0,12,0"/>
 
                                 <Entry Grid.Column="1"
-                                       Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Password]}"
+                                       Placeholder="{extensions:Translate Password}"
                                        Text="{Binding Password}"
                                        IsPassword="True"
                                        TextColor="#212121"
@@ -191,7 +192,7 @@
                                 <Label Text="🔐" FontSize="18" VerticalOptions="Center" Margin="0,0,12,0"/>
 
                                 <Entry Grid.Column="1"
-                                       Placeholder="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[ConfirmPassword]}"
+                                       Placeholder="{extensions:Translate ConfirmPassword}"
                                        Text="{Binding PasswordConfirm}"
                                        IsPassword="True"
                                        TextColor="#212121"
@@ -215,7 +216,7 @@
                                    FontAttributes="Bold"/>
                         </Border>
 
-                        <Button Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Register]}"
+                        <Button Text="{extensions:Translate Register}"
                                 Command="{Binding RegisterCommand}"
                                 BackgroundColor="#1E88E5"
                                 TextColor="White"
@@ -233,10 +234,10 @@
                         <BoxView HeightRequest="1" Color="#E0E0E0" Margin="0,12"/>
 
                         <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
-                            <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[AlreadyHaveAccount]}"
+                            <Label Text="{extensions:Translate AlreadyHaveAccount}"
                                    TextColor="#757575"
                                    FontSize="14"/>
-                            <Label Text="{Binding Source={x:Static services:LocalizationResourceManager.Instance}, Path=[Login]}"
+                            <Label Text="{extensions:Translate Login}"
                                    TextColor="#1E88E5"
                                    FontSize="14"
                                    FontAttributes="Bold"

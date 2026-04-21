@@ -28,7 +28,7 @@ public class ProductApiService : IProductService
         PropertyNameCaseInsensitive = true
     };
 
-    public ProductApiService(HttpClient httpClient, IAuthenticationService authService, IProductImageCoordinator imageCoordinator, IProductCacheService cacheService)
+    public ProductApiService(HttpClient httpClient, IAuthenticationService authService, IProductImageCoordinator imageCoordinator, IProductCacheService cacheService, ApiSettings apiSettings)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _authService = authService ?? throw new ArgumentNullException(nameof(authService));
@@ -42,8 +42,8 @@ public class ProductApiService : IProductService
         // âš ï¸ Android'de HTTP kullanÄ±yoruz (SSL sertifika sorunu olmasÄ±n diye)
         //    AndroidManifest.xml'de usesCleartextTraffic="true" zaten aÃ§Ä±k
 
-        // ğŸ”„ ArtÄ±k IP konfigÃ¼rasyonu merkezi Constants dosyasÄ±ndan okunuyor!
-        var baseHost = KamPay.Helpers.Constants.LocalApiBaseUrl;
+        // ğŸ”„ ArtÄ±k IP konfigÃ¼rasyonu JSON dosyasÄ±ndan okunuyor!
+        var baseHost = apiSettings.LocalApiBaseUrl;
 
         _baseUrl = $"{baseHost}/api/v1/products";
 

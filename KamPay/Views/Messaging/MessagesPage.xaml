@@ -1,5 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
@@ -9,17 +10,10 @@
              x:Class="KamPay.Views.MessagesPage"
              x:DataType="vm:MessagesViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
@@ -29,14 +23,14 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
 
-        <!-- âœ¨ HEADER WITH GRADIENT BACKGROUND -->
+        <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
         <Grid Grid.Row="0" RowDefinitions="Auto">
             <!-- Gradient Background -->
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -54,11 +48,11 @@
             <!-- Title -->
             <Grid Padding="20,50,20,20">
                 <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
-                    <Label Text="ğŸ’¬ Mesajlar" 
+                    <Label Text="💬 Mesajlar" 
                            FontSize="28" 
                            FontAttributes="Bold" 
                            TextColor="White" />
-                    <Label Text="KonuÅŸmalarÄ±nÄ±z burada" 
+                    <Label Text="Konuşmalarınız burada" 
                            FontSize="13" 
                            TextColor="White" 
                            Opacity="0.9"/>
@@ -66,7 +60,7 @@
             </Grid>
         </Grid>
 
-        <!-- ARAMA Ã‡UBUÄU -->
+        <!-- ARAMA ÇUBUĞU -->
         <Grid Grid.Row="1" Padding="15,15,15,10" x:Name="SearchSection">
             <Border StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
@@ -77,9 +71,9 @@
                     <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
                 </Border.Shadow>
                 <Grid ColumnDefinitions="Auto,*">
-                    <Label Text="ğŸ”" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
+                    <Label Text="🔍" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
                     <Entry Grid.Column="1"
-                           Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SearchInChats]}"
+                           Placeholder="{extensions:Translate SearchInChats}"
                            FontSize="15"
                            TextColor="{StaticResource TextPrimary}"
                            PlaceholderColor="{StaticResource TextSecondary}"
@@ -90,7 +84,7 @@
             </Border>
         </Grid>
 
-        <!-- ANA Ä°Ã‡ERÄ°K -->
+        <!-- ANA İÇERİK -->
         <Grid Grid.Row="2">
 
             <!-- REFRESH VIEW -->
@@ -120,13 +114,13 @@
                                     <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                                 </Border.Shadow>
                                 <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Label Text="ğŸ’¬" FontSize="70" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessagesYet]}" 
+                                    <Label Text="💬" FontSize="70" HorizontalTextAlignment="Center"/>
+                                    <Label Text="{extensions:Translate NoMessagesYet}" 
                                            FontSize="16" 
                                            TextColor="{StaticResource TextSecondary}" 
                                            HorizontalTextAlignment="Center"
                                            FontAttributes="Bold"/>
-                                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[StartChatFromProduct]}" 
+                                    <Label Text="{extensions:Translate StartChatFromProduct}" 
                                            FontSize="14"
                                            TextColor="{StaticResource Primary}"
                                            HorizontalTextAlignment="Center"/>
@@ -155,7 +149,7 @@
 
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
 
-                                    <!-- PROFÄ°L FOTO -->
+                                    <!-- PROFİL FOTO -->
                                     <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
                                         <ffimageloading:CachedImage 
                                             Source="{Binding OtherUserPhotoUrl}" 
@@ -186,7 +180,7 @@
                                         </Border>
                                     </Grid>
 
-                                    <!-- KULLANICI BÄ°LGÄ°SÄ° -->
+                                    <!-- KULLANICI BİLGİSİ -->
                                     <VerticalStackLayout Grid.Column="1" 
                                                          VerticalOptions="Center" 
                                                          Spacing="4">
@@ -242,7 +236,7 @@
             </RefreshView>
 
             <!-- LOADING EKRANI -->
-            <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#F5F9FC" ZIndex="1100">
+            <Grid IsVisible="{Binding IsLoading}" BackgroundColor="{StaticResource Background}" ZIndex="1100">
                 <Border BackgroundColor="White"
                         WidthRequest="100"
                         HeightRequest="100"
@@ -260,7 +254,7 @@
                                            Color="{StaticResource Primary}"
                                            WidthRequest="40" 
                                            HeightRequest="40"/>
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MessagesLoading]}" 
+                        <Label Text="{extensions:Translate MessagesLoading}" 
                                TextColor="{StaticResource Primary}"
                                FontSize="13"/>
                     </VerticalStackLayout>
@@ -270,6 +264,8 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+
 
 
 

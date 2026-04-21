@@ -5,8 +5,8 @@
              xmlns:converters="clr-namespace:KamPay.Converters"
              x:Class="KamPay.Views.PaymentPage"
              Title="{Binding Source={RelativeSource Self}, Path=BindingContext.PageTitle}"
-             BackgroundColor="#F5F9FC"
-             Shell.BackgroundColor="#1E88E5"
+             BackgroundColor="{StaticResource Background}"
+             Shell.BackgroundColor="{StaticResource Primary}"
              Shell.ForegroundColor="White">
 
     <ContentPage.Resources>
@@ -21,8 +21,8 @@
         <BoxView Grid.Row="0" HeightRequest="180">
             <BoxView.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1E88E5" Offset="0.0" />
-                    <GradientStop Color="#1565C0" Offset="0.6" />
+                    <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="0.6" />
                     <GradientStop Color="#0D47A1" Offset="1.0" />
                 </LinearGradientBrush>
             </BoxView.Background>
@@ -68,18 +68,18 @@
                             <Label Text="{Binding Transaction.ProductTitle}" 
                                    FontAttributes="Bold" 
                                    FontSize="18"
-                                   TextColor="#212121"
+                                   TextColor="{StaticResource TextPrimary}"
                                    LineBreakMode="TailTruncation"
                                    MaxLines="2"/>
                             <VerticalStackLayout VerticalOptions="Center" Spacing="0">
                                 <Label Text="{Binding Transaction.Price, StringFormat='{0:N2} ₺'}"
-           TextColor="#9E9E9E"
+           TextColor="{StaticResource TextHint}"
            FontSize="14"
            TextDecorations="Strikethrough"
            IsVisible="{Binding Transaction.HasDiscount}" />
 
                                 <Label Text="{Binding Transaction.FinalPrice, StringFormat='{0:N2} ₺'}" 
-           TextColor="#1E88E5" 
+           TextColor="{StaticResource Primary}" 
            FontSize="22"
            FontAttributes="Bold"/>
                             </VerticalStackLayout>
@@ -91,7 +91,7 @@
                 <Label Text="Ödeme Yöntemi Seçin" 
                        FontAttributes="Bold" 
                        FontSize="20"
-                       TextColor="#212121"
+                       TextColor="{StaticResource TextPrimary}"
                        Margin="0,10,0,0"/>
 
                 <!-- Payment Method Buttons -->
@@ -102,13 +102,13 @@
                             StrokeThickness="0"
                             HeightRequest="110">
                         <Border.Shadow>
-                            <Shadow Brush="#1E88E5" Opacity="0.2" Radius="12" Offset="0,4"/>
+                            <Shadow Brush="{StaticResource Primary}" Opacity="0.2" Radius="12" Offset="0,4"/>
                         </Border.Shadow>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding StartPaymentCommand}" CommandParameter="cardsim"/>
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
-                            <Border BackgroundColor="#E3F2FD"
+                            <Border BackgroundColor="{StaticResource PrimaryLightBg}"
                                     WidthRequest="50"
                                     HeightRequest="50"
                                     StrokeThickness="0"
@@ -121,7 +121,7 @@
                             <Label Text="Kredi Kartı" 
                                    FontSize="14"
                                    FontAttributes="Bold"
-                                   TextColor="#1E88E5"/>
+                                   TextColor="{StaticResource Primary}"/>
                         </VerticalStackLayout>
                     </Border>
 
@@ -167,7 +167,7 @@
                         <TapGestureRecognizer Command="{Binding StartPaymentCommand}" CommandParameter="cash"/>
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="20" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Border BackgroundColor="#E8F5E9"
+                        <Border BackgroundColor="{StaticResource SuccessLightBg}"
                                 WidthRequest="50"
                                 HeightRequest="50"
                                 StrokeThickness="0"
@@ -200,22 +200,22 @@
                             <Label Text="Kredi Kartı Ödemesi" 
                                    FontAttributes="Bold" 
                                    FontSize="20"
-                                   TextColor="#212121"
+                                   TextColor="{StaticResource TextPrimary}"
                                    VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                         
                         <!-- Simulation OTP Display -->
                         <Border IsVisible="{Binding SimulatedOtp, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                BackgroundColor="#E3F2FD"
+                                BackgroundColor="{StaticResource PrimaryLightBg}"
                                 StrokeThickness="3"
-                                Stroke="#1E88E5"
+                                Stroke="{StaticResource Primary}"
                                 Padding="20"
                                 StrokeShape="RoundRectangle 16">
                             <Border.Shadow>
-                                <Shadow Brush="#1E88E5" Opacity="0.3" Radius="12" Offset="0,4"/>
+                                <Shadow Brush="{StaticResource Primary}" Opacity="0.3" Radius="12" Offset="0,4"/>
                             </Border.Shadow>
                             <VerticalStackLayout Spacing="10">
-                                <Border BackgroundColor="#1E88E5"
+                                <Border BackgroundColor="{StaticResource Primary}"
                                         Padding="8,4"
                                         StrokeThickness="0"
                                         StrokeShape="RoundRectangle 8"
@@ -229,12 +229,12 @@
                                        FontSize="38" 
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center" 
-                                       TextColor="#1E88E5"
+                                       TextColor="{StaticResource Primary}"
                                        CharacterSpacing="6"/>
                                 <Label Text="Bu kodu aşağıya girin" 
                                        FontSize="13" 
                                        HorizontalOptions="Center" 
-                                       TextColor="#757575"/>
+                                       TextColor="{StaticResource TextSecondary}"/>
                             </VerticalStackLayout>
                         </Border>
                         
@@ -242,9 +242,9 @@
                                HorizontalOptions="Center" 
                                FontAttributes="Bold" 
                                FontSize="15"
-                               TextColor="#757575"/>
+                               TextColor="{StaticResource TextSecondary}"/>
                         
-                        <Border Stroke="#1E88E5" 
+                        <Border Stroke="{StaticResource Primary}" 
                                 StrokeThickness="2"
                                 Padding="16"
                                 StrokeShape="RoundRectangle 16"
@@ -255,21 +255,21 @@
                                    Placeholder="123456" 
                                    HorizontalTextAlignment="Center" 
                                    FontSize="32" 
-                                   TextColor="#1E88E5"
+                                   TextColor="{StaticResource Primary}"
                                    FontAttributes="Bold"
                                    BackgroundColor="Transparent"/>
                         </Border>
                         
                         <Button Text="✓ Ödemeyi Onayla" 
                                 Command="{Binding ConfirmCardPaymentCommand}" 
-                                BackgroundColor="#4CAF50" 
+                                BackgroundColor="{StaticResource Success}" 
                                 TextColor="White"
                                 CornerRadius="16" 
                                 HeightRequest="56"
                                 FontAttributes="Bold"
                                 FontSize="16">
                             <Button.Shadow>
-                                <Shadow Brush="#4CAF50" Opacity="0.4" Radius="12" Offset="0,6"/>
+                                <Shadow Brush="{StaticResource Success}" Opacity="0.4" Radius="12" Offset="0,6"/>
                             </Button.Shadow>
                         </Button>
                     </VerticalStackLayout>
@@ -290,11 +290,11 @@
                             <Label Text="Havale / EFT Ödemesi" 
                                    FontAttributes="Bold" 
                                    FontSize="20"
-                                   TextColor="#212121"
+                                   TextColor="{StaticResource TextPrimary}"
                                    VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                         
-                        <Border BackgroundColor="#FFF3E0"
+                        <Border BackgroundColor="{StaticResource WarningLightBg}"
                                 StrokeThickness="0"
                                 Padding="20"
                                 StrokeShape="RoundRectangle 16">
@@ -311,21 +311,21 @@
                                     <Label Grid.Row="0" Grid.Column="0" 
                                            Text="Banka:" 
                                            FontAttributes="Bold"
-                                           TextColor="#757575"
+                                           TextColor="{StaticResource TextSecondary}"
                                            VerticalOptions="Center"/>
                                     <Label Grid.Row="0" Grid.Column="1" 
                                            Text="{Binding PaymentDetails.BankName}"
-                                           TextColor="#212121"
+                                           TextColor="{StaticResource TextPrimary}"
                                            VerticalOptions="Center"/>
                                     
                                     <Label Grid.Row="1" Grid.Column="0" 
                                            Text="Tutar:" 
                                            FontAttributes="Bold"
-                                           TextColor="#757575"
+                                           TextColor="{StaticResource TextSecondary}"
                                            VerticalOptions="Center"/>
                                     <Label Grid.Row="1" Grid.Column="1" 
                                            Text="{Binding PaymentDetails.Amount, StringFormat='{0:N2} ₺'}"
-                                           TextColor="#212121"
+                                           TextColor="{StaticResource TextPrimary}"
                                            FontAttributes="Bold"
                                            FontSize="18"
                                            VerticalOptions="Center"/>
@@ -333,7 +333,7 @@
                                     <Label Grid.Row="2" Grid.Column="0" 
                                            Text="Referans:" 
                                            FontAttributes="Bold"
-                                           TextColor="#757575"
+                                           TextColor="{StaticResource TextSecondary}"
                                            VerticalOptions="Center"/>
                                     <Label Grid.Row="2" Grid.Column="1" 
                                            Text="{Binding PaymentDetails.BankReference}" 
@@ -345,7 +345,7 @@
                             </VerticalStackLayout>
                         </Border>
                         
-                        <Border BackgroundColor="#FFEBEE"
+                        <Border BackgroundColor="{StaticResource DangerLightBg}"
                                 Stroke="#EF5350"
                                 StrokeThickness="2"
                                 Padding="16"
@@ -364,14 +364,14 @@
                         
                         <Button Text="✓ Ödemeyi Tamamladım" 
                                 Command="{Binding ConfirmCardPaymentCommand}" 
-                                BackgroundColor="#4CAF50" 
+                                BackgroundColor="{StaticResource Success}" 
                                 TextColor="White"
                                 CornerRadius="16" 
                                 HeightRequest="56"
                                 FontAttributes="Bold"
                                 FontSize="16">
                             <Button.Shadow>
-                                <Shadow Brush="#4CAF50" Opacity="0.4" Radius="12" Offset="0,6"/>
+                                <Shadow Brush="{StaticResource Success}" Opacity="0.4" Radius="12" Offset="0,6"/>
                             </Button.Shadow>
                         </Button>
                     </VerticalStackLayout>
@@ -389,10 +389,10 @@
                     </Border.Shadow>
                     <HorizontalStackLayout Spacing="12">
                         <ActivityIndicator IsRunning="True" 
-                                           Color="#1E88E5" 
+                                           Color="{StaticResource Primary}" 
                                            VerticalOptions="Center"/>
                         <Label Text="İşleniyor..." 
-                               TextColor="#757575" 
+                               TextColor="{StaticResource TextSecondary}" 
                                FontSize="14"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>

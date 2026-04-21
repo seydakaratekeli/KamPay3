@@ -108,7 +108,7 @@
                                     <SwipeView.RightItems>
                                         <SwipeItems>
                                             <SwipeItem Text="Sil"
-                                                       BackgroundColor="#F44336"
+                                                       BackgroundColor="{StaticResource Danger}"
                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificationsViewModel}}, Path=DeleteNotificationCommand}"
                                                        CommandParameter="{Binding .}">
                                                 <SwipeItem.IconImageSource>
@@ -238,7 +238,7 @@
                                                 <Label Text="{Binding Title}" 
                                                        FontSize="15" 
                                                        FontAttributes="Bold" 
-                                                       TextColor="#212121"
+                                                       TextColor="{StaticResource TextPrimary}"
                                                        LineBreakMode="TailTruncation"/>
 
                                                 <Label Text="{Binding Message}" 
@@ -253,7 +253,7 @@
                                                            VerticalOptions="Center"/>
                                                     <Label Text="{Binding CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" 
                                                            FontSize="11" 
-                                                           TextColor="#9E9E9E"
+                                                           TextColor="{StaticResource TextHint}"
                                                            VerticalOptions="Center"/>
 
                                                     <Border StrokeShape="RoundRectangle 8" 
@@ -262,7 +262,7 @@
                                                             Padding="6,2"
                                                             VerticalOptions="Center">
                                                         <Label FontSize="10" 
-                                                               TextColor="#757575"
+                                                               TextColor="{StaticResource TextSecondary}"
                                                                FontAttributes="Bold">
                                                             <Label.Triggers>
                                                                 <DataTrigger TargetType="Label" Binding="{Binding Type}" Value="SystemNotice">

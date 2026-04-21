@@ -319,10 +319,10 @@ namespace KamPay.Converters
                 }
                 catch
                 {
-                    return Color.FromArgb("#1E88E5"); // Default blue
+                    return (Color)Application.Current.Resources["Primary"]; // Default blue
                 }
             }
-            return Color.FromArgb("#1E88E5");
+            return (Color)Application.Current.Resources["Primary"];
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:res="clr-namespace:KamPay.Services"
@@ -72,7 +73,7 @@
                                FontSize="24"
                                VerticalOptions="Center"/>
                         <VerticalStackLayout Spacing="2">
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[CurrentPoints]}"
+                            <Label Text="{extensions:Translate CurrentPoints}"
                                    FontSize="11"
                                    TextColor="Black"
                                    Opacity="0.8"/>
@@ -130,7 +131,7 @@
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource Primary}"
                                        HorizontalTextAlignment="Center"/>
-                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SurpriseBoxDescription]}"
+                                <Label Text="{extensions:Translate SurpriseBoxDescription}"
                                        FontSize="14"
                                        TextColor="#0277BD"
                                        HorizontalTextAlignment="Center"
@@ -161,7 +162,7 @@
                             <Label Text="🎉"
                                    FontSize="50"
                                    HorizontalTextAlignment="Center"/>
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Congratulations]}"
+                            <Label Text="{extensions:Translate Congratulations}"
                                    FontSize="24"
                                    FontAttributes="Bold"
                                    TextColor="{StaticResource AccentGreen}"
@@ -194,7 +195,7 @@
                                LineHeight="1.4"/>
 
                         <!-- View Button -->
-                        <Button Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ViewMyProduct]}"
+                        <Button Text="{extensions:Translate ViewMyProduct}"
                                 Clicked="CloseResult_Clicked"
                                 BackgroundColor="{StaticResource AccentGreen}"
                                 TextColor="White"
@@ -216,7 +217,7 @@
                         <Label Text="💡"
                                FontSize="24"
                                VerticalOptions="Center"/>
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[InsufficientPoints]}"
+                        <Label Text="{extensions:Translate InsufficientPoints}"
                                FontSize="13"
                                TextColor="#E65100"
                                VerticalOptions="Center"
@@ -265,7 +266,7 @@
                         <TapGestureRecognizer Command="{Binding RedeemBoxCommand}"/>
                     </Border.GestureRecognizers>
                     
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OpenBoxFor100Points]}"
+                    <Label Text="{extensions:Translate OpenBoxFor100Points}"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="White"
@@ -305,7 +306,7 @@
                                        Color="{StaticResource Primary}"
                                        WidthRequest="40"
                                        HeightRequest="40" />
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OpeningBox]}"
+                    <Label Text="{extensions:Translate OpeningBox}"
                            TextColor="{StaticResource Primary}"
                            FontSize="14"
                            FontAttributes="Bold"
@@ -316,3 +317,4 @@
 
     </Grid>
 </ContentPage>
+

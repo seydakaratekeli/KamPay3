@@ -10,24 +10,16 @@
              x:Class="KamPay.Views.GoodDeedBoardPage"
              x:DataType="vm:GoodDeedBoardViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
-            <Color x:Key="LikeColor">#F44336</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullConverter" />
             <converters:BoolToColorConverter x:Key="LikeColorConverter"
-                                             TrueColor="#F44336"
-                                             FalseColor="#757575"/>
+                                             TrueColor="{StaticResource Danger}"
+                                             FalseColor="{StaticResource TextSecondary}"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -39,8 +31,8 @@
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -139,7 +131,7 @@
                             <TapGestureRecognizer Command="{Binding ClearCategoryFilterCommand}"/>
                         </Border.GestureRecognizers>
                         <Label Text="✕" 
-                               TextColor="#F44336"
+                               TextColor="{StaticResource Danger}"
                                FontSize="14"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
@@ -324,7 +316,7 @@
                                                 <Border Grid.Column="1" 
                                                         StrokeShape="RoundRectangle 12" 
                                                         StrokeThickness="0" 
-                                                        BackgroundColor="#F5F9FC" 
+                                                        BackgroundColor="{StaticResource Background}" 
                                                         Padding="12">
                                                     <VerticalStackLayout Spacing="4">
                                                         <HorizontalStackLayout Spacing="6">
@@ -436,7 +428,7 @@
                                    HorizontalOptions="Center"
                                    TextColor="{StaticResource TextPrimary}"/>
                             <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="#F5F9FC"
+                                    BackgroundColor="{StaticResource Background}"
                                     WidthRequest="40"
                                     HeightRequest="40"
                                     HorizontalOptions="End"
@@ -563,7 +555,7 @@
         <!-- Loading Overlay -->
         <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsSkeletonVisible}"
-              BackgroundColor="#F5F9FC"
+              BackgroundColor="{StaticResource Background}"
               ZIndex="1100"
               InputTransparent="False">
             <Border BackgroundColor="White"

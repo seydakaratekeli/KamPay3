@@ -1,28 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:res="clr-namespace:KamPay.Services"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:behaviors="clr-namespace:KamPay.Behaviors"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
              x:Class="KamPay.Views.ChatPage"
              x:Name="chatPageRoot"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
-            <Color x:Key="SenderBubble">#1E88E5</Color>
-            <Color x:Key="ReceiverBubble">#FFFFFF</Color>
-            <Color x:Key="SystemMessageBg">#E3F2FD</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
@@ -37,8 +29,8 @@
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -144,22 +136,12 @@
                      RefreshColor="{StaticResource Primary}"
                      IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
-            <CollectionView x:Name="MessagesCollectionView"
-                            ItemsSource="{Binding Messages}"
-                            ItemsLayout="VerticalList"
-                            VerticalScrollBarVisibility="Never"
-                            SelectionMode="None"
-                            ItemsUpdatingScrollMode="KeepLastItemInView"
-                            Margin="15,10,15,10">
-                
-                <!-- ✅ BEHAVIOR: RecyclerView Optimizasyonları -->
-                <CollectionView.Behaviors>
-                    <behaviors:OptimizedCollectionViewBehavior 
-                        ItemCacheSize="30"
-                        PrefetchItemCount="6" />
-                </CollectionView.Behaviors>
-                
-                <CollectionView.ItemTemplate>
+            <syncfusion:SfListView x:Name="MessagesListView"
+                                   ItemsSource="{Binding Messages}"
+                                   AutoFitMode="Height"
+                                   SelectionMode="None"
+                                   Margin="15,10,15,10">
+                <syncfusion:SfListView.ItemTemplate>
                     <DataTemplate x:DataType="models:Message">
                         <Grid Padding="0,4">
                             
@@ -203,7 +185,7 @@
                                     
                                     <Label Text="{Binding Content}"
                                            LineBreakMode="WordWrap"
-                                           TextColor="#212121"
+                                           TextColor="{StaticResource TextPrimary}"
                                            FontSize="15"
                                            HorizontalTextAlignment="Center"
                                            FontAttributes="Bold"/>
@@ -223,7 +205,7 @@
                                                 CommandParameter="{Binding .}" />
                                                 
                                         <Button Text="Karşı Teklif"
-                                                BackgroundColor="#1E88E5"
+                                                BackgroundColor="{StaticResource Primary}"
                                                 TextColor="White"
                                                 HeightRequest="36"
                                                 CornerRadius="18"
@@ -260,9 +242,9 @@
                                                          Binding="{Binding IsSentByMe}"
                                                          Value="True">
                                                 <Setter Property="HorizontalOptions" Value="End" />
-                                                <Setter Property="BackgroundColor" Value="#1E88E5" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
                                                 <Setter Property="Shadow">
-                                                    <Shadow Brush="#1E88E5" Offset="0,2" Radius="8" Opacity="0.3"/>
+                                                    <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="8" Opacity="0.3"/>
                                                 </Setter>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -300,7 +282,7 @@
                                            IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
                                         <Label.Style>
                                             <Style TargetType="Label">
-                                                <Setter Property="TextColor" Value="#212121" />
+                                                <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
                                                 <Style.Triggers>
                                                     <DataTrigger TargetType="Label"
                                                                  Binding="{Binding IsSentByMe}"
@@ -318,7 +300,7 @@
                                                FontSize="10">
                                             <Label.Style>
                                                 <Style TargetType="Label">
-                                                    <Setter Property="TextColor" Value="#757575" />
+                                                    <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
                                                     <Style.Triggers>
                                                         <DataTrigger TargetType="Label"
                                                                      Binding="{Binding IsSentByMe}"
@@ -351,40 +333,8 @@
                             </Border>
                         </Grid>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-
-                <!--  Boş görünüm -->
-                <CollectionView.EmptyView>
-                    <Grid VerticalOptions="Center" 
-                          HorizontalOptions="Center" 
-                          Padding="20">
-                        <Border BackgroundColor="White"
-                                StrokeThickness="0"
-                                Padding="30"
-                                WidthRequest="280"
-                                HeightRequest="220">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="20"/>
-                            </Border.StrokeShape>
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                            </Border.Shadow>
-                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
-                                <Label Text="💬" FontSize="60" HorizontalTextAlignment="Center"/>
-                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoMessageYet]}"
-                                       FontSize="16"
-                                       TextColor="{StaticResource TextSecondary}"
-                                       HorizontalTextAlignment="Center"
-                                       FontAttributes="Bold"/>
-                                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[SendFirstMessage]}"
-                                       FontSize="13"
-                                       TextColor="{StaticResource Primary}"
-                                       HorizontalTextAlignment="Center" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
-                </CollectionView.EmptyView>
-            </CollectionView>
+                </syncfusion:SfListView.ItemTemplate>
+            </syncfusion:SfListView>
         </RefreshView>
 
         <!-- ✨ Mesaj Gönderme Alanı -->
@@ -451,13 +401,14 @@
                 
                 <!--  Mesaj Entry -->
                 <Border Grid.Column="2"
+                        Grid.ColumnSpan="2"
                        Padding="14,0"
                        StrokeShape="RoundRectangle 24"
                        StrokeThickness="1"
                        Stroke="{StaticResource BorderColor}"
-                       BackgroundColor="#F5F9FC"
+                       BackgroundColor="{StaticResource Background}"
                        MinimumHeightRequest="48">
-                    <Entry Placeholder="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[TypeMessage]}"
+                    <Entry Placeholder="{extensions:Translate TypeMessage}"
                            Text="{Binding MessageText}"
                            ReturnCommand="{Binding SendMessageCommand}"
                            MaxLength="1000"
@@ -469,7 +420,7 @@
                 </Border>
 
                 <!-- Gönder Butonu -->
-                <Border Grid.Column="3"
+                <Border Grid.Column="4"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="{StaticResource Primary}"
                         WidthRequest="48"
@@ -495,7 +446,7 @@
         <!--  ✨ Loading Overlay -->
         <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsLoading}"
-              BackgroundColor="#F5F9FC"
+              BackgroundColor="{StaticResource Background}"
               ZIndex="1100"
               InputTransparent="False">
             <Border BackgroundColor="White"
@@ -515,7 +466,7 @@
                                        Color="{StaticResource Primary}"
                                        WidthRequest="40"
                                        HeightRequest="40" />
-                    <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MessagesLoading]}"
+                    <Label Text="{extensions:Translate MessagesLoading}"
                            TextColor="{StaticResource Primary}"
                            FontSize="13" />
                 </VerticalStackLayout>
@@ -523,3 +474,4 @@
         </Grid>
     </Grid>
 </ContentPage>
+

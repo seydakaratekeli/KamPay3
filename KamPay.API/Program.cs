@@ -16,12 +16,30 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:5011");
 
 // 1. Firebase Admin SDK'yı Başlat (Güvenlik ve Auth için)
+// YENİ
+var firebaseJson = Environment.GetEnvironmentVariable("FIREBASE_ADMIN_JSON")
+    ?? File.ReadAllText("firebase-admin.json"); // sadece local dev için fallback
+
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromJson(File.ReadAllText("firebase-admin.json"))
+    Credential = GoogleCredential.FromJson(firebaseJson)
 });
 
-// 2. Firebase Database Bağlantısını Servis Olarak Ekle (Dependency Injection)
+// YENİ — config'den oku
+var dbUrl = builder.Configuration["FirebaseDatabase:Url"]
+    ?? throw new InvalidOperationException("FirebaseDatabase:Url yapılandırılmamış.");
+var dbSecret = builder.Configuration["FirebaseDatabase:Secret"]
+    ?? throw new InvalidOperationException("FirebaseDatabase:Secret yapılandırılmamış.");
+
+builder.Services.AddSingleton(new FirebaseClient(dbUrl, new FirebaseOptions
+{
+    AuthTokenAsyncFactory = () => Task.FromResult(dbSecret)
+}));
+
+/*
+//
+bu ksım silinecek üsttekini kullan
+2. Firebase Database Bağlantısını Servis Olarak Ekle (Dependency Injection)
 builder.Services.AddSingleton(new FirebaseClient(
     "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app/",
     new FirebaseOptions
@@ -29,10 +47,19 @@ builder.Services.AddSingleton(new FirebaseClient(
         // "Database secrets" sekmesinden kopyaladığınız kodu buraya yapıştırın.
         // Bu kod API'nize tam yetki (admin) verir, kurallara takılmazsınız.
         AuthTokenAsyncFactory = () => Task.FromResult("7t7wMzquCV96p0v2zu0eLd14hMTWHoO1iRYI2Nkm")
-    }));
+    }));*/
 
-// --- YENİ EKLENEN KISIM: JWT Güvenlik Duvarı ---
-var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "YOUR_VERY_SECURE_SECRET_KEY_HERE_MIN_16_CHARS";
+
+
+
+
+// ESKİ — fallback'li JWT secret
+//var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "YOUR_VERY_SECURE_SECRET_KEY_HERE_MIN_16_CHARS";
+
+// YENİ — fallback yok, yoksa uygulama başlamaz
+var jwtSecret = builder.Configuration["JwtSettings:Secret"]
+    ?? throw new InvalidOperationException("JwtSettings:Secret yapılandırılmamış.");
+
 var issuer = builder.Configuration["JwtSettings:Issuer"] ?? "KamPayAPI";
 var audience = builder.Configuration["JwtSettings:Audience"] ?? "KamPayApp";
 

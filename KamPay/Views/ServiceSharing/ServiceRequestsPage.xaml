@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
              x:Class="KamPay.Views.ServiceRequestsPage"
              x:DataType="vm:ServiceRequestsViewModel"
+             x:Name="ThisPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="AccentGreen">#4CAF50</Color>
-            <Color x:Key="AccentOrange">#FF9800</Color>
-            <Color x:Key="AccentRed">#F44336</Color>
-            <Color x:Key="AccentPurple">#9C27B0</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
@@ -40,22 +33,22 @@
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
 
             <Ellipse x:Name="Circle1" 
-                     WidthRequest="150" 
-                     HeightRequest="150"
-                     Fill="White"
-                     Opacity="0.05"
-                     HorizontalOptions="End"
-                     VerticalOptions="Start"
-                     Margin="0,-60,-60,0"/>
+                      WidthRequest="150" 
+                      HeightRequest="150"
+                      Fill="White"
+                      Opacity="0.05"
+                      HorizontalOptions="End"
+                      VerticalOptions="Start"
+                      Margin="0,-60,-60,0"/>
 
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ServiceRequestsTitle]}"
+            <Label Text="{extensions:Translate ServiceRequestsTitle}"
                    FontSize="24"
                    FontAttributes="Bold"
                    TextColor="White"
@@ -75,17 +68,17 @@
                     StrokeShape="RoundRectangle 20"
                     StrokeThickness="0"
                     HeightRequest="45"
-                    BackgroundColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|White'}">
+                    BackgroundColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='{StaticResource Primary}|White'}">
                 <Border.Shadow>
                     <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
                 </Border.Shadow>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding SelectIncomingCommand}"/>
                 </Border.GestureRecognizers>
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[IncomingRequests]}"
+                <Label Text="{extensions:Translate IncomingRequests}"
                        FontSize="14"
                        FontAttributes="Bold"
-                       TextColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1E88E5'}"
+                       TextColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|{StaticResource Primary}'}"
                        HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"/>
             </Border>
@@ -94,17 +87,17 @@
                     StrokeShape="RoundRectangle 20"
                     StrokeThickness="0"
                     HeightRequest="45"
-                    BackgroundColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|White'}">
+                    BackgroundColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='{StaticResource Primary}|White'}">
                 <Border.Shadow>
                     <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
                 </Border.Shadow>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding SelectOutgoingCommand}"/>
                 </Border.GestureRecognizers>
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OutgoingRequests]}"
+                <Label Text="{extensions:Translate OutgoingRequests}"
                        FontSize="14"
                        FontAttributes="Bold"
-                       TextColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1E88E5'}"
+                       TextColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|{StaticResource Primary}'}"
                        HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"/>
             </Border>
@@ -118,250 +111,40 @@
                          x:Name="ContentSection">
 
                 <Grid>
-                    <!-- GELEN TALEPLER -->
-                    <CollectionView ItemsSource="{Binding IncomingRequests}"
-                                    IsVisible="{Binding IsIncomingSelected}"
-                                    Margin="15,10">
+                    <!-- GELEN TALEPLER - SfListView -->
+                    <syncfusion:SfListView ItemsSource="{Binding IncomingRequests}"
+                                           IsVisible="{Binding IsIncomingSelected}"
+                                           Margin="15,10"
+                                           SelectionMode="None"
+                                           AutoFitMode="Height"
+                                           ItemSpacing="0">
 
-                        <CollectionView.EmptyView>
-                            <ContentView IsVisible="{Binding HasIncomingRequests, Converter={StaticResource InvertedBoolConverter}}">
-                                <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
-                                    <Border BackgroundColor="White"
-                                    StrokeThickness="0"
-                                    Padding="30"
-                                    WidthRequest="280">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="20"/>
-                                        </Border.StrokeShape>
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                                        </Border.Shadow>
-
-
-
-                                        <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
-                                            <Label Text="📥" FontSize="60" HorizontalTextAlignment="Center"/>
-                                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingRequests]}"
-                                           FontSize="16"
-                                           TextColor="{StaticResource TextSecondary}"
-                                           HorizontalTextAlignment="Center"
-                                           FontAttributes="Bold"/>
-                                            <Label Text="Henüz size ulaşan bir hizmet talebi bulunmuyor."
-                                           FontSize="13"
-                                           TextColor="#9E9E9E"
-                                           HorizontalTextAlignment="Center"/>
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </Grid>
-                            </ContentView>
-                        </CollectionView.EmptyView>
-                        
-
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:ServiceRequest">
-                                <Border Margin="0,0,0,12"
-                                        StrokeShape="RoundRectangle 16"
+                        <syncfusion:SfListView.EmptyView>
+                            <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
+                                <Border BackgroundColor="White"
                                         StrokeThickness="0"
-                                        BackgroundColor="White"
-                                        Padding="15">
+                                        Padding="30"
+                                        WidthRequest="280"
+                                        HeightRequest="200">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="20"/>
+                                    </Border.StrokeShape>
                                     <Border.Shadow>
-                                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                                        <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                                     </Border.Shadow>
-
-                                    <VerticalStackLayout Spacing="12">
-                                        <!-- Service Header -->
-                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                            <Border Grid.Column="0"
-                                                    StrokeShape="RoundRectangle 12"
-                                                    StrokeThickness="0"
-                                                    BackgroundColor="#E3F2FD"
-                                                    WidthRequest="50"
-                                                    HeightRequest="50">
-                                                <Label Text="🛠️"
-                                                       FontSize="24"
-                                                       HorizontalTextAlignment="Center"
-                                                       VerticalTextAlignment="Center"/>
-                                            </Border>
-
-                                            <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                                <Label Text="{Binding ServiceTitle}"
-                                                       TextColor="{StaticResource TextPrimary}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="16"
-                                                       LineBreakMode="TailTruncation"
-                                                       MaxLines="1"/>
-                                                <Label Text="{Binding RequesterName, StringFormat='Talep Eden: {0}'}"
-                                                       FontSize="13"
-                                                       TextColor="{StaticResource TextSecondary}"/>
-                                            </VerticalStackLayout>
-
-                                            <Label Grid.Column="2"
-       Text="{Binding Status}"
-       FontSize="11"
-       TextColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}" 
-       FontAttributes="Bold"
-       VerticalOptions="Start"/>
-
-                                            <Button Text="✅ Hizmeti Alındı / Onayla"
-        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=CompleteRequestCommand}"
-        CommandParameter="{Binding .}"
-        BackgroundColor="{StaticResource AccentGreen}"
-        TextColor="White"
-        HeightRequest="45"
-        CornerRadius="22"
-        FontSize="14"
-        FontAttributes="Bold"
-        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
-
-
-                                        </Grid>
-
-                                        <!-- Message -->
-                                        <Label Text="{Binding Message}"
-                                               FontSize="13"
-                                               MaxLines="2"
-                                               LineBreakMode="TailTruncation"
-                                               TextColor="{StaticResource TextPrimary}"
-                                               IsVisible="{Binding Message, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
-
-                                        <!-- Negotiation Info -->
-                                        <Border IsVisible="{Binding IsNegotiating}"
-                                               StrokeShape="RoundRectangle 12"
-                                               StrokeThickness="0"
-                                               BackgroundColor="{StaticResource AccentOrange}"
-                                               Padding="12">
-                                            <VerticalStackLayout Spacing="5">
-                                                <Label Text="💰 Pazarlık Devam Ediyor"
-                                                       FontSize="13"
-                                                       FontAttributes="Bold"
-                                                       TextColor="White"/>
-                                                <Label Text="{Binding ProposedPriceByRequester, StringFormat='Talep Eden Teklifi: {0} ₺'}"
-                                                       FontSize="12"
-                                                       TextColor="White"
-                                                       IsVisible="{Binding ProposedPriceByRequester, Converter={StaticResource IsNotZeroConverter}}"/>
-                                                <Label Text="{Binding CounterOfferByProvider, StringFormat='Sizin Karşı Teklifiniz: {0} ₺'}"
-                                                       FontSize="12"
-                                                       TextColor="White"
-                                                       IsVisible="{Binding CounterOfferByProvider, Converter={StaticResource IsNotZeroConverter}}"/>
-                                            </VerticalStackLayout>
-                                        </Border>
-
-                                        <!-- Price and Actions -->
-                                        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                                            <Label Grid.Column="0"
-                                                   Text="{Binding QuotedPrice, StringFormat='{0} ₺'}"
-                                                   TextColor="{StaticResource Primary}"
-                                                   FontAttributes="Bold"
-                                                   FontSize="18"
-                                                   VerticalOptions="Center"
-                                                   IsVisible="{Binding QuotedPrice, Converter={StaticResource IsNotZeroConverter}}"/>
-
-                                            <Button Grid.Column="1"
-                                                    Text="💬"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#E3F2FD"
-                                                    TextColor="{StaticResource Primary}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"/>
-
-                                            <Button Grid.Column="2"
-                                                    Text="💰"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=SendCounterOfferCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#FFF3E0"
-                                                    TextColor="{StaticResource AccentOrange}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
-
-                                            <Button Grid.Column="3"
-                                                    Text="✓"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentGreen}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding IsNegotiating}"/>
-
-                                            <Button Grid.Column="4"
-                                                    Text="✕"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=DeclineRequestCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentRed}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
-                                        </Grid>
-
-                                        <!-- Complete Service Button (for provider) -->
-                                        <Button Text="✅ İşi Bitirdim"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=FinishServiceCommand}"
-                                                CommandParameter="{Binding .}"
-                                                BackgroundColor="{StaticResource AccentPurple}"
-                                                TextColor="White"
-                                                HeightRequest="45"
-                                                CornerRadius="22"
-                                                FontSize="14"
-                                                FontAttributes="Bold"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
+                                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Label Text="📥" FontSize="60" HorizontalTextAlignment="Center"/>
+                                        <Label Text="{extensions:Translate NoIncomingRequests}"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               HorizontalTextAlignment="Center"
+                                               FontAttributes="Bold"/>
                                     </VerticalStackLayout>
                                 </Border>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                            </Grid>
+                        </syncfusion:SfListView.EmptyView>
 
-                    <!-- GİDEN TALEPLER -->
-                    <CollectionView ItemsSource="{Binding OutgoingRequests}"
-                                    IsVisible="{Binding IsOutgoingSelected}"
-                                    Margin="15,10">
-
-                        <CollectionView.EmptyView>
-                            <ContentView IsVisible="{Binding HasOutgoingRequests, Converter={StaticResource InvertedBoolConverter}}">
-                                <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
-                                    <Border BackgroundColor="White"
-                                    StrokeThickness="0"
-                                    Padding="30"
-                                    WidthRequest="280">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="20"/>
-                                        </Border.StrokeShape>
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
-                                        </Border.Shadow>
-
-                                        <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
-                                            <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
-                                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingRequests]}"
-                                           FontSize="16"
-                                           TextColor="{StaticResource TextSecondary}"
-                                           HorizontalTextAlignment="Center"
-                                           FontAttributes="Bold"/>
-                                            <Label Text="Henüz kimseye hizmet talebi göndermediniz."
-                                           FontSize="13"
-                                           TextColor="#9E9E9E"
-                                           HorizontalTextAlignment="Center"/>
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </Grid>
-                            </ContentView>
-                        </CollectionView.EmptyView>
-                        
-                        <CollectionView.ItemTemplate>
+                        <syncfusion:SfListView.ItemTemplate>
                             <DataTemplate x:DataType="models:ServiceRequest">
                                 <Border Margin="0,0,0,12"
                                         StrokeShape="RoundRectangle 16"
@@ -373,141 +156,238 @@
                                     </Border.Shadow>
 
                                     <VerticalStackLayout Spacing="12">
-                                        <!-- Service Header -->
-                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                            <Border Grid.Column="0"
-                                                    StrokeShape="RoundRectangle 12"
-                                                    StrokeThickness="0"
-                                                    BackgroundColor="#E3F2FD"
-                                                    WidthRequest="50"
-                                                    HeightRequest="50">
-                                                <Label Text="🛠️"
-                                                       FontSize="24"
-                                                       HorizontalTextAlignment="Center"
-                                                       VerticalTextAlignment="Center"/>
-                                            </Border>
-
-                                            <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                                <Label Text="{Binding ServiceTitle}"
-                                                       TextColor="{StaticResource TextPrimary}"
-                                                       FontAttributes="Bold"
-                                                       FontSize="16"
-                                                       LineBreakMode="TailTruncation"
-                                                       MaxLines="1"/>
-                                                <Label Text="{Binding ProviderName, StringFormat='Sağlayıcı: {0}'}"
-                                                       FontSize="13"
-                                                       TextColor="{StaticResource TextSecondary}"/>
-                                            </VerticalStackLayout>
-
-                                            <Label Grid.Column="2"
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0" 
+                                                   Text="{Binding ServiceTitle}"
+                                                   TextColor="{StaticResource TextPrimary}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="16"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="1"/>
+                                            <Label Grid.Column="1"
                                                    Text="{Binding Status}"
                                                    FontSize="11"
                                                    TextColor="{StaticResource Primary}"
-                                                   FontAttributes="Bold"
-                                                   VerticalOptions="Start"/>
+                                                   FontAttributes="Bold"/>
                                         </Grid>
 
-                                        <!-- Message -->
-                                        <Label Text="{Binding Message}"
+                                        <Label Text="{Binding RequesterName, StringFormat='Talep Eden: {0}'}"
                                                FontSize="13"
+                                               TextColor="{StaticResource TextSecondary}"/>
+
+                                        <Label Text="{Binding Message}"
+                                               FontSize="14"
+                                               TextColor="{StaticResource TextPrimary}"
                                                MaxLines="2"
                                                LineBreakMode="TailTruncation"
-                                               TextColor="{StaticResource TextPrimary}"
                                                IsVisible="{Binding Message, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
 
-                                        <!-- Negotiation Info -->
+                                        <!-- Pazarlık Alanı -->
                                         <Border IsVisible="{Binding IsNegotiating}"
-                                               StrokeShape="RoundRectangle 12"
-                                               StrokeThickness="0"
-                                               BackgroundColor="{StaticResource AccentOrange}"
-                                               Padding="12">
-                                            <VerticalStackLayout Spacing="5">
-                                                <Label Text="💰 Pazarlık Devam Ediyor"
-                                                       FontSize="13"
-                                                       FontAttributes="Bold"
-                                                       TextColor="White"/>
-                                                <Label Text="{Binding ProposedPriceByRequester, StringFormat='Sizin Teklifiniz: {0} ₺'}"
-                                                       FontSize="12"
-                                                       TextColor="White"
-                                                       IsVisible="{Binding ProposedPriceByRequester, Converter={StaticResource IsNotZeroConverter}}"/>
-                                                <Label Text="{Binding CounterOfferByProvider, StringFormat='Karşı Teklif: {0} ₺'}"
-                                                       FontSize="12"
-                                                       TextColor="White"
-                                                       IsVisible="{Binding CounterOfferByProvider, Converter={StaticResource IsNotZeroConverter}}"/>
-                                            </VerticalStackLayout>
+                                                Padding="10"
+                                                BackgroundColor="#FFF3E0"
+                                                StrokeShape="RoundRectangle 12"
+                                                StrokeThickness="0">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <VerticalStackLayout Grid.Column="0">
+                                                    <Label Text="💰 Pazarlık Teklifi" FontSize="11" FontAttributes="Bold" TextColor="#E65100"/>
+                                                    <Label Text="{Binding ProposedPriceByRequester, StringFormat='{0} ₺'}" 
+                                                           FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                                                </VerticalStackLayout>
+                                                <Button Grid.Column="1"
+                                                        Text="Karşı Teklif"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SendCounterOfferCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        FontSize="11"
+                                                        HeightRequest="30"
+                                                        Padding="10,0"
+                                                        BackgroundColor="#FB8C00"/>
+                                            </Grid>
                                         </Border>
 
-                                        <!-- Price and Actions -->
-                                        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                                        <Grid ColumnDefinitions="*,Auto">
                                             <Label Grid.Column="0"
-                                                   Text="{Binding QuotedPrice, StringFormat='{0} ₺'}"
+                                                   Text="{Binding Price, StringFormat='{0} ₺'}"
                                                    TextColor="{StaticResource Primary}"
                                                    FontAttributes="Bold"
                                                    FontSize="18"
-                                                   VerticalOptions="Center"
-                                                   IsVisible="{Binding QuotedPrice, Converter={StaticResource IsNotZeroConverter}}"/>
+                                                   VerticalOptions="Center"/>
 
-                                            <Button Grid.Column="1"
-                                                    Text="💬"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=StartConversationCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#E3F2FD"
-                                                    TextColor="{StaticResource Primary}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"/>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.StartConversationCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#E3F2FD"
+                                                        TextColor="{StaticResource Primary}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"/>
 
-                                            <Button Grid.Column="2"
-                                                    Text="💰"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=ProposePriceCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#FFF3E0"
-                                                    TextColor="{StaticResource AccentOrange}"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="18"
-                                                    Padding="0"
-                                                    IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                <Button Text="✓"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AcceptRequestCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="20"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}"/>
 
-                                            <Button Grid.Column="3"
-                                                    Text="✓"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=AcceptNegotiatedPriceCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="{StaticResource AccentGreen}"
-                                                    TextColor="White"
-                                                    WidthRequest="45"
-                                                    HeightRequest="45"
-                                                    CornerRadius="22"
-                                                    FontSize="20"
-                                                    Padding="0"
-                                                    IsVisible="{Binding IsNegotiating}"/>
+                                                <Button Text="✕"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.DeclineRequestCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="{StaticResource Danger}"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="20"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}"/>
+                                            </HorizontalStackLayout>
                                         </Grid>
-
-                                        <!-- Complete Service Button (for requester) -->
-                                        <Button Text="✅ Hizmeti Tamamla"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceRequestsViewModel}}, Path=CompleteRequestCommand}"
-                                                CommandParameter="{Binding .}"
-                                                BackgroundColor="{StaticResource AccentGreen}"
-                                                TextColor="White"
-                                                HeightRequest="45"
-                                                CornerRadius="22"
-                                                FontSize="14"
-                                                FontAttributes="Bold"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                        </syncfusion:SfListView.ItemTemplate>
+                    </syncfusion:SfListView>
+
+                    <!-- GİDEN TALEPLER - SfListView -->
+                    <syncfusion:SfListView ItemsSource="{Binding OutgoingRequests}"
+                                           IsVisible="{Binding IsOutgoingSelected}"
+                                           Margin="15,10"
+                                           SelectionMode="None"
+                                           AutoFitMode="Height"
+                                           ItemSpacing="0">
+
+                        <syncfusion:SfListView.EmptyView>
+                            <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
+                                <Border BackgroundColor="White"
+                                        StrokeThickness="0"
+                                        Padding="30"
+                                        WidthRequest="280"
+                                        HeightRequest="200">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="20"/>
+                                    </Border.StrokeShape>
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                                    </Border.Shadow>
+                                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
+                                        <Label Text="{extensions:Translate NoOutgoingRequests}"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               HorizontalTextAlignment="Center"
+                                               FontAttributes="Bold"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </syncfusion:SfListView.EmptyView>
+
+                        <syncfusion:SfListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:ServiceRequest">
+                                <Border Margin="0,0,0,12"
+                                        StrokeShape="RoundRectangle 16"
+                                        StrokeThickness="0"
+                                        BackgroundColor="White"
+                                        Padding="15">
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                                    </Border.Shadow>
+
+                                    <VerticalStackLayout Spacing="12">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0" 
+                                                   Text="{Binding ServiceTitle}"
+                                                   TextColor="{StaticResource TextPrimary}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="16"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="1"/>
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding Status}"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource Primary}"
+                                                   FontAttributes="Bold"/>
+                                        </Grid>
+
+                                        <Label Text="{Binding ProviderName, StringFormat='Sağlayıcı: {0}'}"
+                                               FontSize="13"
+                                               TextColor="{StaticResource TextSecondary}"/>
+
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0"
+                                                   Text="{Binding Price, StringFormat='{0} ₺'}"
+                                                   TextColor="{StaticResource Primary}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="18"
+                                                   VerticalOptions="Center"/>
+
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                                <Button Text="💬"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.StartConversationCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#E3F2FD"
+                                                        TextColor="{StaticResource Primary}"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"/>
+
+                                                <Button Text="💰"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposePriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#FFF3E0"
+                                                        TextColor="#FB8C00"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}"/>
+
+                                                <Button Text="💳"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CompleteRequestCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding Status, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Accepted}"/>
+
+                                                <Button Text="✅"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AcceptNegotiatedPriceCommand}"
+                                                        CommandParameter="{Binding .}"
+                                                        BackgroundColor="#4CAF50"
+                                                        TextColor="White"
+                                                        WidthRequest="45"
+                                                        HeightRequest="45"
+                                                        CornerRadius="22"
+                                                        FontSize="18"
+                                                        Padding="0"
+                                                        IsVisible="{Binding IsNegotiating}"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </syncfusion:SfListView.ItemTemplate>
+                    </syncfusion:SfListView>
                 </Grid>
             </RefreshView>
 
             <!-- Loading Overlay -->
             <Grid IsVisible="{Binding IsLoading}"
-                  BackgroundColor="#F5F9FC"
+                  BackgroundColor="{StaticResource Background}"
                   ZIndex="1100"
                   InputTransparent="False">
                 <Border BackgroundColor="White"
@@ -527,7 +407,7 @@
                                            Color="{StaticResource Primary}"
                                            WidthRequest="40"
                                            HeightRequest="40" />
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[ServiceRequestsLoading]}"
+                        <Label Text="{extensions:Translate ServiceRequestsLoading}"
                                TextColor="{StaticResource Primary}"
                                FontSize="13" />
                     </VerticalStackLayout>
@@ -536,3 +416,5 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+

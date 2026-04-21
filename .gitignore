@@ -3,9 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# ?? CRITICAL: Güvenli konfigürasyon dosyalarýný gizle (þifre içerir)
+# ?? CRITICAL: Gï¿½venli konfigï¿½rasyon dosyalarï¿½nï¿½ gizle (ï¿½ifre iï¿½erir)
 appsettings.json
 appsettings.*.json
+firebase-admin.json
+appsettings*.json
+!appsettings.example.json
 
 # User-specific files
 *.rsuser
@@ -364,4 +367,4 @@ MigrationBackup/
 .ionide/
 
 # Fody - auto-generated XML schema
-FodyWeavers.xsd
+FodyWeavers.xsdappsettings.Development.json

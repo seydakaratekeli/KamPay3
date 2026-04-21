@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
@@ -7,8 +8,8 @@
              x:Class="KamPay.Views.QRCodeDisplayPage"
              x:DataType="vm:QRCodeViewModel"
              Title="{Binding PageTitle}"
-             BackgroundColor="#F5F9FC"
-             Shell.BackgroundColor="#1E88E5"
+             BackgroundColor="{StaticResource Background}"
+             Shell.BackgroundColor="{StaticResource Primary}"
              Shell.ForegroundColor="White">
     
     <Grid RowDefinitions="Auto,*">
@@ -16,8 +17,8 @@
         <BoxView Grid.Row="0" HeightRequest="200">
             <BoxView.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1E88E5" Offset="0.0" />
-                    <GradientStop Color="#1565C0" Offset="0.6" />
+                    <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="0.6" />
                     <GradientStop Color="#0D47A1" Offset="1.0" />
                 </LinearGradientBrush>
             </BoxView.Background>
@@ -60,7 +61,7 @@
                         <Label Text="{Binding PageTitle}" 
                                FontSize="22" 
                                FontAttributes="Bold" 
-                               TextColor="#212121"
+                               TextColor="{StaticResource TextPrimary}"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
                 </Border>
@@ -120,21 +121,21 @@
                             <Label Text="🔐 PIN KODUNUZ" 
                                    FontSize="14" 
                                    FontAttributes="Bold"
-                                   TextColor="#1565C0"/>
+                                   TextColor="{StaticResource PrimaryDark}"/>
                         </Border>
                         
                         <Label Text="{Binding MyDelivery.VerificationPin}" 
                                FontSize="25" 
                                FontAttributes="Bold"
-                               TextColor="#1E88E5"
+                               TextColor="{StaticResource Primary}"
                                HorizontalOptions="Center"
                                CharacterSpacing="8"/>
                         
-                        <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="20,8"/>
+                        <BoxView HeightRequest="1" BackgroundColor="{StaticResource Divider}" Margin="20,8"/>
                         
                         <Label Text="Bu kodu karşı tarafa gösterin" 
                                FontSize="13" 
-                               TextColor="#757575"
+                               TextColor="{StaticResource TextSecondary}"
                                HorizontalOptions="Center"/>
                     </VerticalStackLayout>
                 </Border>
@@ -155,17 +156,17 @@
                                 StrokeThickness="0"
                                 Padding="8,6"
                                 StrokeShape="RoundRectangle 10">
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[MyProduct]}" 
+                            <Label Text="{extensions:Translate MyProduct}" 
                                    HorizontalOptions="Center" 
                                    FontAttributes="Bold"
-                                   TextColor="#1565C0"
+                                   TextColor="{StaticResource PrimaryDark}"
                                    FontSize="13"/>
                         </Border>
                         
                         <Border Grid.Row="1" Grid.Column="0" 
                                 StrokeShape="RoundRectangle 16" 
                                 Padding="12" 
-                                Stroke="#E0E0E0"
+                                Stroke="{StaticResource Divider}"
                                 StrokeThickness="2"
                                 BackgroundColor="White">
                             <Border.Shadow>
@@ -177,7 +178,7 @@
                                     Format="QrCode"  
                                     Value="{Binding MyDelivery.QRCodeData}"
                                     IsVisible="{Binding MyDelivery.IsUsed, Converter={StaticResource InvertedBoolConverter}}"
-                                    ForegroundColor="#212121"
+                                    ForegroundColor="{StaticResource TextPrimary}"
                                     BackgroundColor="White"/>
 
                                 <Border IsVisible="{Binding MyDelivery.IsUsed}"
@@ -187,7 +188,7 @@
                                         StrokeShape="RoundRectangle 12">
                                     <VerticalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="✅" FontSize="32" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Delivered]}"
+                                        <Label Text="{extensions:Translate Delivered}"
                                                FontSize="16"
                                                FontAttributes="Bold"
                                                TextColor="#2E7D32"
@@ -201,7 +202,7 @@
                                Text="{Binding MyDelivery.ProductTitle}" 
                                HorizontalOptions="Center" 
                                FontSize="12"
-                               TextColor="#757575"
+                               TextColor="{StaticResource TextSecondary}"
                                LineBreakMode="TailTruncation"
                                MaxLines="2"
                                HorizontalTextAlignment="Center"/>
@@ -212,7 +213,7 @@
                                 StrokeThickness="0"
                                 Padding="8,6"
                                 StrokeShape="RoundRectangle 10">
-                            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OtherProduct]}" 
+                            <Label Text="{extensions:Translate OtherProduct}" 
                                    HorizontalOptions="Center" 
                                    FontAttributes="Bold"
                                    TextColor="#F57C00"
@@ -222,7 +223,7 @@
                         <Border Grid.Row="1" Grid.Column="1" 
                                 StrokeShape="RoundRectangle 16"
                                 Padding="12"
-                                Stroke="#E0E0E0"
+                                Stroke="{StaticResource Divider}"
                                 StrokeThickness="2"
                                 BackgroundColor="White">
                             <Border.Shadow>
@@ -236,7 +237,7 @@
                                         StrokeShape="RoundRectangle 12">
                                     <VerticalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="⏳" FontSize="28" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[WaitingConfirmation]}"
+                                        <Label Text="{extensions:Translate WaitingConfirmation}"
                                                FontSize="12"
                                                TextColor="#F57C00"
                                                HorizontalOptions="Center"
@@ -251,7 +252,7 @@
                                         StrokeShape="RoundRectangle 12">
                                     <VerticalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="✅" FontSize="32" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Received]}"
+                                        <Label Text="{extensions:Translate Received}"
                                                FontSize="16"
                                                FontAttributes="Bold"
                                                TextColor="#2E7D32"
@@ -265,7 +266,7 @@
                                Text="{Binding OtherUserDelivery.ProductTitle}" 
                                HorizontalOptions="Center" 
                                FontSize="12"
-                               TextColor="#757575"
+                               TextColor="{StaticResource TextSecondary}"
                                LineBreakMode="TailTruncation"
                                MaxLines="2"
                                HorizontalTextAlignment="Center"/>
@@ -288,7 +289,7 @@
                             <Label Text="Teslimat Fotoğrafı" 
                                    FontSize="18" 
                                    FontAttributes="Bold" 
-                                   TextColor="#212121"
+                                   TextColor="{StaticResource TextPrimary}"
                                    VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                         
@@ -320,13 +321,13 @@
                             <Button Grid.Column="0"
                                     Text="📷 Çek" 
                                     Command="{Binding TakeDeliveryPhotoCommand}"
-                                    BackgroundColor="#1E88E5"
+                                    BackgroundColor="{StaticResource Primary}"
                                     TextColor="White"
                                     CornerRadius="12"
                                     HeightRequest="50"
                                     FontAttributes="Bold">
                                 <Button.Shadow>
-                                    <Shadow Brush="#1E88E5" Opacity="0.3" Radius="8" Offset="0,4"/>
+                                    <Shadow Brush="{StaticResource Primary}" Opacity="0.3" Radius="8" Offset="0,4"/>
                                 </Button.Shadow>
                             </Button>
                             
@@ -351,7 +352,7 @@
                     <!-- Scan QR Button -->
                     <Button Text="{Binding ScanButtonText}" 
                             Command="{Binding ScanQRCodeCommand}" 
-                            BackgroundColor="{Binding CanScanOtherQR, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|#9E9E9E'}"
+                            BackgroundColor="{Binding CanScanOtherQR, Converter={StaticResource BoolToColorConverter}, ConverterParameter='{StaticResource Primary}|{StaticResource TextHint}'}"
                             TextColor="White"
                             CornerRadius="16"
                             HeightRequest="56"
@@ -360,7 +361,7 @@
                             IsEnabled="{Binding CanScanOtherQR}"
                             IsVisible="{Binding CanReceive}">
                         <Button.Shadow>
-                            <Shadow Brush="#1E88E5" Opacity="0.4" Radius="12" Offset="0,6"/>
+                            <Shadow Brush="{StaticResource Primary}" Opacity="0.4" Radius="12" Offset="0,6"/>
                         </Button.Shadow>
                     </Button>
 
@@ -406,10 +407,10 @@
                     </Border.Shadow>
                     <HorizontalStackLayout Spacing="12">
                         <ActivityIndicator IsRunning="True" 
-                                           Color="#1E88E5" 
+                                           Color="{StaticResource Primary}" 
                                            VerticalOptions="Center"/>
                         <Label Text="Yükleniyor..." 
-                               TextColor="#757575" 
+                               TextColor="{StaticResource TextSecondary}" 
                                FontSize="14"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
@@ -419,3 +420,4 @@
         </ScrollView>
     </Grid>
 </ContentPage>
+

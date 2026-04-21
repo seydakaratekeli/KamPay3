@@ -2,6 +2,8 @@ using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
 using KamPay.Services.Auth;
+using System.Reflection;
+using System.Text.Json;
 
 namespace KamPay
 {
@@ -14,8 +16,17 @@ namespace KamPay
             try
             {
                 // Syncfusion Lisans Kaydı
-                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjGyl/VkV+XU9AclRHQmJBYVF2R2VJelRzfV9EYkwxOX1dQl9lSXpSfkRkXXldc31cTmRXUkc=");
-                
+                var syncfusionLicenseKey = GetSyncfusionLicenseKey();
+                if (!string.IsNullOrWhiteSpace(syncfusionLicenseKey))
+                {
+                    Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionLicenseKey);
+                    KamPay.Helpers.AppLogger.DebugLog("Syncfusion lisansi yuklendi.");
+                }
+                else
+                {
+                    KamPay.Helpers.AppLogger.DebugLog("Syncfusion lisans anahtari bulunamadi. KAMPAY_SYNCFUSION_LICENSE_KEY veya appsettings icindeki SyncfusionSettings:LicenseKey alanini kontrol edin.");
+                }
+
                 InitializeComponent();
 
                 _serviceProvider = serviceProvider;
@@ -74,6 +85,57 @@ namespace KamPay
             }
         }
 
+        private const string SyncfusionLicenseEnvironmentVariable = "KAMPAY_SYNCFUSION_LICENSE_KEY";
+        private const string SyncfusionLicensePlaceholder = "YOUR_SYNCFUSION_LICENSE_KEY";
+
+        private static string? GetSyncfusionLicenseKey()
+        {
+            try
+            {
+                var keyFromEnvironment = Environment.GetEnvironmentVariable(SyncfusionLicenseEnvironmentVariable);
+                if (!string.IsNullOrWhiteSpace(keyFromEnvironment))
+                    return keyFromEnvironment;
+
+                var keyFromDevelopmentConfig = ReadSyncfusionLicenseFromEmbeddedConfig("KamPay.appsettings.Development.json");
+                if (!string.IsNullOrWhiteSpace(keyFromDevelopmentConfig))
+                    return keyFromDevelopmentConfig;
+
+                var keyFromProductionConfig = ReadSyncfusionLicenseFromEmbeddedConfig("KamPay.appsettings.json");
+                if (!string.IsNullOrWhiteSpace(keyFromProductionConfig))
+                    return keyFromProductionConfig;
+            }
+            catch (Exception ex)
+            {
+                KamPay.Helpers.AppLogger.DebugLog($"Syncfusion lisans anahtari okunamadi: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private static string? ReadSyncfusionLicenseFromEmbeddedConfig(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+
+            if (stream == null)
+                return null;
+
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+
+            using var document = JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty("SyncfusionSettings", out var syncfusionSettingsElement))
+                return null;
+
+            if (!syncfusionSettingsElement.TryGetProperty("LicenseKey", out var licenseKeyElement))
+                return null;
+
+            var licenseKey = licenseKeyElement.GetString();
+            if (string.IsNullOrWhiteSpace(licenseKey) || string.Equals(licenseKey, SyncfusionLicensePlaceholder, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            return licenseKey;
+        }
         protected override async void OnStart()
         {
             base.OnStart();

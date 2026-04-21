@@ -12,24 +12,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- ?? MODERN MAV� TEMA PALET� -->
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="PrimaryLight">#42A5F5</Color>
-            <Color x:Key="Accent">#64B5F6</Color>
-            <Color x:Key="Secondary">#26C6DA</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Error">#EF5350</Color>
-            <Color x:Key="Success">#66BB6A</Color>
-            <Color x:Key="Warning">#FFA726</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="TextHint">#9E9E9E</Color>
-            <Color x:Key="Divider">#E0E0E0</Color>
-            
-            <!-- Gradient Colors -->
-            <Color x:Key="GradientStart">#1E88E5</Color>
-            <Color x:Key="GradientEnd">#1565C0</Color>
+
 
             <!-- ?? MODERN STYLES -->
             <Style x:Key="ModernCard" TargetType="Frame">
@@ -91,13 +74,13 @@
                 <Setter Property="Opacity" Value="0.9"/>
             </Style>
 
-            <!--  Existing Converters -->
+            <!-- Existing Converters -->
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:BoolToMultiColorConverter x:Key="BoolToMultiColorConverter"/>
 
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
-            <converters:BoolToColorConverter x:Key="BoolToColorConverter" TrueColor="White" FalseColor="#E8F5E9"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:BoolToTextConverter x:Key="BoolToTextConverter"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
             <converters:ProductCategoryToTextConverter x:Key="ProductCategoryToTextConverter"/>
@@ -107,7 +90,7 @@
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
             <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
             <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
-            <converters:UnreadToIconConverter x:Key="UnreadToIconConverter"/>
+            <!-- <converters:UnreadToIconConverter x:Key="UnreadToIconConverter"/> -->
             <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter"/>
             <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
             <converters:AllTrueConverter x:Key="AllTrueConverter"/>

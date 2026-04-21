@@ -39,11 +39,11 @@ namespace KamPay.API.Services.Products
             return await _productRepository.AddAsync(product);
         }
 
-        public async Task<bool> UpdateProductAsync(string id, Product updatedProduct, string userId)
+        public async Task<UpdateResult> UpdateProductAsync(string id, Product updatedProduct, string userId)
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
-            if (existingProduct == null || existingProduct.UserId != userId)
-                return false;
+            if (existingProduct == null) return UpdateResult.NotFound;
+            if (existingProduct.UserId != userId) return UpdateResult.Forbidden;
 
             existingProduct.Title = updatedProduct.Title;
             existingProduct.Price = updatedProduct.Price;
@@ -51,17 +51,17 @@ namespace KamPay.API.Services.Products
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(id, existingProduct);
-            return true;
+            return UpdateResult.Success;
         }
 
-        public async Task<bool> DeleteProductAsync(string id, string userId)
+        public async Task<DeleteResult> DeleteProductAsync(string id, string userId)
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
-            if (existingProduct == null || existingProduct.UserId != userId)
-                return false;
+            if (existingProduct == null) return DeleteResult.NotFound;
+            if (existingProduct.UserId != userId) return DeleteResult.Forbidden;
 
             await _productRepository.DeleteAsync(id);
-            return true;
+            return DeleteResult.Success;
         }
     }
-}
+    }

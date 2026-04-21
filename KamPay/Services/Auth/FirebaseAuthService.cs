@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -27,9 +27,8 @@ namespace KamPay.Services.Auth
     {
         private readonly FirebaseAuthProvider _authProvider;
         private readonly FirebaseClient _firebaseClient;
-        private readonly IEmailService _emailService;
         private readonly IUserProfileService _userProfileService;
-        private readonly ISecurityAuditService _securityAudit; // ✅ Ekle
+        private readonly ISecurityAuditService _securityAudit;
         private AppUser? _currentUser;
         private FirebaseAuthLink? _authLink;
 
@@ -40,20 +39,22 @@ namespace KamPay.Services.Auth
         private const string KEY_REMEMBER_ME = "secure_remember_me";
         private const string KEY_TOKEN_EXPIRY = "secure_token_expiry";
 
-        // ✅ YENİ: Constructor artık tüm bağımlılıkları DI'den alıyor
+        // ✅ Firebase Authentication tüm e-posta işlemlerini (doğrulama, şifre sıfırlama) native olarak yönetiyor
+        // IEmailService artık gerekli değil
+        private readonly ApiSettings _apiSettings;
         public FirebaseAuthService(
             FirebaseAuthProvider authProvider,
             FirebaseClient firebaseClient,
-            IEmailService emailService,
             IUserProfileService userProfileService,
-            ISecurityAuditService securityAudit) 
+            ISecurityAuditService securityAudit,
+            ApiSettings apiSettings) 
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient));
-            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _securityAudit = securityAudit; 
-            
+            _apiSettings = apiSettings ?? throw new ArgumentNullException(nameof(apiSettings));
+
             KamPay.Helpers.AppLogger.DebugLog("✅ FirebaseAuthService oluşturuldu (DI ile)");
         }
 
@@ -158,7 +159,7 @@ namespace KamPay.Services.Auth
                         // NOT: Geliştirme ortamında (localhost) test ediyorsanız doğru IP'yi (örn; Android emülatör için 10.0.2.2) ayarlamalısınız.
                         // Canlı sunucunuz varsa direkt onun URL'sini yazın: https://YOUR_API_DOMAIN/api/Auth/login
                         // https://localhost:7143/api/Auth/login YERİNE:
-                        string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; // Artık IP'yi Constants dosyasından alıyoruz
+                        string apiUrl = $"{_apiSettings.LocalApiBaseUrl}/api/Auth/login"; // Artık IP'yi appsettings dosyasından alıyoruz
 
                         var loginPayload = new { IdToken = _authLink.FirebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
@@ -338,7 +339,7 @@ namespace KamPay.Services.Auth
                             try
                             {
                                 using var apiHttpClient = new System.Net.Http.HttpClient();
-                                string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; 
+                                string apiUrl = $"{_apiSettings.LocalApiBaseUrl}/api/Auth/login"; 
                                 var loginPayload = new { IdToken = refreshedAuth.FirebaseToken };
                                 var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 
@@ -426,7 +427,7 @@ namespace KamPay.Services.Auth
                     try
                     {
                         using var apiHttpClient = new System.Net.Http.HttpClient();
-                        string apiUrl = $"{KamPay.Helpers.Constants.LocalApiBaseUrl}/api/Auth/login"; // ✅ FAZ1: Hardcoded IP kaldırıldı 
+                        string apiUrl = $"{_apiSettings.LocalApiBaseUrl}/api/Auth/login"; // ✅ FAZ1: Hardcoded IP kaldırıldı 
                         var loginPayload = new { IdToken = firebaseToken };
                         var apiResponse = await apiHttpClient.PostAsJsonAsync(apiUrl, loginPayload);
 

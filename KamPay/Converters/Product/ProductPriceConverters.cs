@@ -41,9 +41,9 @@ namespace KamPay.Converters
             {
                 return type switch
                 {
-                    ProductType.Satis => Color.FromArgb("#1E88E5"),
-                    ProductType.Bagis => Color.FromArgb("#43A047"),
-                    ProductType.Takas => Color.FromArgb("#FB8C00"),
+                    ProductType.Satis => (Color)Application.Current.Resources["Primary"],
+                    ProductType.Bagis => (Color)Application.Current.Resources["Success"],
+                    ProductType.Takas => (Color)Application.Current.Resources["Warning"],
                     _ => Colors.Gray
                 };
             }

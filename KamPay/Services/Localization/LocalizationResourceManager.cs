@@ -16,10 +16,8 @@ public class LocalizationResourceManager : ILocalizationService
     private bool _isInitialized = false;
 
     // ✅ Backward compatibility için static instance korunuyor
-    private static readonly Lazy<LocalizationResourceManager> _instance =
-        new(() => new LocalizationResourceManager(), LazyThreadSafetyMode.ExecutionAndPublication);
-
-    public static LocalizationResourceManager Instance => _instance.Value;
+    private static LocalizationResourceManager? _instance;
+    public static LocalizationResourceManager Instance => _instance ??= new LocalizationResourceManager();
     
     /// <summary>
     /// Forces the lazy initialization of the singleton instance.

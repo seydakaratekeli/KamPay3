@@ -111,7 +111,6 @@ namespace KamPay.API.Controllers
             }
         }
 
-        // PUT: api/v1/products/{id}
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateProduct(string id, [FromBody] Product guncelUrun)
@@ -121,20 +120,21 @@ namespace KamPay.API.Controllers
                 var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-                var mevcutUrun = await _productService.GetProductByIdAsync(id);
-                if (mevcutUrun == null) return NotFound("Ürün bulunamadı.");
-                if (mevcutUrun.UserId != userId) return Forbid("Bu ilanı güncelleme yetkiniz yok.");
+                var result = await _productService.UpdateProductAsync(id, guncelUrun, userId);
 
-                await _productService.UpdateProductAsync(id, guncelUrun, userId);
-                return Ok(new { Message = "İlan başarıyla güncellendi." });
+                return result switch
+                {
+                    UpdateResult.NotFound => NotFound("Ürün bulunamadı."),
+                    UpdateResult.Forbidden => Forbid(),
+                    _ => Ok(new { Message = "İlan başarıyla güncellendi." })
+                };
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, $"Sunucu hatası: {ex.Message}");
             }
         }
 
-        // DELETE: api/v1/products/{id}
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteProduct(string id)
@@ -144,17 +144,19 @@ namespace KamPay.API.Controllers
                 var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-                var mevcutUrun = await _productService.GetProductByIdAsync(id);
-                if (mevcutUrun == null) return NotFound();
-                if (mevcutUrun.UserId != userId) return Forbid("Bu ilanı silme yetkiniz yok.");
+                var result = await _productService.DeleteProductAsync(id, userId);
 
-                await _productService.DeleteProductAsync(id, userId);
-                return Ok(new { Message = "İlan başarıyla silindi." });
+                return result switch
+                {
+                    DeleteResult.NotFound => NotFound("Ürün bulunamadı."),
+                    DeleteResult.Forbidden => Forbid(),
+                    _ => Ok(new { Message = "İlan başarıyla silindi." })
+                };
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, $"Sunucu hatası: {ex.Message}");
             }
         }
     }
-}
+    }

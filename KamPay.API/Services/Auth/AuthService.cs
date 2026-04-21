@@ -35,8 +35,12 @@ namespace KamPay.API.Services.Auth
             // yoksa User (AppUser) kaydı oluşturma işlemini burada AuthService içinde veya 
             // IUserRepository aracılığıyla yapabilirsiniz. (Şu anki kapsamda sadece Auth yapılıyor)
 
-            // 3. Generate Custom JWT
-            var jwtSecret = _configuration["JwtSettings:Secret"] ?? "YOUR_VERY_SECURE_SECRET_KEY_HERE_MIN_16_CHARS";
+            // ESKİ
+           // var jwtSecret = _configuration["JwtSettings:Secret"] ?? "YOUR_VERY_SECURE_SECRET_KEY_HERE_MIN_16_CHARS";
+
+            // YENİ
+            var jwtSecret = _configuration["JwtSettings:Secret"]
+                ?? throw new InvalidOperationException("JwtSettings:Secret yapılandırılmamış.");
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
             var expiration = DateTime.UtcNow.AddHours(3);

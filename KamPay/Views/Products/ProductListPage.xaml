@@ -12,19 +12,11 @@
              x:Class="KamPay.Views.ProductListPage"
              x:Name="ThisPage"
              Title="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[Products]}"
-             Shell.BackgroundColor="#1E88E5"
+             Shell.BackgroundColor="{StaticResource Primary}"
              Shell.ForegroundColor="White">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="BorderColor">#E0E0E0</Color>
-            <Color x:Key="SurpriseBox">lightblue</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:EqualityToBackgroundConverter x:Key="EqualityToBackgroundConverter" />
@@ -47,8 +39,8 @@
             <BoxView Grid.RowSpan="2">
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -164,35 +156,34 @@
         <Grid Grid.Row="1" RowDefinitions="Auto,*">
             
             <!-- Category Chips -->
-            <CollectionView Grid.Row="0"
-                            ItemsSource="{Binding Categories}"
-                            SelectionMode="None"
-                            Margin="15,15,15,10"
-                            HeightRequest="40">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8"/>
-                </CollectionView.ItemsLayout>
+            <syncfusion:SfListView Grid.Row="0"
+                                   ItemsSource="{Binding Categories}"
+                                   SelectionMode="None"
+                                   Orientation="Horizontal"
+                                   HeightRequest="50"
+                                   Margin="15,10,15,5"
+                                   ItemSpacing="8">
+                
+                <syncfusion:SfListView.HeaderTemplate>
+                    <DataTemplate>
+                        <Border StrokeShape="RoundRectangle 20"
+                                StrokeThickness="2"
+                                Padding="16,10"
+                                Margin="0,0,8,0"
+                                BackgroundColor="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
+                                Stroke="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CategoryTappedCommand}" CommandParameter="{x:Null}"/>
+                            </Border.GestureRecognizers>
+                            <Label Text="{extensions:Translate All}" 
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
+                        </Border>
+                    </DataTemplate>
+                </syncfusion:SfListView.HeaderTemplate>
 
-                <!-- "Tümü" Button as Header -->
-                <CollectionView.Header>
-                    <Border StrokeShape="RoundRectangle 20"
-                            StrokeThickness="2"
-                            Padding="16,10"
-                            Margin="0,0,8,0"
-                            BackgroundColor="{Binding SelectedCategory, Converter={StaticResource EqualityToBackgroundConverter}, ConverterParameter={x:Null}}"
-                            Stroke="{Binding SelectedCategory, Converter={StaticResource EqualityToBorderColorConverter}, ConverterParameter={x:Null}}">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding CategoryTappedCommand}" CommandParameter="{x:Null}"/>
-                        </Border.GestureRecognizers>
-                        <Label Text="{extensions:Translate All}" 
-                               FontSize="13"
-                               FontAttributes="Bold"
-                               TextColor="{Binding SelectedCategory, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={x:Null}}"/>
-                    </Border>
-                </CollectionView.Header>
-
-                <!-- Category Items -->
-                <CollectionView.ItemTemplate>
+                <syncfusion:SfListView.ItemTemplate>
                     <DataTemplate x:DataType="models:Category">
                         <Border StrokeShape="RoundRectangle 20"
                                 StrokeThickness="2"
@@ -208,8 +199,8 @@
                                    TextColor="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SelectedCategory.CategoryId, Converter={StaticResource EqualityToTextColorConverter}, ConverterParameter={Binding CategoryId}}"/>
                         </Border>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                </syncfusion:SfListView.ItemTemplate>
+            </syncfusion:SfListView>
 
             <!-- Products Grid -->
             <RefreshView Grid.Row="1"
@@ -224,6 +215,10 @@
                                        Margin="15,0,15,15"
                                        LoadMoreOption="Auto"
                                        LoadMoreCommand="{Binding LoadMoreProductsCommand}">
+
+                    <syncfusion:SfListView.Behaviors>
+                        <behaviors:OptimizedSfListViewBehavior />
+                    </syncfusion:SfListView.Behaviors>
 
                     <syncfusion:SfListView.ItemsLayout>
                         <syncfusion:GridLayout SpanCount="2" />
@@ -309,8 +304,7 @@
                                             <Border StrokeShape="Ellipse"
                                                     StrokeThickness="0"
                                                     WidthRequest="24"
-                                                    HeightRequest="24"
-                                                    IsClippedToBounds="True">
+                                                    HeightRequest="24">
                                                 <ffimageloading:CachedImage Source="{Binding UserPhotoUrl}" 
                                                                             HeightRequest="24" WidthRequest="24" 
                                                                             Aspect="AspectFill"
@@ -395,7 +389,7 @@
             <!-- Loading -->
             <Grid Grid.RowSpan="2" 
                   IsVisible="{Binding IsSkeletonVisible}"
-                  BackgroundColor="#F5F9FC"
+                  BackgroundColor="{StaticResource Background}"
                   InputTransparent="False">
                 <Border BackgroundColor="White"
                         WidthRequest="100"
@@ -446,7 +440,7 @@
                                TextColor="{StaticResource TextPrimary}"
                                HorizontalOptions="Center"/>
                         <Border StrokeShape="RoundRectangle 20"
-                                BackgroundColor="#F5F9FC"
+                                BackgroundColor="{StaticResource Background}"
                                 WidthRequest="40"
                                 HeightRequest="40"
                                 HorizontalOptions="End"
@@ -529,9 +523,9 @@
                                     TextColor="{StaticResource TextPrimary}">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding SelectedType}" Value="Bagis">
-                                        <Setter Property="BackgroundColor" Value="#66BB6A" />
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Success}" />
                                         <Setter Property="TextColor" Value="White" />
-                                        <Setter Property="BorderColor" Value="#66BB6A" />
+                                        <Setter Property="BorderColor" Value="{StaticResource Success}" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
@@ -614,3 +608,4 @@
         </Grid>
     </Grid>
 </ContentPage>
+

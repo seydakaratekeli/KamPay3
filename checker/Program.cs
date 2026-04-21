@@ -1,0 +1,4 @@
+using System;
+using System.Reflection;
+using Syncfusion.Maui.ListView;
+class Program { static void Main() { var type = typeof(SfListView); foreach(var m in type.GetMethods(BindingFlags.Public | BindingFlags.Instance)) { if (m.Name.Contains("Scroll")) Console.WriteLine(m.ToString()); } } }

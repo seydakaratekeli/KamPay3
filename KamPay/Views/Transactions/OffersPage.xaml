@@ -1,27 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KamPay.ViewModels"
              xmlns:models="clr-namespace:KamPay.Models"
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              xmlns:res="clr-namespace:KamPay.Services"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
              x:Class="KamPay.Views.OffersPage"
              x:DataType="vm:OffersViewModel"
+             x:Name="ThisPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
-            <Color x:Key="Surface">#FFFFFF</Color>
-            <Color x:Key="Background">#F5F9FC</Color>
-            <Color x:Key="TextPrimary">#212121</Color>
-            <Color x:Key="TextSecondary">#757575</Color>
-            <Color x:Key="AccentGreen">#4CAF50</Color>
-            <Color x:Key="AccentOrange">#FF9800</Color>
-            <Color x:Key="AccentRed">#F44336</Color>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
@@ -51,8 +45,8 @@
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -66,7 +60,7 @@
                      VerticalOptions="Start"
                      Margin="0,-60,-60,0"/>
 
-            <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OffersTitle]}"
+            <Label Text="{extensions:Translate OffersTitle}"
                    FontSize="24"
                    FontAttributes="Bold"
                    TextColor="White"
@@ -85,17 +79,17 @@
                     StrokeShape="RoundRectangle 20"
                     StrokeThickness="0"
                     HeightRequest="45"
-                    BackgroundColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|White'}">
+                    BackgroundColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='{StaticResource Primary}|White'}">
                 <Border.Shadow>
                     <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
                 </Border.Shadow>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding SelectIncomingCommand}"/>
                 </Border.GestureRecognizers>
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[IncomingOffers]}"
+                <Label Text="{extensions:Translate IncomingOffers}"
                        FontSize="14"
                        FontAttributes="Bold"
-                       TextColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1E88E5'}"
+                       TextColor="{Binding IsIncomingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|{StaticResource Primary}'}"
                        HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"/>
             </Border>
@@ -104,17 +98,17 @@
                     StrokeShape="RoundRectangle 20"
                     StrokeThickness="0"
                     HeightRequest="45"
-                    BackgroundColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1E88E5|White'}">
+                    BackgroundColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='{StaticResource Primary}|White'}">
                 <Border.Shadow>
                     <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
                 </Border.Shadow>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding SelectOutgoingCommand}"/>
                 </Border.GestureRecognizers>
-                <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OutgoingOffers]}"
+                <Label Text="{extensions:Translate OutgoingOffers}"
                        FontSize="14"
                        FontAttributes="Bold"
-                       TextColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1E88E5'}"
+                       TextColor="{Binding IsOutgoingSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|{StaticResource Primary}'}"
                        HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"/>
             </Border>
@@ -127,11 +121,15 @@
                          x:Name="ContentSection">
 
                 <Grid>
-                    <CollectionView ItemsSource="{Binding IncomingOffers}"
-                                    IsVisible="{Binding IsIncomingSelected}"
-                                    Margin="15,10">
+                    <!-- ✅ INCOMING OFFERS - SfListView -->
+                    <syncfusion:SfListView ItemsSource="{Binding IncomingOffers}"
+                                           IsVisible="{Binding IsIncomingSelected}"
+                                           Margin="15,10"
+                                           SelectionMode="None"
+                                           AutoFitMode="Height"
+                                           ItemSpacing="0">
 
-                        <CollectionView.EmptyView>
+                        <syncfusion:SfListView.EmptyView>
                             <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
                                 <Border BackgroundColor="White"
                                         StrokeThickness="0"
@@ -146,7 +144,7 @@
                                     </Border.Shadow>
                                     <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="📥" FontSize="60" HorizontalTextAlignment="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoIncomingOffers]}"
+                                        <Label Text="{extensions:Translate NoIncomingOffers}"
                                                FontSize="16"
                                                TextColor="{StaticResource TextSecondary}"
                                                HorizontalTextAlignment="Center"
@@ -154,9 +152,9 @@
                                     </VerticalStackLayout>
                                 </Border>
                             </Grid>
-                        </CollectionView.EmptyView>
+                        </syncfusion:SfListView.EmptyView>
 
-                        <CollectionView.ItemTemplate>
+                        <syncfusion:SfListView.ItemTemplate>
                             <DataTemplate x:DataType="models:Transaction">
                                 <Border Margin="0,0,0,12"
                                         StrokeShape="RoundRectangle 16"
@@ -219,7 +217,6 @@
                                                 StrokeThickness="0"
                                                 BackgroundColor="{StaticResource AccentOrange}"
                                                 Padding="12">
-                                            <!-- ✅ Sadece güncel teklif fiyatları göster -->
                                             <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
                                                    TextColor="White"
                                                    FontSize="13"
@@ -230,9 +227,9 @@
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
                                                 <Button Text="💬"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.MessagePartnerCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#E3F2FD"
+                                                        BackgroundColor="{StaticResource PrimaryLightBg}"
                                                         TextColor="{StaticResource Primary}"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -240,9 +237,8 @@
                                                         FontSize="18"
                                                         Padding="0"/>
 
-                                                <!-- 📱 QR Teslimat (SADECE TAKAS + Accepted) -->
                                                 <Button Text="📱"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ManageDeliveryCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource Primary}"
                                                         TextColor="White"
@@ -259,11 +255,10 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- 💰 Karşı Teklif Butonu (SATICI - Satış, Pending VEYA Negotiating) -->
                                                 <Button Text="💰"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=SendCounterOfferCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SendCounterOfferCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#FFF3E0"
+                                                        BackgroundColor="{StaticResource WarningLightBg}"
                                                         TextColor="{StaticResource AccentOrange}"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -273,7 +268,6 @@
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
-                                                            <!-- Pending VEYA Negotiating -->
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
                                                                 <Binding Path="IsNegotiating"/>
@@ -283,7 +277,7 @@
                                                 </Button>
 
                                                 <Button Text="✓"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptOfferCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AcceptOfferCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource AccentGreen}"
                                                         TextColor="White"
@@ -295,7 +289,7 @@
                                                         IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
 
                                                 <Button Text="✕"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=RejectOfferCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.RejectOfferCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource AccentRed}"
                                                         TextColor="White"
@@ -310,15 +304,18 @@
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                        </syncfusion:SfListView.ItemTemplate>
+                    </syncfusion:SfListView>
 
-                    <!-- ✅ OUTGOING OFFERS - YENİLENMİŞ BUTTON YAPILANMASI -->
-                    <CollectionView ItemsSource="{Binding OutgoingOffers}"
-                                    IsVisible="{Binding IsOutgoingSelected}"
-                                    Margin="15,10">
+                    <!-- ✅ OUTGOING OFFERS - SfListView -->
+                    <syncfusion:SfListView ItemsSource="{Binding OutgoingOffers}"
+                                           IsVisible="{Binding IsOutgoingSelected}"
+                                           Margin="15,10"
+                                           SelectionMode="None"
+                                           AutoFitMode="Height"
+                                           ItemSpacing="0">
 
-                        <CollectionView.EmptyView>
+                        <syncfusion:SfListView.EmptyView>
                             <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="30">
                                 <Border BackgroundColor="White"
                                         StrokeThickness="0"
@@ -333,7 +330,7 @@
                                     </Border.Shadow>
                                     <VerticalStackLayout Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
                                         <Label Text="📤" FontSize="60" HorizontalTextAlignment="Center"/>
-                                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[NoOutgoingOffers]}"
+                                        <Label Text="{extensions:Translate NoOutgoingOffers}"
                                                FontSize="16"
                                                TextColor="{StaticResource TextSecondary}"
                                                HorizontalTextAlignment="Center"
@@ -341,9 +338,9 @@
                                     </VerticalStackLayout>
                                 </Border>
                             </Grid>
-                        </CollectionView.EmptyView>
+                        </syncfusion:SfListView.EmptyView>
 
-                        <CollectionView.ItemTemplate>
+                        <syncfusion:SfListView.ItemTemplate>
                             <DataTemplate x:DataType="models:Transaction">
                                 <Border Margin="0,0,0,12"
                                         StrokeShape="RoundRectangle 16"
@@ -406,22 +403,19 @@
                                                 StrokeThickness="0"
                                                 BackgroundColor="{StaticResource AccentOrange}"
                                                 Padding="12">
-                                            <!-- ✅ Sadece güncel teklif fiyatları göster -->
                                             <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
                                                    TextColor="White"
                                                    FontSize="13"
                                                    FontAttributes="Bold"/>
                                         </Border>
 
-                                        <!-- ✅ ALICI İÇİN BUTONLAR (OUTGOING OFFERS) -->
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
-                                                <!-- 💬 Mesajlaşma Butonu (Her zaman) -->
                                                 <Button Text="💬"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=MessagePartnerCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.MessagePartnerCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#E3F2FD"
+                                                        BackgroundColor="{StaticResource PrimaryLightBg}"
                                                         TextColor="{StaticResource Primary}"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -429,9 +423,8 @@
                                                         FontSize="18"
                                                         Padding="0"/>
 
-                                                <!-- 📱 QR Teslimat (Takas, Accepted) -->
                                                 <Button Text="📱"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ManageDeliveryCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ManageDeliveryCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource Primary}"
                                                         TextColor="White"
@@ -448,11 +441,10 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- 💰 Fiyat Teklifi (SATIŞ - ALICI - Pending VEYA Negotiating) -->
                                                 <Button Text="💰"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposePriceCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposePriceCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#FFF3E0"
+                                                        BackgroundColor="{StaticResource WarningLightBg}"
                                                         TextColor="{StaticResource AccentOrange}"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -470,11 +462,10 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- 💵 Ek Nakit Teklifi (TAKAS - ALICI - Pending VEYA Negotiating) -->
                                                 <Button Text="💵"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ProposeAdditionalCashCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposeAdditionalCashCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#E8F5E9"
+                                                        BackgroundColor="{StaticResource SuccessLightBg}"
                                                         TextColor="{StaticResource AccentGreen}"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -492,11 +483,10 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- ✅ Pazarlık Sonucunu Onayla (Satıcının/Sahip'in karşı teklifi varsa) -->
                                                 <Button Text="✅"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=AcceptNegotiatedPriceCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AcceptNegotiatedPriceCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        BackgroundColor="#4CAF50"
+                                                        BackgroundColor="{StaticResource Success}"
                                                         TextColor="White"
                                                         WidthRequest="45"
                                                         HeightRequest="45"
@@ -505,9 +495,8 @@
                                                         Padding="0"
                                                         IsVisible="{Binding ., Converter={StaticResource CanAcceptNegotiationConverter}}"/>
 
-                                                <!-- 💳 Ödeme Yap (SATIŞ - Accepted, PaymentPending) -->
                                                 <Button Text="💳"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=CompletePaymentCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CompletePaymentCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource AccentGreen}"
                                                         TextColor="White"
@@ -525,9 +514,8 @@
                                                     </Button.IsVisible>
                                                 </Button>
 
-                                                <!-- ✅ Bağış Onayla (BAĞIŞ - Accepted) -->
                                                 <Button Text="✅"
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OffersViewModel}}, Path=ConfirmDonationCommand}"
+                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ConfirmDonationCommand}"
                                                         CommandParameter="{Binding .}"
                                                         BackgroundColor="{StaticResource AccentGreen}"
                                                         TextColor="White"
@@ -548,13 +536,13 @@
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                        </syncfusion:SfListView.ItemTemplate>
+                    </syncfusion:SfListView>
                 </Grid>
             </RefreshView>
 
             <Grid IsVisible="{Binding IsLoading}"
-                  BackgroundColor="#F5F9FC"
+                  BackgroundColor="{StaticResource Background}"
                   ZIndex="1100"
                   InputTransparent="False">
                 <Border BackgroundColor="White"
@@ -574,7 +562,7 @@
                                            Color="{StaticResource Primary}"
                                            WidthRequest="40"
                                            HeightRequest="40" />
-                        <Label Text="{Binding Source={x:Static res:LocalizationResourceManager.Instance}, Path=[OffersLoading]}"
+                        <Label Text="{extensions:Translate OffersLoading}"
                                TextColor="{StaticResource Primary}"
                                FontSize="13" />
                     </VerticalStackLayout>
@@ -583,5 +571,7 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+
 
 

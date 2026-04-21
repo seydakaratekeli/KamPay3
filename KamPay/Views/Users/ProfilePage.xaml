@@ -9,12 +9,10 @@
              x:Class="KamPay.Views.ProfilePage"
              x:DataType="vm:ProfileViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F5F9FC">
+             BackgroundColor="{StaticResource Background}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#1E88E5</Color>
-            <Color x:Key="PrimaryDark">#1565C0</Color>
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:FirstCharConverter x:Key="FirstCharConverter" />
         </ResourceDictionary>
@@ -26,8 +24,8 @@
             <BoxView HeightRequest="220">
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1E88E5" Offset="0.0" />
-                        <GradientStop Color="#1565C0" Offset="1.0" />
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -125,9 +123,9 @@
 
                 <VerticalStackLayout Spacing="10" Margin="0,5">
                     <Button Text="Profili Düzenle" Command="{Binding GoToEditProfileCommand}" 
-                            BackgroundColor="#1E88E5" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="50">
+                            BackgroundColor="{StaticResource Primary}" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="50">
                         <Button.Shadow>
-                            <Shadow Brush="#1E88E5" Offset="0,4" Radius="8" Opacity="0.3"/>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
                         </Button.Shadow>
                     </Button>
 
@@ -149,9 +147,9 @@
                 </VerticalStackLayout>
 
                 <Button Text="Çıkış Yap" Command="{Binding LogoutCommand}" 
-                        BackgroundColor="#F44336" TextColor="White" CornerRadius="12" HeightRequest="50" Margin="0,10,0,0">
+                        BackgroundColor="{StaticResource Danger}" TextColor="White" CornerRadius="12" HeightRequest="50" Margin="0,10,0,0">
                     <Button.Shadow>
-                        <Shadow Brush="#F44336" Offset="0,4" Radius="8" Opacity="0.3"/>
+                        <Shadow Brush="{StaticResource Danger}" Offset="0,4" Radius="8" Opacity="0.3"/>
                     </Button.Shadow>
                 </Button>
 
