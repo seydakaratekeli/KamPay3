@@ -31,230 +31,234 @@
 
     <Grid RowDefinitions="*,Auto">
 
-        <ScrollView Grid.Row="0">
-            <VerticalStackLayout Spacing="0">
+        <RefreshView Grid.Row="0"
+                     Command="{Binding RefreshProductCommand}"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     RefreshColor="{StaticResource Primary}">
+            <ScrollView>
+                <VerticalStackLayout Spacing="0">
 
-                <!-- Image Carousel -->
-                <Grid HeightRequest="350">
-                    <CarouselView ItemsSource="{Binding ProductImages}"
+                    <!-- Image Carousel -->
+                    <Grid HeightRequest="350">
+                        <CarouselView ItemsSource="{Binding ProductImages}"
                                   Position="{Binding CurrentImageIndex}"
                                   IndicatorView="indicatorView"
                                   Loop="False">
-                        <CarouselView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer 
+                            <CarouselView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer 
                                             Command="{Binding BindingContext.ViewProductImageCommand, Source={x:Reference ProductDetailPageRoot}}"
                                             CommandParameter="{Binding .}" />
-                                    </Grid.GestureRecognizers>
-                                    <!-- ✅ Tam ekran görüntüleme için TapGestureRecognizer -->
-                                    <Image Source="{Binding .}" Aspect="AspectFill" InputTransparent="True" />
-                                </Grid>
-                            </DataTemplate>
-                        </CarouselView.ItemTemplate>
-                    </CarouselView>
+                                        </Grid.GestureRecognizers>
+                                        <!-- ✅ Tam ekran görüntüleme için TapGestureRecognizer -->
+                                        <Image Source="{Binding .}" Aspect="AspectFill" InputTransparent="True" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CarouselView.ItemTemplate>
+                        </CarouselView>
 
-                    <Grid VerticalOptions="End" HeightRequest="80">
-                        <Grid.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="Transparent" Offset="0.0" />
-                                <GradientStop Color="#99000000" Offset="1.0" />
-                            </LinearGradientBrush>
-                        </Grid.Background>
-                    </Grid>
+                        <Grid VerticalOptions="End" HeightRequest="80">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="Transparent" Offset="0.0" />
+                                    <GradientStop Color="#99000000" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                        </Grid>
 
-                    <IndicatorView x:Name="indicatorView"
+                        <IndicatorView x:Name="indicatorView"
                                    IndicatorColor="{StaticResource Divider}"
                                    SelectedIndicatorColor="{StaticResource Primary}"
                                    HorizontalOptions="Center"
                                    VerticalOptions="End"
                                    Margin="0,0,0,15" />
-                </Grid>
+                    </Grid>
 
-                <!-- Main Content Card -->
-                <Border StrokeThickness="0"
+                    <!-- Main Content Card -->
+                    <Border StrokeThickness="0"
                         BackgroundColor="{StaticResource Surface}"
                         StrokeShape="RoundRectangle 24,24,0,0"
                         Margin="0,-30,0,0"
                         Padding="24,30,24,40">
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Offset="0,-4" Radius="15" Opacity="0.12" />
-                    </Border.Shadow>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,-4" Radius="15" Opacity="0.12" />
+                        </Border.Shadow>
 
-                    <VerticalStackLayout Spacing="20">
+                        <VerticalStackLayout Spacing="20">
 
-                        <!-- Title & Price Section -->
-                        <VerticalStackLayout Spacing="8">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Text="{Binding Product.CreatedAt, StringFormat='{0:d MMMM yyyy}'}"
+                            <!-- Title & Price Section -->
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Product.CreatedAt, StringFormat='{0:d MMMM yyyy}'}"
                                        TextColor="{StaticResource TextSecondary}"
                                        FontSize="12"
                                        VerticalOptions="Center"/>
 
-                                <Border BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
+                                    <Border BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
                                         StrokeShape="RoundRectangle 10"
                                         StrokeThickness="0"
                                         Padding="12,6"
                                         HorizontalOptions="End">
-                                    <Label Text="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}"
+                                        <Label Text="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}"
                                            TextColor="White"
                                            FontSize="11"
                                            FontAttributes="Bold"
                                            TextTransform="Uppercase"/>
-                                </Border>
-                            </Grid>
+                                    </Border>
+                                </Grid>
 
-                            <Label Text="{Binding Product.Title}"
+                                <Label Text="{Binding Product.Title}"
                                    TextColor="{StaticResource TextPrimary}"
                                    FontSize="24"
                                    FontAttributes="Bold"
                                    LineBreakMode="WordWrap" />
 
-                            <Label Text="{Binding Product, Converter={StaticResource ProductToPriceTextConverter}}"
+                                <Label Text="{Binding Product, Converter={StaticResource ProductToPriceTextConverter}}"
                                    TextColor="{StaticResource Primary}"
                                    FontSize="28"
                                    FontAttributes="Bold"
                                    Margin="0,-4,0,0"/>
-                        </VerticalStackLayout>
-
-
-                        <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
-
-                        <!-- Product Details Grid -->
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="15" ColumnSpacing="15">
-                            <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
-                                <Label Text="{extensions:Translate ConditionLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
-                                <Label Text="{Binding Product.Condition, Converter={StaticResource ProductConditionConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
                             </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
-                                <Label Text="{extensions:Translate CategoryLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
-                                <Label Text="{Binding Product.CategoryName, Converter={StaticResource ProductCategoryToTextConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
-                            </VerticalStackLayout>
 
-                            <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4"
+                            <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
+
+                            <!-- Product Details Grid -->
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="15" ColumnSpacing="15">
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="4">
+                                    <Label Text="{extensions:Translate ConditionLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                    <Label Text="{Binding Product.Condition, Converter={StaticResource ProductConditionConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="4">
+                                    <Label Text="{extensions:Translate CategoryLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                    <Label Text="{Binding Product.CategoryName, Converter={StaticResource ProductCategoryToTextConverter}}" TextColor="{StaticResource TextPrimary}" FontSize="15" FontAttributes="Bold" />
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4"
                                                  IsVisible="{Binding Product.ExchangePreference, Converter={StaticResource IsNotNullOrEmptyConverter}}">
-                                <Label Text="{extensions:Translate ExchangePreferenceLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
-                                <Border BackgroundColor="#E3F2FD" 
+                                    <Label Text="{extensions:Translate ExchangePreferenceLabel}" TextColor="{StaticResource TextSecondary}" FontSize="12" />
+                                    <Border BackgroundColor="#E3F2FD" 
                                         StrokeThickness="0" 
                                         Padding="12" 
                                         StrokeShape="RoundRectangle 10">
-                                    <Label Text="{Binding Product.ExchangePreference}" TextColor="{StaticResource PrimaryDark}" FontSize="14" />
-                                </Border>
-                            </VerticalStackLayout>
-                        </Grid>
+                                        <Label Text="{Binding Product.ExchangePreference}" TextColor="{StaticResource PrimaryDark}" FontSize="14" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
 
-                        <!-- Description -->
-                        <VerticalStackLayout Spacing="8" Margin="0,10,0,0">
-                            <Label Text="{extensions:Translate DescriptionLabel}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
-                            <Label Text="{Binding Product.Description}" 
+                            <!-- Description -->
+                            <VerticalStackLayout Spacing="8" Margin="0,10,0,0">
+                                <Label Text="{extensions:Translate DescriptionLabel}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                                <Label Text="{Binding Product.Description}" 
                                    FontSize="15" 
                                    TextColor="#424242" 
                                    LineHeight="1.4" />
-                        </VerticalStackLayout>
+                            </VerticalStackLayout>
 
-                        <!-- ✨ IMPROVED MAP SECTION -->
-                        <VerticalStackLayout Spacing="12" IsVisible="{Binding HasLocation}" Margin="0,10,0,0">
-                            <Label Text="{extensions:Translate LocationLabel}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 16"
+                            <!-- ✨ IMPROVED MAP SECTION -->
+                            <VerticalStackLayout Spacing="12" IsVisible="{Binding HasLocation}" Margin="0,10,0,0">
+                                <Label Text="{extensions:Translate LocationLabel}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                                <Border StrokeShape="RoundRectangle 16"
                                     HeightRequest="250"
                                     StrokeThickness="0"
                                     BackgroundColor="#F0F0F0">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Opacity="0.1" Radius="8" Offset="0,2"/>
-                                </Border.Shadow>
-                                <Grid>
-                                    <mapsui:MapControl x:Name="ProductMap" VerticalOptions="Fill" HorizontalOptions="Fill" />
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Opacity="0.1" Radius="8" Offset="0,2"/>
+                                    </Border.Shadow>
+                                    <Grid>
+                                        <mapsui:MapControl x:Name="ProductMap" VerticalOptions="Fill" HorizontalOptions="Fill" />
 
-                                    <!-- Map Controls (Top Right) -->
-                                    <VerticalStackLayout Spacing="8" 
+                                        <!-- Map Controls (Top Right) -->
+                                        <VerticalStackLayout Spacing="8" 
                                                          HorizontalOptions="End" 
                                                          VerticalOptions="Start" 
                                                          Margin="12">
-                                        <!-- Zoom In -->
-                                        <Border StrokeShape="RoundRectangle 10"
+                                            <!-- Zoom In -->
+                                            <Border StrokeShape="RoundRectangle 10"
                                                 BackgroundColor="White"
                                                 WidthRequest="40"
                                                 HeightRequest="40"
                                                 StrokeThickness="0"
                                                 Padding="0">
-                                            <Border.Shadow>
-                                                <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
-                                            </Border.Shadow>
-                                            <Border.GestureRecognizers>
-                                                <TapGestureRecognizer Tapped="OnZoomInClicked"/>
-                                            </Border.GestureRecognizers>
-                                            <Label Text="+"
+                                                <Border.Shadow>
+                                                    <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
+                                                </Border.Shadow>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="OnZoomInClicked"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="+"
                                                    FontSize="24"
                                                    FontAttributes="Bold"
                                                    TextColor="{StaticResource Primary}"
                                                    HorizontalOptions="Center"
                                                    VerticalOptions="Center"/>
-                                        </Border>
+                                            </Border>
 
-                                        <!-- Zoom Out -->
-                                        <Border StrokeShape="RoundRectangle 10"
+                                            <!-- Zoom Out -->
+                                            <Border StrokeShape="RoundRectangle 10"
                                                 BackgroundColor="White"
                                                 WidthRequest="40"
                                                 HeightRequest="40"
                                                 StrokeThickness="0"
                                                 Padding="0">
-                                            <Border.Shadow>
-                                                <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
-                                            </Border.Shadow>
-                                            <Border.GestureRecognizers>
-                                                <TapGestureRecognizer Tapped="OnZoomOutClicked"/>
-                                            </Border.GestureRecognizers>
-                                            <Label Text="-"
+                                                <Border.Shadow>
+                                                    <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
+                                                </Border.Shadow>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="OnZoomOutClicked"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="-"
                                                    FontSize="24"
                                                    FontAttributes="Bold"
                                                    TextColor="{StaticResource Primary}"
                                                    HorizontalOptions="Center"
                                                    VerticalOptions="Center"
                                                    Margin="0,-4,0,0"/>
-                                        </Border>
+                                            </Border>
 
-                                        <!-- Reset to Product Location -->
-                                        <Border StrokeShape="RoundRectangle 10"
+                                            <!-- Reset to Product Location -->
+                                            <Border StrokeShape="RoundRectangle 10"
                                                 BackgroundColor="White"
                                                 WidthRequest="40"
                                                 HeightRequest="40"
                                                 StrokeThickness="0"
                                                 Padding="0">
-                                            <Border.Shadow>
-                                                <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
-                                            </Border.Shadow>
-                                            <Border.GestureRecognizers>
-                                                <TapGestureRecognizer Tapped="OnResetLocationClicked"/>
-                                            </Border.GestureRecognizers>
-                                            <Label Text="📍"
+                                                <Border.Shadow>
+                                                    <Shadow Brush="Black" Opacity="0.15" Radius="4" Offset="0,2"/>
+                                                </Border.Shadow>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="OnResetLocationClicked"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="📍"
                                                    FontSize="18"
                                                    HorizontalOptions="Center"
                                                    VerticalOptions="Center"/>
-                                        </Border>
-                                    </VerticalStackLayout>
+                                            </Border>
+                                        </VerticalStackLayout>
 
-                                    <!-- Location Info (Bottom) -->
-                                    <Border VerticalOptions="End" 
+                                        <!-- Location Info (Bottom) -->
+                                        <Border VerticalOptions="End" 
                                             Margin="12" 
                                             BackgroundColor="White" 
                                             StrokeShape="RoundRectangle 12" 
                                             Padding="12"
                                             StrokeThickness="0">
-                                        <Border.Shadow>
-                                            <Shadow Brush="Black" Opacity="0.15" Radius="6" Offset="0,2"/>
-                                        </Border.Shadow>
-                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                                            <Label Text="📍" VerticalOptions="Center" FontSize="16"/>
-                                            <Label Grid.Column="1" 
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Opacity="0.15" Radius="6" Offset="0,2"/>
+                                            </Border.Shadow>
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                <Label Text="📍" VerticalOptions="Center" FontSize="16"/>
+                                                <Label Grid.Column="1" 
                                                    Text="{Binding Product.Location}" 
                                                    FontSize="13" 
                                                    TextColor="{StaticResource TextPrimary}" 
                                                    LineBreakMode="TailTruncation" 
                                                    MaxLines="2" 
                                                    VerticalOptions="Center"/>
-                                            <Button Grid.Column="2" 
+                                                <Button Grid.Column="2" 
                                                     Text="{extensions:Translate Go}" 
                                                     Command="{Binding OpenLocationCommand}" 
                                                     HeightRequest="32" 
@@ -264,36 +268,36 @@
                                                     TextColor="White" 
                                                     FontSize="12" 
                                                     FontAttributes="Bold"/>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </Border>
-                        </VerticalStackLayout>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
 
-                        <!-- Seller Info -->
-                        <Border StrokeShape="RoundRectangle 16"
+                            <!-- Seller Info -->
+                            <Border StrokeShape="RoundRectangle 16"
                                 StrokeThickness="0"
                                 BackgroundColor="{StaticResource Background}"
                                 Padding="12"
                                 Margin="0,10,0,0">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                <ffimageloading:CachedImage Grid.Column="0"
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <ffimageloading:CachedImage Grid.Column="0"
                                                             Source="{Binding Product.UserPhotoUrl}"
                                                             WidthRequest="50" HeightRequest="50"
                                                             Aspect="AspectFill"
                                                             LoadingPlaceholder="person_icon.svg"
                                                             ErrorPlaceholder="person_icon.svg">
-                                    <ffimageloading:CachedImage.Clip>
-                                        <EllipseGeometry Center="25,25" RadiusX="25" RadiusY="25" />
-                                    </ffimageloading:CachedImage.Clip>
-                                </ffimageloading:CachedImage>
+                                        <ffimageloading:CachedImage.Clip>
+                                            <EllipseGeometry Center="25,25" RadiusX="25" RadiusY="25" />
+                                        </ffimageloading:CachedImage.Clip>
+                                    </ffimageloading:CachedImage>
 
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                    <Label Text="{Binding Product.UserName}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
-                                    <Label Text="{Binding Product.CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
-                                </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                        <Label Text="{Binding Product.UserName}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Product.CreatedAt, Converter={StaticResource DateTimeToTimeAgoConverter}}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                    </VerticalStackLayout>
 
-                                <Button Grid.Column="2" 
+                                    <Button Grid.Column="2" 
                                         Text="{extensions:Translate SellerProfile}" 
                                         TextColor="{StaticResource Primary}" 
                                         BackgroundColor="Transparent" 
@@ -301,20 +305,21 @@
                                         FontAttributes="Bold"
                                         Padding="0"
                                         HeightRequest="40"/>
-                            </Grid>
-                        </Border>
+                                </Grid>
+                            </Border>
 
-                        <!-- View Count -->
-                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Opacity="0.6" Margin="0,10,0,20">
-                            <Label Text="👁" FontSize="14" VerticalOptions="Center"/>
-                            <Label Text="{Binding Product.ViewCount}" FontSize="12" FontAttributes="Bold" VerticalOptions="Center"/>
-                            <Label Text="{extensions:Translate ViewsLabel}" FontSize="12" VerticalOptions="Center"/>
-                        </HorizontalStackLayout>
+                            <!-- View Count -->
+                            <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Opacity="0.6" Margin="0,10,0,20">
+                                <Label Text="👁" FontSize="14" VerticalOptions="Center"/>
+                                <Label Text="{Binding Product.ViewCount}" FontSize="12" FontAttributes="Bold" VerticalOptions="Center"/>
+                                <Label Text="{extensions:Translate ViewsLabel}" FontSize="12" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
 
-                    </VerticalStackLayout>
-                </Border>
-            </VerticalStackLayout>
-        </ScrollView>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
 
         <!-- ✨ BOTTOM ACTION BAR -->
         <Border Grid.Row="1" 

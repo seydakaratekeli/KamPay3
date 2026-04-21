@@ -61,6 +61,13 @@ public partial class ProductDetailPage : ContentPage
         // Subscribe to property changes to know when product is loaded
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+        // Sayfaya her dönüşte ürün verisini yeniden yükle (düzenleme sonrası güncel veri garantisi)
+        if (!string.IsNullOrEmpty(_viewModel.ProductId))
+        {
+            _isMapInitialized = false; // Haritanın yeniden çizilmesini sağla
+            _viewModel.RefreshProductCommand.Execute(null);
+        }
+
         // NOT: Mapsui varsayÄ±lan olarak Ã§ift tÄ±klama ile zoom Ã¶zelliÄŸine sahiptir.
         // Manuel event ekleme kodu (DoubleTapped) burada hataya sebep olduÄŸu iÃ§in kaldÄ±rÄ±ldÄ±.
     }
@@ -133,7 +140,7 @@ public partial class ProductDetailPage : ContentPage
             _isMapInitialized = true;
 
             KamPay.Helpers.AppLogger.DebugLog($"âœ… ProductDetailPage haritasÄ± baÅŸlatÄ±ldÄ±: {lat}, {lon}");
-            
+
             return Task.CompletedTask;
         }
         catch (Exception ex)

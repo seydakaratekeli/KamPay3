@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using KamPay.Models;
 
-namespace KamPay.Models.EventMessages
+namespace KamPay.Models.EventMessages.ProductEvent
 {
     /// <summary>
     /// AddProductViewModel → ProductListViewModel arası mesaj.

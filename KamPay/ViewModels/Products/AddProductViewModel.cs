@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
 using KamPay.Models.EventMessages;
+using KamPay.Models.EventMessages.ProductEvent;
 using KamPay.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;

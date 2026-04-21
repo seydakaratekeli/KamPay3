@@ -16,7 +16,8 @@ using KamPay.Services.Auth;
 using KamPay.Services.Products;
 using KamPay.Services.Messaging;
 using KamPay.Services.Transactions;
-
+using KamPay.Models.EventMessages;
+using KamPay.Models.EventMessages.ProductEvent;
 namespace KamPay.ViewModels
 {
     public class ShowTradeOfferPopupMessage
@@ -57,6 +58,9 @@ namespace KamPay.ViewModels
         private bool isLoading;
 
         [ObservableProperty]
+        private bool isRefreshing;
+
+        [ObservableProperty]
         private bool isOwner;
 
         [ObservableProperty]
@@ -76,9 +80,9 @@ namespace KamPay.ViewModels
         private bool hasActiveTransaction;
 
         // HasLocation property - checks if product has valid location
-        public bool HasLocation => Product != null && 
+        public bool HasLocation => Product != null &&
                                    !string.IsNullOrEmpty(Product.Location) &&
-                                   Product.Latitude.HasValue && 
+                                   Product.Latitude.HasValue &&
                                    Product.Longitude.HasValue;
 
         public ObservableCollection<string> ProductImages { get; } = new();
@@ -101,10 +105,30 @@ namespace KamPay.ViewModels
             _userStateService = userStateService;
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // âœ… DIP FIX: DI'den inject
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
-            
+
             // KullanÄ±cÄ± profil deÄŸiÅŸikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
-            
+
+            // Ürün güncelleme mesajını dinle
+            WeakReferenceMessenger.Default.Register<ProductUpdatedMessage>(this, (r, m) =>
+            {
+                if (m.Value.ProductId == ProductId)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Product = m.Value;
+                        ProductImages.Clear();
+                        if (m.Value.ImageUrls != null)
+                        {
+                            foreach (var url in m.Value.ImageUrls)
+                                ProductImages.Add(url);
+                        }
+                        CurrentImageIndex = 0;
+                        OnPropertyChanged(nameof(HasLocation));
+                    });
+                }
+            });
+
             KamPay.Helpers.AppLogger.DebugLog("âœ… ProductDetailViewModel oluÅŸturuldu (DIP uyumlu - FirebaseClient DI'den)");
         }
 
@@ -137,6 +161,7 @@ namespace KamPay.ViewModels
                     _userStateService.UserProfileChanged -= OnUserProfileChanged;
                     _transactionListener?.Dispose();
                     _transactionListener = null;
+                    WeakReferenceMessenger.Default.UnregisterAll(this);
                 }
                 _disposed = true;
             }
@@ -197,7 +222,7 @@ namespace KamPay.ViewModels
                     if (Application.Current?.MainPage != null)
                     {
                         var errorMsg = string.IsNullOrEmpty(result.Message) ? Res["ProductNotFound"].ToString() : result.Message;
-                        if (result.Errors != null && result.Errors.Any()) 
+                        if (result.Errors != null && result.Errors.Any())
                         {
                             errorMsg += $"\n\nTeknik Hata Ã–zeti: {string.Join("\n", result.Errors)}";
                         }
@@ -217,6 +242,21 @@ namespace KamPay.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task RefreshProductAsync()
+        {
+            IsRefreshing = true;
+            try
+            {
+                _lastLoadedProductId = null; // Guard'ı sıfırla
+                await LoadProductAsync();
+            }
+            finally
+            {
+                IsRefreshing = false;
+            }
+        }
+
         //  Aktif transaction'Ä± yÃ¼kle VE realtime listener baÅŸlat
         private async Task LoadActiveTransactionAsync(string currentUserId)
         {
@@ -224,16 +264,16 @@ namespace KamPay.ViewModels
             {
                 // KullanÄ±cÄ±nÄ±n gÃ¶nderdiÄŸi teklifleri kontrol et
                 var myOffersResult = await _transactionService.GetMyOffersAsync(currentUserId);
-                
+
                 if (myOffersResult.Success && myOffersResult.Data != null)
                 {
                     // Bu Ã¼rÃ¼n iÃ§in pending/accepted/negotiating durumda bir transaction var mÄ±?
                     var existingTransaction = myOffersResult.Data
-                        .FirstOrDefault(t => t.ProductId == ProductId && 
-                                           (t.Status == TransactionStatus.Pending || 
+                        .FirstOrDefault(t => t.ProductId == ProductId &&
+                                           (t.Status == TransactionStatus.Pending ||
                                             t.Status == TransactionStatus.Accepted ||
                                             t.IsNegotiating));
-                    
+
                     if (existingTransaction != null)
                     {
                         ActiveTransaction = existingTransaction;
@@ -385,23 +425,23 @@ namespace KamPay.ViewModels
                         IsLoading = true;
                         // SatÄ±ÅŸ iÃ§in talebi oluÅŸtur
                         var saleResult = await _transactionService.CreateRequestAsync(Product, currentUser);
-                        
+
                         if (saleResult.Success)
                         {
                             ActiveTransaction = saleResult.Data;
                             HasActiveTransaction = true;
-                            
+
                             // Hemen konuÅŸmayÄ± baÅŸlat
                             var convResult = await _transactionService.StartConversationForTransactionAsync(ActiveTransaction.TransactionId, currentUser.UserId);
-                            
+
                             if (convResult.Success)
                             {
                                 // SeÃ§ilen fiyatÄ± (liste fiyatÄ± veya pazarlÄ±k) teklif olarak gÃ¶nder
                                 // isInitialRequest true ise "liste fiyatÄ±ndan almak istiyor", false ise "teklif verdi" yazar.
                                 await _transactionService.ProposePriceForSaleAsync(ActiveTransaction.TransactionId, targetPrice, currentUser.UserId, isInitialRequest: isFixedPrice);
-                                
+
                                 // Durum bilgisini chate entegre et
-                                string statusNote = isFixedPrice 
+                                string statusNote = isFixedPrice
                                     ? "â³ SatÄ±n alma talebi (liste fiyatÄ±) oluÅŸturuldu.\nLÃ¼tfen satÄ±cÄ±nÄ±n onaylamasÄ± bekleniyor."
                                     : $"â³ PazarlÄ±k baÅŸlatÄ±ldÄ± (Teklif: {targetPrice:N2}â‚º).\nLÃ¼tfen satÄ±cÄ±nÄ±n teklifi deÄŸerlendirmesi bekleniyor.";
 
@@ -414,7 +454,7 @@ namespace KamPay.ViewModels
                                 };
                                 await _messagingService.SendMessageAsync(systemMessageRequest, currentUser);
                             }
-                            
+
                             // Pop-up kaldÄ±rÄ±ldÄ±, kullanÄ±cÄ±yÄ± direkt konuÅŸma penceresine yÃ¶nlendir
                             if (convResult.Success)
                             {
@@ -427,7 +467,7 @@ namespace KamPay.ViewModels
                                 await Application.Current.MainPage.DisplayAlert(Res["Error"], saleResult.Message, Res["Ok"]);
                         }
                         break;
-                        
+
                     case ProductType.Bagis:
                         IsLoading = true;
                         // BUG-17 FIX: Bagis akisi - alert + chat yonlendirmesi eklendi
@@ -514,7 +554,7 @@ namespace KamPay.ViewModels
         private async Task ProposePriceAsync()
         {
             if (ActiveTransaction == null || Product == null || Product.Type != ProductType.Satis) return;
-            
+
             // "PazarlÄ±k Yap" butonuna basÄ±ldÄ±ÄŸÄ±nda direkt chat ekranÄ±na yÃ¶nlendiriyoruz.
             await MessageSellerAsync();
         }
@@ -568,8 +608,8 @@ namespace KamPay.ViewModels
                 if (proposeResult.Success)
                 {
                     await Application.Current.MainPage.DisplayAlert(
-                        Res["Success"], 
-                        Res["CashOfferSent"], 
+                        Res["Success"],
+                        Res["CashOfferSent"],
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);
@@ -626,8 +666,8 @@ namespace KamPay.ViewModels
                 if (acceptResult.Success)
                 {
                     await Application.Current.MainPage.DisplayAlert(
-                        Res["Success"], 
-                        string.Format(Res["AgreedOnPrice"], agreedAmount), 
+                        Res["Success"],
+                        string.Format(Res["AgreedOnPrice"], agreedAmount),
                         Res["Ok"]
                     );
                     await LoadActiveTransactionAsync(currentUser.UserId);
@@ -673,7 +713,7 @@ namespace KamPay.ViewModels
                     Product.FavoriteCount++;
                 }
 
-                
+
                 //  : UI'Ä±n anlÄ±k deÄŸiÅŸmesi iÃ§in Product nesnesinin deÄŸiÅŸtiÄŸini bildiriyoruz
                 OnPropertyChanged(nameof(Product));
 
@@ -711,7 +751,7 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
-        
+
         [RelayCommand]
         private async Task ShareProductAsync()
         {
@@ -766,7 +806,7 @@ namespace KamPay.ViewModels
                             options.ToArray()
                         );
 
-                        if (action == "Ä°ptal" || string.IsNullOrEmpty(action)) 
+                        if (action == "Ä°ptal" || string.IsNullOrEmpty(action))
                             return;
 
                         IsLoading = true;
@@ -874,7 +914,7 @@ namespace KamPay.ViewModels
             catch (Exception ex)
             {
                 if (Application.Current?.MainPage != null)
-                     await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], $"{Res["OperationFailed"]}: {ex.Message}", Res["Ok"]);
             }
             finally
             {
@@ -912,7 +952,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current.MainPage.DisplayAlert(Res["Success"], Res["ProductDeleted"], Res["Ok"]);
+                    WeakReferenceMessenger.Default.Send(new ProductDeletedMessage(ProductId));
                     await Shell.Current.GoToAsync("..");
                 }
                 else
@@ -1045,9 +1085,9 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ViewCurrentImageAsync()
         {
-            if (ProductImages.Count == 0 || CurrentImageIndex < 0 || CurrentImageIndex >= ProductImages.Count) 
+            if (ProductImages.Count == 0 || CurrentImageIndex < 0 || CurrentImageIndex >= ProductImages.Count)
                 return;
-            
+
             var currentImageUrl = ProductImages[CurrentImageIndex];
             await ViewProductImageAsync(currentImageUrl);
         }

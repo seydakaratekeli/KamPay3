@@ -7,6 +7,7 @@ using Firebase.Database.Streaming;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Models.EventMessages;
+using KamPay.Models.EventMessages.ProductEvent;
 using KamPay.Services;
 using KamPay.Services.Auth;
 using KamPay.Services.Products;
@@ -150,6 +151,40 @@ namespace KamPay.ViewModels
                 });
             });
 
+            // Ürün güncellendi → listede anında yansıt (refresh'siz)
+            WeakReferenceMessenger.Default.Register<ProductUpdatedMessage>(this, (_, m) =>
+            {
+                var updated = m.Value;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    lock (_allProductsLock)
+                    {
+                        var idx = _allLoadedProducts.FindIndex(p => p.ProductId == updated.ProductId);
+                        if (idx >= 0) _allLoadedProducts[idx] = updated;
+                    }
+
+                    var visible = Products.FirstOrDefault(p => p.ProductId == updated.ProductId);
+                    if (visible != null)
+                    {
+                        var visIdx = Products.IndexOf(visible);
+                        if (visIdx >= 0)
+                        {
+                            Products[visIdx] = updated;
+                        }
+                    }
+                });
+            });
+            WeakReferenceMessenger.Default.Register<ProductDeletedMessage>(this, (_, m) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    lock (_allProductsLock)
+                        _allLoadedProducts.RemoveAll(p => p.ProductId == m.Value);
+
+                    var item = Products.FirstOrDefault(p => p.ProductId == m.Value);
+                    if (item != null) Products.Remove(item);
+                });
+            });
             WeakReferenceMessenger.Default.Register<UserSessionChangedMessage>(this, (_, m) =>
             {
                 if (!m.Value) // Logout

@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
 using KamPay.Models.EventMessages;
+using KamPay.Models.EventMessages.ProductEvent;
+
 using KamPay.Services;
 using KamPay.Services.Products;
 using System.Collections.ObjectModel;
@@ -268,6 +270,13 @@ namespace KamPay.ViewModels
 
             if (result.Success)
             {
+                // Güncel ürün verisini API'den çek ve mesaj olarak yayınla
+                var updatedResult = await _productService.GetProductByIdAsync(ProductId);
+                if (updatedResult.Success && updatedResult.Data != null)
+                {
+                    WeakReferenceMessenger.Default.Send(new ProductUpdatedMessage(updatedResult.Data));
+                }
+
                 await Application.Current!.MainPage!.DisplayAlert("BaÅŸarÄ±lÄ±", "ÃœrÃ¼n gÃ¼ncellendi.", "Tamam");
                 await Shell.Current.GoToAsync("..");
             }
@@ -331,12 +340,12 @@ namespace KamPay.ViewModels
         private async Task PreviewImageAsync(string imagePath)
         {
             if (string.IsNullOrEmpty(imagePath)) return;
-            
+
             // Local file path ise file:// protocol ekle
-            var imageUrl = imagePath.StartsWith("http") 
-                ? imagePath 
+            var imageUrl = imagePath.StartsWith("http")
+                ? imagePath
                 : $"file://{imagePath}";
-            
+
             await Shell.Current.GoToAsync($"ImageViewerPage?photoUrl={Uri.EscapeDataString(imageUrl)}");
         }
     }
