@@ -29,7 +29,7 @@ namespace KamPay.ViewModels
         private readonly IUserStateService _userStateService;
         private readonly IStorageService _storageService;
         private readonly IUserProfileService _userProfileService;
-        private readonly ITransactionService _transactionService; // Ã¢Å“â€¦ EKLENEN
+        private readonly ITransactionService _transactionService; // âœ… EKLENEN
         private readonly FirebaseClient _firebaseClient;
         private User? _currentUser;
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
@@ -59,18 +59,18 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool isRefreshing;
 
-        // FotoÃ„Å¸raf yÃƒÂ¼kleme ÃƒÂ¶zellikleri
+        // FotoÄŸraf yÃ¼kleme Ã¶zellikleri
         [ObservableProperty]
         private bool isUploadingImage;
 
         [ObservableProperty]
         private string? selectedImagePath;
 
-        // Ã¢Å“â€¦ Observable property olarak deÃ„Å¸iÃ…Å¸tirildi
+        // âœ… Observable property olarak deÄŸiÅŸtirildi
         [ObservableProperty]
         private string otherUserPhoto = string.Empty;
 
-        // Ã¢Å“â€¦ Observable property olarak deÃ„Å¸iÃ…Å¸tirildi
+        // âœ… Observable property olarak deÄŸiÅŸtirildi
         [ObservableProperty]
         private string otherUserName = string.Empty;
 
@@ -82,15 +82,6 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private bool hasActiveTransaction;
-
-        [ObservableProperty]
-        private string selectedTransactionId = string.Empty;
-
-        // âœ… BUG-3/4 FIX: Ã‡oklu transaction desteÄŸi
-        // AynÄ± conversation'da birden fazla Ã¼rÃ¼n iÃ§in aktif pazarlÄ±k tutulabilir
-        public ObservableRangeCollection<Transaction> ActiveTransactions { get; } = new();
-        [ObservableProperty]
-        private bool hasActiveTransactions;
 
         private bool _isOtherUserOnline;
         public bool IsOtherUserOnline
@@ -112,7 +103,7 @@ namespace KamPay.ViewModels
             IUserStateService userStateService,
             IStorageService storageService,
             IUserProfileService userProfileService,
-            ITransactionService transactionService, // Ã¢Å“â€¦ EKLENEN
+            ITransactionService transactionService, // âœ… EKLENEN
             FirebaseClient firebaseClient)
         {
             _messagingService = messagingService;
@@ -120,13 +111,13 @@ namespace KamPay.ViewModels
             _userStateService = userStateService;
             _storageService = storageService;
             _userProfileService = userProfileService;
-            _transactionService = transactionService; // Ã¢Å“â€¦ EKLENEN
+            _transactionService = transactionService; // âœ… EKLENEN
             _firebaseClient = firebaseClient;
 
-            // KullanÃ„Â±cÃ„Â± profil deÃ„Å¸iÃ…Å¸ikliklerini dinle
+            // KullanÄ±cÄ± profil deÄŸiÅŸikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
-            //  Static timer baÃ…Å¸lat (sadece bir kez)
+            //  Static timer baÅŸlat (sadece bir kez)
             _cacheCleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
             _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
             _cacheCleanupTimer.Start();
@@ -136,10 +127,10 @@ namespace KamPay.ViewModels
         {
             if (updatedUser == null) return;
 
-            //  Kritik: UI'da anlÃ„Â±k gÃƒÂ¼ncelleme iÃƒÂ§in MainThread'de ÃƒÂ§alÃ„Â±Ã…Å¸tÃ„Â±rÃ„Â±lmalÃ„Â±dÃ„Â±r.
+            //  Kritik: UI'da anlÄ±k gÃ¼ncelleme iÃ§in MainThread'de Ã§alÄ±ÅŸtÄ±rÄ±lmalÄ±dÄ±r.
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // DiÃ„Å¸er kullanÃ„Â±cÃ„Â±nÃ„Â±n bilgilerini gÃƒÂ¼ncelle
+                // DiÄŸer kullanÄ±cÄ±nÄ±n bilgilerini gÃ¼ncelle
                 if (Conversation != null && _currentUser != null)
                 {
                     var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
@@ -150,7 +141,7 @@ namespace KamPay.ViewModels
                     }
                 }
 
-                // Mesajlardaki kullanÃ„Â±cÃ„Â± bilgilerini gÃƒÂ¼ncelle
+                // Mesajlardaki kullanÄ±cÄ± bilgilerini gÃ¼ncelle
                 foreach (var message in Messages.Where(m => m.SenderId == updatedUser.UserId || m.ReceiverId == updatedUser.UserId))
                 {
                     if (message.SenderId == updatedUser.UserId)
@@ -177,10 +168,10 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task LoadChatAsync()
         {
-            //  CACHE: AynÃ„Â± konuÃ…Å¸ma iÃƒÂ§in tekrar yÃƒÂ¼kleme yapma
+            //  CACHE: AynÄ± konuÅŸma iÃ§in tekrar yÃ¼kleme yapma
             if (_activeConversationId == ConversationId && _initialLoadComplete)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å¡Â¡ Cache'den yÃƒÂ¼kleniyor: {ConversationId}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš¡ Cache'den yÃ¼kleniyor: {ConversationId}");
 
                 if (_conversationCache.TryGetValue(ConversationId, out var cachedState))
                 {
@@ -198,7 +189,7 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                //  Eski konuÃ…Å¸madan geliyorsak kaydet
+                //  Eski konuÅŸmadan geliyorsak kaydet
                 if (_activeConversationId != null &&
                     _activeConversationId != ConversationId &&
                     _initialLoadComplete)
@@ -216,24 +207,23 @@ namespace KamPay.ViewModels
                     return;
                 }
 
-                //  CACHE: Cache'de varsa oradan yÃƒÂ¼kle
+                //  CACHE: Cache'de varsa oradan yÃ¼kle
                 if (_conversationCache.TryGetValue(ConversationId, out var cachedState))
                 {
-                    KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€œÂ¦ Cache'den yÃƒÂ¼klendi: {ConversationId}");
+                    KamPay.Helpers.AppLogger.DebugLog($"ğŸ“¦ Cache'den yÃ¼klendi: {ConversationId}");
                     RestoreFromCache(cachedState);
                     _activeConversationId = ConversationId;
                     _initialLoadComplete = true;
                     IsLoading = false;
 
                     await _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
-                    await LoadActiveTransactionsAsync(_currentUser.UserId);
                     return;
                 }
 
-                //  Ã„Â°lk kez yÃƒÂ¼kleniyor
-                KamPay.Helpers.AppLogger.DebugLog($" Ã„Â°lk yÃƒÂ¼kleme: {ConversationId}");
+                //  Ä°lk kez yÃ¼kleniyor
+                KamPay.Helpers.AppLogger.DebugLog($" Ä°lk yÃ¼kleme: {ConversationId}");
 
-                // KonuÃ…Å¸ma bilgileri
+                // KonuÅŸma bilgileri
                 if (Conversation == null || Conversation.ConversationId != ConversationId)
                 {
                     var conversations = await _messagingService.GetUserConversationsAsync(_currentUser.UserId);
@@ -241,26 +231,26 @@ namespace KamPay.ViewModels
 
                     if (Conversation != null)
                     {
-                        // Navigation parametresinden URL-decoded deÃ„Å¸eri al
+                        // Navigation parametresinden URL-decoded deÄŸeri al
                         var photoFromNav = System.Net.WebUtility.UrlDecode(OtherUserPhoto ?? string.Empty);
                         
                         OtherUserName = Conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
                         
-                        // Navigation'dan gelen fotoÃ„Å¸raf varsa ve geÃƒÂ§erliyse onu kullan
+                        // Navigation'dan gelen fotoÄŸraf varsa ve geÃ§erliyse onu kullan
                         if (!string.IsNullOrEmpty(photoFromNav) && photoFromNav != "person_icon.svg")
                         {
                             OtherUserPhoto = photoFromNav;
                         }
                         else
                         {
-                            // KonuÃ…Å¸madan fotoÃ„Å¸raf al
+                            // KonuÅŸmadan fotoÄŸraf al
                             OtherUserPhoto = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
                         }
 
-                        KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€˜Â¤ OtherUserName: {OtherUserName}");
-                        KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€œÂ· OtherUserPhoto: {OtherUserPhoto}");
+                        KamPay.Helpers.AppLogger.DebugLog($"ğŸ‘¤ OtherUserName: {OtherUserName}");
+                        KamPay.Helpers.AppLogger.DebugLog($"ğŸ“· OtherUserPhoto: {OtherUserPhoto}");
 
-                        // / Online durumunu sorgula - Users koleksiyonundan LastLoginAt kontrolÃƒÂ¼
+                        // / Online durumunu sorgula - Users koleksiyonundan LastLoginAt kontrolÃ¼
                         try
                         {
                             var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
@@ -276,56 +266,166 @@ namespace KamPay.ViewModels
                                     var last = otherUser.LastLoginAt.Value.ToUniversalTime();
                                     var diff = DateTime.UtcNow - last;
                                     IsOtherUserOnline = diff.TotalMinutes <= 2;
-                                    OnlineStatusText = IsOtherUserOnline ? "Ãƒâ€¡evrimiÃƒÂ§i" : $"Son gÃƒÂ¶rÃƒÂ¼lme: {last.ToLocalTime():g}";
+                                    OnlineStatusText = IsOtherUserOnline ? "Ã‡evrimiÃ§i" : $"Son gÃ¶rÃ¼lme: {last.ToLocalTime():g}";
 
-                                    // Profil fotoÃ„Å¸rafÃ„Â± boÃ…Å¸sa Firebase'den al
+                                    // Profil fotoÄŸrafÄ± boÅŸsa Firebase'den al
                                     if ((string.IsNullOrEmpty(OtherUserPhoto) || OtherUserPhoto == "person_icon.svg") && 
                                         !string.IsNullOrEmpty(otherUser.ProfileImageUrl))
                                     {
                                         OtherUserPhoto = otherUser.ProfileImageUrl;
-                                        KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€œÂ· Firebase'den fotoÃ„Å¸raf alÃ„Â±ndÃ„Â±: {OtherUserPhoto}");
+                                        KamPay.Helpers.AppLogger.DebugLog($"ğŸ“· Firebase'den fotoÄŸraf alÄ±ndÄ±: {OtherUserPhoto}");
                                     }
                                 }
                                 else
                                 {
                                     IsOtherUserOnline = false;
-                                    OnlineStatusText = "Ãƒâ€¡evrimdÃ„Â±Ã…Å¸Ã„Â±";
+                                    OnlineStatusText = "Ã‡evrimdÄ±ÅŸÄ±";
                                 }
                             }
                             else
                             {
                                 IsOtherUserOnline = false;
-                                OnlineStatusText = "Ãƒâ€¡evrimdÃ„Â±Ã…Å¸Ã„Â±";
+                                OnlineStatusText = "Ã‡evrimdÄ±ÅŸÄ±";
                             }
                         }
                         catch (Exception ex)
                         {
-                            KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å¡Â Ã¯Â¸Â Online durumu alÃ„Â±namadÃ„Â±: {ex.Message}");
+                            KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Online durumu alÄ±namadÄ±: {ex.Message}");
                             IsOtherUserOnline = false;
-                            OnlineStatusText = "Ãƒâ€¡evrimdÃ„Â±Ã…Å¸Ã„Â±";
+                            OnlineStatusText = "Ã‡evrimdÄ±ÅŸÄ±";
                         }
 
-                        // Ã¢Å“â€¦ Fallback: KullanÃ„Â±cÃ„Â± profil servisi ile fotoÃ„Å¸raf yÃƒÂ¼kle
+                        // âœ… Fallback: KullanÄ±cÄ± profil servisi ile fotoÄŸraf yÃ¼kle
                         await EnsureOtherUserPhotoAsync();
 
-                        // Ã¢Å“â€¦ LOAD ACTIVE TRANSACTION (Daha gÃƒÂ¼venli yÃƒÂ¶ntem)
-                        // âœ… Aktif transaction'larÄ± tek yerden yÃ¼kle
-                        await LoadActiveTransactionsAsync(_currentUser.UserId);
+                        // âœ… LOAD ACTIVE TRANSACTION (Daha gÃ¼venli yÃ¶ntem)
+                        try
+                        {
+                            var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
+                            if (myOffersResult.Success && myOffersResult.Data != null)
+                            {
+                                var match = myOffersResult.Data.FirstOrDefault(t => t.ConversationId == ConversationId);
+                                if (match != null)
+                                {
+                                    ActiveTransaction = match;
+                                    HasActiveTransaction = true;
+                                    KamPay.Helpers.AppLogger.DebugLog($"âœ… ActiveTransaction loaded: {match.TransactionId}");
+                                }
+                                else
+                                {
+                                    KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Bu konuÅŸmaya baÄŸlÄ± iÅŸlem bulunamadÄ±: {ConversationId}");
+                                    // Belki henÃ¼z conversationId set edilmemiÅŸ bir transaction var? ProductId filtresiyle de bakÄ±labilir
+                                    if (Conversation != null && !string.IsNullOrEmpty(Conversation.ProductId))
+                                    {
+                                        var fallbackMatch = myOffersResult.Data.FirstOrDefault(t => t.ProductId == Conversation.ProductId && (t.Status == TransactionStatus.Pending || t.IsNegotiating));
+                                        if (fallbackMatch != null)
+                                        {
+                                            ActiveTransaction = fallbackMatch;
+                                            HasActiveTransaction = true;
+                                            KamPay.Helpers.AppLogger.DebugLog($"âœ… ActiveTransaction loaded via Fallback ProductId: {fallbackMatch.TransactionId}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Could not load active transaction: {ex.Message}");
+                        }
                     }
                     else
                     {
                         KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Conversation bulunamadÄ±: {ConversationId}");
                     }
                 }
-                // 3Ã¯Â¸ÂÃ¢Æ’Â£ Scroll to bottom
+
+                //  UltraFastLoad: Snapshot ile anÄ±nda mesajlarÄ± yÃ¼kle
+                await LoadMessagesWithSnapshotAsync();
+
+                _activeConversationId = ConversationId;
+
+                await _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
+            }
+            catch (Exception ex)
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ LoadChatAsync hatasÄ±: {ex.Message}");
+                IsLoading = false;
+            }
+        }
+
+        //  UltraFastLoad: Snapshot ile mesajlarÄ± anÄ±nda yÃ¼kle
+        private async Task LoadMessagesWithSnapshotAsync()
+        {
+            try
+            {
+                KamPay.Helpers.AppLogger.DebugLog($"ğŸ“¸ Snapshot ile mesaj yÃ¼kleme baÅŸlÄ±yor: {ConversationId}");
+
+                // 1ï¸âƒ£ SNAPSHOT: TÃ¼m mesajlarÄ± anÄ±nda Ã§ek
+                var messagesSnapshot = await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(ConversationId)
+                    .OnceAsync<Message>();
+
+                if (messagesSnapshot.Any())
+                {
+                    //  : Sistem mesajlarÄ±nÄ± da dahil et
+                    var loadedMessages = messagesSnapshot
+                        .Where(m => m.Object != null && !m.Object.IsDeleted) // Sadece silinen mesajlarÄ± filtrele
+                        .Select(m =>
+                        {
+                            var message = m.Object;
+                            message.MessageId = m.Key;
+                            message.IsSentByMe = message.SenderId == _currentUser!.UserId;
+                            
+                            //  DEBUG: Sistem mesajÄ± kontrolÃ¼
+                            if (message.Type == MessageType.System || message.IsSystemMessage)
+                            {
+                                KamPay.Helpers.AppLogger.DebugLog($"ğŸ“‹ Sistem mesajÄ± yÃ¼klendi: {message.Content}");
+                            }
+                            
+                            return message;
+                        })
+                        .OrderBy(m => m.SentAt)
+                        .ToList();
+
+                    // UI'a optimize ÅŸekilde ekle
+                    if (loadedMessages.Count > 50)
+                    {
+                        Messages.ReplaceRange(loadedMessages.Take(50));
+                        var remaining = loadedMessages.Skip(50).ToList();
+
+                        _ = Task.Run(async () =>
+                        {
+                            for (int i = 0; i < remaining.Count; i += 50)
+                            {
+                                var chunk = remaining.Skip(i).Take(50).ToList();
+                                await MainThread.InvokeOnMainThreadAsync(() => Messages.AddRange(chunk));
+                                await Task.Delay(50); // Nefes alma (UI Thread)
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Messages.ReplaceRange(loadedMessages);
+                    }
+
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… Snapshot ile {loadedMessages.Count} mesaj yÃ¼klendi");
+                }
+
+                // 2ï¸âƒ£ Loading'i kapat - veri gÃ¶sterildi
+                _initialLoadComplete = true;
+                IsLoading = false;
+
+                // 3ï¸âƒ£ Scroll to bottom
                 WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
 
-                // 4Ã¯Â¸ÂÃ¢Æ’Â£ REALTIME: Listener baÃ…Å¸lat (yeni mesajlar iÃƒÂ§in)
+                // 4ï¸âƒ£ REALTIME: Listener baÅŸlat (yeni mesajlar iÃ§in)
                 StartListeningToMessages();
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ LoadMessagesWithSnapshotAsync hatasÃ„Â±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ LoadMessagesWithSnapshotAsync hatasÄ±: {ex.Message}");
                 // Hata durumunda loading'i kapat ve real-time listener ile devam et
                 _initialLoadComplete = false;
                 IsLoading = false;
@@ -338,7 +438,7 @@ namespace KamPay.ViewModels
         {
             if (string.IsNullOrEmpty(conversationId)) return;
 
-            //  LRU: Maksimum cache sayÃ„Â±sÃ„Â±nÃ„Â± kontrol et
+            //  LRU: Maksimum cache sayÄ±sÄ±nÄ± kontrol et
             if (_conversationCache.Count >= MaxCachedConversations)
             {
                 var oldestKey = _conversationCache
@@ -346,7 +446,7 @@ namespace KamPay.ViewModels
                     .First().Key;
 
                 _conversationCache.Remove(oldestKey);
-                KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€”â€˜Ã¯Â¸Â LRU: En eski cache temizlendi: {oldestKey}");
+                KamPay.Helpers.AppLogger.DebugLog($"ğŸ—‘ï¸ LRU: En eski cache temizlendi: {oldestKey}");
             }
 
             var state = new ConversationState
@@ -360,23 +460,23 @@ namespace KamPay.ViewModels
             };
 
             _conversationCache[conversationId] = state;
-            KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€™Â¾ Cache'e kaydedildi: {conversationId} ({state.Messages.Count} mesaj)");
+            KamPay.Helpers.AppLogger.DebugLog($"ğŸ’¾ Cache'e kaydedildi: {conversationId} ({state.Messages.Count} mesaj)");
         }
 
-        //  Cache'den geri yÃƒÂ¼kleme
+        //  Cache'den geri yÃ¼kleme
         private void RestoreFromCache(ConversationState state)
         {
-            // Cache yaÃ…Å¸Ã„Â±nÃ„Â± kontrol et
+            // Cache yaÅŸÄ±nÄ± kontrol et
             if ((DateTime.UtcNow - state.CachedAt).TotalMinutes > MaxCacheAgeMinutes)
             {
-                KamPay.Helpers.AppLogger.DebugLog("Ã¢Å¡Â Ã¯Â¸Â Cache eski, yeniden yÃƒÂ¼kleniyor...");
+                KamPay.Helpers.AppLogger.DebugLog("âš ï¸ Cache eski, yeniden yÃ¼kleniyor...");
                 _conversationCache.Remove(ConversationId);
                 _initialLoadComplete = false;
                 _ = Task.Run(() => LoadChatAsync());
                 return;
             }
 
-            // Last accessed time gÃƒÂ¼ncelle (LRU iÃƒÂ§in)
+            // Last accessed time gÃ¼ncelle (LRU iÃ§in)
             state.LastAccessedAt = DateTime.UtcNow;
 
             Messages.Clear();
@@ -389,13 +489,13 @@ namespace KamPay.ViewModels
             OtherUserName = state.OtherUserName;
             OtherUserPhoto = state.OtherUserPhoto;
 
-            // Listener'Ã„Â± yeniden baÃ…Å¸lat
+            // Listener'Ä± yeniden baÅŸlat
             StartListeningToMessages();
 
-            KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å“â€¦ Cache'den geri yÃƒÂ¼klendi: {Messages.Count} mesaj");
+            KamPay.Helpers.AppLogger.DebugLog($"âœ… Cache'den geri yÃ¼klendi: {Messages.Count} mesaj");
         }
 
-        //  Mevcut konuÃ…Å¸mayÃ„Â± temizle
+        //  Mevcut konuÅŸmayÄ± temizle
         private void CleanupCurrentConversation()
         {
             _messagesSubscription?.Dispose();
@@ -417,7 +517,7 @@ namespace KamPay.ViewModels
                 // Cache'i temizle
                 _conversationCache.Remove(ConversationId);
 
-                // Listener'Ã„Â± yeniden baÃ…Å¸lat
+                // Listener'Ä± yeniden baÅŸlat
                 CleanupCurrentConversation();
                 Messages.Clear();
 
@@ -428,7 +528,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ Refresh hatasÃ„Â±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ Refresh hatasÄ±: {ex.Message}");
             }
             finally
             {
@@ -441,18 +541,18 @@ namespace KamPay.ViewModels
         {
             if (_isListenerActive)
             {
-                KamPay.Helpers.AppLogger.DebugLog("Ã¢Å¡Â Ã¯Â¸Â Listener zaten aktif, yeniden baÃ…Å¸latÃ„Â±lmadÃ„Â±.");
+                KamPay.Helpers.AppLogger.DebugLog("âš ï¸ Listener zaten aktif, yeniden baÅŸlatÄ±lmadÄ±.");
                 return;
             }
 
-            KamPay.Helpers.AppLogger.DebugLog($" Real-time listener baÃ…Å¸latÃ„Â±ldÃ„Â±: {ConversationId}");
+            KamPay.Helpers.AppLogger.DebugLog($" Real-time listener baÅŸlatÄ±ldÄ±: {ConversationId}");
 
-            //  : Sistem mesajlarÃ„Â±nÃ„Â± da dahil et
+            //  : Sistem mesajlarÄ±nÄ± da dahil et
             _messagesSubscription = _firebaseClient
                 .Child(Constants.MessagesCollection)
                 .Child(ConversationId)
                 .AsObservable<Message>()
-                .Where(e => e.Object != null && !e.Object.IsDeleted) // Sadece silinen mesajlarÃ„Â± filtrele
+                .Where(e => e.Object != null && !e.Object.IsDeleted) // Sadece silinen mesajlarÄ± filtrele
                 .Buffer(TimeSpan.FromMilliseconds(200))
                 .Where(batch => batch.Any())
                 .Subscribe(
@@ -462,12 +562,12 @@ namespace KamPay.ViewModels
                         {
                             try
                             {
-                                //  DEBUG: Sistem mesajÃ„Â± kontrolÃƒÂ¼
+                                //  DEBUG: Sistem mesajÄ± kontrolÃ¼
                                 foreach (var e in events)
                                 {
                                     if (e.Object != null && (e.Object.Type == MessageType.System || e.Object.IsSystemMessage))
                                     {
-                                        KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€œâ€¹ Realtime sistem mesajÃ„Â±: {e.Object.Content}");
+                                        KamPay.Helpers.AppLogger.DebugLog($"ğŸ“‹ Realtime sistem mesajÄ±: {e.Object.Content}");
                                     }
                                 }
                                 
@@ -475,7 +575,7 @@ namespace KamPay.ViewModels
                             }
                             catch (Exception ex)
                             {
-                                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ Message batch hatasÃ„Â±: {ex.Message}");
+                                KamPay.Helpers.AppLogger.DebugLog($"âŒ Message batch hatasÄ±: {ex.Message}");
                             }
                             finally
                             {
@@ -491,7 +591,7 @@ namespace KamPay.ViewModels
                     },
                     error =>
                     {
-                        KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ Firebase message listener hatasÃ„Â±: {error.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"âŒ Firebase message listener hatasÄ±: {error.Message}");
                         MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
                     });
 
@@ -549,10 +649,10 @@ namespace KamPay.ViewModels
             }
         }
 
-        //  Binary search insert (optimize edilmiÃ…Å¸)
+        //  Binary search insert (optimize edilmiÅŸ)
         private void InsertMessageSorted(Message newMessage)
         {
-            // Temp mesajÃ„Â± bul ve kaldÃ„Â±r
+            // Temp mesajÄ± bul ve kaldÄ±r
             var tempMessage = Messages.FirstOrDefault(m => m.MessageId != null && m.MessageId.StartsWith("temp_") &&
                                                             m.Content == newMessage.Content &&
                                                             Math.Abs((m.SentAt - newMessage.SentAt).TotalSeconds) < 10);
@@ -613,10 +713,10 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            // GÃƒÅ“VENLÃ„Â°K: Mesaj iÃƒÂ§eriÃ„Å¸ini XSS saldÃ„Â±rÃ„Â±larÃ„Â±na karÃ…Å¸Ã„Â± temizle
+            // GÃœVENLÄ°K: Mesaj iÃ§eriÄŸini XSS saldÄ±rÄ±larÄ±na karÅŸÄ± temizle
             var messageContent = InputSanitizer.SanitizeText(MessageText.Trim());
 
-            // EÃ„Å¸er temizleme sonrasÃ„Â± mesaj tamamen boÃ…Å¸aldÃ„Â±ysa iÃ…Å¸lemi iptal et
+            // EÄŸer temizleme sonrasÄ± mesaj tamamen boÅŸaldÄ±ysa iÅŸlemi iptal et
             if (string.IsNullOrEmpty(messageContent)) return;
 
             var tempMessage = new Message
@@ -651,7 +751,7 @@ namespace KamPay.ViewModels
                 if (string.IsNullOrEmpty(receiverId))
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", "AlÃ„Â±cÃ„Â± bilgisi bulunamadÃ„Â±.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "AlÄ±cÄ± bilgisi bulunamadÄ±.", "Tamam");
                     return;
                 }
 
@@ -667,126 +767,25 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    // Ã¢Å“â€¦ BaÃ…Å¸arÃ„Â±lÃ„Â± gÃƒÂ¶nderim sonrasÃ„Â± input temizle
+                    // âœ… BaÅŸarÄ±lÄ± gÃ¶nderim sonrasÄ± input temizle
                     MessageText = string.Empty;
                 }
                 else
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message ?? "Mesaj gÃƒÂ¶nderilemedi", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", result.Message ?? "Mesaj gÃ¶nderilemedi", "Tamam");
                 }
             }
             catch (Exception ex)
             {
                 Messages.Remove(tempMessage);
                 await Application.Current!.MainPage!.DisplayAlert("Hata", ex.Message, "Tamam");
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ SendMessage hatasÃ„Â±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ SendMessage hatasÄ±: {ex.Message}");
             }
             finally
             {
                 IsSending = false;
             }
-        }
-
-
-        // âœ… BUG-3/4 FIX: Hem alÄ±cÄ± hem satÄ±cÄ± transaction'larÄ±nÄ± yÃ¼kle
-        // AynÄ± conversation'da birden fazla Ã¼rÃ¼n iÃ§in aktif pazarlÄ±k desteklenir
-        private async Task LoadActiveTransactionsAsync(string currentUserId)
-        {
-            try
-            {
-                ActiveTransactions.Clear();
-                var allActive = new System.Collections.Generic.List<Transaction>();
-
-                // 1. AlÄ±cÄ± olarak transaction'lar
-                var myOffersResult = await _transactionService.GetMyOffersAsync(currentUserId);
-                if (myOffersResult.Success && myOffersResult.Data != null)
-                {
-                    allActive.AddRange(myOffersResult.Data.Where(t =>
-                        t.ConversationId == ConversationId &&
-                        (t.Status == TransactionStatus.Pending || t.IsNegotiating)));
-                }
-
-                // 2. SatÄ±cÄ± olarak transaction'lar (BUG-4 FIX: satÄ±cÄ± chat'te gÃ¶remiyordu)
-                try
-                {
-                    var sellerSnapshot = await _firebaseClient
-                        .Child(Constants.TransactionsCollection)
-                        .OrderBy("SellerId")
-                        .EqualTo(currentUserId)
-                        .OnceAsync<Transaction>();
-
-                    var sellerTransactions = sellerSnapshot
-                        .Where(s => s.Object != null &&
-                                    s.Object.ConversationId == ConversationId &&
-                                    (s.Object.Status == TransactionStatus.Pending || s.Object.IsNegotiating))
-                        .Select(s => { s.Object.TransactionId = s.Key; return s.Object; })
-                        .ToList();
-
-                    allActive.AddRange(sellerTransactions);
-                }
-                catch (Exception sellerEx)
-                {
-                    KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ SatÄ±cÄ± transaction'larÄ± alÄ±namadÄ±: {sellerEx.Message}");
-                }
-
-                // Fallback: ConversationId ile bulunamazsa ProductId ile ara
-                if (!allActive.Any() && Conversation != null && !string.IsNullOrEmpty(Conversation.ProductId))
-                {
-                    var fallback = myOffersResult?.Data?.FirstOrDefault(t =>
-                        t.ProductId == Conversation.ProductId &&
-                        (t.Status == TransactionStatus.Pending || t.IsNegotiating));
-                    if (fallback != null) allActive.Add(fallback);
-                }
-
-                if (allActive.Any())
-                {
-                    // DuplikasyonlarÄ± kaldÄ±r (TransactionId bazÄ±nda)
-                    var distinct = allActive
-                        .GroupBy(t => t.TransactionId)
-                        .Select(g => g.First())
-                        .ToList();
-
-                    ActiveTransactions.ReplaceRange(distinct);
-                    HasActiveTransactions = true;
-
-                    // KullanÄ±cÄ± seÃ§im yaptÄ±ysa onu koru, yoksa ilk transaction'Ä± seÃ§
-                    var selected = !string.IsNullOrWhiteSpace(selectedTransactionId)
-                        ? distinct.FirstOrDefault(t => t.TransactionId == selectedTransactionId)
-                        : null;
-
-                    ActiveTransaction = selected ?? distinct.First();
-                    HasActiveTransaction = ActiveTransaction != null;
-                    selectedTransactionId = ActiveTransaction?.TransactionId ?? string.Empty;
-
-                    KamPay.Helpers.AppLogger.DebugLog($"âœ… ActiveTransactions yÃ¼klendi: {distinct.Count} transaction");
-                }
-                else
-                {
-                    HasActiveTransactions = false;
-                    HasActiveTransaction = false;
-                    ActiveTransaction = null;
-                    selectedTransactionId = string.Empty;
-                    KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Bu konuÅŸmaya baÄŸlÄ± aktif iÅŸlem bulunamadÄ±: {ConversationId}");
-                }
-            }
-            catch (Exception ex)
-            {
-                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ LoadActiveTransactionsAsync hatasÄ±: {ex.Message}");
-            }
-        }
-
-        [RelayCommand]
-        private Task SelectActiveTransactionAsync(Transaction transaction)
-        {
-            if (transaction == null)
-                return Task.CompletedTask;
-
-            ActiveTransaction = transaction;
-            HasActiveTransaction = true;
-            selectedTransactionId = transaction.TransactionId ?? string.Empty;
-
-            return Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -813,22 +812,22 @@ namespace KamPay.ViewModels
 
             if (oldKeys.Any())
             {
-                KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€”â€˜Ã¯Â¸Â {oldKeys.Count} eski cache otomatik temizlendi");
+                KamPay.Helpers.AppLogger.DebugLog($"ğŸ—‘ï¸ {oldKeys.Count} eski cache otomatik temizlendi");
             }
         }
 
-        // Ã¢Å“â€¦ IN-CHAT NEGOTIATION COMMANDS
+        // âœ… IN-CHAT NEGOTIATION COMMANDS
 
         [RelayCommand]
         private async Task ProposeOfferAsync(Message message)
         {
-            // KullanÃ„Â±lacak ÃƒÂ¶zel transaction (Balon ÃƒÂ¼zerinden geliyorsa kendi transaction'Ã„Â±, alt butondan geliyorsa genel ActiveTransaction)
+            // KullanÄ±lacak Ã¶zel transaction (Balon Ã¼zerinden geliyorsa kendi transaction'Ä±, alt butondan geliyorsa genel ActiveTransaction)
             Transaction targetTransaction = ActiveTransaction;
 
             if (message != null && !string.IsNullOrEmpty(message.RelatedTransactionId))
             {
-                // EÃ„Å¸er buton, bir teklif balonundan tetiklendiyse ve balonda iÃ…Å¸lem ID'si varsa onu kullan
-                // Mevcut listedeki iÃ…Å¸lemler arasÃ„Â±ndan bulmayÃ„Â± deneriz
+                // EÄŸer buton, bir teklif balonundan tetiklendiyse ve balonda iÅŸlem ID'si varsa onu kullan
+                // Mevcut listedeki iÅŸlemler arasÄ±ndan bulmayÄ± deneriz
                 var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
                 if (myOffersResult.Success && myOffersResult.Data != null)
                 {
@@ -842,7 +841,7 @@ namespace KamPay.ViewModels
 
             if (targetTransaction == null) 
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÃ…Å¸lem (transaction) yÃƒÂ¼klenemedi. LÃƒÂ¼tfen sayfayÃ„Â± yenileyin veya tekrar girin.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÅŸlem (transaction) yÃ¼klenemedi. LÃ¼tfen sayfayÄ± yenileyin veya tekrar girin.", "Tamam");
                 return;
             }
             if (_currentUser == null) return;
@@ -850,11 +849,11 @@ namespace KamPay.ViewModels
             try
             {
                 var result = await Application.Current!.MainPage!.DisplayPromptAsync(
-                    $"ÄŸÅ¸â€™Â° Fiyat Teklifi ({targetTransaction.ProductTitle})",
-                    "Teklif etmek istediÃ„Å¸iniz tutarÃ„Â± girin (Ã¢â€šÂº):",
-                    Res["SendButton"] ?? "GÃƒÂ¶nder",
-                    Res["Cancel"] ?? "Ã„Â°ptal",
-                    "Ãƒâ€“rn: 500",
+                    $"ğŸ’° Fiyat Teklifi ({targetTransaction.ProductTitle})",
+                    "Teklif etmek istediÄŸiniz tutarÄ± girin (â‚º):",
+                    Res["SendButton"] ?? "GÃ¶nder",
+                    Res["Cancel"] ?? "Ä°ptal",
+                    "Ã–rn: 500",
                     keyboard: Keyboard.Numeric
                 );
 
@@ -862,16 +861,16 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "GeÃƒÂ§erli bir tutar giriniz.", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert("Hata", "GeÃ§erli bir tutar giriniz.", "Tamam");
                     return;
                 }
 
                 IsLoading = true;
 
-                // SatÃ„Â±cÃ„Â± mÃ„Â± AlÃ„Â±cÃ„Â± mÃ„Â±?
+                // SatÄ±cÄ± mÄ± AlÄ±cÄ± mÄ±?
                 if (targetTransaction.SellerId == _currentUser.UserId)
                 {
-                    // SatÃ„Â±cÃ„Â± ise CounterOffer gÃƒÂ¶nder
+                    // SatÄ±cÄ± ise CounterOffer gÃ¶nder
                     var response = await _transactionService.SendCounterOfferForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
                     if (!response.Success)
                     {
@@ -880,7 +879,7 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    // AlÃ„Â±cÃ„Â± ise ProposePrice gÃƒÂ¶nder
+                    // AlÄ±cÄ± ise ProposePrice gÃ¶nder
                     var response = await _transactionService.ProposePriceForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
                     if (!response.Success)
                     {
@@ -888,7 +887,7 @@ namespace KamPay.ViewModels
                     }
                 }
 
-                // Tekrar transaction'Ã„Â± yÃƒÂ¼kleyelim ki UI gÃƒÂ¼ncellensin
+                // Tekrar transaction'Ä± yÃ¼kleyelim ki UI gÃ¼ncellensin
                 await LoadChatAsync();
             }
             catch (Exception ex)
@@ -906,39 +905,32 @@ namespace KamPay.ViewModels
         {
             if (message == null) return;
             
-            // Ãƒâ€“zel transaction bul (karÃ„Â±Ã…Å¸Ã„Â±klÃ„Â±Ã„Å¸Ã„Â± ÃƒÂ¶nlemek iÃƒÂ§in mesaj bilgisini sÃƒÂ¼z)
-            // âœ… BUG-3 FIX: ActiveTransactions listesinden doÄŸru transaction'Ä± bul
-            Transaction? targetTransaction = null;
-
+            // Ã–zel transaction bul (karÄ±ÅŸÄ±klÄ±ÄŸÄ± Ã¶nlemek iÃ§in mesaj bilgisini sÃ¼z)
+            Transaction targetTransaction = ActiveTransaction;
             if (!string.IsNullOrEmpty(message.RelatedTransactionId))
             {
-                // Ã–nce yerel listede ara
-                targetTransaction = ActiveTransactions.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
-
-                if (targetTransaction == null)
+                var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser?.UserId ?? "");
+                if (myOffersResult.Success && myOffersResult.Data != null)
                 {
-                    var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser?.UserId ?? "");
-                    if (myOffersResult.Success && myOffersResult.Data != null)
-                        targetTransaction = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
+                    var specificTx = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
+                    if (specificTx != null)
+                    {
+                        targetTransaction = specificTx;
+                    }
                 }
             }
 
-            if (targetTransaction == null)
-                targetTransaction = ActiveTransactions.FirstOrDefault() ?? ActiveTransaction;
-
             if (targetTransaction == null) 
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÃ…Å¸lem yÃƒÂ¼klenemedi. LÃƒÂ¼tfen sayfayÃ„Â± yenile.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÅŸlem yÃ¼klenemedi. LÃ¼tfen sayfayÄ± yenile.", "Tamam");
                 return;
             }
             if (_currentUser == null) return;
-
-            // EÄŸer iÅŸlem durumu Pending deÄŸilse iÅŸlem yapma
-            // âœ… BUG FIX: PazarlÄ±k bitmiÅŸ olsa bile (IsNegotiating=false) iÅŸlem pending kalabilir
-            if (targetTransaction.Status != TransactionStatus.Pending)
+            
+            // EÄŸer teklif zaten kabul edildiyse veya reddedildiyse iÅŸlem yapma
+            if (targetTransaction.Status != TransactionStatus.Pending || !targetTransaction.IsNegotiating)
             {
-                 await Application.Current!.MainPage!.DisplayAlert("UyarÄ±", 
-                     "Bu iÅŸlem artÄ±k beklemede deÄŸil (Durum: " + targetTransaction.StatusText + ").", "Tamam");
+                 await Application.Current!.MainPage!.DisplayAlert("UyarÄ±", "Bu pazarlÄ±k zaten sonuÃ§lanmÄ±ÅŸ.", "Tamam");
                  return;
             }
 
@@ -946,9 +938,9 @@ namespace KamPay.ViewModels
             {
                 var confirm = await Application.Current!.MainPage!.DisplayAlert(
                     $"Onay ({targetTransaction.ProductTitle})",
-                    $"{message.ProposedPrice:N2}Ã¢â€šÂº teklifi kabul etmek istediÃ„Å¸inize emin misiniz?",
+                    $"{message.ProposedPrice:N2}â‚º teklifi kabul etmek istediÄŸinize emin misiniz?",
                     "Kabul Et",
-                    "Ã„Â°ptal"
+                    "Ä°ptal"
                 );
 
                 if (!confirm) return;
@@ -959,7 +951,7 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    await LoadChatAsync(); // State'i gÃƒÂ¼ncelle
+                    await LoadChatAsync(); // State'i gÃ¼ncelle
                 }
                 else
                 {
@@ -984,9 +976,9 @@ namespace KamPay.ViewModels
 
             try
             {
-                KamPay.Helpers.AppLogger.DebugLog("ÄŸÅ¸Â§Â¹ ChatViewModel dispose ediliyor...");
+                KamPay.Helpers.AppLogger.DebugLog("ğŸ§¹ ChatViewModel dispose ediliyor...");
 
-                // Event subscription'Ã„Â± temizle
+                // Event subscription'Ä± temizle
                 _userStateService.UserProfileChanged -= OnUserProfileChanged;
 
                 if (!string.IsNullOrEmpty(_activeConversationId))
@@ -994,22 +986,22 @@ namespace KamPay.ViewModels
                     SaveToCache(_activeConversationId);
                 }
 
-                // Ã¢Å“â€¦ EKLEME: Listener temizliÃ„Å¸i
+                // âœ… EKLEME: Listener temizliÄŸi
                 _messagesSubscription?.Dispose();
                 _messagesSubscription = null;
                 _isListenerActive = false;
                 _initialLoadComplete = false;
 
-                // Ã¢Å“â€¦ EKLEME: Timer temizliÃ„Å¸i
+                // âœ… EKLEME: Timer temizliÄŸi
                 _cacheCleanupTimer?.Stop();
                 _cacheCleanupTimer?.Dispose();
                 _cacheCleanupTimer = null;
                 
-                KamPay.Helpers.AppLogger.DebugLog("Ã¢Å“â€¦ ChatViewModel resources disposed");
+                KamPay.Helpers.AppLogger.DebugLog("âœ… ChatViewModel resources disposed");
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å¡Â Ã¯Â¸Â ChatViewModel dispose hatasÃ„Â±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ ChatViewModel dispose hatasÄ±: {ex.Message}");
             }
             finally
             {
@@ -1021,7 +1013,7 @@ namespace KamPay.ViewModels
         public static void ClearCache()
         {
             _conversationCache.Clear();
-            KamPay.Helpers.AppLogger.DebugLog("Ã¢Å“â€¦ TÃƒÂ¼m chat cache temizlendi");
+            KamPay.Helpers.AppLogger.DebugLog("âœ… TÃ¼m chat cache temizlendi");
         }
 
         public static void ClearOldCache(int maxAgeMinutes = 30)
@@ -1037,7 +1029,7 @@ namespace KamPay.ViewModels
                 _conversationCache.Remove(key);
             }
 
-            // Ã¢Å“â€¦ EKLEME: Boyut limiti kontrolÃƒÂ¼
+            // âœ… EKLEME: Boyut limiti kontrolÃ¼
             int removedOldestCount = 0;
             if (_conversationCache.Count > MaxCachedConversations)
             {
@@ -1057,11 +1049,11 @@ namespace KamPay.ViewModels
 
             if (oldKeys.Any() || removedOldestCount > 0)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å“â€¦ Cache temizlendi: {oldKeys.Count} eski, {removedOldestCount} fazla ÃƒÂ¶Ã„Å¸e silindi");
+                KamPay.Helpers.AppLogger.DebugLog($"âœ… Cache temizlendi: {oldKeys.Count} eski, {removedOldestCount} fazla Ã¶ÄŸe silindi");
             }
         }
 
-        // ÄŸÅ¸â€œÂ· FotoÃ„Å¸raf GÃƒÂ¶nderme KomutlarÃ„Â±
+        // ğŸ“· FotoÄŸraf GÃ¶nderme KomutlarÄ±
 
         [RelayCommand]
         private async Task PickImageAsync()
@@ -1072,7 +1064,7 @@ namespace KamPay.ViewModels
             {
                 var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
-                    Title = "FotoÃ„Å¸raf SeÃƒÂ§in"
+                    Title = "FotoÄŸraf SeÃ§in"
                 });
 
                 if (result != null)
@@ -1083,16 +1075,16 @@ namespace KamPay.ViewModels
             }
             catch (FeatureNotSupportedException)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Bu cihazda fotoÃ„Å¸raf seÃƒÂ§me desteklenmiyor.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Bu cihazda fotoÄŸraf seÃ§me desteklenmiyor.", "Tamam");
             }
             catch (PermissionException)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Galeri eriÃ…Å¸im izni gerekli.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Galeri eriÅŸim izni gerekli.", "Tamam");
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ PickImage hatasÃ„Â±: {ex.Message}");
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÃ„Å¸raf seÃƒÂ§ilemedi.", "Tamam");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ PickImage hatasÄ±: {ex.Message}");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÄŸraf seÃ§ilemedi.", "Tamam");
             }
         }
 
@@ -1111,7 +1103,7 @@ namespace KamPay.ViewModels
 
                 var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
                 {
-                    Title = "FotoÃ„Å¸raf Ãƒâ€¡ekin"
+                    Title = "FotoÄŸraf Ã‡ekin"
                 });
 
                 if (result != null)
@@ -1126,12 +1118,12 @@ namespace KamPay.ViewModels
             }
             catch (PermissionException)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Kamera eriÃ…Å¸im izni gerekli.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "Kamera eriÅŸim izni gerekli.", "Tamam");
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ TakePhoto hatasÃ„Â±: {ex.Message}");
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÃ„Å¸raf ÃƒÂ§ekilemedi.", "Tamam");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ TakePhoto hatasÄ±: {ex.Message}");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÄŸraf Ã§ekilemedi.", "Tamam");
             }
         }
 
@@ -1142,7 +1134,7 @@ namespace KamPay.ViewModels
                 return;
             }
 
-            // HÃ„Â±z SÃ„Â±nÃ„Â±rÃ„Â± KontrolÃƒÂ¼
+            // HÄ±z SÄ±nÄ±rÄ± KontrolÃ¼
             var limitCheck = KamPay.Helpers.SecureRateLimiters.ImageUpload.CheckRequest(_currentUser.UserId);
             if (!limitCheck.IsAllowed)
             {
@@ -1153,7 +1145,7 @@ namespace KamPay.ViewModels
             {
                 IsUploadingImage = true;
 
-                // 1Ã¯Â¸ÂÃ¢Æ’Â£ Temp mesaj oluÃ…Å¸tur (loading state ile)
+                // 1ï¸âƒ£ Temp mesaj oluÅŸtur (loading state ile)
                 var tempMessage = new Message
                 {
                     MessageId = $"temp_{Guid.NewGuid()}",
@@ -1164,9 +1156,9 @@ namespace KamPay.ViewModels
                     ReceiverId = Conversation.GetOtherUserId(_currentUser.UserId) ?? string.Empty,
                     ReceiverName = Conversation.GetOtherUserName(_currentUser.UserId),
                     ReceiverPhotoUrl = Conversation.GetOtherUserPhotoUrl(_currentUser.UserId),
-                    Content = "ÄŸÅ¸â€œÂ· FotoÃ„Å¸raf",
+                    Content = "ğŸ“· FotoÄŸraf",
                     Type = MessageType.Image,
-                    ImageUrl = imagePath, // GeÃƒÂ§ici olarak local path gÃƒÂ¶ster
+                    ImageUrl = imagePath, // GeÃ§ici olarak local path gÃ¶ster
                     IsImageLoading = true,
                     ProductId = Conversation.ProductId,
                     ProductTitle = Conversation.ProductTitle,
@@ -1180,29 +1172,29 @@ namespace KamPay.ViewModels
                 InsertMessageSorted(tempMessage);
                 WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(tempMessage));
 
-                // 2Ã¯Â¸ÂÃ¢Æ’Â£ Firebase Storage'a yÃƒÂ¼kle
+                // 2ï¸âƒ£ Firebase Storage'a yÃ¼kle
                 var uploadResult = await _storageService.UploadMessageImageAsync(imagePath, ConversationId);
 
                 if (!uploadResult.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", uploadResult.Message ?? "GÃƒÂ¶rsel yÃƒÂ¼klenemedi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", uploadResult.Message ?? "GÃ¶rsel yÃ¼klenemedi.", "Tamam");
                     return;
                 }
 
-                // 3Ã¯Â¸ÂÃ¢Æ’Â£ Mesaj olarak gÃƒÂ¶nder
+                // 3ï¸âƒ£ Mesaj olarak gÃ¶nder
                 var receiverId = Conversation.GetOtherUserId(_currentUser.UserId);
                 if (string.IsNullOrEmpty(receiverId))
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", "AlÃ„Â±cÃ„Â± bilgisi bulunamadÃ„Â±.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", "AlÄ±cÄ± bilgisi bulunamadÄ±.", "Tamam");
                     return;
                 }
 
                 var request = new SendMessageRequest
                 {
                     ReceiverId = receiverId,
-                    Content = "ÄŸÅ¸â€œÂ· FotoÃ„Å¸raf",
+                    Content = "ğŸ“· FotoÄŸraf",
                     Type = MessageType.Image,
                     ProductId = Conversation.ProductId,
                     ImageUrl = uploadResult.Data
@@ -1213,13 +1205,13 @@ namespace KamPay.ViewModels
                 if (!sendResult.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gÃƒÂ¶nderilemedi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gÃ¶nderilemedi.", "Tamam");
                 }
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ SendImageMessage hatasÃ„Â±: {ex.Message}");
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÃ„Å¸raf gÃƒÂ¶nderilemedi.", "Tamam");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ SendImageMessage hatasÄ±: {ex.Message}");
+                await Application.Current!.MainPage!.DisplayAlert("Hata", "FotoÄŸraf gÃ¶nderilemedi.", "Tamam");
             }
             finally
             {
@@ -1239,7 +1231,7 @@ namespace KamPay.ViewModels
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ ViewImage hatasÃ„Â±: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âŒ ViewImage hatasÄ±: {ex.Message}");
             }
         }
 
@@ -1260,12 +1252,12 @@ namespace KamPay.ViewModels
                 if (profileResult.Success && profileResult.Data != null && !string.IsNullOrEmpty(profileResult.Data.ProfileImageUrl))
                 {
                     OtherUserPhoto = profileResult.Data.ProfileImageUrl;
-                    KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å“â€¦ Profil servisi fotoÃ„Å¸rafÃ„Â±nÃ„Â± yÃƒÂ¼kledi: {OtherUserPhoto}");
+                    KamPay.Helpers.AppLogger.DebugLog($"âœ… Profil servisi fotoÄŸrafÄ±nÄ± yÃ¼kledi: {OtherUserPhoto}");
                 }
             }
             catch (Exception ex)
             {
-                KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å¡Â Ã¯Â¸Â EnsureOtherUserPhotoAsync hata: {ex.Message}");
+                KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ EnsureOtherUserPhotoAsync hata: {ex.Message}");
             }
         }
     }
@@ -1278,8 +1270,7 @@ namespace KamPay.ViewModels
         public required string OtherUserName { get; set; }
         public required string OtherUserPhoto { get; set; }
         public DateTime CachedAt { get; set; }
-        public DateTime LastAccessedAt { get; set; } //  LRU iÃƒÂ§in
+        public DateTime LastAccessedAt { get; set; } //  LRU iÃ§in
     }
 }
-
 

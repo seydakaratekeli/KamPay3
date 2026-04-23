@@ -1,6 +1,6 @@
 # KamPay - Proje Bağlam Dosyası (claude.md)
 
-> **Son Güncelleme:** 2026-04-21
+> **Son Güncelleme:** 2026-04-23
 > Bu dosya, AI asistanların her oturumda codebase taraması yapmasını önlemek için hazırlanmıştır.
 
 ---
@@ -123,7 +123,8 @@ DI bağımlılık sırası kritiktir. Genel sıra:
 Models/
 ├── Auth/               → ApiLoginResponseDto
 ├── Configuration/      → AppConfig (EmailSettings, FirebaseConfig, ApiSettings)
-├── EventMessages/      → MapLocationUpdateMessage, QRCodeScannedMessage (WeakReferenceMessenger)
+├── EventMessages/      → MapLocationUpdateMessage, QRCodeScannedMessage, FavoriteCountChangedMessage
+│   └── ProductEvent/   → ProductAddedMessage, ProductUpdatedMessage, ProductDeletedMessage
 ├── Messaging/          → Conversation, Message, ScrollToChatMessage
 ├── Notifications/      → Notification
 ├── Products/           → Product, Favorite, ProductPagedResponse
@@ -367,6 +368,7 @@ Sayfalar arası iletişim için CommunityToolkit.Mvvm `WeakReferenceMessenger` k
 - `MapLocationUpdateMessage` → Harita konum güncellemesi
 - `QRCodeScannedMessage` → QR kod tarama sonucu
 - `ScrollToChatMessage` → Chat scroll komutu
+- `ProductEvent/*` → Ürün ekleme/güncelleme/silme mesajları (ör. `ProductUpdatedMessage`)
 
 ---
 

@@ -542,17 +542,7 @@ namespace KamPay.ViewModels
                     IncomingOffers.RemoveAt(index);
                     IncomingOffers.Insert(index, result.Data);
                     OnPropertyChanged(nameof(IncomingOffers));
-                    Debug.WriteLine($"✅ UI manuel güncellendi: {transaction.TransactionId}");
-                }
-
-                var existingOutgoing = OutgoingOffers.FirstOrDefault(t => t.TransactionId == transaction.TransactionId);
-                if (existingOutgoing != null && result.Data != null)
-                {
-                    var index = OutgoingOffers.IndexOf(existingOutgoing);
-                    OutgoingOffers.RemoveAt(index);
-                    OutgoingOffers.Insert(index, result.Data);
-                    OnPropertyChanged(nameof(OutgoingOffers));
-                    Debug.WriteLine($"✅ UI (Outgoing) manuel güncellendi: {transaction.TransactionId}");
+                    Debug.WriteLine($"âœ… UI manuel gÃ¼ncellendi: {transaction.TransactionId}");
                 }
             });
         }
@@ -582,11 +572,7 @@ namespace KamPay.ViewModels
                 }
 
                 // âœ… 1. SATIÅ - PazarlÄ±ksÄ±z
-                // ✅ BUG-1 FIX: Status==Pending kontrolü eklendi.
-                // AcceptNegotiatedPriceAsync artık Status=Accepted yapmıyor;
-                // pazarlık bitmişse (IsNeg=false) ama Status hala Pending ise buraya düşer.
-                if (transaction.Type == ProductType.Satis && !transaction.IsNegotiating && transaction.QuotedPrice > 0
-                    && transaction.Status == TransactionStatus.Pending)
+                if (transaction.Type == ProductType.Satis && !transaction.IsNegotiating && transaction.QuotedPrice > 0)
                 {
                     var message = accept
                         ? $"'{transaction.ProductTitle}' iÃ§in {transaction.BuyerName} tarafÄ±ndan gÃ¶nderilen satÄ±n alma talebini kabul ediyor musunuz?\n\nğŸ’° SatÄ±ÅŸ FiyatÄ±: {transaction.QuotedPrice:N2}â‚º"

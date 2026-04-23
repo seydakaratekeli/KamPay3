@@ -72,12 +72,7 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult(priceCheck.ErrorMessage);
 
                 transaction.ProposedPriceByBuyer = proposedPrice;
-                // ✅ BUG-1 FIX: Liste fiyatı talebi ise (isInitialRequest=true) pazarlık BAŞLATMA.
-                // Gerçek pazarlık teklifi ise (isInitialRequest=false) IsNegotiating=true kalır.
-                transaction.IsNegotiating = !isInitialRequest;
-                // Liste fiyatı için QuotedPrice'ı hemen ayarla (Blok 1 koşulu QuotedPrice > 0 bekler)
-                if (isInitialRequest)
-                    transaction.QuotedPrice = proposedPrice;
+                transaction.IsNegotiating = true;
                 transaction.LastNegotiationDate = DateTime.UtcNow;
 
                 if (!transaction.NegotiationStartedAt.HasValue)
@@ -403,9 +398,7 @@ namespace KamPay.Services
                     transaction.QuotedPrice = agreedAmount;
 
                 transaction.IsNegotiating = false;
-                // ✅ BUG-2 FIX: Status=Accepted YAPMA.
-                // Status Pending kalır → satıcı RespondToOfferAsync ile son onayı verir.
-                // Bu sayede QR kod oluşturma ve ürün rezervasyonu adımları ÇALIŞIR.
+                transaction.Status = TransactionStatus.Accepted;
 
                 var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
                 decimal? originalPrice = transaction.Type == ProductType.Satis ? transaction.Price : null;
@@ -428,7 +421,7 @@ namespace KamPay.Services
                     UserId = transaction.SellerId,
                     Type = NotificationType.TransactionUpdate,
                     Title = "💰 Pazarlık Tamamlandı",
-                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ teklifinizi kabul etti. Teklifler sayfasından son onayınızı verin.",
+                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ teklifinizi kabul etti. Ödeme bekleniyor.",
                     ActionUrl = nameof(Views.OffersPage)
                 });
 
@@ -437,7 +430,7 @@ namespace KamPay.Services
                     UserId = transaction.BuyerId,
                     Type = NotificationType.TransactionUpdate,
                     Title = "✅ Fiyat Onaylandı",
-                    Message = $"'{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ fiyatında anlaştınız. Satıcının son onayı bekleniyor.",
+                    Message = $"'{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ fiyatında anlaştınız. Artık ödeme yapabilirsiniz.",
                     ActionUrl = nameof(Views.OffersPage)
                 });
 

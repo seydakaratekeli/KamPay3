@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -21,9 +21,9 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         
-        <!--  ✨ ÖZEL HEADER (Gradient + Profil Bilgileri) -->
+        <!--  âœ¨ Ã–ZEL HEADER (Gradient + Profil Bilgileri) -->
         <Grid Grid.Row="0" RowDefinitions="Auto" x:Name="HeaderSection">
             <!-- Gradient Background -->
             <BoxView>
@@ -60,7 +60,7 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding GoBackCommand}"/>
                     </Border.GestureRecognizers>
-                    <Label Text="↩"
+                    <Label Text="â†©"
                            FontSize="25"
                            TextColor="White"
                            HorizontalOptions="Center"
@@ -68,7 +68,7 @@
                            FontAttributes="Bold"/>
                 </Border>
                 
-                <!-- Profil Fotoğrafı -->
+                <!-- Profil FotoÄŸrafÄ± -->
                 <Border Grid.Column="1" 
                         StrokeThickness="2"
                         Stroke="White"
@@ -110,18 +110,18 @@
                     </Grid>
                 </Border>
                 
-                <!-- İsim ve Son Görülme Durumu -->
+                <!-- Ä°sim ve Son GÃ¶rÃ¼lme Durumu -->
                 <VerticalStackLayout Grid.Column="2" 
                                      VerticalOptions="Center"
                                      Spacing="3">
-                    <Label Text="{Binding OtherUserName, FallbackValue='Yükleniyor...'}"
+                    <Label Text="{Binding OtherUserName, FallbackValue='YÃ¼kleniyor...'}"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="White"
                            LineBreakMode="TailTruncation"
                            MaxLines="1"/>
 
-                    <Label Text="{Binding OnlineStatusText, FallbackValue='Bağlanıyor...'}"
+                    <Label Text="{Binding OnlineStatusText, FallbackValue='BaÄŸlanÄ±yor...'}"
                            FontSize="12"
                            TextColor="White"
                            Opacity="0.85"/>
@@ -129,8 +129,55 @@
             </Grid>
         </Grid>
 
-        <!--  ✨ Mesaj Listesi -->
-        <RefreshView Grid.Row="1"
+        <!-- âœ¨ AKTÄ°F Ä°ÅLEMLER (TRANSACTION CHIPS) -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding HasActiveTransactions}"
+                BackgroundColor="#F8F9FA"
+                StrokeThickness="0"
+                Padding="0,8,0,8"
+                ZIndex="5">
+            <CollectionView ItemsSource="{Binding ActiveTransactions}"
+                            HeightRequest="60"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Transaction">
+                        <Border StrokeShape="RoundRectangle 20"
+                                Stroke="{StaticResource Primary}"
+                                StrokeThickness="1"
+                                BackgroundColor="White"
+                                Padding="12,6"
+                                Margin="12,0,0,0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectActiveTransactionCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                <Label Text="ğŸ“¦" VerticalOptions="Center" FontSize="14"/>
+                                <Label Text="{Binding ProductName}" 
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"
+                                       FontSize="12"
+                                       TextColor="{StaticResource TextPrimary}" />
+                                <Label Text="{Binding Price, StringFormat='{0:N2} â‚º'}"
+                                       VerticalOptions="Center"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Primary}"
+                                       FontAttributes="Bold" />
+                                <Border BackgroundColor="#E8F5E9" Padding="6,2" StrokeShape="RoundRectangle 10" StrokeThickness="0">
+                                    <Label Text="{Binding Status}" FontSize="10" TextColor="#2E7D32" FontAttributes="Bold" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
+
+        <!--  âœ¨ Mesaj Listesi -->
+        <RefreshView Grid.Row="2"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
                      RefreshColor="{StaticResource Primary}"
@@ -145,7 +192,7 @@
                     <DataTemplate x:DataType="models:Message">
                         <Grid Padding="0,4">
                             
-                            <!--  System Mesajı - Mavi ton -->
+                            <!--  System MesajÄ± - Mavi ton -->
                             <Border Padding="12,8"
                                    StrokeShape="RoundRectangle 12"
                                    StrokeThickness="0"
@@ -161,7 +208,7 @@
                                        FontAttributes="Bold"/>
                             </Border>
                             
-                            <!-- 💰 PAZARLIK MESAJI (Negotiation) -->
+                            <!-- ğŸ’° PAZARLIK MESAJI (Negotiation) -->
                             <Border Padding="12"
                                    StrokeShape="RoundRectangle 16"
                                    StrokeThickness="0"
@@ -179,7 +226,7 @@
 
                                 <VerticalStackLayout Spacing="8">
                                     <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
-                                        <Label Text="💰" FontSize="18" VerticalOptions="Center"/>
+                                        <Label Text="ğŸ’°" FontSize="18" VerticalOptions="Center"/>
                                         <Label Text="{Binding NegotiationAction}" FontAttributes="Bold" FontSize="12" TextColor="#F57C00" VerticalOptions="Center" TextTransform="Uppercase"/>
                                     </HorizontalStackLayout>
                                     
@@ -190,7 +237,7 @@
                                            HorizontalTextAlignment="Center"
                                            FontAttributes="Bold"/>
                                     
-                                    <!-- Butonlar kısmı: Sadece karşı tarafın gönderdiği teklifler için butonları göster (Kendi teklifini kabul edemezsin) -->
+                                    <!-- Butonlar kÄ±smÄ±: Sadece karÅŸÄ± tarafÄ±n gÃ¶nderdiÄŸi teklifler iÃ§in butonlarÄ± gÃ¶ster (Kendi teklifini kabul edemezsin) -->
                                     <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" Margin="0,5,0,0"
                                                            IsVisible="{Binding IsSentByMe, Converter={StaticResource InvertedBoolConverter}}">
                                         <Button Text="Kabul Et"
@@ -204,7 +251,7 @@
                                                 Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.AcceptOfferCommand}"
                                                 CommandParameter="{Binding .}" />
                                                 
-                                        <Button Text="Karşı Teklif"
+                                        <Button Text="KarÅŸÄ± Teklif"
                                                 BackgroundColor="{StaticResource Primary}"
                                                 TextColor="White"
                                                 HeightRequest="36"
@@ -252,7 +299,7 @@
                                 </Border.Style>
 
                                 <VerticalStackLayout Spacing="6">
-                                    <!--  Fotoğraf Mesajı -->
+                                    <!--  FotoÄŸraf MesajÄ± -->
                                     <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}">
                                         <Border StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 12"
@@ -275,7 +322,7 @@
                                                            HorizontalOptions="Center" />
                                     </Grid>
 
-                                    <!--  Text Mesajı -->
+                                    <!--  Text MesajÄ± -->
                                     <Label Text="{Binding Content}"
                                            LineBreakMode="WordWrap"
                                            FontSize="15"
@@ -319,12 +366,12 @@
                                                 <DataTrigger TargetType="Label" 
                                                             Binding="{Binding IsDelivered}" 
                                                             Value="False">
-                                                    <Setter Property="Text" Value="⏱" />
+                                                    <Setter Property="Text" Value="â±" />
                                                 </DataTrigger>
                                                 <DataTrigger TargetType="Label" 
                                                             Binding="{Binding IsDelivered}" 
                                                             Value="True">
-                                                    <Setter Property="Text" Value="✓✓" />
+                                                    <Setter Property="Text" Value="âœ“âœ“" />
                                                 </DataTrigger>
                                             </Label.Triggers>
                                         </Label>
@@ -337,8 +384,8 @@
             </syncfusion:SfListView>
         </RefreshView>
 
-        <!-- ✨ Mesaj Gönderme Alanı -->
-        <Border Grid.Row="2"
+        <!-- âœ¨ Mesaj GÃ¶nderme AlanÄ± -->
+        <Border Grid.Row="3"
                Padding="15,12"
                StrokeShape="RoundRectangle 0"
                StrokeThickness="0"
@@ -350,7 +397,7 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto"
                   ColumnSpacing="8">
                 
-                <!--  Fotoğraf Butonu -->
+                <!--  FotoÄŸraf Butonu -->
                 <Border Grid.Column="0"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="#E3F2FD"
@@ -360,13 +407,13 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding PickImageCommand}"/>
                     </Border.GestureRecognizers>
-                    <Label Text="📷"
+                    <Label Text="ğŸ“·"
                            FontSize="24"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
                 </Border>
                 
-                <!-- 🛒 Teslimatı Onayla Butonu -->
+                <!-- ğŸ›’ TeslimatÄ± Onayla Butonu -->
                 <Border Grid.Column="1"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="#E8F5E9"
@@ -377,12 +424,12 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding CompleteDeliveryFromChatCommand}"/>
                     </Border.GestureRecognizers>
-                    <Label Text="🛒"
+                    <Label Text="ğŸ›’"
                            FontSize="24"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
                 </Border>
-                <!-- 💰 Teklif Ver Butonu (Sadece ActiveTransaction varsa) -->
+                <!-- ğŸ’° Teklif Ver Butonu (Sadece ActiveTransaction varsa) -->
                 <Border Grid.Column="1"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="#FFF3E0"
@@ -393,7 +440,7 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ProposeOfferCommand}"/>
                     </Border.GestureRecognizers>
-                    <Label Text="💰"
+                    <Label Text="ğŸ’°"
                            FontSize="24"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"/>
@@ -419,7 +466,7 @@
                            BackgroundColor="Transparent" />
                 </Border>
 
-                <!-- Gönder Butonu -->
+                <!-- GÃ¶nder Butonu -->
                 <Border Grid.Column="4"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="{StaticResource Primary}"
@@ -432,7 +479,7 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding SendMessageCommand}"/>
                     </Border.GestureRecognizers>
-                    <Label Text="➤"
+                    <Label Text="â¤"
                            FontSize="20"
                            TextColor="White"
                            FontAttributes="Bold"
@@ -443,8 +490,8 @@
             </Grid>
         </Border>
 
-        <!--  ✨ Loading Overlay -->
-        <Grid Grid.RowSpan="3"
+        <!--  âœ¨ Loading Overlay -->
+        <Grid Grid.RowSpan="4"
               IsVisible="{Binding IsLoading}"
               BackgroundColor="{StaticResource Background}"
               ZIndex="1100"
@@ -474,4 +521,6 @@
         </Grid>
     </Grid>
 </ContentPage>
+
+
 
