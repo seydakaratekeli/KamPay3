@@ -11,10 +11,7 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- ?? MODERN MAV� TEMA PALET� -->
-
-
-            <!-- ?? MODERN STYLES -->
+            <!-- MODERN STYLES -->
             <Style x:Key="ModernCard" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
                 <Setter Property="CornerRadius" Value="16"/>
@@ -74,10 +71,11 @@
                 <Setter Property="Opacity" Value="0.9"/>
             </Style>
 
-            <!-- Existing Converters -->
+            <!-- ═══════════════════════════════════════ -->
+            <!--  MEVCUT CONVERTER'LAR (değişmedi)       -->
+            <!-- ═══════════════════════════════════════ -->
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:BoolToMultiColorConverter x:Key="BoolToMultiColorConverter"/>
-
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
@@ -90,13 +88,12 @@
             <converters:ProductTypeToBadgeTextConverter x:Key="ProductTypeToBadgeTextConverter"/>
             <converters:ProductTypeShowPriceConverter x:Key="ProductTypeShowPriceConverter"/>
             <converters:ProductSortOptionToTextConverter x:Key="ProductSortOptionToTextConverter"/>
-            <!-- <converters:UnreadToIconConverter x:Key="UnreadToIconConverter"/> -->
             <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter"/>
             <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
             <converters:AllTrueConverter x:Key="AllTrueConverter"/>
             <converters:IsAcceptedConverter x:Key="IsAcceptedConverter"/>
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
-                                    <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
+            <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:LessThan100Converter x:Key="LessThan100Converter"/>
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
@@ -107,6 +104,28 @@
             <converters:ProductToStatusTextConverter x:Key="ProductToStatusTextConverter"/>
             <converters:ProductToStatusColorConverter x:Key="ProductToStatusColorConverter"/>
             <converters:ProductToPriceTextConverter x:Key="ProductToPriceTextConverter"/>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!--  ✅ FAZ 6 YENİ: Genel amaçlı fiyat format converter    -->
+            <!--  Kullanım: {Binding Price, Converter={StaticResource PriceFormatConverter}} -->
+            <!--  Çıktı: "₺1.500,00"  |  ConverterParameter="NoSymbol" → "1.500,00" -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <converters:PriceFormatConverter x:Key="PriceFormatConverter"/>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!--  ✅ FAZ 7 YENİ: Pazarlık durum metni (mevcut + kalan süre)     -->
+            <!--  Kullanım: {Binding ., Converter={StaticResource NegotiationStatusTextConverter}} -->
+            <!--  ConverterParameter="TimeOnly" → sadece "⏱️ 23s 45dk kaldı"   -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <converters:NegotiationStatusTextConverter x:Key="NegotiationStatusTextConverter"/>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!--  ✅ FAZ 7 YENİ: Pazarlık arka plan rengi                       -->
+            <!--  Normal → AccentOrange | Son 2 saat → Error | Dolmuş → Gray    -->
+            <!--  Kullanım: BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}" -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <converters:NegotiationTimerColorConverter x:Key="NegotiationTimerColorConverter"/>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

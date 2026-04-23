@@ -946,39 +946,48 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ProposeOfferAsync(Message message)
         {
-            // KullanÃ„Â±lacak ÃƒÂ¶zel transaction (Balon ÃƒÂ¼zerinden geliyorsa kendi transaction'Ã„Â±, alt butondan geliyorsa genel ActiveTransaction)
             Transaction targetTransaction = ActiveTransaction;
 
             if (message != null && !string.IsNullOrEmpty(message.RelatedTransactionId))
             {
-                // EÃ„Å¸er buton, bir teklif balonundan tetiklendiyse ve balonda iÃ…Å¸lem ID'si varsa onu kullan
-                // Mevcut listedeki iÃ…Å¸lemler arasÃ„Â±ndan bulmayÃ„Â± deneriz
                 var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
                 if (myOffersResult.Success && myOffersResult.Data != null)
                 {
                     var specificTx = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
                     if (specificTx != null)
-                    {
                         targetTransaction = specificTx;
-                    }
                 }
             }
 
-            if (targetTransaction == null) 
+            if (targetTransaction == null)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÃ…Å¸lem (transaction) yÃƒÂ¼klenemedi. LÃƒÂ¼tfen sayfayÃ„Â± yenileyin veya tekrar girin.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata",
+                    "Aktif işlem (transaction) yüklenemedi. Lütfen sayfayı yenileyin veya tekrar girin.", "Tamam");
                 return;
             }
+
+            // ✅ FAZ 4: ProductId cross-check — teklif doğru ürüne mi ait?
+            if (Conversation != null &&
+                !string.IsNullOrEmpty(Conversation.ProductId) &&
+                !string.IsNullOrEmpty(targetTransaction.ProductId) &&
+                targetTransaction.ProductId != Conversation.ProductId)
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata",
+                    "Bu teklif farklı bir ürüne ait. Lütfen doğru sohbet penceresinden işlem yapın.", "Tamam");
+                AppLogger.DebugLog($"⚠️ FAZ4 Cross-check başarısız: Transaction.ProductId={targetTransaction.ProductId}, Conversation.ProductId={Conversation.ProductId}");
+                return;
+            }
+
             if (_currentUser == null) return;
 
             try
             {
                 var result = await Application.Current!.MainPage!.DisplayPromptAsync(
-                    $"ÄŸÅ¸â€™Â° Fiyat Teklifi ({targetTransaction.ProductTitle})",
-                    "Teklif etmek istediÃ„Å¸iniz tutarÃ„Â± girin (Ã¢â€šÂº):",
-                    Res["SendButton"] ?? "GÃƒÂ¶nder",
-                    Res["Cancel"] ?? "Ã„Â°ptal",
-                    "Ãƒâ€“rn: 500",
+                    $"💰 Fiyat Teklifi ({targetTransaction.ProductTitle})",
+                    "Teklif etmek istediğiniz tutarı girin (₺):",
+                    Res["SendButton"] ?? "Gönder",
+                    Res["Cancel"] ?? "İptal",
+                    "Örn: 500",
                     keyboard: Keyboard.Numeric
                 );
 
@@ -986,33 +995,29 @@ namespace KamPay.ViewModels
 
                 if (!decimal.TryParse(result, out var proposedPrice) || proposedPrice <= 0)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "GeÃƒÂ§erli bir tutar giriniz.", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Geçerli bir tutar giriniz.", "Tamam");
                     return;
                 }
 
                 IsLoading = true;
 
-                // SatÃ„Â±cÃ„Â± mÃ„Â± AlÃ„Â±cÃ„Â± mÃ„Â±?
                 if (targetTransaction.SellerId == _currentUser.UserId)
                 {
-                    // SatÃ„Â±cÃ„Â± ise CounterOffer gÃƒÂ¶nder
-                    var response = await _transactionService.SendCounterOfferForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
+                    // Satıcı ise CounterOffer gönder
+                    var response = await _transactionService.SendCounterOfferForSaleAsync(
+                        targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
                     if (!response.Success)
-                    {
                         await Application.Current.MainPage.DisplayAlert("Hata", response.Message, "Tamam");
-                    }
                 }
                 else
                 {
-                    // AlÃ„Â±cÃ„Â± ise ProposePrice gÃƒÂ¶nder
-                    var response = await _transactionService.ProposePriceForSaleAsync(targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
+                    // Alıcı ise ProposePrice gönder
+                    var response = await _transactionService.ProposePriceForSaleAsync(
+                        targetTransaction.TransactionId, proposedPrice, _currentUser.UserId);
                     if (!response.Success)
-                    {
                         await Application.Current.MainPage.DisplayAlert("Hata", response.Message, "Tamam");
-                    }
                 }
 
-                // Tekrar transaction'Ã„Â± yÃƒÂ¼kleyelim ki UI gÃƒÂ¼ncellensin
                 await LoadChatAsync();
             }
             catch (Exception ex)
@@ -1029,14 +1034,12 @@ namespace KamPay.ViewModels
         private async Task AcceptOfferAsync(Message message)
         {
             if (message == null) return;
-            
-            // Ãƒâ€“zel transaction bul (karÃ„Â±Ã…Å¸Ã„Â±klÃ„Â±Ã„Å¸Ã„Â± ÃƒÂ¶nlemek iÃƒÂ§in mesaj bilgisini sÃƒÂ¼z)
-            // âœ… BUG-3 FIX: ActiveTransactions listesinden doÄŸru transaction'Ä± bul
+
             Transaction? targetTransaction = null;
 
             if (!string.IsNullOrEmpty(message.RelatedTransactionId))
             {
-                // Ã–nce yerel listede ara
+                // Önce yerel listede ara
                 targetTransaction = ActiveTransactions.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
 
                 if (targetTransaction == null)
@@ -1050,45 +1053,54 @@ namespace KamPay.ViewModels
             if (targetTransaction == null)
                 targetTransaction = ActiveTransactions.FirstOrDefault() ?? ActiveTransaction;
 
-            if (targetTransaction == null) 
+            if (targetTransaction == null)
             {
-                await Application.Current!.MainPage!.DisplayAlert("Hata", "Aktif iÃ…Å¸lem yÃƒÂ¼klenemedi. LÃƒÂ¼tfen sayfayÃ„Â± yenile.", "Tamam");
+                await Application.Current!.MainPage!.DisplayAlert("Hata",
+                    "Aktif işlem yüklenemedi. Lütfen sayfayı yenile.", "Tamam");
                 return;
             }
+
+            // ✅ FAZ 4: ProductId cross-check — teklif doğru ürüne mi ait?
+            if (Conversation != null &&
+                !string.IsNullOrEmpty(Conversation.ProductId) &&
+                !string.IsNullOrEmpty(targetTransaction.ProductId) &&
+                targetTransaction.ProductId != Conversation.ProductId)
+            {
+                await Application.Current!.MainPage!.DisplayAlert("Hata",
+                    "Bu teklif farklı bir ürüne ait. Lütfen doğru sohbet penceresinden işlem yapın.", "Tamam");
+                AppLogger.DebugLog($"⚠️ FAZ4 Cross-check başarısız: Transaction.ProductId={targetTransaction.ProductId}, Conversation.ProductId={Conversation.ProductId}");
+                return;
+            }
+
             if (_currentUser == null) return;
 
-            // EÄŸer iÅŸlem durumu Pending deÄŸilse iÅŸlem yapma
-            // âœ… BUG FIX: PazarlÄ±k bitmiÅŸ olsa bile (IsNegotiating=false) iÅŸlem pending kalabilir
             if (targetTransaction.Status != TransactionStatus.Pending)
             {
-                 await Application.Current!.MainPage!.DisplayAlert("UyarÄ±", 
-                     "Bu iÅŸlem artÄ±k beklemede deÄŸil (Durum: " + targetTransaction.StatusText + ").", "Tamam");
-                 return;
+                await Application.Current!.MainPage!.DisplayAlert("Uyarı",
+                    "Bu işlem artık beklemede değil (Durum: " + targetTransaction.StatusText + ").", "Tamam");
+                return;
             }
 
             try
             {
                 var confirm = await Application.Current!.MainPage!.DisplayAlert(
                     $"Onay ({targetTransaction.ProductTitle})",
-                    $"{message.ProposedPrice:N2}Ã¢â€šÂº teklifi kabul etmek istediÃ„Å¸inize emin misiniz?",
+                    $"{message.ProposedPrice:N2}₺ teklifi kabul etmek istediğinize emin misiniz?",
                     "Kabul Et",
-                    "Ã„Â°ptal"
+                    "İptal"
                 );
 
                 if (!confirm) return;
 
                 IsLoading = true;
 
-                var result = await _transactionService.AcceptNegotiatedPriceAsync(targetTransaction.TransactionId, _currentUser.UserId);
+                var result = await _transactionService.AcceptNegotiatedPriceAsync(
+                    targetTransaction.TransactionId, _currentUser.UserId);
 
                 if (result.Success)
-                {
-                    await LoadChatAsync(); // State'i gÃƒÂ¼ncelle
-                }
+                    await LoadChatAsync();
                 else
-                {
                     await Application.Current.MainPage.DisplayAlert("Hata", result.Message, "Tamam");
-                }
             }
             catch (Exception ex)
             {
@@ -1099,7 +1111,6 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
-
         private bool _disposed = false;
         
         public void Dispose()

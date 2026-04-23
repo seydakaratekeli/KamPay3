@@ -245,6 +245,9 @@ namespace KamPay.Services
                 await _firebaseClient.Child("/").PatchAsync(atomicUpdates);
                 AppLogger.DebugLog("✅ Atomik işlem tamamlandı (Transaction + QR Kodlar).");
 
+                // ✅ FAZ 5: Aynı ürün için diğer pending transaction'ları otomatik reddet
+                await AutoRejectOtherPendingOffersAsync(transaction.ProductId, transactionId);
+
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
                     UserId = transaction.BuyerId,
@@ -272,6 +275,76 @@ namespace KamPay.Services
             {
                 AppLogger.DebugLog($"❌ RespondToOfferAsync Hata: {ex.Message}");
                 return ServiceResult<Transaction>.FailureResult("İşlem sırasında hata oluştu.", ex.Message);
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  FAZ 5: ÇOKLU ALICI SENARYOSU — OTOMATİK REDDET
+        // ─────────────────────────────────────────────
+
+        /// <summary>
+        /// Bir ürün için kabul edilen transaction dışındaki tüm pending transaction'ları reddeder.
+        /// Satıcı bir alıcıyla anlaşınca diğer alıcıları otomatik bilgilendirir.
+        /// </summary>
+        private async Task AutoRejectOtherPendingOffersAsync(string productId, string acceptedTransactionId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(productId)) return;
+
+                // Firebase'de ProductId'ye göre tüm transaction'ları al
+                // NOT: Firebase Console'da "transactions" koleksiyonunda "ProductId" index'i gereklidir.
+                var allTransactions = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .OrderBy("ProductId")
+                    .EqualTo(productId)
+                    .OnceAsync<Transaction>();
+
+                foreach (var t in allTransactions)
+                {
+                    // Kabul edilen transaction'ı atla
+                    if (t.Key == acceptedTransactionId) continue;
+
+                    // Sadece Pending olanları reddet
+                    if (t.Object == null || t.Object.Status != TransactionStatus.Pending) continue;
+
+                    var rejectedTransaction = t.Object;
+                    rejectedTransaction.Status = TransactionStatus.Rejected;
+                    rejectedTransaction.IsNegotiating = false;
+                    rejectedTransaction.UpdatedAt = DateTime.UtcNow;
+                    rejectedTransaction.NegotiationNotes += (string.IsNullOrEmpty(rejectedTransaction.NegotiationNotes) ? "" : "\n")
+                        + "⚠️ Ürün başka bir alıcıya satıldı.";
+
+                    await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .Child(t.Key)
+                        .PutAsync(rejectedTransaction);
+
+                    // Reddedilen alıcıya bildirim gönder
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = rejectedTransaction.BuyerId,
+                        Type = NotificationType.OfferRejected,
+                        Title = "⚠️ Ürün Satıldı",
+                        Message = $"'{rejectedTransaction.ProductTitle}' başka bir alıcıya satıldı. Pazarlığınız kapandı.",
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+
+                    // İlgili conversation'a sistem mesajı ekle
+                    if (!string.IsNullOrEmpty(rejectedTransaction.ConversationId))
+                    {
+                        await AddSystemMessageAsync(
+                            rejectedTransaction.ConversationId,
+                            $"⚠️ [{rejectedTransaction.ProductTitle}]\nBu ürün başka bir alıcıya satıldı. Pazarlık kapandı.");
+                    }
+
+                    AppLogger.DebugLog($"✅ AutoReject: {rejectedTransaction.BuyerName} için transaction reddedildi ({t.Key})");
+                }
+            }
+            catch (Exception ex)
+            {
+                // AutoReject hatası ana akışı bozmaz
+                AppLogger.DebugLog($"⚠️ AutoRejectOtherPendingOffersAsync hatası: {ex.Message}");
             }
         }
 
@@ -350,6 +423,7 @@ namespace KamPay.Services
                 if (transaction.BuyerId != currentUserId && transaction.SellerId != currentUserId)
                     return ServiceResult<string>.FailureResult("Bu işleme erişim yetkiniz yok");
 
+                // ✅ Mevcut conversation varsa ve hâlâ aktifse direkt döndür
                 if (!string.IsNullOrEmpty(transaction.ConversationId))
                 {
                     try
@@ -370,6 +444,8 @@ namespace KamPay.Services
 
                 var otherUserId = transaction.BuyerId == currentUserId ? transaction.SellerId : transaction.BuyerId;
 
+                // ✅ FAZ 1 FIX: Kullanıcı çifti + ProductId bazında conversation ara
+                // Aynı iki kullanıcı arasında farklı ürünler için farklı conversation oluşturulur.
                 var existingConversations1 = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OrderBy("User1Id").EqualTo(currentUserId)
@@ -377,7 +453,8 @@ namespace KamPay.Services
 
                 var existingWithOtherUser = existingConversations1
                     .FirstOrDefault(c => c.Object != null && c.Object.IsActive &&
-                                        (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId));
+                                        (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId) &&
+                                        c.Object.ProductId == transaction.ProductId); // ✅ ProductId filtresi eklendi
 
                 if (existingWithOtherUser == null)
                 {
@@ -388,7 +465,8 @@ namespace KamPay.Services
 
                     existingWithOtherUser = existingConversations2
                         .FirstOrDefault(c => c.Object != null && c.Object.IsActive &&
-                                            (c.Object.User1Id == otherUserId || c.Object.User2Id == otherUserId));
+                                            (c.Object.User1Id == otherUserId || c.Object.User2Id == otherUserId) &&
+                                            c.Object.ProductId == transaction.ProductId); // ✅ ProductId filtresi eklendi
                 }
 
                 if (existingWithOtherUser != null)
@@ -399,6 +477,7 @@ namespace KamPay.Services
                     return ServiceResult<string>.SuccessResult(existingWithOtherUser.Key, "Mevcut konuşma bulundu");
                 }
 
+                // ✅ FAZ 1 FIX: Yeni conversation'a ProductId, ProductTitle ve ProductThumbnail set et
                 var conversation = new Conversation
                 {
                     ConversationId = Guid.NewGuid().ToString(),
@@ -412,7 +491,11 @@ namespace KamPay.Services
                     LastMessageTime = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    IsActive = true
+                    IsActive = true,
+                    // ✅ YENİ: Ürün bilgilerini conversation'a bağla
+                    ProductId = transaction.ProductId,
+                    ProductTitle = transaction.ProductTitle,
+                    ProductThumbnail = transaction.ProductThumbnailUrl
                 };
 
                 await _firebaseClient.Child(Constants.ConversationsCollection).Child(conversation.ConversationId).PutAsync(conversation);
@@ -430,7 +513,7 @@ namespace KamPay.Services
                 await AddSystemMessageAsync(conversation.ConversationId,
                     $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n📝 Görüşme başlatıldı{priceInfo}{exchangeInfo}");
 
-                AppLogger.DebugLog($"✅ Yeni konuşma oluşturuldu: {conversation.ConversationId}");
+                AppLogger.DebugLog($"✅ Yeni konuşma oluşturuldu: {conversation.ConversationId} (Ürün: {transaction.ProductTitle})");
                 return ServiceResult<string>.SuccessResult(conversation.ConversationId, "Konuşma başlatıldı");
             }
             catch (Exception ex)

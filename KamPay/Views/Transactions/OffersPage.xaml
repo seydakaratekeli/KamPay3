@@ -23,18 +23,18 @@
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
-                                    <converters:AllTrueConverter x:Key="AllTrueConverter"/>
+             <converters:AllTrueConverter x:Key="AllTrueConverter"/>
             <converters:IsCurrentUserConverter x:Key="IsCurrentUserConverter"/>
             <converters:ProductTypeToEmojiConverter x:Key="ProductTypeToEmojiConverter"/>
             <converters:IsNegotiatingConverter x:Key="IsNegotiatingConverter"/>
-            <!-- ✅ YENİ CONVERTER'LAR -->
             <converters:PaymentPendingConverter x:Key="PaymentPendingConverter"/>
             <converters:PaymentPaidConverter x:Key="PaymentPaidConverter"/>
             <converters:IsDonationConverter x:Key="IsDonationConverter"/>
             <converters:AnyTrueConverter x:Key="AnyTrueConverter"/>
-            <!-- ✅ YENİ: Pazarlık durum metni converter'ı -->
             <converters:NegotiationStatusTextConverter x:Key="NegotiationStatusTextConverter"/>
-            <!-- ✅ YENİ: Pazarlık onaylama converter'ı -->
+            <converters:NegotiationTimerColorConverter x:Key="NegotiationTimerColorConverter"/>
+            <converters:NegotiationStatusTextConverter x:Key="NegotiationTimerTextConverter"/>
+
             <converters:CanAcceptNegotiationConverter x:Key="CanAcceptNegotiationConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -213,14 +213,43 @@
                                         </Grid>
 
                                         <Border IsVisible="{Binding IsNegotiating}"
-                                                StrokeShape="RoundRectangle 12"
-                                                StrokeThickness="0"
-                                                BackgroundColor="{StaticResource AccentOrange}"
-                                                Padding="12">
-                                            <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
-                                                   TextColor="White"
-                                                   FontSize="13"
-                                                   FontAttributes="Bold"/>
+        StrokeShape="RoundRectangle 12"
+        StrokeThickness="0"
+        BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}"
+        Padding="12">
+                                            <VerticalStackLayout Spacing="4">
+
+                                                <!-- Pazarlık durumu metni (fiyatlar + kalan süre) -->
+                                                <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
+               TextColor="White"
+               FontSize="13"
+               FontAttributes="Bold"/>
+
+                                                <!-- ✅ FAZ 7: Tur sayısı ve süre özeti satırı -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <Label Grid.Column="0"
+                   FontSize="11"
+                   TextColor="White"
+                   Opacity="0.85">
+                                                        <Label.FormattedText>
+                                                            <FormattedString>
+                                                                <Span Text="Tur: "/>
+                                                                <Span Text="{Binding NegotiationRoundCount}" FontAttributes="Bold"/>
+                                                                <Span Text=" / 10"/>
+                                                            </FormattedString>
+                                                        </Label.FormattedText>
+                                                    </Label>
+
+                                                    <!-- Son 2 saatte veya dolmuşsa saat ikonu kırmızı olur (renk converter'dan geliyor) -->
+                                                    <Label Grid.Column="1"
+                   FontSize="11"
+                   TextColor="White"
+                   Opacity="0.9"
+                   HorizontalOptions="End"
+                   FontAttributes="Bold"
+                   Text="{Binding ., Converter={StaticResource NegotiationTimerTextConverter}, ConverterParameter=TimeOnly}"/>
+                                                </Grid>
+                                            </VerticalStackLayout>
                                         </Border>
 
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">

@@ -17,7 +17,7 @@ namespace KamPay.Services
     {
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
-        private readonly TransactionCrudService _crudService; // Konuşma yardımcıları için
+        private readonly TransactionCrudService _crudService;
 
         public TransactionNegotiationService(
             FirebaseClient firebaseClient,
@@ -62,6 +62,15 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // ✅ FAZ 2: Sıra kontrolü — alıcı üst üste teklif gönderemesin
+                // isInitialRequest=true ise ilk talep, sıra kontrolü atlanır
+                if (!isInitialRequest && !string.IsNullOrEmpty(transaction.LastActionBy) &&
+                    transaction.LastActionBy == currentUserId)
+                {
+                    return ServiceResult<bool>.FailureResult(
+                        "Karşı tarafın yanıtını beklemeniz gerekiyor. Üst üste teklif gönderemezsiniz.");
+                }
+
                 var canContinueCheck = NegotiationRules.CanContinueNegotiation(
                     transaction.NegotiationRoundCount, transaction.NegotiationStartedAt);
                 if (!canContinueCheck.IsValid)
@@ -72,12 +81,11 @@ namespace KamPay.Services
                     return ServiceResult<bool>.FailureResult(priceCheck.ErrorMessage);
 
                 transaction.ProposedPriceByBuyer = proposedPrice;
-                // ✅ BUG-1 FIX: Liste fiyatı talebi ise (isInitialRequest=true) pazarlık BAŞLATMA.
-                // Gerçek pazarlık teklifi ise (isInitialRequest=false) IsNegotiating=true kalır.
                 transaction.IsNegotiating = !isInitialRequest;
-                // Liste fiyatı için QuotedPrice'ı hemen ayarla (Blok 1 koşulu QuotedPrice > 0 bekler)
+
                 if (isInitialRequest)
                     transaction.QuotedPrice = proposedPrice;
+
                 transaction.LastNegotiationDate = DateTime.UtcNow;
 
                 if (!transaction.NegotiationStartedAt.HasValue)
@@ -85,12 +93,15 @@ namespace KamPay.Services
 
                 transaction.NegotiationRoundCount++;
 
+                // ✅ FAZ 2: Son hareketi yapan kişiyi güncelle
+                transaction.LastActionBy = currentUserId;
+
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
                     .Child(transactionId)
                     .PutAsync(transaction);
 
-                AppLogger.DebugLog($"✅ Fiyat teklifi kaydedildi: {proposedPrice:N2}₺ (Tur: {transaction.NegotiationRoundCount})");
+                AppLogger.DebugLog($"✅ Fiyat teklifi kaydedildi: {proposedPrice:N2}₺ (Tur: {transaction.NegotiationRoundCount}, LastActionBy: {currentUserId})");
 
                 string notificationTitle = isInitialRequest ? "💰 Satın Alma İsteği" : "💰 Yeni Fiyat Teklifi";
                 string notificationMessage = isInitialRequest
@@ -117,7 +128,8 @@ namespace KamPay.Services
                         currentUserId, transaction.BuyerName, transaction.TransactionId, "Propose");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"Fiyat teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
+                return ServiceResult<bool>.SuccessResult(true,
+                    $"Fiyat teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
             }
             catch (Exception ex)
             {
@@ -154,6 +166,14 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // ✅ FAZ 2: Sıra kontrolü — satıcı da üst üste karşı teklif gönderemesin
+                if (!string.IsNullOrEmpty(transaction.LastActionBy) &&
+                    transaction.LastActionBy == currentUserId)
+                {
+                    return ServiceResult<bool>.FailureResult(
+                        "Karşı tarafın yanıtını beklemeniz gerekiyor. Üst üste teklif gönderemezsiniz.");
+                }
+
                 var canContinue = NegotiationRules.CanContinueNegotiation(
                     transaction.NegotiationRoundCount, transaction.NegotiationStartedAt);
                 if (!canContinue.IsValid)
@@ -173,12 +193,15 @@ namespace KamPay.Services
 
                 transaction.NegotiationRoundCount++;
 
+                // ✅ FAZ 2: Son hareketi yapan kişiyi güncelle
+                transaction.LastActionBy = currentUserId;
+
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
                     .Child(transactionId)
                     .PutAsync(transaction);
 
-                AppLogger.DebugLog($"✅ Karşı teklif kaydedildi: {counterOffer:N2}₺ (Tur: {transaction.NegotiationRoundCount})");
+                AppLogger.DebugLog($"✅ Karşı teklif kaydedildi: {counterOffer:N2}₺ (Tur: {transaction.NegotiationRoundCount}, LastActionBy: {currentUserId})");
 
                 await _notificationService.CreateNotificationAsync(new Notification
                 {
@@ -197,7 +220,8 @@ namespace KamPay.Services
                         counterOffer, currentUserId, transaction.SellerName, transaction.TransactionId, "CounterOffer");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"Karşı teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
+                return ServiceResult<bool>.SuccessResult(true,
+                    $"Karşı teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
             }
             catch (Exception ex)
             {
@@ -238,6 +262,14 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // ✅ FAZ 2: Sıra kontrolü
+                if (!string.IsNullOrEmpty(transaction.LastActionBy) &&
+                    transaction.LastActionBy == currentUserId)
+                {
+                    return ServiceResult<bool>.FailureResult(
+                        "Karşı tarafın yanıtını beklemeniz gerekiyor. Üst üste teklif gönderemezsiniz.");
+                }
+
                 var canContinue = NegotiationRules.CanContinueNegotiation(
                     transaction.NegotiationRoundCount, transaction.NegotiationStartedAt);
                 if (!canContinue.IsValid)
@@ -255,6 +287,7 @@ namespace KamPay.Services
                     transaction.NegotiationStartedAt = DateTime.UtcNow;
 
                 transaction.NegotiationRoundCount++;
+                transaction.LastActionBy = currentUserId; // ✅ FAZ 2
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -281,7 +314,8 @@ namespace KamPay.Services
                         $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"Nakit teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
+                return ServiceResult<bool>.SuccessResult(true,
+                    $"Nakit teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
             }
             catch (Exception ex)
             {
@@ -318,6 +352,14 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // ✅ FAZ 2: Sıra kontrolü
+                if (!string.IsNullOrEmpty(transaction.LastActionBy) &&
+                    transaction.LastActionBy == currentUserId)
+                {
+                    return ServiceResult<bool>.FailureResult(
+                        "Karşı tarafın yanıtını beklemeniz gerekiyor. Üst üste teklif gönderemezsiniz.");
+                }
+
                 var canContinue = NegotiationRules.CanContinueNegotiation(
                     transaction.NegotiationRoundCount, transaction.NegotiationStartedAt);
                 if (!canContinue.IsValid)
@@ -335,6 +377,7 @@ namespace KamPay.Services
                     transaction.NegotiationStartedAt = DateTime.UtcNow;
 
                 transaction.NegotiationRoundCount++;
+                transaction.LastActionBy = currentUserId; // ✅ FAZ 2
 
                 await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -363,7 +406,8 @@ namespace KamPay.Services
                         $"📊 Pazarlık Turu: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds}");
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, $"Karşı teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
+                return ServiceResult<bool>.SuccessResult(true,
+                    $"Karşı teklifiniz gönderildi (Tur: {transaction.NegotiationRoundCount}/{NegotiationRules.MaxNegotiationRounds})");
             }
             catch (Exception ex)
             {
@@ -376,7 +420,15 @@ namespace KamPay.Services
         //  ORTAK PAZARLIK METODU
         // ─────────────────────────────────────────────
 
-        /// <summary>Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas)</summary>
+        /// <summary>
+        /// Anlaşılan fiyat/tutarı kabul et (Hem Satış Hem Takas).
+        ///
+        /// ✅ FAZ 3 — Role-aware davranış:
+        ///   • Alıcı kabul ederse  → IsNegotiating=false, Status=Pending kalır.
+        ///     Satıcıya "son onayını ver" bildirimi gönderilir.
+        ///   • Satıcı kabul ederse → Direkt RespondToOfferAsync(accept=true) gibi davranır,
+        ///     transaction Accepted'a geçer ve QR oluşumu için RespondToOfferAsync çağrılır.
+        /// </summary>
         public async Task<ServiceResult<bool>> AcceptNegotiatedPriceAsync(
             string transactionId,
             string currentUserId)
@@ -403,55 +455,126 @@ namespace KamPay.Services
                     transaction.QuotedPrice = agreedAmount;
 
                 transaction.IsNegotiating = false;
-                // ✅ BUG-2 FIX: Status=Accepted YAPMA.
-                // Status Pending kalır → satıcı RespondToOfferAsync ile son onayı verir.
-                // Bu sayede QR kod oluşturma ve ürün rezervasyonu adımları ÇALIŞIR.
-
-                var acceptedBy = transaction.BuyerId == currentUserId ? "Alıcı" : "Satıcı";
-                decimal? originalPrice = transaction.Type == ProductType.Satis ? transaction.Price : null;
-
-                var negotiationSummary = NegotiationRules.GetNegotiationSummary(
-                    transaction.NegotiationRoundCount, transaction.NegotiationStartedAt, originalPrice, agreedAmount);
-                negotiationSummary += $"👤 Kabul Eden: {acceptedBy}\n";
-                negotiationSummary += $"✅ Durum: Onaylandı - Ödeme yapılabilir\n";
-
-                transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n") + negotiationSummary;
                 transaction.UpdatedAt = DateTime.UtcNow;
 
-                await _firebaseClient
-                    .Child(Constants.TransactionsCollection)
-                    .Child(transactionId)
-                    .PutAsync(transaction);
+                // ✅ FAZ 3: Kim kabul ediyor?
+                bool isAcceptedByBuyer = transaction.BuyerId == currentUserId;
 
-                await _notificationService.CreateNotificationAsync(new Notification
+                if (isAcceptedByBuyer)
                 {
-                    UserId = transaction.SellerId,
-                    Type = NotificationType.TransactionUpdate,
-                    Title = "💰 Pazarlık Tamamlandı",
-                    Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ teklifinizi kabul etti. Teklifler sayfasından son onayınızı verin.",
-                    ActionUrl = nameof(Views.OffersPage)
-                });
+                    // ── ALICI KABUL ETTİ ──
+                    // Status Pending kalır → Satıcı RespondToOfferAsync ile son onayı verir.
+                    // QR oluşturma ve ürün rezervasyonu satıcı onayında yapılır.
 
-                await _notificationService.CreateNotificationAsync(new Notification
-                {
-                    UserId = transaction.BuyerId,
-                    Type = NotificationType.TransactionUpdate,
-                    Title = "✅ Fiyat Onaylandı",
-                    Message = $"'{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ fiyatında anlaştınız. Satıcının son onayı bekleniyor.",
-                    ActionUrl = nameof(Views.OffersPage)
-                });
+                    var negotiationSummary = NegotiationRules.GetNegotiationSummary(
+                        transaction.NegotiationRoundCount, transaction.NegotiationStartedAt,
+                        transaction.Type == ProductType.Satis ? transaction.Price : null, agreedAmount);
+                    negotiationSummary += "👤 Kabul Eden: Alıcı\n";
+                    negotiationSummary += "⏳ Durum: Satıcının son onayı bekleniyor\n";
 
-                if (!string.IsNullOrEmpty(transaction.ConversationId))
-                {
-                    await _crudService.AddNegotiationMessageAsync(
-                        transaction.ConversationId,
-                        $"✅ [{transaction.ProductTitle} - Satış]\nTeklifi kabul etti.\nAnlaşılan Fiyat: {agreedAmount:N2} ₺",
-                        agreedAmount, currentUserId,
-                        currentUserId == transaction.BuyerId ? transaction.BuyerName : transaction.SellerName,
-                        transaction.TransactionId, "Accept");
+                    transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n")
+                        + negotiationSummary;
+
+                    await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .Child(transactionId)
+                        .PutAsync(transaction);
+
+                    // ✅ FAZ 3: Satıcıya role-aware bildirim — "son onayını ver"
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = transaction.SellerId,
+                        Type = NotificationType.TransactionUpdate,
+                        Title = "💰 Alıcı Fiyatı Kabul Etti",
+                        Message = $"{transaction.BuyerName}, '{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ teklifinizi kabul etti. Teklifler sayfasından son onayınızı verin.",
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+
+                    // ✅ FAZ 3: Alıcıya "satıcıyı bekle" bildirimi
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = transaction.BuyerId,
+                        Type = NotificationType.TransactionUpdate,
+                        Title = "✅ Teklifiniz İletildi",
+                        Message = $"'{transaction.ProductTitle}' için {transaction.QuotedPrice:N2}₺ fiyatında anlaştınız. Satıcının son onayı bekleniyor.",
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+
+                    if (!string.IsNullOrEmpty(transaction.ConversationId))
+                    {
+                        await _crudService.AddNegotiationMessageAsync(
+                            transaction.ConversationId,
+                            $"✅ [{transaction.ProductTitle} - Satış]\nAlıcı teklifi kabul etti.\nAnlaşılan Fiyat: {agreedAmount:N2} ₺\n⏳ Satıcının son onayı bekleniyor...",
+                            agreedAmount, currentUserId, transaction.BuyerName,
+                            transaction.TransactionId, "Accept");
+                    }
+
+                    return ServiceResult<bool>.SuccessResult(true,
+                        $"✅ {agreedAmount:N2}₺ fiyatı kabul edildi! Satıcının onayı bekleniyor.");
                 }
+                else
+                {
+                    // ── SATICI KABUL ETTİ ──
+                    // Satıcı "Kabul Et"e basarsa pazarlık biter, direkt Accepted'a geçer.
+                    // RespondToOfferAsync akışını taklit eder: QR oluşturma + bildirimler.
 
-                return ServiceResult<bool>.SuccessResult(true, $"✅ {agreedAmount:N2}₺ fiyatında anlaştınız! Artık ödeme yapabilirsiniz.");
+                    var negotiationSummary = NegotiationRules.GetNegotiationSummary(
+                        transaction.NegotiationRoundCount, transaction.NegotiationStartedAt,
+                        transaction.Type == ProductType.Satis ? transaction.Price : null, agreedAmount);
+                    negotiationSummary += "👤 Kabul Eden: Satıcı\n";
+                    negotiationSummary += "✅ Durum: Onaylandı - Ödeme yapılabilir\n";
+
+                    transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n")
+                        + negotiationSummary;
+
+                    // Satıcı kabul ederse direkt RespondToOfferAsync'e yönlendir
+                    // (QR oluşturma + ürün rezervasyonu + atomik güncelleme orada)
+                    await _firebaseClient
+                        .Child(Constants.TransactionsCollection)
+                        .Child(transactionId)
+                        .PutAsync(transaction);
+
+                    if (!string.IsNullOrEmpty(transaction.ConversationId))
+                    {
+                        await _crudService.AddNegotiationMessageAsync(
+                            transaction.ConversationId,
+                            $"✅ [{transaction.ProductTitle} - Satış]\nSatıcı teklifi kabul etti.\nAnlaşılan Fiyat: {agreedAmount:N2} ₺\n🎉 Ödeme adımına geçebilirsiniz!",
+                            agreedAmount, currentUserId, transaction.SellerName,
+                            transaction.TransactionId, "SellerAccept");
+                    }
+
+                    // Satıcının kabul etmesi = RespondToOfferAsync(accept=true) ile eşdeğer
+                    // QR oluşturma ve ürün rezervasyonu için orijinal akışa yönlendir
+                    var respondResult = await _crudService.RespondToOfferAsync(transactionId, accept: true);
+
+                    if (!respondResult.Success)
+                    {
+                        AppLogger.DebugLog($"⚠️ Satıcı kabul sonrası RespondToOffer hatası: {respondResult.Message}");
+                        // Hata olsa bile transaction güncellendi, devam et
+                    }
+
+                    // ✅ FAZ 3: Her iki tarafa da "anlaşıldı" bildirimi
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = transaction.BuyerId,
+                        Type = NotificationType.OfferAccepted,
+                        Title = "🎉 Anlaşma Sağlandı!",
+                        Message = $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatında anlaştınız. Ödeme yapabilirsiniz.",
+                        ActionUrl = nameof(Views.PaymentPage)
+                    });
+
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = transaction.SellerId,
+                        Type = NotificationType.TransactionUpdate,
+                        Title = "✅ Pazarlık Tamamlandı",
+                        Message = $"'{transaction.ProductTitle}' için {agreedAmount:N2}₺ fiyatında anlaştınız. Alıcının ödemesini bekliyorsunuz.",
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+
+                    return ServiceResult<bool>.SuccessResult(true,
+                        $"✅ {agreedAmount:N2}₺ fiyatında anlaşıldı! Alıcı ödeme yapabilir.");
+                }
             }
             catch (Exception ex)
             {

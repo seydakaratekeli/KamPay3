@@ -210,7 +210,7 @@ namespace KamPay.ViewModels
             {
                 if (token.IsCancellationRequested) return;
 
-                Debug.WriteLine("ğŸ“¸ Snapshot yÃ¼kleniyor...");
+                Debug.WriteLine("📸 Snapshot yükleniyor...");
 
                 var snapshot = await _firebaseClient
                     .Child(Constants.TransactionsCollection)
@@ -219,7 +219,7 @@ namespace KamPay.ViewModels
                 if (token.IsCancellationRequested) return;
 
                 var userOffers = snapshot
-                    .Where(s => s.Object != null && 
+                    .Where(s => s.Object != null &&
                                (s.Object.SellerId == userId || s.Object.BuyerId == userId) &&
                                !(s.Key != null && s.Key.StartsWith("service_")))
                     .Select(s =>
@@ -230,6 +230,9 @@ namespace KamPay.ViewModels
                     })
                     .OrderByDescending(t => t.CreatedAt)
                     .ToList();
+
+                // ✅ FAZ 7: Süresi dolmuş pazarlıkları arka planda iptal et (UI'ı bloke etmez)
+                _ = Task.Run(() => CheckAndExpireNegotiationsAsync(userOffers));
 
                 if (!userOffers.Any())
                 {
@@ -242,7 +245,7 @@ namespace KamPay.ViewModels
                             IsSkeletonVisible = false;
                             IsRefreshing = false;
                             UpdateHasOffers();
-                            Debug.WriteLine("âœ… Snapshot yÃ¼klendi â€” teklif yok.");
+                            Debug.WriteLine("✅ Snapshot yüklendi — teklif yok.");
                         }
                     });
                     return;
@@ -283,13 +286,13 @@ namespace KamPay.ViewModels
                         IsSkeletonVisible = false;
                         IsRefreshing = false;
                         UpdateHasOffers();
-                        Debug.WriteLine($"âœ… Snapshot yÃ¼klendi â€” {userOffers.Count} teklif bulundu.");
+                        Debug.WriteLine($"✅ Snapshot yüklendi — {userOffers.Count} teklif bulundu.");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"âš ï¸ Snapshot yÃ¼klenirken hata: {ex.Message}");
+                Debug.WriteLine($"⚠️ Snapshot yüklenirken hata: {ex.Message}");
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsLoading = false;
@@ -906,6 +909,62 @@ namespace KamPay.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+        /// <summary>
+        /// ✅ FAZ 7: Süresi dolmuş aktif pazarlıkları otomatik iptal eder.
+        /// LoadInitialSnapshotAsync sonrası arka planda çalışır, UI'ı bloke etmez.
+        /// Sadece IsNegotiating=true ve 48 saati geçmiş transaction'ları işler.
+        /// </summary>
+        private async Task CheckAndExpireNegotiationsAsync(List<Transaction> transactions)
+        {
+            try
+            {
+                var expiredNegotiations = transactions
+                    .Where(t =>
+                        t.IsNegotiating &&
+                        t.Status == TransactionStatus.Pending &&
+                        KamPay.Helpers.NegotiationRules.IsNegotiationExpired(t.NegotiationStartedAt))
+                    .ToList();
+
+                if (!expiredNegotiations.Any()) return;
+
+                Debug.WriteLine($"⏰ FAZ 7: {expiredNegotiations.Count} süresi dolmuş pazarlık bulundu, iptal ediliyor...");
+
+                foreach (var transaction in expiredNegotiations)
+                {
+                    try
+                    {
+                        // Pazarlığı durdur ama transaction'ı iptal etme — sadece IsNegotiating=false yap
+                        // Status Pending kalır, taraflar hâlâ kabul/red yapabilir
+                        transaction.IsNegotiating = false;
+                        transaction.UpdatedAt = DateTime.UtcNow;
+                        transaction.NegotiationNotes +=
+                            (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n") +
+                            $"⏰ Pazarlık süresi doldu ({KamPay.Helpers.NegotiationRules.NegotiationTimeoutHours} saat). " +
+                            $"[{DateTime.UtcNow:dd.MM.yyyy HH:mm}]";
+
+                        await _firebaseClient
+                            .Child(Constants.TransactionsCollection)
+                            .Child(transaction.TransactionId)
+                            .PutAsync(transaction);
+
+                        // Bildirim gönderme: _transactionService üzerinden yapılamıyorsa
+                        // INotificationService'i OffersViewModel'e inject ederek kullanabilirsiniz.
+                        // Şimdilik yalnızca Firebase güncellemesi yeterlidir;
+                        // bildirim TransactionNegotiationService içinden zaten gönderildi.
+
+                        Debug.WriteLine($"✅ FAZ 7: Süresi dolmuş pazarlık durduruldu: {transaction.TransactionId} ({transaction.ProductTitle})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"⚠️ FAZ 7: Expire işlemi başarısız ({transaction.TransactionId}): {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"⚠️ FAZ 7: CheckAndExpireNegotiationsAsync hatası: {ex.Message}");
             }
         }
 

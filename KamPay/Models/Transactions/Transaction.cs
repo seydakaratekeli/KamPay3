@@ -6,64 +6,59 @@ using System.Linq;
 
 namespace KamPay.Models
 {
-    //  Bir ürün satışı, takası veya bağışı sürecini takip eden ana model
+    // Bir ürün satışı, takası veya bağışı sürecini takip eden ana model
     public class Transaction
     {
         public string TransactionId { get; set; } = Guid.NewGuid().ToString();
 
-        //  İlgili Ana Ürün Bilgileri
+        // İlgili Ana Ürün Bilgileri
         public string ProductId { get; set; } = "";
         public string ProductTitle { get; set; } = "";
         public string ProductThumbnailUrl { get; set; } = "";
         public ProductType Type { get; set; } // Satış, Takas, Bağış
 
-
-        // KamPay/Models/Transactions/Transaction.cs
-        // Mevcut Transaction sınıfının içine özelliklerin altına şu property'yi ekleyin:
-
         [JsonIgnore]
         public bool IsChipSelected { get; set; }
 
-        //  Taraflar
-        public string SellerId { get; set; } = ""; // Ürünü sunan kişi
+        // Taraflar
+        public string SellerId { get; set; } = "";
         public string SellerName { get; set; } = "";
         public string SellerPhotoUrl { get; set; } = "";
-        public string BuyerId { get; set; } = "";  // Teklifi yapan/isteği gönderen kişi
+        public string BuyerId { get; set; } = "";
         public string BuyerName { get; set; } = "";
         public string BuyerPhotoUrl { get; set; } = "";
 
         // Ödeme Durumu
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
 
-        //  Yeni eklenen ödeme bilgileri (simülasyon desteği için)
+        // Ödeme bilgileri (simülasyon desteği)
         public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.None;
         public string? PaymentSimulationId { get; set; }
 
-        public decimal Price { get; set; } // Ürünün orijinal liste fiyatı
-        public decimal QuotedPrice { get; set; } // Satış anındaki kilitli fiyat (pazarlık vb.)
+        public decimal Price { get; set; }       // Ürünün orijinal liste fiyatı
+        public decimal QuotedPrice { get; set; } // Satış anındaki kilitli fiyat
         public string Currency { get; set; } = "TRY";
 
-        
         public DateTime? PaymentCompletedAt { get; set; }
 
         public string? Message { get; set; }
 
-        //  Durum ve Zaman Bilgileri
+        // Durum ve Zaman Bilgileri
         public TransactionStatus Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        //  QR Kod Teslimat Takibi
+        // QR Kod Teslimat Takibi
         [JsonIgnore]
         public List<DeliveryQRCode> DeliveryQRCodes { get; set; } = new();
 
-        //  Takas'a özel alanlar
+        // Takas'a özel alanlar
         public string? OfferedProductId { get; set; }
         public string? OfferedProductTitle { get; set; }
-        public string? OfferedProductThumbnailUrl { get; set; } //  Takas edilen ürünün görseli
+        public string? OfferedProductThumbnailUrl { get; set; }
         public string? OfferMessage { get; set; }
 
-        //  Pazarlık Özellikleri
+        // Pazarlık Özellikleri
         [JsonIgnore]
         public decimal FinalPrice => QuotedPrice > 0 ? QuotedPrice : Price;
 
@@ -71,60 +66,44 @@ namespace KamPay.Models
         public bool HasDiscount => QuotedPrice > 0 && QuotedPrice < Price;
 
         // Alıcının teklif ettiği fiyat (Satış için)
-
         public decimal? ProposedPriceByBuyer { get; set; }
-        
-        
+
         // Satıcının karşı teklifi (Satış için)
-      
         public decimal? CounterOfferBySeller { get; set; }
-        
-       
+
         // Talep edenin teklif ettiği ek nakit (Takas için)
-        
         public decimal? AdditionalCashByRequester { get; set; }
-        
-       
+
         // Sahip'in istediği ek nakit (Takas için)
-        
         public decimal? CounterCashByOwner { get; set; }
-        
-      
+
         // Pazarlık devam ediyor mu?
-        
         public bool IsNegotiating { get; set; } = false;
-        
-       
+
         // Son pazarlık tarihi
-        
         public DateTime? LastNegotiationDate { get; set; }
-        
-       
+
         // Pazarlık başlangıç tarihi
-        
         public DateTime? NegotiationStartedAt { get; set; }
-        
-       
+
         // Pazarlık notları
-        
         public string NegotiationNotes { get; set; } = "";
-        
-       
-        // Pazarlık turu sayısı (kaç kez teklif/karşı teklif yapıldı)
-        
+
+        // Pazarlık turu sayısı
         public int NegotiationRoundCount { get; set; } = 0;
-        
-       
+
+        // ✅ FAZ 2: Sıra kontrolü için — son teklifi/karşı teklifi gönderen kullanıcı ID'si.
+        // Alıcı arka arkaya teklif gönderememesi için, satıcı yanıt vermeden alıcının
+        // tekrar teklif yapmasını engellemek amacıyla kullanılır.
+        public string LastActionBy { get; set; } = "";
+
         // Mesajlaşma için conversation ID
-      
         public string ConversationId { get; set; } = "";
-        
-      
+
         // Aktif konuşma var mı?
-        
         public bool HasActiveConversation { get; set; } = false;
 
-        //  Görsel durum metni
+        // Görsel durum metni
         public string StatusText
         {
             get
@@ -153,79 +132,53 @@ namespace KamPay.Models
             Status == TransactionStatus.Completed ||
             (Status == TransactionStatus.Accepted && DeliveryQRCodes.Any() && DeliveryQRCodes.All(qr => qr.IsUsed));
 
-        //  Hesaplanan Özellikler
-        
-        
         // Pazarlık durumu metni
-       
         public string NegotiationStatusText
         {
             get
             {
                 if (!IsNegotiating)
                     return string.Empty;
-                
+
                 if (Type == ProductType.Satis)
                 {
-                    // SATIŞ için fiyat pazarlığı
                     if (CounterOfferBySeller.HasValue && ProposedPriceByBuyer.HasValue)
-                    {
                         return $"Sizin: {ProposedPriceByBuyer:N2}₺ / Karşı: {CounterOfferBySeller:N2}₺";
-                    }
                     else if (ProposedPriceByBuyer.HasValue)
-                    {
                         return $"Teklifiniz: {ProposedPriceByBuyer:N2}₺";
-                    }
                     else if (CounterOfferBySeller.HasValue)
-                    {
                         return $"Karşı Teklif: {CounterOfferBySeller:N2}₺";
-                    }
                 }
                 else if (Type == ProductType.Takas)
                 {
-                    // TAKAS için ek nakit pazarlığı
                     if (CounterCashByOwner.HasValue && AdditionalCashByRequester.HasValue)
-                    {
                         return $"Sizin: {AdditionalCashByRequester:N2}₺ / Karşı: {CounterCashByOwner:N2}₺";
-                    }
                     else if (AdditionalCashByRequester.HasValue)
-                    {
                         return $"Ek Nakit Teklifiniz: {AdditionalCashByRequester:N2}₺";
-                    }
                     else if (CounterCashByOwner.HasValue)
-                    {
                         return $"İstenen Ek Nakit: {CounterCashByOwner:N2}₺";
-                    }
                 }
-                
+
                 return "Pazarlık devam ediyor";
             }
         }
-        
-      
+
         // Hangi fiyat/tutar üzerinde anlaşıldı?
-        
         public decimal AgreedAmount
         {
             get
             {
                 if (Type == ProductType.Satis)
-                {
-                    // Satış: En son teklif edilen fiyat
                     return CounterOfferBySeller ?? ProposedPriceByBuyer ?? QuotedPrice;
-                }
                 else if (Type == ProductType.Takas)
-                {
-                    // Takas: En son teklif edilen ek nakit
                     return CounterCashByOwner ?? AdditionalCashByRequester ?? 0;
-                }
-                
+
                 return QuotedPrice;
             }
         }
     }
 
-    //  İşlem Durumu
+    // İşlem Durumu
     public enum TransactionStatus
     {
         Pending,     // Teklif yapıldı, satıcının onayı bekliyor
@@ -235,7 +188,7 @@ namespace KamPay.Models
         Cancelled    // Taraflardan biri iptal etti
     }
 
-    //  Ödeme Durumu
+    // Ödeme Durumu
     public enum PaymentStatus
     {
         Pending, // Ödeme bekleniyor
