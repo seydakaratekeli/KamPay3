@@ -17,6 +17,13 @@ namespace KamPay.Models
         public string ProductThumbnailUrl { get; set; } = "";
         public ProductType Type { get; set; } // Satış, Takas, Bağış
 
+
+        // KamPay/Models/Transactions/Transaction.cs
+        // Mevcut Transaction sınıfının içine özelliklerin altına şu property'yi ekleyin:
+
+        [JsonIgnore]
+        public bool IsChipSelected { get; set; }
+
         //  Taraflar
         public string SellerId { get; set; } = ""; // Ürünü sunan kişi
         public string SellerName { get; set; } = "";

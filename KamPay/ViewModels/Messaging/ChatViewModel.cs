@@ -43,6 +43,9 @@ namespace KamPay.ViewModels
         private bool _isListenerActive = false;
         private string? _activeConversationId;
         private bool _initialLoadComplete = false;
+        private IDisposable? _typingSubscription;
+        private System.Timers.Timer? _typingDebounceTimer;
+        private const string NullTransactionFilter = "__ALL__";
 
         [ObservableProperty]
         private string conversationId = string.Empty;
@@ -92,6 +95,42 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private bool hasActiveTransactions;
 
+        private string _selectedFilterTransactionId = NullTransactionFilter;
+        public string SelectedFilterTransactionId
+        {
+            get => _selectedFilterTransactionId;
+            set
+            {
+                if (SetProperty(ref _selectedFilterTransactionId, value))
+                {
+                    OnPropertyChanged(nameof(FilteredMessages));
+                }
+            }
+        }
+
+        public IEnumerable<Message> FilteredMessages =>
+            SelectedFilterTransactionId == NullTransactionFilter
+                ? Messages
+                : Messages.Where(m =>
+                    m.RelatedTransactionId == SelectedFilterTransactionId ||
+                    m.Type == MessageType.System ||
+                    m.Type == MessageType.Negotiation);
+
+        private bool _isOtherUserTyping;
+        public bool IsOtherUserTyping
+        {
+            get => _isOtherUserTyping;
+            set => SetProperty(ref _isOtherUserTyping, value);
+        }
+
+        private bool _showAllChipSelected = true;
+        public bool ShowAllChipSelected
+        {
+            get => _showAllChipSelected;
+            set => SetProperty(ref _showAllChipSelected, value);
+        }
+
+
         private bool _isOtherUserOnline;
         public bool IsOtherUserOnline
         {
@@ -130,6 +169,8 @@ namespace KamPay.ViewModels
             _cacheCleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
             _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
             _cacheCleanupTimer.Start();
+            Messages.CollectionChanged += (_, _) =>
+    OnPropertyChanged(nameof(FilteredMessages));
         }
 
         private void OnUserProfileChanged(object? sender, User updatedUser)
@@ -322,6 +363,7 @@ namespace KamPay.ViewModels
 
                 // 4Ã¯Â¸ÂÃ¢Æ’Â£ REALTIME: Listener baÃ…Å¸lat (yeni mesajlar iÃƒÂ§in)
                 StartListeningToMessages();
+                StartListeningToTyping();
             }
             catch (Exception ex)
             {
@@ -330,6 +372,7 @@ namespace KamPay.ViewModels
                 _initialLoadComplete = false;
                 IsLoading = false;
                 StartListeningToMessages();
+                StartListeningToTyping();
             }
         }
 
@@ -391,6 +434,7 @@ namespace KamPay.ViewModels
 
             // Listener'Ã„Â± yeniden baÃ…Å¸lat
             StartListeningToMessages();
+            StartListeningToTyping();
 
             KamPay.Helpers.AppLogger.DebugLog($"Ã¢Å“â€¦ Cache'den geri yÃƒÂ¼klendi: {Messages.Count} mesaj");
         }
@@ -423,6 +467,7 @@ namespace KamPay.ViewModels
 
                 _initialLoadComplete = false;
                 StartListeningToMessages();
+                StartListeningToTyping();
 
                 await Task.Delay(500);
             }
@@ -434,6 +479,39 @@ namespace KamPay.ViewModels
             {
                 IsRefreshing = false;
             }
+        }
+
+        [RelayCommand]
+        private void SelectAllMessages()
+        {
+            SelectedFilterTransactionId = NullTransactionFilter;
+            ShowAllChipSelected = true;
+
+            foreach (var t in ActiveTransactions)
+                t.IsChipSelected = false;
+
+            OnPropertyChanged(nameof(FilteredMessages));
+        }
+
+        [RelayCommand]
+        private Task SelectTransactionChipAsync(Transaction transaction)
+        {
+            if (transaction == null) return Task.CompletedTask;
+
+            ActiveTransaction = transaction;
+            HasActiveTransaction = true;
+            selectedTransactionId = transaction.TransactionId ?? string.Empty;
+
+            SelectedFilterTransactionId = transaction.TransactionId ?? NullTransactionFilter;
+            ShowAllChipSelected = false;
+
+            foreach (var t in ActiveTransactions)
+                t.IsChipSelected = (t.TransactionId == transaction.TransactionId);
+
+            OnPropertyChanged(nameof(FilteredMessages));
+            WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
+
+            return Task.CompletedTask;
         }
 
         //  : 200ms buffer + batch processing
@@ -496,6 +574,52 @@ namespace KamPay.ViewModels
                     });
 
             _isListenerActive = true;
+        }
+
+        private void StartListeningToTyping()
+        {
+            if (Conversation == null || _currentUser == null) return;
+
+            var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
+            if (string.IsNullOrEmpty(otherUserId)) return;
+
+            _typingSubscription = _firebaseClient
+                .Child("typing")
+                .Child(ConversationId)
+                .Child(otherUserId)
+                .AsObservable<bool>()
+                .Subscribe(e =>
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        IsOtherUserTyping = e.Object;
+                        if (IsOtherUserTyping)
+                            WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
+                    });
+                });
+        }
+
+        partial void OnMessageTextChanged(string value)
+        {
+            if (_currentUser == null || string.IsNullOrEmpty(ConversationId)) return;
+
+            _ = _firebaseClient
+                .Child("typing")
+                .Child(ConversationId)
+                .Child(_currentUser.UserId)
+                .PutAsync(true);
+
+            _typingDebounceTimer?.Stop();
+            _typingDebounceTimer = new System.Timers.Timer(3000) { AutoReset = false };
+            _typingDebounceTimer.Elapsed += async (_, _) =>
+            {
+                await _firebaseClient
+                    .Child("typing")
+                    .Child(ConversationId)
+                    .Child(_currentUser.UserId)
+                    .PutAsync(false);
+            };
+            _typingDebounceTimer.Start();
         }
 
         //  Batch processing
@@ -1000,6 +1124,20 @@ namespace KamPay.ViewModels
                 _isListenerActive = false;
                 _initialLoadComplete = false;
 
+                _typingSubscription?.Dispose();
+                _typingSubscription = null;
+                _typingDebounceTimer?.Stop();
+                _typingDebounceTimer?.Dispose();
+                _typingDebounceTimer = null;
+
+                if (_currentUser != null && !string.IsNullOrEmpty(ConversationId))
+                {
+                    _ = _firebaseClient
+                          .Child("typing")
+                          .Child(ConversationId)
+                          .Child(_currentUser.UserId)
+                          .PutAsync(false);
+                }
                 // Ã¢Å“â€¦ EKLEME: Timer temizliÃ„Å¸i
                 _cacheCleanupTimer?.Stop();
                 _cacheCleanupTimer?.Dispose();
