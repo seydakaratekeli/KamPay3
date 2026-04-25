@@ -53,6 +53,9 @@ namespace KamPay.Models
         public string? NegotiationAction { get; set; }
         public string? RelatedTransactionId { get; set; }
 
+        // ✅ Pazarlık teklifinin hala geçerli olup olmadığını tutar
+        public bool IsActiveOffer { get; set; } = true;
+
         // ✅ [ObservableProperty] — ChatViewModel'de temp mesajdan gerçek mesaja geçişte UI anında değişir
         [ObservableProperty]
         [property: JsonIgnore]

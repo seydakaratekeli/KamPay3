@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,7 +75,8 @@ namespace KamPay.Services.Messaging
                     return ServiceResult<Message>.FailureResult("GÃ¶rsel URL'i boÅŸ olamaz.");
                 }
 
-                var conversationResult = await GetOrCreateConversationAsync(sender.UserId, request.ReceiverId, request.ProductId);
+                string conversationType = string.IsNullOrEmpty(request.ProductId) ? "General" : "Negotiation";
+                var conversationResult = await GetOrCreateConversationAsync(sender.UserId, request.ReceiverId, request.ProductId, conversationType);
                 if (!conversationResult.Success || conversationResult.Data == null)
                 {
                     return ServiceResult<Message>.FailureResult("KonuÅŸma oluÅŸturulamadÄ± veya bulunamadÄ±.");
@@ -220,7 +221,7 @@ namespace KamPay.Services.Messaging
             }
         }
 
-        public async Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null)
+        public async Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null, string conversationType = "General")
         {
             try
             {
@@ -234,7 +235,8 @@ namespace KamPay.Services.Messaging
                     .FirstOrDefault(c =>
                         c.IsActive &&
                         ((c.User1Id == user1Id && c.User2Id == user2Id) ||
-                         (c.User1Id == user2Id && c.User2Id == user1Id)));
+                         (c.User1Id == user2Id && c.User2Id == user1Id)) &&
+                        (c.ConversationType ?? "General") == conversationType);
 
                 if (existing != null)
                 {
@@ -271,7 +273,8 @@ namespace KamPay.Services.Messaging
                     User2Name = user2.FullName ?? string.Empty,
                     User2PhotoUrl = user2.ProfileImageUrl ?? string.Empty,
                     LastMessage = "KonuÅŸma baÅŸladÄ±",
-                    LastMessageTime = DateTime.UtcNow
+                    LastMessageTime = DateTime.UtcNow,
+                    ConversationType = conversationType
                 };
 
                 if (!string.IsNullOrEmpty(productId))

@@ -270,7 +270,9 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                     new TransactionNegotiationService(
                         sp.GetRequiredService<Firebase.Database.FirebaseClient>(),
                         sp.GetRequiredService<INotificationService>(),
-                        sp.GetRequiredService<TransactionCrudService>()
+                        sp.GetRequiredService<TransactionCrudService>(),
+                        sp.GetRequiredService<IProductService>() // ✅ 4. Parametre (IProductService) EKLENDİ
+
                     ));
                 builder.Services.AddSingleton<TransactionPaymentService>(sp =>
                     new TransactionPaymentService(

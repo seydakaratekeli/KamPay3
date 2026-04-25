@@ -1,37 +1,52 @@
-using KamPay.ViewModels;
+ï»¿using KamPay.ViewModels;
 using Microsoft.Maui.Controls;
 
 namespace KamPay.Views
 {
     public partial class LoginPage : ContentPage
     {
+        private readonly LoginViewModel _vm;
+
         public LoginPage(LoginViewModel vm)
         {
             InitializeComponent();
+            _vm = vm;
             BindingContext = vm;
+
+            // âœ… EmailEntry Return tuÅŸuna basÄ±nca PasswordEntry'ye odaklan
+            // XAML'deki FocusPasswordCommand binding yerine code-behind Ã§Ã¶zÃ¼mÃ¼
+            EmailEntry.Completed += (s, e) => PasswordEntry.Focus();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            
-            // Küçük bir gecikme ile animasyonları başlat
+
+            // KÃ¼Ã§Ã¼k gecikme ile animasyonlarÄ± baÅŸlat
             await Task.Delay(100);
             await AnimatePageAsync();
         }
 
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            // Sayfa kapanÄ±nca animasyonu durdur (bellek sÄ±zÄ±ntÄ±sÄ±nÄ± Ã¶nle)
+            this.AbortAnimation("Circle1Rotation");
+            this.AbortAnimation("Circle2Rotation");
+        }
+
         private async Task AnimatePageAsync()
         {
-            // Reset initial states
+            // BaÅŸlangÄ±Ã§ durumlarÄ±nÄ± sÄ±fÄ±rla
             LogoSection.Opacity = 0;
             LogoSection.TranslationY = -50;
             LoginFormCard.Opacity = 0;
             LoginFormCard.TranslationY = 50;
 
-            // Animate background circles (sürekli dönme)
+            // Arka plan dairelerini dÃ¶ndÃ¼r
             AnimateBackgroundCircles();
 
-            // Animate logo section
+            // Logo animasyonu
             await Task.WhenAll(
                 LogoSection.FadeTo(1, 800, Easing.CubicOut),
                 LogoSection.TranslateTo(0, 0, 800, Easing.CubicOut)
@@ -39,7 +54,7 @@ namespace KamPay.Views
 
             await Task.Delay(200);
 
-            // Animate login form card
+            // Form kartÄ± animasyonu
             await Task.WhenAll(
                 LoginFormCard.FadeTo(1, 600, Easing.CubicOut),
                 LoginFormCard.TranslateTo(0, 0, 600, Easing.CubicOut)
@@ -48,32 +63,25 @@ namespace KamPay.Views
 
         private void AnimateBackgroundCircles()
         {
-            // Sürekli dönen animasyonlar için Task.Run kullan
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        // MainThread'de animasyon çalıştır
-                        await MainThread.InvokeOnMainThreadAsync(async () =>
-                        {
-                            await Task.WhenAll(
-                                Circle1.RotateTo(360, 20000, Easing.Linear),
-                                Circle2.RotateTo(-360, 25000, Easing.Linear)
-                            );
+            // âœ… Task.Run + while(true) yerine Animation.Commit kullan
+            // Bu yÃ¶ntem UI thread'i bloke etmez, sayfa kapanÄ±nca da temiz durur
+            var animation1 = new Animation(v => Circle1.Rotation = v, 0, 360);
+            animation1.Commit(
+                owner: Circle1,
+                name: "Circle1Rotation",
+                length: 20000,
+                easing: Easing.Linear,
+                repeat: () => true
+            );
 
-                            Circle1.Rotation = 0;
-                            Circle2.Rotation = 0;
-                        });
-                    }
-                    catch
-                    {
-                        // Sayfa kapatılırsa veya hata olursa döngüyü kır
-                        break;
-                    }
-                }
-            });
+            var animation2 = new Animation(v => Circle2.Rotation = v, 0, -360);
+            animation2.Commit(
+                owner: Circle2,
+                name: "Circle2Rotation",
+                length: 25000,
+                easing: Easing.Linear,
+                repeat: () => true
+            );
         }
     }
 }

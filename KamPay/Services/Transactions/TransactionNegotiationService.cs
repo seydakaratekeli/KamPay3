@@ -5,7 +5,7 @@ using KamPay.Models;
 using KamPay.Views;
 using System;
 using System.Threading.Tasks;
-
+using KamPay.Services.Products; // <-- YENİ EKLENEN
 namespace KamPay.Services
 {
     /// <summary>
@@ -19,14 +19,19 @@ namespace KamPay.Services
         private readonly INotificationService _notificationService;
         private readonly TransactionCrudService _crudService;
 
+        // Tertemiz oldu
+        private readonly IProductService _productService;
+
         public TransactionNegotiationService(
             FirebaseClient firebaseClient,
             INotificationService notificationService,
-            TransactionCrudService crudService)
+            TransactionCrudService crudService,
+            IProductService productService) // Tertemiz oldu
         {
             _firebaseClient = firebaseClient;
             _notificationService = notificationService;
             _crudService = crudService;
+            _productService = productService;
         }
 
         // ─────────────────────────────────────────────
@@ -479,7 +484,19 @@ namespace KamPay.Services
                         .Child(Constants.TransactionsCollection)
                         .Child(transactionId)
                         .PutAsync(transaction);
-
+                   
+// ✅ Alıcı kabul edince → ürünü "Satış Sürecinde" olarak işaretle
+// (Satıcı onaylamadan önce bile ürünün rezerve edildiği görünsün)
+try
+{
+   await _productService.MarkAsReservedAsync(transaction.ProductId, true); 
+   AppLogger.DebugLog($"✅ Ürün rezerve edildi (alıcı kabul): {transaction.ProductId}");
+}
+catch (Exception reserveEx)
+{
+    AppLogger.DebugLog($"⚠️ Rezervasyon işlemi başarısız: {reserveEx.Message}");
+    // Ana akışı bozmaz
+}
                     // ✅ FAZ 3: Satıcıya role-aware bildirim — "son onayını ver"
                     await _notificationService.CreateNotificationAsync(new Notification
                     {

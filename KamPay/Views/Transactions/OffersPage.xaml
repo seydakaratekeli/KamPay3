@@ -33,8 +33,9 @@
             <converters:AnyTrueConverter x:Key="AnyTrueConverter"/>
             <converters:NegotiationStatusTextConverter x:Key="NegotiationStatusTextConverter"/>
             <converters:NegotiationTimerColorConverter x:Key="NegotiationTimerColorConverter"/>
-            <converters:NegotiationStatusTextConverter x:Key="NegotiationTimerTextConverter"/>
-
+            <converters:NegotiationTimerTextConverter x:Key="NegotiationTimerTextConverter"/>
+            <converters:IsMyTurnConverter x:Key="IsMyTurnConverter"/>
+            <converters:NegotiationRoundsLeftConverter x:Key="NegotiationRoundsLeftConverter"/>
             <converters:CanAcceptNegotiationConverter x:Key="CanAcceptNegotiationConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -217,41 +218,55 @@
         StrokeThickness="0"
         BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}"
         Padding="12">
-                                            <VerticalStackLayout Spacing="4">
+                                            <VerticalStackLayout Spacing="6">
 
-                                                <!-- Pazarlık durumu metni (fiyatlar + kalan süre) -->
                                                 <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
                TextColor="White"
                FontSize="13"
                FontAttributes="Bold"/>
 
-                                                <!-- ✅ FAZ 7: Tur sayısı ve süre özeti satırı -->
                                                 <Grid ColumnDefinitions="*,Auto">
-                                                    <Label Grid.Column="0"
-                   FontSize="11"
-                   TextColor="White"
-                   Opacity="0.85">
-                                                        <Label.FormattedText>
-                                                            <FormattedString>
-                                                                <Span Text="Tur: "/>
-                                                                <Span Text="{Binding NegotiationRoundCount}" FontAttributes="Bold"/>
-                                                                <Span Text=" / 10"/>
-                                                            </FormattedString>
-                                                        </Label.FormattedText>
-                                                    </Label>
 
-                                                    <!-- Son 2 saatte veya dolmuşsa saat ikonu kırmızı olur (renk converter'dan geliyor) -->
-                                                    <Label Grid.Column="1"
-                   FontSize="11"
-                   TextColor="White"
-                   Opacity="0.9"
-                   HorizontalOptions="End"
-                   FontAttributes="Bold"
-                   Text="{Binding ., Converter={StaticResource NegotiationTimerTextConverter}, ConverterParameter=TimeOnly}"/>
+                                                    <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                                        <Label FontSize="11" TextColor="White" Opacity="0.9">
+                                                            <Label.FormattedText>
+                                                                <FormattedString>
+                                                                    <Span Text="Teklif turu: "/>
+                                                                    <Span Text="{Binding NegotiationRoundCount}" FontAttributes="Bold"/>
+                                                                    <Span Text=" / 10"/>
+                                                                </FormattedString>
+                                                            </Label.FormattedText>
+                                                        </Label>
+
+                                                        <HorizontalStackLayout Spacing="3">
+                                                            <ProgressBar Progress="{Binding NegotiationRoundCount, Converter={StaticResource NegotiationRoundsLeftConverter}}"
+                                 ProgressColor="White"
+                                 BackgroundColor="#40FFFFFF"
+                                 HeightRequest="6"
+                                 WidthRequest="140"/>
+
+                                                            <Label Text="{Binding ., Converter={StaticResource NegotiationTimerTextConverter}}"                           FontSize="10"
+                           TextColor="White"
+                           Opacity="0.85"
+                           VerticalOptions="Center"/>
+                                                        </HorizontalStackLayout>
+                                                    </VerticalStackLayout>
+
+                                                    <Border Grid.Column="1"
+                    StrokeShape="RoundRectangle 8"
+                    BackgroundColor="#30FFFFFF"
+                    Padding="8,4">
+
+                                                        <Label Text="{Binding ., Converter={StaticResource IsMyTurnConverter}}"
+                       FontSize="11"
+                       FontAttributes="Bold"
+                       TextColor="White"/>
+                                                    </Border>
+
                                                 </Grid>
                                             </VerticalStackLayout>
                                         </Border>
-
+                                        
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
 
@@ -285,15 +300,12 @@
                                                 </Button>
 
                                                 <Button Text="💰"
-                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SendCounterOfferCommand}"
-                                                        CommandParameter="{Binding .}"
-                                                        BackgroundColor="{StaticResource WarningLightBg}"
-                                                        TextColor="{StaticResource AccentOrange}"
-                                                        WidthRequest="45"
-                                                        HeightRequest="45"
-                                                        CornerRadius="22"
-                                                        FontSize="18"
-                                                        Padding="0">
+        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.SendCounterOfferCommand}"
+        CommandParameter="{Binding .}"
+        BackgroundColor="{StaticResource WarningLightBg}"
+        TextColor="{StaticResource AccentOrange}"
+        WidthRequest="45" HeightRequest="45"
+        CornerRadius="22" FontSize="18" Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
@@ -303,8 +315,16 @@
                                                             </MultiBinding>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
+                                                    <!-- ✅ YENI: Sıra satıcıda değilse disable et (alıcı son teklifi yaptıysa satıcı karşı teklif veremez) -->
+                                                    <Button.IsEnabled>
+                                                        <Binding Path="." Converter="{StaticResource IsMyTurnConverter}"
+                 ConverterParameter="bool"/>
+                                                    </Button.IsEnabled>
+                                                    <Button.Opacity>
+                                                        <Binding Path="." Converter="{StaticResource IsMyTurnConverter}"
+                 ConverterParameter="opacity"/>
+                                                    </Button.Opacity>
                                                 </Button>
-
                                                 <Button Text="✓"
                                                         Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.AcceptOfferCommand}"
                                                         CommandParameter="{Binding .}"
@@ -428,14 +448,57 @@
                                         </Grid>
 
                                         <Border IsVisible="{Binding IsNegotiating}"
-                                                StrokeShape="RoundRectangle 12"
-                                                StrokeThickness="0"
-                                                BackgroundColor="{StaticResource AccentOrange}"
-                                                Padding="12">
-                                            <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
-                                                   TextColor="White"
-                                                   FontSize="13"
-                                                   FontAttributes="Bold"/>
+        StrokeShape="RoundRectangle 12"
+        StrokeThickness="0"
+        BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}"
+        Padding="12">
+                                            <VerticalStackLayout Spacing="6">
+
+                                                <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
+               TextColor="White"
+               FontSize="13"
+               FontAttributes="Bold"/>
+
+                                                <Grid ColumnDefinitions="*,Auto">
+
+                                                    <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                                        <Label FontSize="11" TextColor="White" Opacity="0.9">
+                                                            <Label.FormattedText>
+                                                                <FormattedString>
+                                                                    <Span Text="Teklif turu: "/>
+                                                                    <Span Text="{Binding NegotiationRoundCount}" FontAttributes="Bold"/>
+                                                                    <Span Text=" / 10"/>
+                                                                </FormattedString>
+                                                            </Label.FormattedText>
+                                                        </Label>
+
+                                                        <HorizontalStackLayout Spacing="3">
+                                                            <ProgressBar Progress="{Binding NegotiationRoundCount, Converter={StaticResource NegotiationRoundsLeftConverter}}"
+                                 ProgressColor="White"
+                                 BackgroundColor="#40FFFFFF"
+                                 HeightRequest="6"
+                                 WidthRequest="140"/>
+
+                                                            <Label Text="{Binding ., Converter={StaticResource NegotiationTimerTextConverter}}"                           FontSize="10"
+                           TextColor="White"
+                           Opacity="0.85"
+                           VerticalOptions="Center"/>
+                                                        </HorizontalStackLayout>
+                                                    </VerticalStackLayout>
+
+                                                    <Border Grid.Column="1"
+                    StrokeShape="RoundRectangle 8"
+                    BackgroundColor="#30FFFFFF"
+                    Padding="8,4">
+
+                                                        <Label Text="{Binding ., Converter={StaticResource IsMyTurnConverter}}"
+                       FontSize="11"
+                       FontAttributes="Bold"
+                       TextColor="White"/>
+                                                    </Border>
+
+                                                </Grid>
+                                            </VerticalStackLayout>
                                         </Border>
 
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
@@ -471,15 +534,12 @@
                                                 </Button>
 
                                                 <Button Text="💰"
-                                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposePriceCommand}"
-                                                        CommandParameter="{Binding .}"
-                                                        BackgroundColor="{StaticResource WarningLightBg}"
-                                                        TextColor="{StaticResource AccentOrange}"
-                                                        WidthRequest="45"
-                                                        HeightRequest="45"
-                                                        CornerRadius="22"
-                                                        FontSize="18"
-                                                        Padding="0">
+        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposePriceCommand}"
+        CommandParameter="{Binding .}"
+        BackgroundColor="{StaticResource WarningLightBg}"
+        TextColor="{StaticResource AccentOrange}"
+        WidthRequest="45" HeightRequest="45"
+        CornerRadius="22" FontSize="18" Padding="0">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
@@ -489,8 +549,16 @@
                                                             </MultiBinding>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
+                                                    <!-- ✅ YENI: Sıra alıcıda değilse disable -->
+                                                    <Button.IsEnabled>
+                                                        <Binding Path="." Converter="{StaticResource IsMyTurnConverter}"
+                 ConverterParameter="bool"/>
+                                                    </Button.IsEnabled>
+                                                    <Button.Opacity>
+                                                        <Binding Path="." Converter="{StaticResource IsMyTurnConverter}"
+                 ConverterParameter="opacity"/>
+                                                    </Button.Opacity>
                                                 </Button>
-
                                                 <Button Text="💵"
                                                         Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ProposeAdditionalCashCommand}"
                                                         CommandParameter="{Binding .}"

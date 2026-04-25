@@ -26,6 +26,9 @@
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
             <converters:CanNegotiateConverter x:Key="CanNegotiateConverter" />
+            <converters:ProductToStatusTextConverter x:Key="ProductToStatusTextConverter" />
+            <converters:ProductToStatusColorConverter x:Key="ProductToStatusColorConverter" />
+            <converters:ProductToPriceTextConverter x:Key="ProductToPriceTextConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -96,17 +99,31 @@
                                        FontSize="12"
                                        VerticalOptions="Center"/>
 
-                                    <Border BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
-                                        StrokeShape="RoundRectangle 10"
-                                        StrokeThickness="0"
-                                        Padding="12,6"
-                                        HorizontalOptions="End">
-                                        <Label Text="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}"
-                                           TextColor="White"
-                                           FontSize="11"
-                                           FontAttributes="Bold"
-                                           TextTransform="Uppercase"/>
-                                    </Border>
+                                    <HorizontalStackLayout HorizontalOptions="End" Spacing="8">
+                                        <!-- Status Badge (Satış Sürecinde vb.) -->
+                                        <Border IsVisible="{Binding Product, Converter={StaticResource ProductToStatusTextConverter}, ConverterParameter=HasValue}"
+                                                BackgroundColor="{Binding Product, Converter={StaticResource ProductToStatusColorConverter}}"
+                                                StrokeShape="RoundRectangle 10"
+                                                StrokeThickness="0"
+                                                Padding="12,6">
+                                            <Label Text="{Binding Product, Converter={StaticResource ProductToStatusTextConverter}}"
+                                                   TextColor="White"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextTransform="Uppercase"/>
+                                        </Border>
+
+                                        <Border BackgroundColor="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeColorConverter}}"
+                                            StrokeShape="RoundRectangle 10"
+                                            StrokeThickness="0"
+                                            Padding="12,6">
+                                            <Label Text="{Binding Product.Type, Converter={StaticResource ProductTypeToBadgeTextConverter}}"
+                                               TextColor="White"
+                                               FontSize="11"
+                                               FontAttributes="Bold"
+                                               TextTransform="Uppercase"/>
+                                        </Border>
+                                    </HorizontalStackLayout>
                                 </Grid>
 
                                 <Label Text="{Binding Product.Title}"

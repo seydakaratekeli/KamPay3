@@ -14,18 +14,19 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:IsPendingConverter x:Key="IsPendingConverter"/>
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
+            <!-- ✅ Tab renk converter'ı buraya da ekle -->
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <!-- ✅ DÜZELTME: 4 satır — Header, TabBar, SearchBar, İçerik -->
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
 
-        <!-- ✨ HEADER WITH GRADIENT BACKGROUND -->
+        <!-- SATIR 0: HEADER -->
         <Grid Grid.Row="0" RowDefinitions="Auto">
-            <!-- Gradient Background -->
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -35,33 +36,69 @@
                 </BoxView.Background>
             </BoxView>
 
-            <!-- Animated Background Circle -->
-            <Ellipse x:Name="Circle1" 
-                     WidthRequest="200" 
-                     HeightRequest="200"
-                     Fill="White"
-                     Opacity="0.05"
-                     HorizontalOptions="End"
-                     VerticalOptions="Start"
+            <Ellipse x:Name="Circle1"
+                     WidthRequest="200" HeightRequest="200"
+                     Fill="White" Opacity="0.05"
+                     HorizontalOptions="End" VerticalOptions="Start"
                      Margin="0,-80,-80,0"/>
 
-            <!-- Title -->
             <Grid Padding="20,50,20,20">
                 <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
-                    <Label Text="💬 Mesajlar" 
-                           FontSize="28" 
-                           FontAttributes="Bold" 
-                           TextColor="White" />
-                    <Label Text="Konuşmalarınız burada" 
-                           FontSize="13" 
-                           TextColor="White" 
-                           Opacity="0.9"/>
+                    <Label Text="💬 Mesajlar"
+                           FontSize="28" FontAttributes="Bold"
+                           TextColor="White"/>
+                    <Label Text="Konuşmalarınız burada"
+                           FontSize="13" TextColor="White" Opacity="0.9"/>
                 </VerticalStackLayout>
             </Grid>
         </Grid>
 
-        <!-- ARAMA ÇUBUĞU -->
-        <Grid Grid.Row="1" Padding="15,15,15,10" x:Name="SearchSection">
+        <!-- ✅ SATIR 1: TAB BAR (Sohbetler / Pazarlıklar) -->
+        <!-- HATA: Eskide Grid.Row="1" yoktu, kapsayıcı Grid içindeydi ve Row ataması eksikti -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              Padding="12,8" ColumnSpacing="8"
+              BackgroundColor="White">
+
+            <!-- Kişisel Sohbetler -->
+            <Border Grid.Column="0"
+                    StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                    HeightRequest="40"
+                    BackgroundColor="{Binding ShowPersonalChatsOnly,
+                        Converter={StaticResource BoolToColorConverter},
+                        ConverterParameter='{StaticResource Primary}|{StaticResource Background}'}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ExecuteShowPersonalChatsCommand}"/>
+                </Border.GestureRecognizers>
+                <Label Text="💬 Sohbetler"
+                       FontSize="13" FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                       TextColor="{Binding ShowPersonalChatsOnly,
+                           Converter={StaticResource BoolToColorConverter},
+                           ConverterParameter='White|{StaticResource Primary}'}"/>
+            </Border>
+
+            <!-- Pazarlık Sohbetleri -->
+            <Border Grid.Column="1"
+                    StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                    HeightRequest="40"
+                    BackgroundColor="{Binding ShowNegotiationChats,
+                        Converter={StaticResource BoolToColorConverter},
+                        ConverterParameter='{StaticResource AccentOrange}|{StaticResource Background}'}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ExecuteShowNegotiationChatsCommand}"/>
+                </Border.GestureRecognizers>
+                <Label Text="💰 Pazarlıklar"
+                       FontSize="13" FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                       TextColor="{Binding ShowNegotiationChats,
+                           Converter={StaticResource BoolToColorConverter},
+                           ConverterParameter='White|{StaticResource AccentOrange}'}"/>
+            </Border>
+        </Grid>
+
+        <!-- SATIR 2: ARAMA ÇUBUĞU -->
+        <Grid Grid.Row="2" Padding="15,10,15,8" x:Name="SearchSection">
             <Border StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     BackgroundColor="White"
@@ -84,52 +121,46 @@
             </Border>
         </Grid>
 
-        <!-- ANA İÇERİK -->
-        <Grid Grid.Row="2">
+        <!-- SATIR 3: ANA İÇERİK -->
+        <Grid Grid.Row="3">
 
-            <!-- REFRESH VIEW -->
             <RefreshView Command="{Binding RefreshConversationsCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
                          RefreshColor="{StaticResource Primary}"
                          IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
-                <CollectionView ItemsSource="{Binding Conversations}"
+                <!-- ✅ DÜZELTME: Tek seviye Grid, Tab bar zaten Row 1'de -->
+                <CollectionView ItemsSource="{Binding FilteredConversations}"
                                 SelectionMode="None"
                                 Margin="0,5,0,0">
 
-                    <!-- EMPTY VIEW -->
                     <CollectionView.EmptyView>
-                        <Grid VerticalOptions="Center" 
-                              HorizontalOptions="Center" 
-                              Padding="20">
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
                             <Border BackgroundColor="White"
                                     StrokeThickness="0"
                                     Padding="30"
                                     WidthRequest="280"
-                                    HeightRequest="240">
+                                    HeightRequest="200">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="20"/>
                                 </Border.StrokeShape>
                                 <Border.Shadow>
                                     <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                                 </Border.Shadow>
-                                <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Label Text="💬" FontSize="70" HorizontalTextAlignment="Center"/>
-                                    <Label Text="{extensions:Translate NoMessagesYet}" 
-                                           FontSize="16" 
-                                           TextColor="{StaticResource TextSecondary}" 
+                                <VerticalStackLayout Spacing="12"
+                                                     HorizontalOptions="Center"
+                                                     VerticalOptions="Center">
+                                    <Label Text="💬" FontSize="60" HorizontalTextAlignment="Center"/>
+                                    <Label Text="{Binding EmptyMessage}"
+                                           FontSize="16"
+                                           TextColor="{StaticResource TextSecondary}"
                                            HorizontalTextAlignment="Center"
                                            FontAttributes="Bold"/>
-                                    <Label Text="{extensions:Translate StartChatFromProduct}" 
-                                           FontSize="14"
-                                           TextColor="{StaticResource Primary}"
-                                           HorizontalTextAlignment="Center"/>
                                 </VerticalStackLayout>
                             </Border>
                         </Grid>
                     </CollectionView.EmptyView>
 
-                    <!-- ITEM TEMPLATE -->
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Conversation">
                             <Border StrokeShape="RoundRectangle 16"
@@ -142,20 +173,19 @@
                                 </Border.Shadow>
 
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer 
+                                    <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
-                                        CommandParameter="{Binding .}" />
+                                        CommandParameter="{Binding .}"/>
                                 </Border.GestureRecognizers>
 
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
 
                                     <!-- PROFİL FOTO -->
                                     <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
-                                        <ffimageloading:CachedImage 
-                                            Source="{Binding OtherUserPhotoUrl}" 
+                                        <ffimageloading:CachedImage
+                                            Source="{Binding OtherUserPhotoUrl}"
                                             Aspect="AspectFill"
-                                            HeightRequest="55" 
-                                            WidthRequest="55"
+                                            HeightRequest="55" WidthRequest="55"
                                             LoadingPlaceholder="person_icon.svg"
                                             ErrorPlaceholder="person_icon.svg"
                                             DownsampleToViewSize="True"
@@ -166,14 +196,11 @@
                                             </ffimageloading:CachedImage.Clip>
                                         </ffimageloading:CachedImage>
 
-                                        <!-- Online indicator (optional) -->
+                                        <!-- Online indicator -->
                                         <Border BackgroundColor="#4CAF50"
-                                                StrokeThickness="2"
-                                                Stroke="White"
-                                                WidthRequest="14"
-                                                HeightRequest="14"
-                                                HorizontalOptions="End"
-                                                VerticalOptions="End">
+                                                StrokeThickness="2" Stroke="White"
+                                                WidthRequest="14" HeightRequest="14"
+                                                HorizontalOptions="End" VerticalOptions="End">
                                             <Border.StrokeShape>
                                                 <RoundRectangle CornerRadius="7"/>
                                             </Border.StrokeShape>
@@ -181,37 +208,42 @@
                                     </Grid>
 
                                     <!-- KULLANICI BİLGİSİ -->
-                                    <VerticalStackLayout Grid.Column="1" 
-                                                         VerticalOptions="Center" 
-                                                         Spacing="4">
-                                        <Label Text="{Binding OtherUserName}" 
-                                               FontSize="16" 
-                                               FontAttributes="Bold" 
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         VerticalOptions="Center"
+                                                         Spacing="3">
+                                        <Label Text="{Binding OtherUserName}"
+                                               FontSize="16" FontAttributes="Bold"
                                                TextColor="{StaticResource TextPrimary}"
                                                LineBreakMode="TailTruncation"/>
 
-                                        <Label Text="{Binding ProductName}" FontSize="12" FontAttributes="Italic" TextColor="{StaticResource Primary}" LineBreakMode="TailTruncation"/>
+                                        <!-- ✅ Pazarlık sohbetinde ürün adını göster -->
+                                        <Label Text="{Binding ProductTitle}"
+                                               FontSize="12" FontAttributes="Italic"
+                                               TextColor="{StaticResource Primary}"
+                                               LineBreakMode="TailTruncation"
+                                               IsVisible="{Binding IsNegotiationConversation}"/>
+
                                         <Label Text="{Binding LastMessage}"
-                                               FontSize="14" 
+                                               FontSize="14"
                                                TextColor="{StaticResource TextSecondary}"
                                                LineBreakMode="TailTruncation"
                                                MaxLines="1"/>
                                     </VerticalStackLayout>
 
                                     <!-- ZAMAN & BADGE -->
-                                    <VerticalStackLayout Grid.Column="2" 
-                                                         VerticalOptions="Center" 
-                                                         HorizontalOptions="End" 
+                                    <VerticalStackLayout Grid.Column="2"
+                                                         VerticalOptions="Center"
+                                                         HorizontalOptions="End"
                                                          Spacing="8">
 
-                                        <Label Text="{Binding LastMessageTimeText}" 
-                                               FontSize="11" 
+                                        <Label Text="{Binding LastMessageTimeText}"
+                                               FontSize="11"
                                                TextColor="{StaticResource TextSecondary}"
                                                HorizontalOptions="End"/>
 
-                                        <Border BackgroundColor="{StaticResource Primary}" 
+                                        <Border BackgroundColor="{StaticResource Primary}"
                                                 StrokeThickness="0"
-                                                MinimumHeightRequest="22" 
+                                                MinimumHeightRequest="22"
                                                 MinimumWidthRequest="22"
                                                 Padding="6,2"
                                                 HorizontalOptions="End"
@@ -219,11 +251,10 @@
                                             <Border.StrokeShape>
                                                 <RoundRectangle CornerRadius="11"/>
                                             </Border.StrokeShape>
-                                            <Label Text="{Binding UnreadCount}" 
-                                                   TextColor="White" 
-                                                   FontSize="11" 
-                                                   FontAttributes="Bold"
-                                                   HorizontalOptions="Center" 
+                                            <Label Text="{Binding UnreadCount}"
+                                                   TextColor="White"
+                                                   FontSize="11" FontAttributes="Bold"
+                                                   HorizontalOptions="Center"
                                                    VerticalOptions="Center"/>
                                         </Border>
 
@@ -235,26 +266,27 @@
                 </CollectionView>
             </RefreshView>
 
-            <!-- LOADING EKRANI -->
-            <Grid IsVisible="{Binding IsLoading}" BackgroundColor="{StaticResource Background}" ZIndex="1100">
+            <!-- LOADING -->
+            <Grid IsVisible="{Binding IsLoading}"
+                  BackgroundColor="{StaticResource Background}"
+                  ZIndex="1100">
                 <Border BackgroundColor="White"
-                        WidthRequest="100"
-                        HeightRequest="100"
+                        WidthRequest="100" HeightRequest="100"
                         StrokeThickness="0"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center">
+                        HorizontalOptions="Center" VerticalOptions="Center">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="20"/>
                     </Border.StrokeShape>
                     <Border.Shadow>
                         <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,8"/>
                     </Border.Shadow>
-                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
-                        <ActivityIndicator IsRunning="True" 
+                    <VerticalStackLayout Spacing="10"
+                                         HorizontalOptions="Center"
+                                         VerticalOptions="Center">
+                        <ActivityIndicator IsRunning="True"
                                            Color="{StaticResource Primary}"
-                                           WidthRequest="40" 
-                                           HeightRequest="40"/>
-                        <Label Text="{extensions:Translate MessagesLoading}" 
+                                           WidthRequest="40" HeightRequest="40"/>
+                        <Label Text="{extensions:Translate MessagesLoading}"
                                TextColor="{StaticResource Primary}"
                                FontSize="13"/>
                     </VerticalStackLayout>
@@ -264,9 +296,3 @@
         </Grid>
     </Grid>
 </ContentPage>
-
-
-
-
-
-

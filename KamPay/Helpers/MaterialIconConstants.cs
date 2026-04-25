@@ -13,4 +13,6 @@ public static class MaterialIconConstants
     public const string Lightbulb = "\ue0f0";  // lightbulb (💡)
     public const string Warning = "\ue002";    // warning (⚠️)
     public const string Phone = "\ue32c";      // smartphone (📱)
+    public const string Visibility = "\ue8f4";
+    public const string VisibilityOff = "\ue645";
 }

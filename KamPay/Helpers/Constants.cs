@@ -1,4 +1,4 @@
-namespace KamPay.Helpers;
+﻿namespace KamPay.Helpers;
 
 public static class Constants
 {
@@ -6,27 +6,7 @@ public static class Constants
 
     public const string FirebaseRealtimeDbUrl = "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app/";
 
-    // 🌐 Merkezi API URL Yapılandırması 🌐
-    // Bilgisayarınızın IP'si değiştiğinde SADECE buradaki RealDeviceApiUrl kısmını güncelleyin!
-    public const string RealDeviceApiUrl = "http://192.168.1.5:5011"; // Kendi IP'niz
-    public const string EmulatorApiUrl = "http://10.0.2.2:5011"; // Android Emülatör IP'si
-    public const string LocalhostApiUrl = "http://localhost:5011"; // Windows vs.
-
-    // Uygulama genelinde kullanılacak olan adres:
-    public static string LocalApiBaseUrl
-    {
-        get
-        {
-#if ANDROID
-            // Emülatör kullanıyorsanız RealDeviceApiUrl yerine EmulatorApiUrl yazabilirsiniz
-            return RealDeviceApiUrl;
-#elif IOS
-            return RealDeviceApiUrl;
-#else
-            return LocalhostApiUrl;
-#endif
-        }
-    }
+   
 
     // üniversite e-posta domain kontrolü için
     public const string UniversityEmailDomain = "@bartin.edu.tr";

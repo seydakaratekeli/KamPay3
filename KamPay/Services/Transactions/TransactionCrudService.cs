@@ -571,6 +571,25 @@ namespace KamPay.Services
         {
             try
             {
+                // ✅ Eski teklifleri geçersiz kıl
+                var allMessages = await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(conversationId)
+                    .OnceAsync<Message>();
+
+                foreach (var msg in allMessages)
+                {
+                    if (msg.Object != null && msg.Object.RelatedTransactionId == transactionId && msg.Object.IsActiveOffer)
+                    {
+                        msg.Object.IsActiveOffer = false;
+                        await _firebaseClient
+                            .Child(Constants.MessagesCollection)
+                            .Child(conversationId)
+                            .Child(msg.Key)
+                            .PutAsync(msg.Object);
+                    }
+                }
+
                 var negotiationMessage = new Message
                 {
                     MessageId = Guid.NewGuid().ToString(),
@@ -584,7 +603,8 @@ namespace KamPay.Services
                     Type = MessageType.Negotiation,
                     ProposedPrice = proposedPrice,
                     RelatedTransactionId = transactionId,
-                    NegotiationAction = action
+                    NegotiationAction = action,
+                    IsActiveOffer = (action != "Accept" && action != "SellerAccept")
                 };
 
                 await _firebaseClient

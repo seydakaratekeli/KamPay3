@@ -946,18 +946,25 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private async Task ProposeOfferAsync(Message message)
         {
-            Transaction targetTransaction = ActiveTransaction;
+            Transaction? targetTransaction = null;
 
             if (message != null && !string.IsNullOrEmpty(message.RelatedTransactionId))
             {
-                var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
-                if (myOffersResult.Success && myOffersResult.Data != null)
+                // 1. Önce hem alıcı hem satıcı kayıtlarını barındıran yerel listede ara
+                targetTransaction = ActiveTransactions.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
+
+                // 2. Bulunamazsa servisten kendi tekliflerinizi kontrol et
+                if (targetTransaction == null && _currentUser != null)
                 {
-                    var specificTx = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
-                    if (specificTx != null)
-                        targetTransaction = specificTx;
+                    var myOffersResult = await _transactionService.GetMyOffersAsync(_currentUser.UserId);
+                    if (myOffersResult.Success && myOffersResult.Data != null)
+                        targetTransaction = myOffersResult.Data.FirstOrDefault(t => t.TransactionId == message.RelatedTransactionId);
                 }
             }
+
+            // 3. Hala bulunamadıysa (veya message null ise) seçili/ilk aktif işlemi kullan
+            if (targetTransaction == null)
+                targetTransaction = ActiveTransactions.FirstOrDefault() ?? ActiveTransaction;
 
             if (targetTransaction == null)
             {
@@ -965,6 +972,8 @@ namespace KamPay.ViewModels
                     "Aktif işlem (transaction) yüklenemedi. Lütfen sayfayı yenileyin veya tekrar girin.", "Tamam");
                 return;
             }
+
+            // ... Metodun geri kalanı aynı devam edecek
 
             // ✅ FAZ 4: ProductId cross-check — teklif doğru ürüne mi ait?
             if (Conversation != null &&

@@ -52,6 +52,11 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private string emptyMessage = "HenÃ¼z mesajÄ±nÄ±z yok";
+        [ObservableProperty]
+        private bool showPersonalChatsOnly = true; // Varsayılan: kişisel sohbetler
+
+        [ObservableProperty]
+        private bool showNegotiationChats = false;
 
         [ObservableProperty]
         private Conversation? selectedConversation;
@@ -99,6 +104,13 @@ namespace KamPay.ViewModels
                     });
                 }
             });
+
+            // Constructor (MessagesViewModel metodu) içine ekleyin:
+            Conversations.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(FilteredConversations));
+            };
+
         }
 
         private void OnUserProfileChanged(object? sender, User updatedUser)
@@ -187,7 +199,7 @@ namespace KamPay.ViewModels
                             var conversation = kvp.Value;
                             conversation.ConversationId = kvp.Key;
                             conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-                            conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
+                            conversation.UnreadCount = conversation.GetUnreadCountDb(_currentUser.UserId);
                             // Ä°lk yÃ¼klemede placeholder resim koy
                             conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
                             return conversation;
@@ -313,7 +325,7 @@ namespace KamPay.ViewModels
             }
 
             conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-            conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
+            conversation.UnreadCount = conversation.GetUnreadCountDb(_currentUser.UserId);
             conversation.OtherUserPhotoUrl = conversation.GetOtherUserPhotoUrl(_currentUser.UserId) ?? "person_icon.svg";
 
             var existingConvo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
@@ -420,7 +432,7 @@ namespace KamPay.ViewModels
 
                 // Temel bilgileri modelden al
                 conversation.OtherUserName = conversation.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-                conversation.UnreadCount = conversation.GetUnreadCount(_currentUser.UserId);
+                conversation.UnreadCount = conversation.GetUnreadCountDb(_currentUser.UserId);
 
                 //  : Profil FotoÄŸrafÄ±nÄ± Servisten Ã‡ek
                 try
@@ -505,7 +517,7 @@ namespace KamPay.ViewModels
             foreach (var freshConvo in freshData)
             {
                 freshConvo.OtherUserName = freshConvo.GetOtherUserName(_currentUser.UserId) ?? string.Empty;
-                freshConvo.UnreadCount = freshConvo.GetUnreadCount(_currentUser.UserId);
+                freshConvo.UnreadCount = freshConvo.GetUnreadCountDb(_currentUser.UserId);
 
                 //  âœ… FIX: Profil Resmini ve FullName'i Ã‡ek
                 try
@@ -548,6 +560,47 @@ namespace KamPay.ViewModels
             }
 
             SortConversationsInPlace();
+        }
+        // Filtrelenmiş conversation listesi
+        public IEnumerable<Conversation> FilteredConversations =>
+            showPersonalChatsOnly
+                ? Conversations.Where(c => !c.IsNegotiationConversation)
+                : Conversations.Where(c => c.IsNegotiationConversation);
+
+        // ─── 2) Partial void override (sınıf gövdesine ekle) ─────────────────
+
+        partial void OnShowPersonalChatsOnlyChanged(bool value)
+        {
+            OnPropertyChanged(nameof(FilteredConversations));
+        }
+
+        partial void OnShowNegotiationChatsChanged(bool value)
+        {
+            OnPropertyChanged(nameof(FilteredConversations));
+        }
+
+        // Conversations koleksiyonu değişince filtered'ı da güncelle
+        // (mevcut CollectionChanged aboneliğine ekle veya ayrı bir metot olarak bağla)
+        // Conversations.CollectionChanged += (_, _) => OnPropertyChanged(nameof(FilteredConversations));
+
+        // ─── 3) YENİ KomutLAR (sınıf gövdesine ekle) ─────────────────────────
+
+        [RelayCommand]
+        private void ExecuteShowPersonalChats()
+        {
+            ShowPersonalChatsOnly = true;
+            ShowNegotiationChats = false;
+            OnPropertyChanged(nameof(FilteredConversations));
+            EmptyMessage = FilteredConversations.Any() ? string.Empty : "Bu sekmede henüz mesajınız yok.";
+        }
+
+        [RelayCommand]
+        private void ExecuteShowNegotiationChats()
+        {
+            ShowPersonalChatsOnly = false;
+            ShowNegotiationChats = true;
+            OnPropertyChanged(nameof(FilteredConversations));
+            EmptyMessage = FilteredConversations.Any() ? string.Empty : "Bu sekmede henüz mesajınız yok.";
         }
 
         [RelayCommand]

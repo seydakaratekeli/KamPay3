@@ -104,7 +104,8 @@
             <converters:ProductToStatusTextConverter x:Key="ProductToStatusTextConverter"/>
             <converters:ProductToStatusColorConverter x:Key="ProductToStatusColorConverter"/>
             <converters:ProductToPriceTextConverter x:Key="ProductToPriceTextConverter"/>
-
+            <converters:IsMyTurnConverter x:Key="IsMyTurnConverter"/>
+            <converters:NegotiationRoundsLeftConverter x:Key="NegotiationRoundsLeftConverter"/>
             <!-- ═══════════════════════════════════════════════════════ -->
             <!--  ✅ FAZ 6 YENİ: Genel amaçlı fiyat format converter    -->
             <!--  Kullanım: {Binding Price, Converter={StaticResource PriceFormatConverter}} -->

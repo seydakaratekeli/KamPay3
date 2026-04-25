@@ -4,19 +4,20 @@ using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
 using Firebase.Database.Query;
 using Firebase.Database.Streaming;
+using KamPay.Converters;
 using KamPay.Helpers;
 using KamPay.Models;
 using KamPay.Services;
+using KamPay.Services.Auth;
+using KamPay.Services.Transactions;
 using KamPay.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Collections.Generic;
-using KamPay.Services.Auth;
-using KamPay.Services.Transactions;
 
 namespace KamPay.ViewModels
 {
@@ -1330,8 +1331,17 @@ namespace KamPay.ViewModels
                 if (string.IsNullOrEmpty(_currentUserId)) return;
 
                 IsLoading = true;
-                var result = await _transactionService.SendCounterOfferForSaleAsync(transaction.TransactionId, amount, _currentUserId);
+                // YENİ (servis öncesi istemci tarafı pre-validation):
+                var preValidation = NegotiationRuleExtensions.ValidateSellerCounterOffer(
+                    amount, transaction.Price, transaction.ProposedPriceByBuyer);
 
+                if (!preValidation.IsValid)
+                {
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Geçersiz Teklif", preValidation.ErrorMessage, "Tamam");
+                    return;
+                }
+
+                var result = await _transactionService.SendCounterOfferForSaleAsync(transaction.TransactionId, amount, _currentUserId);
                 if (result.Success)
                 {
                     await Shell.Current.CurrentPage.DisplayAlertAsync("âœ… BaÅŸarÄ±lÄ±", $"KarÅŸÄ± teklifiniz ({amount:N2}â‚º) alÄ±cÄ±ya iletildi!", "Tamam");

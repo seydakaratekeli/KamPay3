@@ -29,6 +29,8 @@ namespace KamPay.ViewModels
         [ObservableProperty] private bool rememberMe;
         [ObservableProperty]
         private bool isLoading;
+        [ObservableProperty]
+        private bool isPasswordHidden = true;
 
         [ObservableProperty]
         private string errorMessage = string.Empty;
@@ -200,6 +202,32 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
+
+        // 4) Komut (sınıf gövdesine):
+        [RelayCommand]
+        private void TogglePasswordVisibility()
+        {
+            IsPasswordHidden = !IsPasswordHidden;
+        }
+
+
+        // 2) PasswordToggleIcon computed property (sınıf gövdesine):
+        /// <summary>
+        /// MaterialIcons font ile göz ikonu.
+        /// IsPasswordHidden=true  → "visibility_off" ikonu (gizli)
+        /// IsPasswordHidden=false → "visibility" ikonu (görünür)
+        /// </summary>
+        public string PasswordToggleIcon =>
+            IsPasswordHidden
+                ? MaterialIconConstants.VisibilityOff   // "\ue645" veya projenizin sabitine göre
+                : MaterialIconConstants.Visibility;     // "\ue8f4"
+
+        // 3) partial void override — icon güncellemesi için:
+        partial void OnIsPasswordHiddenChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PasswordToggleIcon));
+        }
+
     }
 }
 

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -48,8 +48,8 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <!-- ✅ FAZ4: 5 satır — Header, Chips, Mesajlar, TypingIndicator, InputArea -->
-    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+    <!-- ✅ FAZ4: 6 satır — Header, Chips, Banner, Mesajlar, TypingIndicator, InputArea -->
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
 
         <!-- ✨ HEADER (Gradient + Profil) -->
         <Grid Grid.Row="0" RowDefinitions="Auto" x:Name="HeaderSection">
@@ -290,8 +290,26 @@
             <BoxView Grid.Row="1" HeightRequest="1" BackgroundColor="#E0E0E0"/>
         </Grid>
 
+        <!-- ✅ Kalan Tur Bilgisi Banner'ı -->
+        <Border Grid.Row="2"
+                IsVisible="{Binding HasActiveTransaction}"
+                BackgroundColor="#FFF3E0"
+                Padding="10,5"
+                StrokeThickness="0"
+                Margin="15,10,15,0"
+                StrokeShape="RoundRectangle 8">
+            <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
+                <Label Text="ℹ️" VerticalOptions="Center"/>
+                <Label Text="{Binding ActiveTransaction.RemainingRoundsText}" 
+                       FontSize="12" 
+                       TextColor="#F57C00" 
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+        </Border>
+
         <!-- ✨ MESAJ LİSTESİ -->
-        <RefreshView Grid.Row="2"
+        <RefreshView Grid.Row="3"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
                      RefreshColor="{StaticResource Primary}"
@@ -356,33 +374,35 @@
                                            HorizontalTextAlignment="Center"
                                            FontAttributes="Bold"/>
 
-                                    <!-- Butonlar: Sadece karşı tarafın tekliflerinde -->
-                                    <HorizontalStackLayout Spacing="10"
-                                                           HorizontalOptions="Center"
-                                                           Margin="0,5,0,0"
-                                                           IsVisible="{Binding IsSentByMe, Converter={StaticResource InvertedBoolConverter}}">
-                                        <Button Text="Kabul Et"
-                                                BackgroundColor="#4CAF50"
-                                                TextColor="White"
-                                                HeightRequest="36"
-                                                CornerRadius="18"
-                                                FontSize="12"
-                                                FontAttributes="Bold"
-                                                Padding="10,0"
-                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.AcceptOfferCommand}"
-                                                CommandParameter="{Binding .}"/>
+                                    <!-- Butonlar: Sadece karşı tarafın tekliflerinde ve aktif teklifse -->
+                                    <VerticalStackLayout IsVisible="{Binding IsActiveOffer}">
+                                        <HorizontalStackLayout Spacing="10"
+                                                               HorizontalOptions="Center"
+                                                               Margin="0,5,0,0"
+                                                               IsVisible="{Binding IsSentByMe, Converter={StaticResource InvertedBoolConverter}}">
+                                            <Button Text="Kabul Et"
+                                                    BackgroundColor="#4CAF50"
+                                                    TextColor="White"
+                                                    HeightRequest="36"
+                                                    CornerRadius="18"
+                                                    FontSize="12"
+                                                    FontAttributes="Bold"
+                                                    Padding="10,0"
+                                                    Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.AcceptOfferCommand}"
+                                                    CommandParameter="{Binding .}"/>
 
-                                        <Button Text="Karşı Teklif"
-                                                BackgroundColor="{StaticResource Primary}"
-                                                TextColor="White"
-                                                HeightRequest="36"
-                                                CornerRadius="18"
-                                                FontSize="12"
-                                                FontAttributes="Bold"
-                                                Padding="10,0"
-                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ProposeOfferCommand}"
-                                                CommandParameter="{Binding .}"/>
-                                    </HorizontalStackLayout>
+                                            <Button Text="Karşı Teklif"
+                                                    BackgroundColor="{StaticResource Primary}"
+                                                    TextColor="White"
+                                                    HeightRequest="36"
+                                                    CornerRadius="18"
+                                                    FontSize="12"
+                                                    FontAttributes="Bold"
+                                                    Padding="10,0"
+                                                    Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ProposeOfferCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
                                 </VerticalStackLayout>
                             </Border>
 
@@ -545,7 +565,7 @@
         </RefreshView>
 
         <!-- ✅ FAZ4: TYPING INDICATOR — WhatsApp-style "yazıyor..." balonu -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 x:Name="TypingIndicatorBorder"
                 IsVisible="{Binding IsOtherUserTyping}"
                 HorizontalOptions="Start"
@@ -581,7 +601,7 @@
         </Border>
 
         <!-- ✨ MESAJ GÖNDERME ALANI -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="5"
                Padding="15,12"
                StrokeShape="RoundRectangle 0"
                StrokeThickness="0"
@@ -690,7 +710,7 @@
         </Border>
 
         <!-- ✨ Loading Overlay -->
-        <Grid Grid.RowSpan="5"
+        <Grid Grid.RowSpan="6"
               IsVisible="{Binding IsLoading}"
               BackgroundColor="{StaticResource Background}"
               ZIndex="1100"

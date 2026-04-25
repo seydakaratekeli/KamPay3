@@ -100,24 +100,44 @@ namespace KamPay.Helpers
         }
 
         /// <summary>
-        /// Karşı teklif fiyatının geçerli aralıkta olup olmadığını kontrol eder (SATIŞ için)
+        /// Karşı teklif fiyatının geçerli aralıkta olup olmadığını kontrol eder (SATIŞ için).
+        ///
+        /// ✅ KURAL DÜZELTMESİ:
+        ///   Önceki: counterOffer &lt; proposedPrice → sadece Warning (engellemiyordu)
+        ///   Yeni:   counterOffer &lt; proposedPrice → Failure (bloke eder)
+        ///
+        ///   MANTIK: Satıcı alıcının teklifinden düşük karşı teklif veremez.
+        ///   Örnek: Alıcı 400₺ teklif etti, satıcı 350₺ karşı teklif veremez.
+        ///   Bu hem pazarlık mantığına aykırı hem de sonsuz döngüye yol açar.
+        ///
+        ///   Satıcının seçenekleri:
+        ///     a) Alıcının teklifini kabul et (AcceptNegotiatedPriceAsync)
+        ///     b) Alıcının teklifinden yüksek karşı teklif ver (liste fiyatına kadar)
+        ///     c) Teklifi reddet (RejectOffer)
         /// </summary>
-        public static ValidationResult ValidateCounterOffer(decimal counterOffer, decimal originalPrice, decimal? proposedPrice)
+        public static ValidationResult ValidateCounterOffer(
+            decimal counterOffer,
+            decimal originalPrice,
+            decimal? proposedPrice)
         {
             if (counterOffer <= 0)
                 return ValidationResult.Failure("Karşı teklif fiyatı sıfırdan büyük olmalıdır.");
 
             if (counterOffer > originalPrice)
                 return ValidationResult.Failure(
-                    $"Karşı teklif orijinal fiyattan yüksek olamaz. Maksimum: {originalPrice:N2}₺");
+                    $"Karşı teklif orijinal liste fiyatından ({originalPrice:N2}₺) yüksek olamaz. " +
+                    $"Maksimum: {originalPrice:N2}₺");
 
+            // ✅ DÜZELTME: Warning → Failure
+            // Satıcı alıcının teklifinden düşük karşı teklif veremez
             if (proposedPrice.HasValue && counterOffer < proposedPrice.Value)
-                return ValidationResult.Warning(
-                    "Karşı teklif, alıcının teklifinden düşük. Bu mantıklı olmayabilir.");
+                return ValidationResult.Failure(
+                    $"Karşı teklif, alıcının mevcut teklifinden ({proposedPrice:N2}₺) düşük olamaz.\n" +
+                    $"• Alıcıyı kabul etmek için 'Teklifi Kabul Et' kullanın.\n" +
+                    $"• Daha yüksek bir fiyat önermek için {proposedPrice.Value:N2}₺ üzerinde bir değer girin.");
 
             return ValidationResult.Success();
         }
-
         /// <summary>
         /// Takas için ek nakit teklifinin geçerli olup olmadığını kontrol eder
         /// </summary>

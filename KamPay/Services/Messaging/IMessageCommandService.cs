@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 namespace KamPay.Services
 {
     /// <summary>
-    /// ? ISP: Sadece mesaj yazma/güncelleme iþlemleri
+    /// ? ISP: Sadece mesaj yazma/gÃ¼ncelleme iÅŸlemleri
     /// </summary>
     public interface IMessageCommandService
     {
         Task<ServiceResult<Message>> SendMessageAsync(SendMessageRequest request, User sender);
-        Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null);
+        Task<ServiceResult<Conversation>> GetOrCreateConversationAsync(string user1Id, string user2Id, string? productId = null, string conversationType = "General");
         Task<ServiceResult<bool>> DeleteConversationAsync(string conversationId, string userId);
         Task<ServiceResult<bool>> MarkMessagesAsReadAsync(string conversationId, string readerUserId);
         Task<ServiceResult<bool>> UpdateUserInfoInMessagesAsync(string userId, string? newName, string? newPhotoUrl);
@@ -19,10 +19,10 @@ namespace KamPay.Services
         /// <summary>
         /// Real-time dinleme - Reactive Extensions pattern
         /// </summary>
-        [Obsolete("Direkt ViewModel'de Firebase Observable kullanýn")]
+        [Obsolete("Direkt ViewModel'de Firebase Observable kullanÄ±n")]
         IDisposable SubscribeToConversations(string userId, Action<List<Conversation>> onConversationsChanged);
         
-        [Obsolete("Direkt ViewModel'de Firebase Observable kullanýn")]
+        [Obsolete("Direkt ViewModel'de Firebase Observable kullanÄ±n")]
         IDisposable SubscribeToMessages(string conversationId, Action<List<Message>> onMessagesChanged);
     }
 }
