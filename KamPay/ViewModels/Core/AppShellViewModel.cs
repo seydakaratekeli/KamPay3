@@ -52,13 +52,14 @@ namespace KamPay.ViewModels
         private IDisposable? _messageSubscription;
 
         // FirebaseClient'Ä± her seferinde yeniden oluÅŸturmak yerine bir kere oluÅŸturup kullanmak daha verimlidir.
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
+        private readonly FirebaseClient _firebaseClient;
 
 
-        public AppShellViewModel(IAuthenticationService authService, IMessagingService messagingService)
+        public AppShellViewModel(IAuthenticationService authService, IMessagingService messagingService, FirebaseClient firebaseClient)
         {
             _authService = authService;
             _messagingService = messagingService;
+            _firebaseClient = firebaseClient;
 
             // Initialize with fallback values first to prevent crashes
             HomeTitle = "Ana Sayfa";

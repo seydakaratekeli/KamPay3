@@ -193,8 +193,13 @@
 
         <!-- ✅ FAZ4: TRANSACTION CHİP BANNER — Çoklu işlem + "Tüm Mesajlar" chip'i -->
         <Grid Grid.Row="1"
-              IsVisible="{Binding HasActiveTransactions}"
               BackgroundColor="#F5F9FC">
+            <Grid.IsVisible>
+                <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                    <Binding Path="HasActiveTransactions"/>
+                    <Binding Path="IsNegotiationChat"/>
+                </MultiBinding>
+            </Grid.IsVisible>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -224,7 +229,7 @@
                         </Border.GestureRecognizers>
                         <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
                             <Label Text="💬" VerticalOptions="Center" FontSize="13"/>
-                            <Label Text="Tüm Mesajlar" FontSize="12" FontAttributes="Bold" MaximumWidthRequest="120">
+                            <Label Text="Genel Sohbet" FontSize="12" FontAttributes="Bold" MaximumWidthRequest="120">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding ShowAllChipSelected}" Value="True">
                                         <Setter Property="TextColor" Value="White" />
@@ -267,7 +272,7 @@
                                                     </DataTrigger>
                                                 </Label.Triggers>
                                             </Label>
-                                            <Label Text="{Binding PaymentStatus}" FontSize="10">
+                                            <Label Text="{Binding StatusText}" FontSize="10">
                                                 <Label.Triggers>
                                                     <DataTrigger TargetType="Label" Binding="{Binding IsChipSelected}" Value="True">
                                                         <Setter Property="TextColor" Value="#E3F2FD" />
@@ -292,12 +297,17 @@
 
         <!-- ✅ Kalan Tur Bilgisi Banner'ı -->
         <Border Grid.Row="2"
-                IsVisible="{Binding HasActiveTransaction}"
                 BackgroundColor="#FFF3E0"
                 Padding="10,5"
                 StrokeThickness="0"
                 Margin="15,10,15,0"
                 StrokeShape="RoundRectangle 8">
+            <Border.IsVisible>
+                <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                    <Binding Path="HasActiveTransaction"/>
+                    <Binding Path="IsNegotiationChat"/>
+                </MultiBinding>
+            </Border.IsVisible>
             <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
                 <Label Text="ℹ️" VerticalOptions="Center"/>
                 <Label Text="{Binding ActiveTransaction.RemainingRoundsText}" 
@@ -400,9 +410,75 @@
                                                     FontAttributes="Bold"
                                                     Padding="10,0"
                                                     Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ProposeOfferCommand}"
-                                                    CommandParameter="{Binding .}"/>
+                                                    CommandParameter="{Binding .}">
+                                                <Button.IsVisible>
+                                                    <Binding Source="{x:Reference chatPageRoot}" Path="BindingContext.ActiveTransaction.IsNegotiationAllowed" FallbackValue="True"/>
+                                                </Button.IsVisible>
+                                            </Button>
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- 📦 İLAN KARTI (ProductCard) -->
+                            <Border Padding="10"
+                                   StrokeShape="RoundRectangle 16"
+                                   StrokeThickness="1"
+                                   Stroke="{StaticResource Primary}"
+                                   BackgroundColor="#F8FBFF"
+                                   MaximumWidthRequest="280"
+                                   HorizontalOptions="Center"
+                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ProductCard}">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.1"/>
+                                </Border.Shadow>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.NavigateToProductDetailCommand}" CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="6">
+                                    <ffimageloading:CachedImage Source="{Binding ProductThumbnail}"
+                                                                HeightRequest="120"
+                                                                WidthRequest="260"
+                                                                Aspect="AspectFill"
+                                                                LoadingPlaceholder="product_placeholder.png"
+                                                                ErrorPlaceholder="product_placeholder.png">
+                                        <ffimageloading:CachedImage.Clip>
+                                            <RoundRectangleGeometry CornerRadius="12" Rect="0,0,260,120"/>
+                                        </ffimageloading:CachedImage.Clip>
+                                    </ffimageloading:CachedImage>
+                                    <Label Text="{Binding ProductTitle}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource TextPrimary}" LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding ProductPrice, StringFormat='{0:N2} ₺'}" FontSize="14" FontAttributes="Bold" TextColor="#4CAF50"/>
+                                    <Label Text="Tıklayarak ilana git ➔" FontSize="11" TextColor="{StaticResource Primary}" HorizontalOptions="End" FontAttributes="Italic"/>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- 🛠️ HİZMET KARTI (ServiceCard) -->
+                            <Border Padding="12"
+                                   StrokeShape="RoundRectangle 16"
+                                   StrokeThickness="1"
+                                   Stroke="#8E24AA"
+                                   BackgroundColor="#FAF5FF"
+                                   MaximumWidthRequest="280"
+                                   HorizontalOptions="Center"
+                                   IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ServiceCard}">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.1"/>
+                                </Border.Shadow>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.NavigateToServiceOfferDetailCommand}" CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="6">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border BackgroundColor="#E1BEE7" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" StrokeThickness="0" VerticalOptions="Center">
+                                            <Label Text="🛠️" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                        </Border>
+                                        <VerticalStackLayout VerticalOptions="Center">
+                                            <Label Text="{Binding ProductTitle}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource TextPrimary}" LineBreakMode="TailTruncation" MaximumWidthRequest="200"/>
+                                            <Label Text="{Binding ProductPrice, StringFormat='{0:N2} ₺'}" FontSize="13" FontAttributes="Bold" TextColor="#8E24AA"/>
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Content}" FontSize="13" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" MaxLines="2"/>
+                                    <Label Text="Tıklayarak hizmete git ➔" FontSize="11" TextColor="#8E24AA" HorizontalOptions="End" FontAttributes="Italic" Margin="0,4,0,0"/>
                                 </VerticalStackLayout>
                             </Border>
 
@@ -424,6 +500,13 @@
                                                 <Setter Property="IsVisible" Value="False"/>
                                             </DataTrigger>
                                             <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="Negotiation">
+                                                <Setter Property="IsVisible" Value="False"/>
+                                            </DataTrigger>
+                                            <!-- ✅ FAZ 2: ProductCard ve ServiceCard için normal mesaj görünümünü gizle -->
+                                            <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="ProductCard">
+                                                <Setter Property="IsVisible" Value="False"/>
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Type}" Value="ServiceCard">
                                                 <Setter Property="IsVisible" Value="False"/>
                                             </DataTrigger>
                                             <DataTrigger TargetType="Border"
@@ -532,7 +615,7 @@
                                                                 <DataTrigger TargetType="Label"
                                                                              Binding="{Binding IsRead}"
                                                                              Value="True">
-                                                                    <Setter Property="TextColor" Value="#A5D6A7"/>
+                                                                    <Setter Property="TextColor" Value="#4FC3F7"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -547,7 +630,7 @@
                                                                 <DataTrigger TargetType="Label"
                                                                              Binding="{Binding IsRead}"
                                                                              Value="True">
-                                                                    <Setter Property="TextColor" Value="#A5D6A7"/>
+                                                                    <Setter Property="TextColor" Value="#4FC3F7"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -646,21 +729,28 @@
                            VerticalOptions="Center"/>
                 </Border>
 
-                <!-- 💰 Teklif Ver Butonu (ActiveTransaction varsa) -->
+                <!-- 💰 Teklif Ver Butonu — Sabit fiyatlı talepte gizlenir -->
                 <Border Grid.Column="1"
-                        StrokeShape="RoundRectangle 24"
-                        BackgroundColor="#FFF3E0"
-                        WidthRequest="48"
-                        HeightRequest="48"
-                        StrokeThickness="0"
-                        IsVisible="{Binding HasActiveTransaction}">
+        StrokeShape="RoundRectangle 24"
+        BackgroundColor="#FFF3E0"
+        WidthRequest="48"
+        HeightRequest="48"
+        StrokeThickness="0">
+                    <Border.IsVisible>
+                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                            <Binding Path="HasActiveTransaction"/>
+                            <Binding Path="IsNegotiationChat"/>
+                            <Binding Path="ActiveTransaction.IsFixedPriceRequest"
+                     Converter="{StaticResource InvertedBoolConverter}"/>
+                        </MultiBinding>
+                    </Border.IsVisible>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ProposeOfferCommand}"/>
                     </Border.GestureRecognizers>
                     <Label Text="💰"
-                           FontSize="24"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"/>
+           FontSize="24"
+           HorizontalOptions="Center"
+           VerticalOptions="Center"/>
                 </Border>
 
                 <!-- Mesaj Entry -->

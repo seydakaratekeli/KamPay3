@@ -1,4 +1,4 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 using Mapsui.UI.Maui;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +10,6 @@ namespace KamPay.Views
     {
         private readonly ProfileViewModel _viewModel;
         private bool _hasAnimated = false;
-        private CancellationTokenSource? _animationCts;
 
         public ProfilePage(ProfileViewModel viewModel)
         {
@@ -37,11 +36,8 @@ namespace KamPay.Views
                 // Animasyonlar bittikten sonra veriyi beklemeden (async ateşle unut) tetikle
                 _ = _viewModel.InitializeAsync();
             }
-            else
-            {
-                // Daha önce animasyon yapıldıysa doğrudan çek
-                _ = _viewModel.InitializeAsync();
-            }
+            // ✅ Singleton sayfa: sonraki tab geçişlerinde InitializeAsync çağırma
+            // ProfileViewModel'in 5 dakikalık cache mekanizması geçerli
         }
 
         private async Task AnimatePageAsync()
@@ -84,37 +80,24 @@ namespace KamPay.Views
 
         private void StartBackgroundRotation()
         {
-            _animationCts?.Cancel();
-            _animationCts = new CancellationTokenSource();
-            var token = _animationCts.Token;
-
-            Task.Run(async () =>
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await MainThread.InvokeOnMainThreadAsync(async () =>
-                        {
-                            if (Circle1 != null)
-                            {
-                                await Circle1.RotateTo(360, 30000, Easing.Linear);
-                                Circle1.Rotation = 0;
-                            }
-                        });
-                    }
-                    catch { break; }
-                }
-            }, token);
+            // ✅ DÜZELTME: while(true) döngüsü yerine güvenli Animation.Commit API'si
+            try { Circle1?.AbortAnimation("CircleRotation"); } catch { }
+            if (Circle1 == null) return;
+            var animation = new Animation(v => Circle1.Rotation = v, 0, 360);
+            animation.Commit(
+                owner: Circle1,
+                name: "CircleRotation",
+                length: 30000,
+                easing: Easing.Linear,
+                repeat: () => true
+            );
         }
 
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            // Sayfa kapandığında animasyon döngüsünü durdur
-            _animationCts?.Cancel();
-            _animationCts?.Dispose();
-            _animationCts = null;
+            // ✅ Singleton sayfa: Animation.Commit durdur
+            try { Circle1?.AbortAnimation("CircleRotation"); } catch { }
         }
     }
 }

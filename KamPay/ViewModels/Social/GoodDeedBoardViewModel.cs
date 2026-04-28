@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Firebase.Database;
 using Firebase.Database.Query;
@@ -25,6 +25,8 @@ namespace KamPay.ViewModels
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
         private readonly FirebaseClient _firebaseClient;
+        private readonly IStorageService _storageService;
+        private readonly INotificationCoordinator _notificationCoordinator;
 
         private IDisposable? _postsSubscription;
         private readonly Dictionary<string, IDisposable> _commentSubscriptions = new();
@@ -85,21 +87,27 @@ namespace KamPay.ViewModels
             IAuthenticationService authService,
             IUserProfileService userProfileService,
             IUserStateService userStateService,
-            FirebaseClient firebaseClient)
+            FirebaseClient firebaseClient,
+            IStorageService storageService,
+            INotificationCoordinator notificationCoordinator)
         {
             _goodDeedService = goodDeedService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
-
             _firebaseClient = firebaseClient;
+            _storageService = storageService;
+            _notificationCoordinator = notificationCoordinator;
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
             // Dil değiştiğinde filtreyi yeniden uygula
             LocalizationResourceManager.Instance.PropertyChanged += (sender, e) =>
             {
-                OnPropertyChanged(nameof(FilterPostTypes));
-                ApplyFilter();
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    OnPropertyChanged(nameof(FilterPostTypes));
+                    ApplyFilter();
+                });
             };
         }
 
@@ -136,6 +144,12 @@ namespace KamPay.ViewModels
                 }
             });
         }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSelectedImage))]
+        private string? selectedImagePath;
+
+        public bool HasSelectedImage => !string.IsNullOrEmpty(SelectedImagePath);
 
         [RelayCommand]
         private void OpenPostForm() => IsPostFormVisible = true;
@@ -227,8 +241,44 @@ namespace KamPay.ViewModels
             // Tarihe göre sırala (en yeni önce)
             query = query.OrderByDescending(p => p.CreatedAt);
 
-            // Filtrelenmiş listeyi performanslı şekilde güncelle
-            FilteredPosts.ReplaceRange(query);
+            var items = query.ToList();
+
+            // Filtrelenmiş listeyi performanslı şekilde güncelle - UI Thread Güvenliği
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                FilteredPosts.ReplaceRange(items);
+            });
+        }
+
+        [RelayCommand]
+        private async Task SelectImageAsync()
+        {
+            try
+            {
+                var result = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Lütfen bir fotoğraf seçin"
+                });
+
+                if (result != null)
+                {
+                    var fileInfo = new FileInfo(result.FullPath);
+                    if (fileInfo.Length > 3 * 1024 * 1024)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", "Lütfen 3MB'dan küçük bir görsel seçin.", "Tamam");
+                        return;
+                    }
+
+                    SelectedImagePath = result.FullPath;
+                }
+            }
+            catch (Exception) { /* Ignored */ }
+        }
+
+        [RelayCommand]
+        private void RemoveSelectedImage()
+        {
+            SelectedImagePath = null;
         }
 
         [RelayCommand]
@@ -262,6 +312,17 @@ namespace KamPay.ViewModels
                 var userProfile = await _userProfileService.GetUserProfileAsync(currentUser.UserId);
                 string userImage = userProfile?.Data?.ProfileImageUrl ?? "default_avatar.png";
 
+                string? uploadedImageUrl = null;
+                if (!string.IsNullOrEmpty(SelectedImagePath))
+                {
+                    using var stream = File.OpenRead(SelectedImagePath);
+                    var uploadResult = await _storageService.UploadFileAsync(stream, Path.GetFileName(SelectedImagePath), "good_deed_images");
+                    if (uploadResult.Success)
+                    {
+                        uploadedImageUrl = uploadResult.Data;
+                    }
+                }
+
                 var post = new GoodDeedPost
                 {
                     UserId = currentUser.UserId,
@@ -270,6 +331,7 @@ namespace KamPay.ViewModels
                     Type = SelectedType,
                     Title = Title,
                     Description = Description,
+                    ImageUrl = uploadedImageUrl,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -279,7 +341,11 @@ namespace KamPay.ViewModels
                 {
                     Title = string.Empty;
                     Description = string.Empty;
+                    SelectedImagePath = null;
                     IsPostFormVisible = false;
+
+                    await _userProfileService.AddPointsAsync(currentUser.UserId, 5, "İyilik panosu ilan oluşturma");
+
                     await Application.Current.MainPage.DisplayAlert(
                         loc["Success"], 
                         loc["PostCreatedSuccess"], 
@@ -347,6 +413,17 @@ namespace KamPay.ViewModels
                         LocalizationResourceManager.Instance["Error"], 
                         LocalizationResourceManager.Instance["OperationFailedTryAgain"], 
                         LocalizationResourceManager.Instance["Ok"]);
+                }
+                else
+                {
+                    if (isLikedNewState && post.UserId != currentUser.UserId)
+                    {
+                        await _notificationCoordinator.SendPriorityNotificationAsync(
+                            post.UserId,
+                            "İyilik Panosu",
+                            $"{currentUser.FullName} ilanınızı beğendi: {post.Title}",
+                            NotificationType.SystemNotice);
+                    }
                 }
             }
             catch (Exception ex)
@@ -437,6 +514,27 @@ namespace KamPay.ViewModels
                     result.Message, 
                     LocalizationResourceManager.Instance["Ok"]);
             }
+            else
+            {
+                if (post.UserId != currentUser.UserId)
+                {
+                    await _notificationCoordinator.SendPriorityNotificationAsync(
+                        post.UserId,
+                        "Yeni Yorum",
+                        $"{currentUser.FullName} ilanınıza yorum yaptı: {post.Title}",
+                        NotificationType.SystemNotice);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task NavigateToDetailAsync(GoodDeedPost post)
+        {
+            if (post == null) return;
+            await Shell.Current.GoToAsync("GoodDeedPostDetailPage", new Dictionary<string, object>
+            {
+                { "Post", post }
+            });
         }
 
         private bool ContainsRealPost(IList<FirebaseEvent<GoodDeedPost>> events)
@@ -483,9 +581,9 @@ namespace KamPay.ViewModels
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
                 _postsSubscription = _firebaseClient
-                    .Child("good_deed_posts")
+                    .Child(Constants.GoodDeedPostsCollection)
                     .AsObservable<GoodDeedPost>()
-                    .Where(e => e.Object != null)
+                    .Where(e => e.Object != null && e.Object.IsActive)
                     .Buffer(TimeSpan.FromMilliseconds(400))
                     .Where(batch => batch.Any())
                     .Subscribe(
@@ -548,8 +646,12 @@ namespace KamPay.ViewModels
                 Debug.WriteLine($"❌ StartListeningForPosts hatası: {ex.Message}");
                 Debug.WriteLine($"❌ Exception type: {ex.GetType().Name}");
                 Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-                IsLoading = false;
-                IsSkeletonVisible = false;
+                
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    IsLoading = false;
+                    IsSkeletonVisible = false;
+                });
             }
         }
 
@@ -560,13 +662,13 @@ namespace KamPay.ViewModels
                 if (token.IsCancellationRequested) return;
 
                 var snapshot = await _firebaseClient
-                    .Child("good_deed_posts")
+                    .Child(Constants.GoodDeedPostsCollection)
                     .OnceAsync<GoodDeedPost>();
 
                 if (token.IsCancellationRequested) return;
 
                 var posts = snapshot
-                    .Where(s => s.Object != null && !string.IsNullOrWhiteSpace(s.Object.Title))
+                    .Where(s => s.Object != null && s.Object.IsActive && !string.IsNullOrWhiteSpace(s.Object.Title))
                     .Select(s =>
                     {
                         var p = s.Object;
@@ -768,7 +870,7 @@ namespace KamPay.ViewModels
             if (_commentSubscriptions.ContainsKey(post.PostId)) return;
 
             var subscription = _firebaseClient
-                .Child("good_deed_posts")
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(post.PostId)
                 .Child("Comments")
                 .AsObservable<Comment>()

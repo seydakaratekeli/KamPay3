@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ using KamPay.Models;
 
 namespace KamPay.Services
 {
-    //bu sayfanýn amacý Firebase Realtime Database'de favori ürünleri yönetmektir. Favorilere ekleme, çýkarma, listeleme ve kontrol etme gibi iþlevleri kapsar.
+    //bu sayfanÄ±n amacÄ± Firebase Realtime Database'de favori Ã¼rÃ¼nleri yÃ¶netmektir. Favorilere ekleme, Ã§Ä±karma, listeleme ve kontrol etme gibi iÅŸlevleri kapsar.
     public class FirebaseFavoriteService : IFavoriteService
     {
         private readonly FirebaseClient _firebaseClient;
@@ -18,10 +18,10 @@ namespace KamPay.Services
         private readonly INotificationService _notificationService;
 
 
-        public FirebaseFavoriteService(INotificationService notificationService)
+        public FirebaseFavoriteService(FirebaseClient firebaseClient, INotificationService notificationService)
         {
-            _firebaseClient = new FirebaseClient(Constants.FirebaseRealtimeDbUrl);
-            _notificationService = notificationService; 
+            _firebaseClient = firebaseClient;
+            _notificationService = notificationService;
         }
 
         public async Task<ServiceResult<Favorite>> AddToFavoritesAsync(string userId, string productId)
@@ -39,10 +39,10 @@ namespace KamPay.Services
 
                 if (existing != null)
                 {
-                    return ServiceResult<Favorite>.FailureResult("Ürün zaten favorilerde");
+                    return ServiceResult<Favorite>.FailureResult("ÃœrÃ¼n zaten favorilerde");
                 }
 
-                // 2. Ürün bilgilerini al
+                // 2. ÃœrÃ¼n bilgilerini al
                 var product = await _firebaseClient
                     .Child(Constants.ProductsCollection)
                     .Child(productId)
@@ -50,10 +50,10 @@ namespace KamPay.Services
 
                 if (product == null)
                 {
-                    return ServiceResult<Favorite>.FailureResult("Ürün bulunamadý");
+                    return ServiceResult<Favorite>.FailureResult("ÃœrÃ¼n bulunamadÄ±");
                 }
 
-                // 3. Favori nesnesini oluþtur
+                // 3. Favori nesnesini oluÅŸtur
                 var favorite = new Favorite
                 {
                     UserId = userId,
@@ -64,38 +64,38 @@ namespace KamPay.Services
                     ProductType = product.Type
                 };
 
-                // 4. Favoriyi veritabanýna kaydet
+                // 4. Favoriyi veritabanÄ±na kaydet
                 await _firebaseClient
                     .Child(Constants.FavoritesCollection)
                     .Child(favorite.FavoriteId)
                     .PutAsync(favorite);
 
-                // 5. Ürünün favori sayýsýný artýr
+                // 5. ÃœrÃ¼nÃ¼n favori sayÄ±sÄ±nÄ± artÄ±r
                 product.FavoriteCount++;
                 await _firebaseClient
                     .Child(Constants.ProductsCollection)
                     .Child(productId)
                     .PutAsync(product);
 
-                // 6. Bildirim mantýðýný uygula
+                // 6. Bildirim mantÄ±ÄŸÄ±nÄ± uygula
                 var isOwner = product.UserId == userId;
 
-                // Sadece ürünün sahibi olmayan biri favoriye eklediðinde bildirim gönder
+                // Sadece Ã¼rÃ¼nÃ¼n sahibi olmayan biri favoriye eklediÄŸinde bildirim gÃ¶nder
                 if (!isOwner)
                 {
                     var currentUser = await _firebaseClient.Child(Constants.UsersCollection).Child(userId).OnceSingleAsync<User>();
                     var notification = new Notification
                     {
-                        UserId = product.UserId, // Bildirimi alacak kiþi (ÜRÜN SAHÝBÝ)
+                        UserId = product.UserId, // Bildirimi alacak kiÅŸi (ÃœRÃœN SAHÄ°BÄ°)
                         Type = NotificationType.NewFavorite,
                         Title = "Yeni Favori!",
-                        Message = $"{currentUser.FullName}, '{product.Title}' adlý ürününü favorilerine ekledi.",
+                        Message = $"{currentUser.FullName}, '{product.Title}' adlÄ± Ã¼rÃ¼nÃ¼nÃ¼ favorilerine ekledi.",
                         RelatedEntityId = product.ProductId,
                         RelatedEntityType = "Product",
                         ActionUrl = $"ProductDetailPage?productId={product.ProductId}"
                     };
 
-                    // Bildirimi oluþtur (Bu metot artýk anlýk sinyal göndermiyor, sadece kaydeder)
+                    // Bildirimi oluÅŸtur (Bu metot artÄ±k anlÄ±k sinyal gÃ¶ndermiyor, sadece kaydeder)
                     await _notificationService.CreateNotificationAsync(notification);
                 }
 
@@ -103,7 +103,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<Favorite>.FailureResult("Favorilere eklenirken bir hata oluþtu", ex.Message);
+                return ServiceResult<Favorite>.FailureResult("Favorilere eklenirken bir hata oluÅŸtu", ex.Message);
             }
         }
 
@@ -120,7 +120,7 @@ namespace KamPay.Services
 
                 if (favorite == null)
                 {
-                    return ServiceResult<bool>.FailureResult("Favoride bulunamadý");
+                    return ServiceResult<bool>.FailureResult("Favoride bulunamadÄ±");
                 }
 
                 // Favoriyi sil
@@ -129,7 +129,7 @@ namespace KamPay.Services
                     .Child(favorite.Object.FavoriteId)
                     .DeleteAsync();
 
-                // Ürünün favori sayýsýný azalt
+                // ÃœrÃ¼nÃ¼n favori sayÄ±sÄ±nÄ± azalt
                 var product = await _firebaseClient
                     .Child(Constants.ProductsCollection)
                     .Child(productId)
@@ -144,11 +144,11 @@ namespace KamPay.Services
                         .PutAsync(product);
                 }
 
-                return ServiceResult<bool>.SuccessResult(true, "Favorilerden çýkarýldý");
+                return ServiceResult<bool>.SuccessResult(true, "Favorilerden Ã§Ä±karÄ±ldÄ±");
             }
             catch (Exception ex)
             {
-                return ServiceResult<bool>.FailureResult("Çýkarýlamadý", ex.Message);
+                return ServiceResult<bool>.FailureResult("Ã‡Ä±karÄ±lamadÄ±", ex.Message);
             }
         }
 
@@ -170,7 +170,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<Favorite>>.FailureResult("Yüklenemedi", ex.Message);
+                return ServiceResult<List<Favorite>>.FailureResult("YÃ¼klenemedi", ex.Message);
             }
         }
 
@@ -210,7 +210,7 @@ namespace KamPay.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult<int>.FailureResult("Sayýlamadý", ex.Message);
+                return ServiceResult<int>.FailureResult("SayÄ±lamadÄ±", ex.Message);
             }
         }
     }

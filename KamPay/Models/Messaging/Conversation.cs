@@ -30,7 +30,7 @@ namespace KamPay.Models
 
         // ✅ UI: Mesajlar sekmesinde pazarlık/kişisel sohbetleri filtreleme
         [JsonIgnore]
-        public bool IsNegotiationConversation => ConversationType == "Negotiation" || !string.IsNullOrEmpty(ProductId);
+        public bool IsNegotiationConversation => ConversationType == "Negotiation";
 
         // 🔔 [ObservableProperty] — mesaj listesi güncelleme anında UI yansır
         [ObservableProperty]
@@ -43,6 +43,11 @@ namespace KamPay.Models
         public int UnreadCountUser2 { get; set; }
 
         public bool IsActive { get; set; } = true;
+        
+        // Kullanıcı bazlı silme durumu
+        public bool DeletedByUser1 { get; set; } = false;
+        public bool DeletedByUser2 { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -55,6 +60,10 @@ namespace KamPay.Models
         [JsonIgnore]
         [ObservableProperty]
         private string otherUserPhotoUrl = "";
+
+        [JsonIgnore]
+        [ObservableProperty]
+        private bool isOtherUserOnline;
 
         [JsonIgnore]
         [ObservableProperty]

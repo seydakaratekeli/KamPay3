@@ -1,4 +1,4 @@
-﻿using KamPay.ViewModels;
+using KamPay.ViewModels;
 
 namespace KamPay.Views
 {
@@ -28,14 +28,11 @@ namespace KamPay.Views
                 // Önce ekranı akıcı şekilde çiz
                 await AnimatePageAsync();
 
-                // Sonra arkaplanda veriyi yüklemeye başla
+                // Sonra arkaplanda veriyi yüklemeye başla (sadece ilk kez)
                 _ = _viewModel.InitializeAsync();
             }
-            else
-            {
-                // Zaten sayfa önceden çizildiyse beklemeden yükle (Fakat asenkron olarak, UI'ı kitlemeden)
-                _ = _viewModel.InitializeAsync();
-            }
+            // ✅ Singleton sayfa: sonraki tab geçişlerinde InitializeAsync çağırma
+            // Veri zaten yüklü, listener zaten aktif
         }
 
         private async Task AnimatePageAsync()
@@ -66,24 +63,16 @@ namespace KamPay.Views
 
         private void AnimateBackgroundCircle()
         {
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        await MainThread.InvokeOnMainThreadAsync(async () =>
-                        {
-                            await Circle1.RotateTo(360, 30000, Easing.Linear);
-                            Circle1.Rotation = 0;
-                        });
-                    }
-                    catch
-                    {
-                        break;
-                    }
-                }
-            });
+            // ✅ DÜZELTME: while(true) döngüsü yerine güvenli Animation.Commit API'si
+            try { Circle1?.AbortAnimation("CircleRotation"); } catch { }
+            var animation = new Animation(v => Circle1.Rotation = v, 0, 360);
+            animation.Commit(
+                owner: Circle1,
+                name: "CircleRotation",
+                length: 30000,
+                easing: Easing.Linear,
+                repeat: () => true
+            );
         }
 
         //  Sayfa kaybolduğunda listener'ları temizle

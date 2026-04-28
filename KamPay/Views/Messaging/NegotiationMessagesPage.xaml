@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+             xmlns:res="clr-namespace:KamPay.Services"
+             x:Class="KamPay.Views.NegotiationMessagesPage"
+             x:DataType="vm:MessagesViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:IsPendingConverter x:Key="IsPendingConverter"/>
+            <converters:IsNotZeroConverter x:Key="IsNotZeroConverter"/>
+            <!-- ✅ Tab renk converter'ı buraya da ekle -->
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <!-- ✅ DÜZELTME: 3 satır — Header, SearchBar, İçerik -->
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- SATIR 0: HEADER -->
+        <Grid Grid.Row="0" RowDefinitions="Auto">
+            <BoxView>
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF6F00" Offset="0.0" />
+                        <GradientStop Color="#E65100" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <Ellipse x:Name="Circle1"
+                     WidthRequest="200" HeightRequest="200"
+                     Fill="White" Opacity="0.05"
+                     HorizontalOptions="End" VerticalOptions="Start"
+                     Margin="0,-80,-80,0"/>
+
+            <Grid Padding="20,50,20,20">
+                <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
+                    <Label Text="💰 Pazarlık Sohbetleri"
+                           FontSize="28" FontAttributes="Bold"
+                           TextColor="White"/>
+                    <Label Text="Pazarlık ve teklifleriniz burada"
+                           FontSize="13" TextColor="White" Opacity="0.9"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- SATIR 1: ARAMA ÇUBUĞU -->
+        <Grid Grid.Row="1" Padding="15,10,15,8" x:Name="SearchSection">
+            <Border StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    BackgroundColor="White"
+                    HeightRequest="50"
+                    Padding="15,0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.1"/>
+                </Border.Shadow>
+                <Grid ColumnDefinitions="Auto,*">
+                    <Label Text="🔍" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
+                    <Entry Grid.Column="1"
+                           Text="{Binding SearchText, Mode=TwoWay}"
+                           Placeholder="{extensions:Translate SearchInChats}"
+                           FontSize="15"
+                           TextColor="{StaticResource TextPrimary}"
+                           PlaceholderColor="{StaticResource TextSecondary}"
+                           BackgroundColor="Transparent"
+                           VerticalOptions="Center"
+                           Margin="10,0,0,0"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- SATIR 2: ANA İÇERİK -->
+        <Grid Grid.Row="2">
+
+            <RefreshView Command="{Binding RefreshConversationsCommand}"
+                         IsRefreshing="{Binding IsRefreshing}"
+                         RefreshColor="{StaticResource Primary}"
+                         IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+
+                <!-- ✅ DÜZELTME: Tek seviye Grid, Tab bar zaten Row 1'de -->
+                <CollectionView ItemsSource="{Binding NegotiationConversations}"
+                                SelectionMode="None"
+                                Margin="0,5,0,0">
+
+                    <CollectionView.EmptyView>
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+                            <Border BackgroundColor="White"
+                                    StrokeThickness="0"
+                                    Padding="30"
+                                    WidthRequest="280"
+                                    HeightRequest="200">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="20"/>
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
+                                </Border.Shadow>
+                                <VerticalStackLayout Spacing="12"
+                                                     HorizontalOptions="Center"
+                                                     VerticalOptions="Center">
+                                    <Label Text="💬" FontSize="60" HorizontalTextAlignment="Center"/>
+                                    <Label Text="{Binding EmptyMessage}"
+                                           FontSize="16"
+                                           TextColor="{StaticResource TextSecondary}"
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Conversation">
+                            <SwipeView Margin="15,5,15,5">
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="{extensions:Translate Delete}"
+                                                   IconImageSource="delete_icon.png"
+                                                   BackgroundColor="#F44336"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=DeleteConversationCommand}"
+                                                   CommandParameter="{Binding .}"/>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <Border StrokeShape="RoundRectangle 16"
+                                        StrokeThickness="0"
+                                        BackgroundColor="White"
+                                        Padding="15">
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                                    </Border.Shadow>
+
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+
+                                    <!-- PROFİL FOTO -->
+                                    <Grid Grid.Column="0" HeightRequest="55" WidthRequest="55">
+                                        <ffimageloading:CachedImage
+                                            Source="{Binding OtherUserPhotoUrl}"
+                                            Aspect="AspectFill"
+                                            HeightRequest="55" WidthRequest="55"
+                                            LoadingPlaceholder="person_icon.svg"
+                                            ErrorPlaceholder="person_icon.svg"
+                                            DownsampleToViewSize="True"
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Center">
+                                            <ffimageloading:CachedImage.Clip>
+                                                <EllipseGeometry Center="27.5,27.5" RadiusX="27.5" RadiusY="27.5"/>
+                                            </ffimageloading:CachedImage.Clip>
+                                        </ffimageloading:CachedImage>
+
+                                        <!-- Online indicator -->
+                                        <Border BackgroundColor="#4CAF50"
+                                                StrokeThickness="2" Stroke="White"
+                                                WidthRequest="14" HeightRequest="14"
+                                                HorizontalOptions="End" VerticalOptions="End"
+                                                Margin="0,0,-2,-2"
+                                                IsVisible="{Binding IsOtherUserOnline}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="7"/>
+                                            </Border.StrokeShape>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- KULLANICI BİLGİSİ -->
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         VerticalOptions="Center"
+                                                         Spacing="3">
+                                        <Label Text="{Binding OtherUserName}"
+                                               FontSize="16" FontAttributes="Bold"
+                                               TextColor="{StaticResource TextPrimary}"
+                                               LineBreakMode="TailTruncation"/>
+
+                                        <!-- ✅ Pazarlık sohbetinde ürün adını göster -->
+                                        <Label Text="{Binding ProductTitle}"
+                                               FontSize="12" FontAttributes="Italic"
+                                               TextColor="{StaticResource Primary}"
+                                               LineBreakMode="TailTruncation"
+                                               IsVisible="{Binding IsNegotiationConversation}"/>
+
+                                        <Label Text="{Binding LastMessage}"
+                                               FontSize="14"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1"/>
+                                    </VerticalStackLayout>
+
+                                    <!-- ZAMAN & BADGE -->
+                                    <VerticalStackLayout Grid.Column="2"
+                                                         VerticalOptions="Center"
+                                                         HorizontalOptions="End"
+                                                         Spacing="8">
+
+                                        <Label Text="{Binding LastMessageTimeText}"
+                                               FontSize="11"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               HorizontalOptions="End"/>
+
+                                        <Border BackgroundColor="{StaticResource Primary}"
+                                                StrokeThickness="0"
+                                                MinimumHeightRequest="22"
+                                                MinimumWidthRequest="22"
+                                                Padding="6,2"
+                                                HorizontalOptions="End"
+                                                IsVisible="{Binding UnreadCount, Converter={StaticResource IsNotZeroConverter}}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="11"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding UnreadCount}"
+                                                   TextColor="White"
+                                                   FontSize="11" FontAttributes="Bold"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"/>
+                                        </Border>
+
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <!-- LOADING -->
+            <Grid IsVisible="{Binding IsLoading}"
+                  BackgroundColor="{StaticResource Background}"
+                  ZIndex="1100">
+                <Border BackgroundColor="White"
+                        WidthRequest="100" HeightRequest="100"
+                        StrokeThickness="0"
+                        HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.15" Radius="15" Offset="0,8"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="10"
+                                         HorizontalOptions="Center"
+                                         VerticalOptions="Center">
+                        <ActivityIndicator IsRunning="True"
+                                           Color="{StaticResource Primary}"
+                                           WidthRequest="40" HeightRequest="40"/>
+                        <Label Text="{extensions:Translate MessagesLoading}"
+                               TextColor="{StaticResource Primary}"
+                               FontSize="13"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</ContentPage>

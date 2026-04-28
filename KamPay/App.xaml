@@ -112,6 +112,7 @@
             <!--  Çıktı: "₺1.500,00"  |  ConverterParameter="NoSymbol" → "1.500,00" -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <converters:PriceFormatConverter x:Key="PriceFormatConverter"/>
+            <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
 
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <!--  ✅ FAZ 7 YENİ: Pazarlık durum metni (mevcut + kalan süre)     -->

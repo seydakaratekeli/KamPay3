@@ -22,8 +22,8 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <!-- ✅ DÜZELTME: 4 satır — Header, TabBar, SearchBar, İçerik -->
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <!-- ✅ DÜZELTME: 3 satır — Header, SearchBar, İçerik -->
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- SATIR 0: HEADER -->
         <Grid Grid.Row="0" RowDefinitions="Auto">
@@ -44,61 +44,17 @@
 
             <Grid Padding="20,50,20,20">
                 <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
-                    <Label Text="💬 Mesajlar"
+                    <Label Text="💬 Genel Sohbetler"
                            FontSize="28" FontAttributes="Bold"
                            TextColor="White"/>
-                    <Label Text="Konuşmalarınız burada"
+                    <Label Text="Kişisel konuşmalarınız burada"
                            FontSize="13" TextColor="White" Opacity="0.9"/>
                 </VerticalStackLayout>
             </Grid>
         </Grid>
 
-        <!-- ✅ SATIR 1: TAB BAR (Sohbetler / Pazarlıklar) -->
-        <!-- HATA: Eskide Grid.Row="1" yoktu, kapsayıcı Grid içindeydi ve Row ataması eksikti -->
-        <Grid Grid.Row="1"
-              ColumnDefinitions="*,*"
-              Padding="12,8" ColumnSpacing="8"
-              BackgroundColor="White">
-
-            <!-- Kişisel Sohbetler -->
-            <Border Grid.Column="0"
-                    StrokeShape="RoundRectangle 20" StrokeThickness="0"
-                    HeightRequest="40"
-                    BackgroundColor="{Binding ShowPersonalChatsOnly,
-                        Converter={StaticResource BoolToColorConverter},
-                        ConverterParameter='{StaticResource Primary}|{StaticResource Background}'}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ExecuteShowPersonalChatsCommand}"/>
-                </Border.GestureRecognizers>
-                <Label Text="💬 Sohbetler"
-                       FontSize="13" FontAttributes="Bold"
-                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
-                       TextColor="{Binding ShowPersonalChatsOnly,
-                           Converter={StaticResource BoolToColorConverter},
-                           ConverterParameter='White|{StaticResource Primary}'}"/>
-            </Border>
-
-            <!-- Pazarlık Sohbetleri -->
-            <Border Grid.Column="1"
-                    StrokeShape="RoundRectangle 20" StrokeThickness="0"
-                    HeightRequest="40"
-                    BackgroundColor="{Binding ShowNegotiationChats,
-                        Converter={StaticResource BoolToColorConverter},
-                        ConverterParameter='{StaticResource AccentOrange}|{StaticResource Background}'}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ExecuteShowNegotiationChatsCommand}"/>
-                </Border.GestureRecognizers>
-                <Label Text="💰 Pazarlıklar"
-                       FontSize="13" FontAttributes="Bold"
-                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
-                       TextColor="{Binding ShowNegotiationChats,
-                           Converter={StaticResource BoolToColorConverter},
-                           ConverterParameter='White|{StaticResource AccentOrange}'}"/>
-            </Border>
-        </Grid>
-
-        <!-- SATIR 2: ARAMA ÇUBUĞU -->
-        <Grid Grid.Row="2" Padding="15,10,15,8" x:Name="SearchSection">
+        <!-- SATIR 1: ARAMA ÇUBUĞU -->
+        <Grid Grid.Row="1" Padding="15,10,15,8" x:Name="SearchSection">
             <Border StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     BackgroundColor="White"
@@ -110,6 +66,7 @@
                 <Grid ColumnDefinitions="Auto,*">
                     <Label Text="🔍" VerticalOptions="Center" Opacity="0.6" FontSize="18"/>
                     <Entry Grid.Column="1"
+                           Text="{Binding SearchText, Mode=TwoWay}"
                            Placeholder="{extensions:Translate SearchInChats}"
                            FontSize="15"
                            TextColor="{StaticResource TextPrimary}"
@@ -121,8 +78,8 @@
             </Border>
         </Grid>
 
-        <!-- SATIR 3: ANA İÇERİK -->
-        <Grid Grid.Row="3">
+        <!-- SATIR 2: ANA İÇERİK -->
+        <Grid Grid.Row="2">
 
             <RefreshView Command="{Binding RefreshConversationsCommand}"
                          IsRefreshing="{Binding IsRefreshing}"
@@ -130,7 +87,7 @@
                          IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
                 <!-- ✅ DÜZELTME: Tek seviye Grid, Tab bar zaten Row 1'de -->
-                <CollectionView ItemsSource="{Binding FilteredConversations}"
+                <CollectionView ItemsSource="{Binding PersonalConversations}"
                                 SelectionMode="None"
                                 Margin="0,5,0,0">
 
@@ -163,20 +120,29 @@
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Conversation">
-                            <Border StrokeShape="RoundRectangle 16"
-                                    StrokeThickness="0"
-                                    BackgroundColor="White"
-                                    Margin="15,5,15,5"
-                                    Padding="15">
-                                <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
-                                </Border.Shadow>
+                            <SwipeView Margin="15,5,15,5">
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="{extensions:Translate Delete}"
+                                                   IconImageSource="delete_icon.png"
+                                                   BackgroundColor="#F44336"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=DeleteConversationCommand}"
+                                                   CommandParameter="{Binding .}"/>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <Border StrokeShape="RoundRectangle 16"
+                                        StrokeThickness="0"
+                                        BackgroundColor="White"
+                                        Padding="15">
+                                    <Border.Shadow>
+                                        <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.08"/>
+                                    </Border.Shadow>
 
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
-                                        CommandParameter="{Binding .}"/>
-                                </Border.GestureRecognizers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=ConversationTappedCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
 
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
 
@@ -200,7 +166,9 @@
                                         <Border BackgroundColor="#4CAF50"
                                                 StrokeThickness="2" Stroke="White"
                                                 WidthRequest="14" HeightRequest="14"
-                                                HorizontalOptions="End" VerticalOptions="End">
+                                                HorizontalOptions="End" VerticalOptions="End"
+                                                Margin="0,0,-2,-2"
+                                                IsVisible="{Binding IsOtherUserOnline}">
                                             <Border.StrokeShape>
                                                 <RoundRectangle CornerRadius="7"/>
                                             </Border.StrokeShape>
@@ -261,6 +229,7 @@
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
+                            </SwipeView>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>

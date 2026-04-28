@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Firebase.Database;
 using Firebase.Database.Streaming;
@@ -23,6 +23,7 @@ namespace KamPay.ViewModels
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
+        private readonly IUserProfileService _userProfileService;
         private readonly IRealtimeSnapshotService<CustomerServiceRequest> _loader; // ✅ Interface
         private readonly FirebaseClient _firebaseClient;
 
@@ -44,6 +45,18 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string searchText = "";
 
+        [ObservableProperty] private bool isCustomerRequestFormVisible;
+        [ObservableProperty] private bool isPosting;
+
+        // FORM FIELDS (Customer Request)
+        [ObservableProperty] private string customerRequestTitle = "";
+        [ObservableProperty] private string customerRequestDescription = "";
+        [ObservableProperty] private ServiceCategory customerRequestCategory;
+        [ObservableProperty] private string customerRequestLocation = "";
+        [ObservableProperty] private decimal customerRequestBudgetMin;
+        [ObservableProperty] private decimal customerRequestBudgetMax;
+        [ObservableProperty] private DateTime customerRequestPreferredDate = DateTime.Now.AddDays(1);
+
         public ObservableCollection<CustomerServiceRequest> Requests { get; } = new();
         public ObservableCollection<CustomerServiceRequest> FilteredRequests { get; } = new();
 
@@ -55,12 +68,14 @@ namespace KamPay.ViewModels
             IServiceSharingService serviceService,
             IAuthenticationService authService,
             IUserStateService userStateService,
+            IUserProfileService userProfileService,
             IRealtimeSnapshotService<CustomerServiceRequest> realtimeLoader,
             FirebaseClient firebaseClient) // ✅ DI ile inject
         {
             _serviceService = serviceService;
             _authService = authService;
             _userStateService = userStateService;
+            _userProfileService = userProfileService;
             _loader = realtimeLoader; // ✅ Artık DI'den geliyor
             _firebaseClient = firebaseClient; // DI'den geliyor
 
@@ -338,6 +353,114 @@ namespace KamPay.ViewModels
             {
                 IsRefreshing = false;
             }
+        }
+
+        [RelayCommand]
+        private void OpenCustomerRequestForm() => IsCustomerRequestFormVisible = true;
+
+        [RelayCommand]
+        private void CloseCustomerRequestForm() => IsCustomerRequestFormVisible = false;
+
+        [RelayCommand]
+        private async Task CreateCustomerRequestAsync()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(CustomerRequestTitle))
+                {
+                    await DisplayAsync("Uyarı", "Başlık gerekli.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(CustomerRequestDescription))
+                {
+                    await DisplayAsync("Uyarı", "Açıklama gerekli.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(CustomerRequestLocation))
+                {
+                    await DisplayAsync("Uyarı", "Konum gerekli.");
+                    return;
+                }
+
+                if (CustomerRequestBudgetMin < 0 || CustomerRequestBudgetMax < 0)
+                {
+                    await DisplayAsync("Uyarı", "Bütçe 0 veya daha büyük olmalıdır.");
+                    return;
+                }
+
+                if (CustomerRequestBudgetMin > CustomerRequestBudgetMax)
+                {
+                    await DisplayAsync("Uyarı", "Minimum bütçe, maksimum bütçeden büyük olamaz.");
+                    return;
+                }
+
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    await DisplayAsync("Hata", "Giriş yapılmamış.");
+                    return;
+                }
+
+                var profile = await _userProfileService.GetUserProfileAsync(user.UserId);
+                var img = profile?.Data?.ProfileImageUrl ?? "person_icon.svg";
+
+                IsPosting = true;
+
+                var customerRequest = new CustomerServiceRequest
+                {
+                    RequestId = Guid.NewGuid().ToString(),
+                    CustomerId = user.UserId,
+                    CustomerName = user.FullName,
+                    CustomerPhotoUrl = img,
+                    Title = CustomerRequestTitle,
+                    Description = CustomerRequestDescription,
+                    Category = CustomerRequestCategory,
+                    Location = CustomerRequestLocation,
+                    BudgetMin = CustomerRequestBudgetMin,
+                    BudgetMax = CustomerRequestBudgetMax,
+                    PreferredDate = CustomerRequestPreferredDate,
+                    Status = CustomerRequestStatus.Open,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    ProposalCount = 0
+                };
+
+                var result = await _serviceService.CreateCustomerRequestAsync(customerRequest);
+
+                if (result.Success)
+                {
+                    CustomerRequestTitle = "";
+                    CustomerRequestDescription = "";
+                    CustomerRequestLocation = "";
+                    CustomerRequestBudgetMin = 0;
+                    CustomerRequestBudgetMax = 0;
+                    CustomerRequestCategory = 0;
+                    CustomerRequestPreferredDate = DateTime.Now.AddDays(1);
+
+                    IsCustomerRequestFormVisible = false;
+
+                    await DisplayAsync("Başarılı", "Hizmet talebiniz oluşturuldu! Profesyonellerden teklifler almaya başlayacaksınız.");
+                }
+                else
+                {
+                    await DisplayAsync("Hata", result.Message ?? "Hata oluştu.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAsync("Hata", ex.Message);
+            }
+            finally
+            {
+                IsPosting = false;
+            }
+        }
+
+        private static Task DisplayAsync(string title, string message)
+        {
+            return Microsoft.Maui.Controls.Application.Current!.MainPage!.DisplayAlert(title, message, "Tamam");
         }
 
         public void Dispose()

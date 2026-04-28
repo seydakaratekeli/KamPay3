@@ -11,7 +11,11 @@ namespace KamPay.Services
         // === MEVCUT METODLAR (Eski sistem - Profesyonel hizmet paylaşımı) ===
         Task<ServiceResult<ServiceOffer>> CreateServiceOfferAsync(ServiceOffer offer);
         Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersAsync(ServiceCategory? category = null);
+        Task<ServiceResult<ServiceOffer>> GetServiceOfferByIdAsync(string offerId);
         Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersPagedAsync(int pageSize = 20, string? lastKey = null, ServiceCategory? category = null);
+        Task<ServiceResult<bool>> UpdateServiceOfferAsync(ServiceOffer offer);
+        Task<ServiceResult<bool>> DeleteServiceOfferAsync(string offerId);
+        Task<ServiceResult<bool>> ToggleAvailabilityAsync(string offerId, bool isAvailable);
         Task<ServiceResult<ServiceRequest>> RequestServiceAsync(ServiceOffer offer, User requester, string message);
         Task<ServiceResult<(List<ServiceRequest> Incoming, List<ServiceRequest> Outgoing)>> GetMyServiceRequestsAsync(string userId);
         Task<ServiceResult<bool>> RespondToRequestAsync(string requestId, bool accept);

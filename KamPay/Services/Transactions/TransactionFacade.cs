@@ -1,4 +1,4 @@
-using KamPay.Models;
+﻿using KamPay.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,8 +26,10 @@ namespace KamPay.Services.Transactions
         public Task<ServiceResult<Transaction>> CreateTradeOfferAsync(Product product, string offeredProductId, string message, User buyer)
             => _crudService.CreateTradeOfferAsync(product, offeredProductId, message, buyer);
 
-        public Task<ServiceResult<Transaction>> CreateRequestAsync(Product product, User buyer)
-            => _crudService.CreateRequestAsync(product, buyer);
+        // TransactionFacade.cs — delegate et
+        public Task<ServiceResult<Transaction>> CreateRequestAsync(
+            Product product, User buyer, bool isFixedPriceRequest = false)
+            => _crudService.CreateRequestAsync(product, buyer, isFixedPriceRequest);
 
         public Task<ServiceResult<Transaction>> RespondToOfferAsync(string transactionId, bool accept)
             => _crudService.RespondToOfferAsync(transactionId, accept);

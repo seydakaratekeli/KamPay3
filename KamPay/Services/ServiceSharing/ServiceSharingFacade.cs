@@ -32,7 +32,11 @@ namespace KamPay.Services.ServiceSharing
 
         public Task<ServiceResult<ServiceOffer>> CreateServiceOfferAsync(ServiceOffer offer) => _offerService.CreateServiceOfferAsync(offer);
         public Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersAsync(ServiceCategory? category = null) => _offerService.GetServiceOffersAsync(category);
+        public Task<ServiceResult<ServiceOffer>> GetServiceOfferByIdAsync(string offerId) => _offerService.GetServiceOfferByIdAsync(offerId);
         public Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersPagedAsync(int pageSize = 20, string? lastKey = null, ServiceCategory? category = null) => _offerService.GetServiceOffersPagedAsync(pageSize, lastKey, category);
+        public Task<ServiceResult<bool>> UpdateServiceOfferAsync(ServiceOffer offer) => _offerService.UpdateServiceOfferAsync(offer);
+        public Task<ServiceResult<bool>> DeleteServiceOfferAsync(string offerId) => _offerService.DeleteServiceOfferAsync(offerId);
+        public Task<ServiceResult<bool>> ToggleAvailabilityAsync(string offerId, bool isAvailable) => _offerService.ToggleAvailabilityAsync(offerId, isAvailable);
         public Task<ServiceResult<bool>> UpdateUserInfoInServicesAsync(string userId, string? newName, string? newPhotoUrl) => _offerService.UpdateUserInfoInServicesAsync(userId, newName, newPhotoUrl);
 
         public Task<ServiceResult<ServiceRequest>> RequestServiceAsync(ServiceOffer offer, User requester, string message) => _crudService.RequestServiceAsync(offer, requester, message);

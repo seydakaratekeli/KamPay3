@@ -1,4 +1,4 @@
-﻿using Firebase.Database;
+using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Models;
 using KamPay.Helpers;
@@ -8,7 +8,6 @@ namespace KamPay.Services;
 public class FirebaseGoodDeedService : IGoodDeedService
 {
     private readonly FirebaseClient _firebaseClient;
-    private const string GoodDeedPostsCollection = "good_deed_posts";
 
     // ✅ Constructor DI ile FirebaseClient alıyor
     public FirebaseGoodDeedService(FirebaseClient firebaseClient)
@@ -22,7 +21,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
         try
         {
             await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(post.PostId)
                 .PutAsync(post);
 
@@ -39,7 +38,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
         try
         {
             var allPosts = await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .OnceAsync<GoodDeedPost>();
 
             var posts = allPosts
@@ -53,6 +52,26 @@ public class FirebaseGoodDeedService : IGoodDeedService
         catch (Exception ex)
         {
             return ServiceResult<List<GoodDeedPost>>.FailureResult("Hata", ex.Message);
+        }
+    }
+
+    public async Task<ServiceResult<bool>> UpdatePostAsync(GoodDeedPost post)
+    {
+        try
+        {
+            if (post == null || string.IsNullOrEmpty(post.PostId))
+                return ServiceResult<bool>.FailureResult("Geçersiz parametreler");
+
+            await _firebaseClient
+                .Child(Constants.GoodDeedPostsCollection)
+                .Child(post.PostId)
+                .PutAsync(post);
+
+            return ServiceResult<bool>.SuccessResult(true);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<bool>.FailureResult("Post güncellenirken hata oluştu", ex.Message);
         }
     }
 
@@ -70,25 +89,21 @@ public class FirebaseGoodDeedService : IGoodDeedService
             var userLikeRef = likesRef.Child(userId);
             var existingLike = await userLikeRef.OnceSingleAsync<bool?>();
 
-            var post = await postRef.OnceSingleAsync<GoodDeedPost>();
-            if (post == null)
-                return ServiceResult<bool>.FailureResult("Post bulunamadı");
+            var likeCountRef = postRef.Child("LikeCount");
+            var currentLikeCount = await likeCountRef.OnceSingleAsync<int>();
 
             if (existingLike.HasValue && existingLike.Value)
             {
                 // Beğeni var, kaldır
                 await userLikeRef.DeleteAsync();
-                post.LikeCount = Math.Max(0, post.LikeCount - 1);
+                await likeCountRef.PutAsync(Math.Max(0, currentLikeCount - 1));
             }
             else
             {
                 // Beğeni yok, ekle
                 await userLikeRef.PutAsync(true);
-                post.LikeCount++;
+                await likeCountRef.PutAsync(currentLikeCount + 1);
             }
-
-            // Post'un beğeni sayısını güncelle
-            await postRef.Child("LikeCount").PutAsync(post.LikeCount);
 
             return ServiceResult<bool>.SuccessResult(true);
         }
@@ -103,7 +118,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
         try
         {
             var post = await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(postId)
                 .OnceSingleAsync<GoodDeedPost>();
 
@@ -113,7 +128,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
             }
 
             await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(postId)
                 .DeleteAsync();
 
@@ -137,7 +152,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
                 comment.CreatedAt = DateTime.UtcNow;
 
             var commentsNode = _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(postId)
                 .Child("Comments");
 
@@ -153,7 +168,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
             var commentCount = allComments?.Count ?? 0;
 
             await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(postId)
                 .Child("CommentCount")
                 .PutAsync(commentCount);
@@ -170,7 +185,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
         try
         {
             var post = await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .Child(postId)
                 .OnceSingleAsync<GoodDeedPost>();
 
@@ -197,7 +212,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
         {
             // 1?? Kullanıcının gönderilerini bul
             var allPosts = await _firebaseClient
-                .Child(GoodDeedPostsCollection)
+                .Child(Constants.GoodDeedPostsCollection)
                 .OrderBy("UserId")
                 .EqualTo(userId)
                 .OnceAsync<GoodDeedPost>();
@@ -227,7 +242,7 @@ public class FirebaseGoodDeedService : IGoodDeedService
                 if (updates.Any())
                 {
                     var task = _firebaseClient
-                        .Child(GoodDeedPostsCollection)
+                        .Child(Constants.GoodDeedPostsCollection)
                         .Child(postEntry.Key)
                         .PatchAsync(updates);
 

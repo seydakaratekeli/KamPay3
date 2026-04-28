@@ -16,6 +16,7 @@
         <ResourceDictionary>
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <toolkit:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullConverter" />
             <converters:BoolToColorConverter x:Key="LikeColorConverter"
                                              TrueColor="{StaticResource Danger}"
@@ -50,11 +51,11 @@
             <!-- Title -->
             <Grid Padding="20,50,20,20">
                 <VerticalStackLayout VerticalOptions="Center" x:Name="HeaderSection">
-                    <Label Text="💚 İyilik Panosu" 
+                    <Label Text="{extensions:Translate GoodDeedBoardTitle}" 
                            FontSize="28" 
                            FontAttributes="Bold" 
                            TextColor="White" />
-                    <Label Text="Kampüste iyilik yap, fark yarat" 
+                    <Label Text="{extensions:Translate GoodDeedBoardSubtitle}" 
                            FontSize="13" 
                            TextColor="White" 
                            Opacity="0.9"/>
@@ -86,7 +87,7 @@
                         </Image.Behaviors>
                     </Image>
                     <Entry Grid.Column="1"
-                           Placeholder="İyilik ara..."
+                           Placeholder="{extensions:Translate SearchGoodDeed}"
                            Text="{Binding SearchText}"
                            FontSize="15"
                            VerticalOptions="Center"
@@ -108,7 +109,7 @@
                 </Border.Shadow>
                 <Grid ColumnDefinitions="*,Auto">
                     <Picker Grid.Column="0"
-                            Title="Kategori Seçiniz"
+                            Title="{extensions:Translate SelectCategory}"
                             ItemsSource="{Binding FilterPostTypes}"
                             SelectedItem="{Binding FilterPostType}"
                             FontSize="15"
@@ -189,8 +190,23 @@
                             <Border.Shadow>
                                 <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
                             </Border.Shadow>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoodDeedBoardViewModel}}, Path=NavigateToDetailCommand}" CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
 
                             <VerticalStackLayout Spacing="12">
+                                <!-- Image Display (If present) -->
+                                <Border IsVisible="{Binding ImageUrl, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 12"
+                                        Margin="0,0,0,10">
+                                    <ffimageloading:CachedImage Source="{Binding ImageUrl}" 
+                                                                Aspect="AspectFill" 
+                                                                HeightRequest="200"
+                                                                LoadingPlaceholder="image_placeholder.png"
+                                                                ErrorPlaceholder="image_placeholder.png"/>
+                                </Border>
+                                
                                 <!-- Header: Title & Type Badge -->
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                     <Label Grid.Column="0" 
@@ -504,6 +520,46 @@
                                     </Picker.ItemDisplayBinding>
                                 </Picker>
                             </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Image Selection -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Görsel (Opsiyonel)" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimary}"/>
+                            
+                            <Grid IsVisible="{Binding HasSelectedImage, Converter={StaticResource InvertedBoolConverter}}">
+                                <Border StrokeShape="RoundRectangle 12" 
+                                        StrokeThickness="1" 
+                                        StrokeDashArray="5,5"
+                                        Stroke="{StaticResource BorderColor}" 
+                                        BackgroundColor="#F9F9F9"
+                                        Padding="12"
+                                        HeightRequest="80">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectImageCommand}"/>
+                                    </Border.GestureRecognizers>
+                                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                                        <Label Text="📷 Fotoğraf Ekle" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+
+                            <Grid IsVisible="{Binding HasSelectedImage}" HeightRequest="150" Margin="0,0,0,10">
+                                <Border StrokeShape="RoundRectangle 12" StrokeThickness="0">
+                                    <Image Source="{Binding SelectedImagePath}" Aspect="AspectFill"/>
+                                </Border>
+                                <Button Text="✕" 
+                                        Command="{Binding RemoveSelectedImageCommand}"
+                                        BackgroundColor="{StaticResource Danger}" 
+                                        TextColor="White"
+                                        WidthRequest="30" HeightRequest="30"
+                                        CornerRadius="15"
+                                        Padding="0"
+                                        Margin="10"
+                                        HorizontalOptions="End" VerticalOptions="Start"/>
+                            </Grid>
                         </VerticalStackLayout>
 
                         <!-- Submit Button -->

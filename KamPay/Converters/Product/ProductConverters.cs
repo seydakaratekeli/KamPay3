@@ -156,6 +156,7 @@ namespace KamPay.Converters
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var loc = LocalizationResourceManager.Instance;
+            if (value == null) return loc.GetString("All");
             return value is PostType pt ? pt switch 
             { 
                 PostType.HelpRequest => loc.GetString("PostTypeHelpRequest"), 

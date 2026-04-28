@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
 namespace KamPay.Models
@@ -27,6 +27,8 @@ namespace KamPay.Models
         [ObservableProperty] private string profileImageUrl = "";
 
         public DateTime MemberSince { get; set; }
+        
+        [ObservableProperty] private DateTime? lastLoginAt;
 
         public string FullName
         {

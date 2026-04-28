@@ -1,4 +1,4 @@
-﻿using Firebase.Storage;
+using Firebase.Storage;
 using KamPay.Helpers;
 using KamPay.Models;
 using SkiaSharp;
@@ -174,6 +174,23 @@ public class FirebaseStorageService : IStorageService
         catch (Exception ex)
         {
             return ServiceResult<bool>.FailureResult("Silme hatası", ex.Message);
+        }
+    }
+
+    public async Task<ServiceResult<string>> UploadFileAsync(Stream fileStream, string fileName, string folderName)
+    {
+        try
+        {
+            var downloadUrl = await _storage
+                .Child(folderName)
+                .Child(fileName)
+                .PutAsync(fileStream);
+
+            return ServiceResult<string>.SuccessResult(downloadUrl);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<string>.FailureResult("Dosya yükleme hatası", ex.Message);
         }
     }
 

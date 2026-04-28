@@ -74,6 +74,18 @@ namespace KamPay.Models
         // Talep edenin teklif ettiği ek nakit (Takas için)
         public decimal? AdditionalCashByRequester { get; set; }
 
+        // ✅ SORUN 1 FIX: Liste fiyatıyla satın alma talebi mi?
+        // CreateRequestAsync'te true set edilir → pazarlık butonları gizlenir
+        public bool IsFixedPriceRequest { get; set; } = false;
+
+        /// <summary>
+        /// ✅ Computed: Pazarlığa izin veriliyor mu?
+        /// IsFixedPriceRequest=true ise pazarlık butonları tamamen devre dışı kalır.
+        /// XAML binding'lerde InvertedBoolConverter yerine doğrudan kullanılabilir.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsNegotiationAllowed => !IsFixedPriceRequest;
+
         // Sahip'in istediği ek nakit (Takas için)
         public decimal? CounterCashByOwner { get; set; }
 
@@ -93,7 +105,10 @@ namespace KamPay.Models
         public int NegotiationRoundCount { get; set; } = 0;
 
         [JsonIgnore]
-        public string RemainingRoundsText => $"Kalan Teklif Hakkı: {Math.Max(0, Helpers.NegotiationRules.MaxNegotiationRounds - NegotiationRoundCount)}";
+        public string RemainingRoundsText =>
+            IsFixedPriceRequest
+                ? "✅ Liste fiyatı ile satın alma talebi"
+                : $"Kalan Teklif Hakkı: {Math.Max(0, Helpers.NegotiationRules.MaxNegotiationRounds - NegotiationRoundCount)}";
 
         // ✅ FAZ 2: Sıra kontrolü için — son teklifi/karşı teklifi gönderen kullanıcı ID'si.
         // Alıcı arka arkaya teklif gönderememesi için, satıcı yanıt vermeden alıcının

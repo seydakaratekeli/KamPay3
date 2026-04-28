@@ -60,6 +60,27 @@ namespace KamPay.Services.ServiceSharing
             }
         }
 
+        public async Task<ServiceResult<ServiceOffer>> GetServiceOfferByIdAsync(string offerId)
+        {
+            try
+            {
+                var offer = await _firebaseClient
+                    .Child(Constants.ServiceOffersCollection)
+                    .Child(offerId)
+                    .OnceSingleAsync<ServiceOffer>();
+
+                if (offer == null)
+                    return ServiceResult<ServiceOffer>.FailureResult("İlan bulunamadı.");
+
+                offer.ServiceId = offerId;
+                return ServiceResult<ServiceOffer>.SuccessResult(offer);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<ServiceOffer>.FailureResult("İlan getirilemedi.", ex.Message);
+            }
+        }
+
         public async Task<ServiceResult<List<ServiceOffer>>> GetServiceOffersPagedAsync(
             int pageSize = 20,
             string? lastKey = null,
@@ -142,6 +163,73 @@ namespace KamPay.Services.ServiceSharing
             catch (Exception ex)
             {
                 return ServiceResult<List<ServiceOffer>>.FailureResult("Hizmetler yüklenemedi", ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult<bool>> UpdateServiceOfferAsync(ServiceOffer offer)
+        {
+            try
+            {
+                var updateData = new Dictionary<string, object>
+                {
+                    { "Title", offer.Title },
+                    { "Description", offer.Description },
+                    { "Price", offer.Price },
+                    { "Category", (int)offer.Category },
+                    { "TimeCredits", offer.TimeCredits },
+                    { "UpdatedAt", DateTime.UtcNow.ToString("O") }
+                };
+
+                await _firebaseClient
+                    .Child(Constants.ServiceOffersCollection)
+                    .Child(offer.ServiceId)
+                    .PatchAsync(updateData);
+
+                return ServiceResult<bool>.SuccessResult(true, "İlan güncellendi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("İlan güncellenemedi.", ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult<bool>> DeleteServiceOfferAsync(string offerId)
+        {
+            try
+            {
+                await _firebaseClient
+                    .Child(Constants.ServiceOffersCollection)
+                    .Child(offerId)
+                    .DeleteAsync();
+
+                return ServiceResult<bool>.SuccessResult(true, "İlan silindi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("İlan silinemedi.", ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult<bool>> ToggleAvailabilityAsync(string offerId, bool isAvailable)
+        {
+            try
+            {
+                var patchData = new Dictionary<string, object>
+                {
+                    { "IsAvailable", isAvailable },
+                    { "UpdatedAt", DateTime.UtcNow.ToString("O") }
+                };
+
+                await _firebaseClient
+                    .Child(Constants.ServiceOffersCollection)
+                    .Child(offerId)
+                    .PatchAsync(patchData);
+
+                return ServiceResult<bool>.SuccessResult(true, isAvailable ? "İlan aktifleştirildi." : "İlan pasifleştirildi.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<bool>.FailureResult("Durum güncellenemedi.", ex.Message);
             }
         }
 

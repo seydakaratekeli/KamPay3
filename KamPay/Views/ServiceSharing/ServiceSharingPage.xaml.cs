@@ -6,6 +6,7 @@ public partial class ServiceSharingPage : ContentPage
 {
     private readonly ServiceSharingViewModel _viewModel;
     private bool _hasAnimated = false;
+    private CancellationTokenSource? _animationCts;
 
     public ServiceSharingPage(ServiceSharingViewModel vm)
     {
@@ -26,8 +27,16 @@ public partial class ServiceSharingPage : ContentPage
         }
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        try { Circle1?.AbortAnimation("CircleRotation"); } catch { }
+    }
+
     private async Task AnimatePageAsync()
     {
+        if (HeaderSection == null || FilterSection == null || Circle1 == null) return;
+
         // Reset states
         HeaderSection.Opacity = 0;
         HeaderSection.TranslationY = -30;
@@ -54,23 +63,13 @@ public partial class ServiceSharingPage : ContentPage
 
     private void AnimateBackgroundCircle()
     {
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
-                    {
-                        await Circle1.RotateTo(360, 30000, Easing.Linear);
-                        Circle1.Rotation = 0;
-                    });
-                }
-                catch
-                {
-                    break;
-                }
-            }
-        });
+        var animation = new Animation(v => Circle1.Rotation = v, 0, 360);
+        animation.Commit(
+            owner: Circle1,
+            name: "CircleRotation",
+            length: 30000,
+            easing: Easing.Linear,
+            repeat: () => true
+        );
     }
 }

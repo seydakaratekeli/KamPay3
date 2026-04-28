@@ -1,10 +1,8 @@
-﻿namespace KamPay.Helpers;
+namespace KamPay.Helpers;
 
 public static class Constants
 {
-    // Firebase Realtime Database URL
-
-    public const string FirebaseRealtimeDbUrl = "https://kampay-b006d-default-rtdb.europe-west1.firebasedatabase.app/";
+   
 
    
 
@@ -40,6 +38,7 @@ public static class Constants
     // 🎯 ARMUT MODELİ: Yeni Koleksiyonlar
     public const string CustomerServiceRequestsCollection = "customer_service_requests"; // Müşteri talepleri
     public const string ProviderProposalsCollection = "provider_proposals"; // Profesyonel teklifleri
+    public const string ServiceReviewsCollection = "service_reviews"; // Hizmet değerlendirmeleri
 
     // Firebase Storage yollar
     public const string ProductImagesFolder = "product_images";
@@ -72,11 +71,16 @@ public static class Constants
     /// 
     /// {
     ///   "rules": {
+    ///     ".read": "auth != null",
+    ///     ".write": "auth != null",
     ///     "products": {
     ///       ".indexOn": ["CategoryId", "CreatedAt", "Type", "Price", "UserId"]
     ///     },
     ///     "service_offers": {
-    ///       ".indexOn": ["Category", "CreatedAt", "ProviderId"]
+    ///       ".indexOn": ["Category", "CreatedAt", "ProviderId", "IsAvailable"]
+    ///     },
+    ///     "service_requests": {
+    ///       ".indexOn": ["ProviderId", "RequesterId", "Status", "RequestedAt"]
     ///     },
     ///     "customer_service_requests": {
     ///       ".indexOn": ["Category", "CreatedAt", "CustomerId", "Status"]
@@ -89,10 +93,16 @@ public static class Constants
     ///     },
     ///     "transactions": {
     ///       ".indexOn": ["SellerId", "BuyerId", "Status", "CreatedAt"]
+    ///     },
+    ///     "conversations": {
+    ///       ".indexOn": ["User1Id", "User2Id", "UpdatedAt"]
     ///     }
     ///   }
     /// }
     /// 
+    /// ⚠️ service_requests koleksiyonuna ProviderId ve RequesterId indexleri ZORUNLUDUR!
+    /// ServiceRequestsViewModel.LoadInitialSnapshotAsync bu alanlar üzerinden OrderBy sorgusu yapar.
+    /// Index yoksa FirebaseException fırlatılır ve uygulama çökebilir.
     /// Bu indeksler olmadan sayfalama ve filtreleme ÇALIŞMAZ!
     /// </summary>
     public const string FirebaseIndexingNote = "See documentation above for required Firebase indexes";

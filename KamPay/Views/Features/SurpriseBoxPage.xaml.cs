@@ -6,6 +6,7 @@ public partial class SurpriseBoxPage : ContentPage
 {
     private readonly SurpriseBoxViewModel _viewModel;
     private bool _hasAnimated = false;
+    private CancellationTokenSource? _animationCts;
 
     public SurpriseBoxPage(SurpriseBoxViewModel vm)
     {
@@ -30,10 +31,17 @@ public partial class SurpriseBoxPage : ContentPage
             await Task.Delay(100);
             await AnimatePageAsync();
         }
+        else
+        {
+            _animationCts = new CancellationTokenSource();
+          //  AnimateBackgroundCircles(_animationCts.Token);
+        }
     }
 
     private async Task AnimatePageAsync()
     {
+        if (HeaderSection == null || ContentSection == null) return;
+
         // Reset states
         HeaderSection.Opacity = 0;
         HeaderSection.TranslationY = -30;
@@ -60,45 +68,11 @@ public partial class SurpriseBoxPage : ContentPage
 
     private void AnimateBackgroundCircles()
     {
-        // Circle 1 - Slow rotation
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
-                    {
-                        await Circle1.RotateTo(360, 35000, Easing.Linear);
-                        Circle1.Rotation = 0;
-                    });
-                }
-                catch
-                {
-                    break;
-                }
-            }
-        });
+        var anim1 = new Animation(v => Circle1.Rotation = v, 0, 360);
+        anim1.Commit(owner: Circle1, name: "Circle1Rotation", length: 35000, easing: Easing.Linear, repeat: () => true);
 
-        // Circle 2 - Faster rotation (opposite direction)
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
-                    {
-                        await Circle2.RotateTo(-360, 25000, Easing.Linear);
-                        Circle2.Rotation = 0;
-                    });
-                }
-                catch
-                {
-                    break;
-                }
-            }
-        });
+        var anim2 = new Animation(v => Circle2.Rotation = v, 0, -360);
+        anim2.Commit(owner: Circle2, name: "Circle2Rotation", length: 25000, easing: Easing.Linear, repeat: () => true);
     }
 
     private async void OnRedemptionCompleted(object? sender, bool success)
@@ -154,6 +128,10 @@ public partial class SurpriseBoxPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        
+        Circle1.AbortAnimation("Circle1Rotation");
+        Circle2.AbortAnimation("Circle2Rotation");
+
         _viewModel.RedemptionCompleted -= OnRedemptionCompleted;
     }
 }

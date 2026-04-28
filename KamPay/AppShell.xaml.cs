@@ -1,4 +1,4 @@
-﻿// KamPay/AppShell.xaml.cs
+// KamPay/AppShell.xaml.cs
 
 using KamPay.Views;
 using KamPay.ViewModels;
@@ -110,7 +110,11 @@ namespace KamPay
             Routing.RegisterRoute(nameof(OffersPage), typeof(OffersPage));
             Routing.RegisterRoute(nameof(TradeOfferView), typeof(TradeOfferView));
             Routing.RegisterRoute(nameof(GoodDeedBoardPage), typeof(GoodDeedBoardPage));
+            Routing.RegisterRoute(nameof(GoodDeedPostDetailPage), typeof(GoodDeedPostDetailPage));
+            Routing.RegisterRoute(nameof(EditGoodDeedPostPage), typeof(EditGoodDeedPostPage));
             Routing.RegisterRoute(nameof(ServiceSharingPage), typeof(ServiceSharingPage));
+            Routing.RegisterRoute(nameof(ServiceOfferDetailPage), typeof(ServiceOfferDetailPage));
+            Routing.RegisterRoute(nameof(EditServiceOfferPage), typeof(EditServiceOfferPage));
             Routing.RegisterRoute(nameof(QRCodeDisplayPage), typeof(QRCodeDisplayPage));
             Routing.RegisterRoute("qrscanner", typeof(QRScannerPage));
             Routing.RegisterRoute(nameof(ServiceRequestsPage), typeof(ServiceRequestsPage));

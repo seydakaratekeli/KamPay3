@@ -188,7 +188,10 @@ namespace KamPay.Services.ServiceSharing
                 var existingWithOtherUser = existingConversations
                     .FirstOrDefault(c => c.Object != null &&
                                         c.Object.IsActive &&
+                                        c.Object.ConversationType == "Negotiation" &&
                                         (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId));
+
+                var currentUserObj = await GetUserAsync(currentUserId);
 
                 if (existingWithOtherUser != null)
                 {
@@ -196,10 +199,25 @@ namespace KamPay.Services.ServiceSharing
                     request.HasActiveConversation = true;
                     await requestNode.PutAsync(request);
 
+                    // ✅ FAZ 2: Hizmet Kartını Gönder
+                    if (currentUserObj != null)
+                    {
+                        await _messagingService.SendMessageAsync(new SendMessageRequest
+                        {
+                            ReceiverId = otherUserId,
+                            Content = request.Message ?? "Hizmet talebi gönderildi",
+                            Type = MessageType.ServiceCard,
+                            ServiceOfferId = request.ServiceId,
+                            ProductTitle = request.ServiceTitle,
+                            ProductPrice = request.Price,
+                            ConversationType = "Negotiation"
+                        }, currentUserObj);
+                    }
+
                     return ServiceResult<string>.SuccessResult(existingWithOtherUser.Key, "Mevcut konuşma bulundu.");
                 }
 
-                var conversationResult = await _messagingService.GetOrCreateConversationAsync(currentUserId, otherUserId);
+                var conversationResult = await _messagingService.GetOrCreateConversationAsync(currentUserId, otherUserId, null, "Negotiation");
 
                 if (!conversationResult.Success || conversationResult.Data == null)
                 {
@@ -212,14 +230,26 @@ namespace KamPay.Services.ServiceSharing
 
                 var systemMessageContent = $"💬 [{request.ServiceTitle} - Hizmet]\n📢 Konuşma başlatıldı\nFiyat: {request.Price:N2} ₺";
 
-                var currentUserObj = await GetUserAsync(currentUserId);
                 if (currentUserObj != null)
                 {
                     await _messagingService.SendMessageAsync(new SendMessageRequest
                     {
                         ReceiverId = otherUserId,
                         Content = systemMessageContent,
-                        Type = MessageType.System
+                        Type = MessageType.System,
+                        ConversationType = "Negotiation"
+                    }, currentUserObj);
+
+                    // ✅ FAZ 2: Hizmet Kartını Gönder
+                    await _messagingService.SendMessageAsync(new SendMessageRequest
+                    {
+                        ReceiverId = otherUserId,
+                        Content = request.Message ?? "Hizmet talebi gönderildi",
+                        Type = MessageType.ServiceCard,
+                        ServiceOfferId = request.ServiceId,
+                        ProductTitle = request.ServiceTitle,
+                        ProductPrice = request.Price,
+                        ConversationType = "Negotiation"
                     }, currentUserObj);
                 }
 

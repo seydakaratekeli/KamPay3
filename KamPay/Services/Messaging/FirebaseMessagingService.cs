@@ -75,7 +75,10 @@ namespace KamPay.Services.Messaging
                     return ServiceResult<Message>.FailureResult("GÃ¶rsel URL'i boÅŸ olamaz.");
                 }
 
-                string conversationType = string.IsNullOrEmpty(request.ProductId) ? "General" : "Negotiation";
+                // ConversationType artık mesajdaki ProductId'ye göre değil,
+                // request'te açıkça belirtilen tipe göre belirlenir.
+                // Default: General — yalnızca Negotiation açıkça gerektiğinde belirtilir.
+                string conversationType = request.ConversationType ?? "General";
                 var conversationResult = await GetOrCreateConversationAsync(sender.UserId, request.ReceiverId, request.ProductId, conversationType);
                 if (!conversationResult.Success || conversationResult.Data == null)
                 {
@@ -209,7 +212,9 @@ namespace KamPay.Services.Messaging
                         return conv;
                     })
                     .Where(c => c.IsActive &&
-                               (c.User1Id == userId || c.User2Id == userId))
+                               (c.User1Id == userId || c.User2Id == userId) &&
+                               !(c.User1Id == userId && c.DeletedByUser1) &&
+                               !(c.User2Id == userId && c.DeletedByUser2))
                     .OrderByDescending(c => c.LastMessageTime)
                     .ToList();
 
@@ -231,12 +236,26 @@ namespace KamPay.Services.Messaging
                     .OnceAsync<Conversation>();
 
                 var existing = allConversations
-                    .Select(c => c.Object)
+                    .Select(c => { c.Object.ConversationId = c.Key; return c.Object; })
                     .FirstOrDefault(c =>
                         c.IsActive &&
                         ((c.User1Id == user1Id && c.User2Id == user2Id) ||
                          (c.User1Id == user2Id && c.User2Id == user1Id)) &&
                         (c.ConversationType ?? "General") == conversationType);
+
+                // ✅ Silinmiş ama aynı tip konuşma varsa yeniden aktif et
+                if (existing != null && ((existing.User1Id == user1Id && existing.DeletedByUser1) ||
+                                         (existing.User2Id == user1Id && existing.DeletedByUser2)))
+                {
+                    // Kullanıcı için silme bayrağını kaldır
+                    if (existing.User1Id == user1Id) existing.DeletedByUser1 = false;
+                    else existing.DeletedByUser2 = false;
+
+                    await _firebaseClient
+                        .Child(Constants.ConversationsCollection)
+                        .Child(existing.ConversationId)
+                        .PutAsync(existing);
+                }
 
                 if (existing != null)
                 {
@@ -382,17 +401,32 @@ namespace KamPay.Services.Messaging
 
                 if (conversation == null)
                 {
-                    return ServiceResult<bool>.FailureResult("KonuÅŸma bulunamadÄ±");
+                    return ServiceResult<bool>.FailureResult("Konuşma bulunamadı");
                 }
 
-                conversation.IsActive = false;
+                // ✅ Kullanıcı bazlı silme — karşı tarafın konuşması etkilenmez
+                var updates = new Dictionary<string, object>();
+                if (conversation.User1Id == userId)
+                    updates["DeletedByUser1"] = true;
+                else if (conversation.User2Id == userId)
+                    updates["DeletedByUser2"] = true;
+                else
+                    return ServiceResult<bool>.FailureResult("Bu konuşma size ait değil");
+
+                // Her iki kullanıcı da sildiyse IsActive = false yap
+                bool bothDeleted =
+                    (conversation.User1Id == userId ? true : conversation.DeletedByUser1) &&
+                    (conversation.User2Id == userId ? true : conversation.DeletedByUser2);
+
+                if (bothDeleted)
+                    updates["IsActive"] = false;
 
                 await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .Child(conversationId)
-                    .PutAsync(conversation);
+                    .PatchAsync(updates);
 
-                return ServiceResult<bool>.SuccessResult(true, "KonuÅŸma silindi");
+                return ServiceResult<bool>.SuccessResult(true, "Konuşma silindi");
             }
             catch (Exception ex)
             {

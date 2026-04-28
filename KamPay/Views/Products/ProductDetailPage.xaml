@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -427,18 +427,19 @@
                     </Button>
 
                     <Button Grid.Column="1" 
-                            Text="💰 Pazarlık Yap" 
-                            Command="{Binding MessageSellerCommand}" 
-                            HeightRequest="50" 
-                            CornerRadius="14" 
-                            BackgroundColor="#FF9800" 
-                            TextColor="White" 
-                            FontAttributes="Bold" 
-                            FontSize="15" 
-                            IsVisible="{Binding HasActiveTransaction}">
-                        <Button.Shadow>
-                            <Shadow Brush="#FF9800" Opacity="0.4" Radius="10" Offset="0,4"/>
-                        </Button.Shadow>
+        Text="💰 Pazarlık Yap" 
+        Command="{Binding MessageSellerCommand}" 
+        HeightRequest="50" 
+        CornerRadius="14" 
+        BackgroundColor="#FF9800" 
+        TextColor="White" 
+        FontAttributes="Bold" 
+        FontSize="15"
+        IsEnabled="{Binding IsFixedPriceSelected, Converter={StaticResource InvertedBoolConverter}}"
+        Opacity="{Binding IsFixedPriceSelected, Converter={StaticResource BoolToOpacityConverter}}">
+                        <Button.IsVisible>
+                            <Binding Path="HasActiveTransaction"/>
+                        </Button.IsVisible>
                     </Button>
 
                     <Button Grid.Column="2" 

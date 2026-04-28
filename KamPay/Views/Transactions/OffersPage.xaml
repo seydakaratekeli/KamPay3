@@ -213,11 +213,16 @@
                                             </VerticalStackLayout>
                                         </Grid>
 
-                                        <Border IsVisible="{Binding IsNegotiating}"
-        StrokeShape="RoundRectangle 12"
+                                        <Border StrokeShape="RoundRectangle 12"
         StrokeThickness="0"
         BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}"
         Padding="12">
+                                            <Border.IsVisible>
+                                                <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                    <Binding Path="IsNegotiating"/>
+                                                    <Binding Path="IsNegotiationAllowed"/>
+                                                </MultiBinding>
+                                            </Border.IsVisible>
                                             <VerticalStackLayout Spacing="6">
 
                                                 <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
@@ -309,6 +314,7 @@
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
+                                                            <Binding Path="IsNegotiationAllowed"/>
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
                                                                 <Binding Path="IsNegotiating"/>
@@ -447,11 +453,16 @@
                                             </VerticalStackLayout>
                                         </Grid>
 
-                                        <Border IsVisible="{Binding IsNegotiating}"
-        StrokeShape="RoundRectangle 12"
+                                        <Border StrokeShape="RoundRectangle 12"
         StrokeThickness="0"
         BackgroundColor="{Binding ., Converter={StaticResource NegotiationTimerColorConverter}}"
         Padding="12">
+                                            <Border.IsVisible>
+                                                <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                                    <Binding Path="IsNegotiating"/>
+                                                    <Binding Path="IsNegotiationAllowed"/>
+                                                </MultiBinding>
+                                            </Border.IsVisible>
                                             <VerticalStackLayout Spacing="6">
 
                                                 <Label Text="{Binding ., Converter={StaticResource NegotiationStatusTextConverter}}"
@@ -543,6 +554,7 @@
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueConverter}">
                                                             <Binding Path="Type" Converter="{StaticResource EnumToBoolConverter}" ConverterParameter="Satis"/>
+                                                            <Binding Path="IsNegotiationAllowed"/>
                                                             <MultiBinding Converter="{StaticResource AnyTrueConverter}">
                                                                 <Binding Path="Status" Converter="{StaticResource IsPendingConverter}"/>
                                                                 <Binding Path="IsNegotiating"/>

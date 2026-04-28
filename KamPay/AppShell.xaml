@@ -20,7 +20,8 @@
         </Tab>
 
         <Tab x:Name="ServicesTab" Title="Hizmetler" Icon="briefcase.svg">
-            <ShellContent ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
+            <ShellContent Title="Hizmet İlanları" ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
+            <ShellContent Title="Hizmet Talepleri" ContentTemplate="{DataTemplate local:CustomerRequestsListPage}" Route="CustomerRequestsListPage" />
         </Tab>
 
         <Tab x:Name="GoodDeedTab" Title="İyilik Panosu" Icon="good_board.svg">
@@ -28,7 +29,8 @@
         </Tab>
 
         <Tab x:Name="MessagesTab" Title="Mesajlar" Icon="message_icon.svg">
-            <ShellContent ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
+            <ShellContent Title="Genel Sohbet" ContentTemplate="{DataTemplate local:MessagesPage}" Route="MessagesPage" />
+            <ShellContent Title="Pazarlık Sohbeti" ContentTemplate="{DataTemplate local:NegotiationMessagesPage}" Route="NegotiationMessagesPage" />
         </Tab>
 
         <Tab x:Name="ProfileTab" Title="Profil" Icon="person_icon.svg">

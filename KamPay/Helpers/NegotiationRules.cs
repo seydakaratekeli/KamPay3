@@ -150,6 +150,21 @@ namespace KamPay.Helpers
         }
 
         /// <summary>
+        /// İşlemin pazarlığa uygun olup olmadığını kontrol eder.
+        /// Sabit fiyat, zaman aşımı ve tur limiti tek noktadan kontrol edilir.
+        /// </summary>
+        public static ValidationResult CanNegotiate(Transaction transaction)
+        {
+            if (transaction.IsFixedPriceRequest)
+                return ValidationResult.Failure(
+                    "Bu işlem liste fiyatı ile satın alma talebidir. Pazarlık yapılamaz.");
+
+            return CanContinueNegotiation(
+                transaction.NegotiationRoundCount,
+                transaction.NegotiationStartedAt);
+        }
+
+        /// <summary>
         /// Pazarlığa devam edilip edilemeyeceğini kontrol eder
         /// </summary>
         public static ValidationResult CanContinueNegotiation(int currentRounds, DateTime? negotiationStartedAt)

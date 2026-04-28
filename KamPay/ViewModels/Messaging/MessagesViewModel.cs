@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -53,10 +53,7 @@ namespace KamPay.ViewModels
         [ObservableProperty]
         private string emptyMessage = "HenÃ¼z mesajÄ±nÄ±z yok";
         [ObservableProperty]
-        private bool showPersonalChatsOnly = true; // Varsayılan: kişisel sohbetler
-
-        [ObservableProperty]
-        private bool showNegotiationChats = false;
+        private string searchText = string.Empty;
 
         [ObservableProperty]
         private Conversation? selectedConversation;
@@ -108,7 +105,8 @@ namespace KamPay.ViewModels
             // Constructor (MessagesViewModel metodu) içine ekleyin:
             Conversations.CollectionChanged += (s, e) =>
             {
-                OnPropertyChanged(nameof(FilteredConversations));
+                OnPropertyChanged(nameof(PersonalConversations));
+                OnPropertyChanged(nameof(NegotiationConversations));
             };
 
         }
@@ -276,9 +274,20 @@ namespace KamPay.ViewModels
                             var convo = Conversations.FirstOrDefault(c => c.ConversationId == conversation.ConversationId);
                             if (convo != null)
                             {
-                                // âœ… FIX: FullName kullan, Username deÄŸil
+                                // ✅ FIX: FullName kullan, Username değil
                                 convo.OtherUserPhotoUrl = userProfile.Data.ProfileImageUrl ?? "person_icon.svg";
                                 convo.OtherUserName = userProfile.Data.FullName ?? string.Empty;
+                                
+                                // ✅ FAZ 3: Online durumu
+                                if (userProfile.Data.LastLoginAt.HasValue)
+                                {
+                                    // Son 15 dakika içinde giriş yaptıysa "Online" kabul edelim
+                                    convo.IsOtherUserOnline = (DateTime.UtcNow - userProfile.Data.LastLoginAt.Value).TotalMinutes < 15;
+                                }
+                                else
+                                {
+                                    convo.IsOtherUserOnline = false;
+                                }
                             }
                         });
                     }
@@ -562,46 +571,55 @@ namespace KamPay.ViewModels
             SortConversationsInPlace();
         }
         // Filtrelenmiş conversation listesi
-        public IEnumerable<Conversation> FilteredConversations =>
-            showPersonalChatsOnly
-                ? Conversations.Where(c => !c.IsNegotiationConversation)
-                : Conversations.Where(c => c.IsNegotiationConversation);
+        public IEnumerable<Conversation> PersonalConversations
+        {
+            get
+            {
+                var q = Conversations.Where(c => !c.IsNegotiationConversation);
+
+                if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    var t = SearchText.ToLower();
+                    q = q.Where(c =>
+                        (c.OtherUserName != null && c.OtherUserName.ToLower().Contains(t)) ||
+                        (c.LastMessage != null && c.LastMessage.ToLower().Contains(t)) ||
+                        (c.ProductTitle != null && c.ProductTitle.ToLower().Contains(t))
+                    );
+                }
+
+                return q;
+            }
+        }
+
+        public IEnumerable<Conversation> NegotiationConversations
+        {
+            get
+            {
+                var q = Conversations.Where(c => c.IsNegotiationConversation);
+
+                if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    var t = SearchText.ToLower();
+                    q = q.Where(c =>
+                        (c.OtherUserName != null && c.OtherUserName.ToLower().Contains(t)) ||
+                        (c.LastMessage != null && c.LastMessage.ToLower().Contains(t)) ||
+                        (c.ProductTitle != null && c.ProductTitle.ToLower().Contains(t))
+                    );
+                }
+
+                return q;
+            }
+        }
 
         // ─── 2) Partial void override (sınıf gövdesine ekle) ─────────────────
 
-        partial void OnShowPersonalChatsOnlyChanged(bool value)
+        partial void OnSearchTextChanged(string value)
         {
-            OnPropertyChanged(nameof(FilteredConversations));
+            OnPropertyChanged(nameof(PersonalConversations));
+            OnPropertyChanged(nameof(NegotiationConversations));
         }
-
-        partial void OnShowNegotiationChatsChanged(bool value)
-        {
-            OnPropertyChanged(nameof(FilteredConversations));
-        }
-
-        // Conversations koleksiyonu değişince filtered'ı da güncelle
-        // (mevcut CollectionChanged aboneliğine ekle veya ayrı bir metot olarak bağla)
-        // Conversations.CollectionChanged += (_, _) => OnPropertyChanged(nameof(FilteredConversations));
 
         // ─── 3) YENİ KomutLAR (sınıf gövdesine ekle) ─────────────────────────
-
-        [RelayCommand]
-        private void ExecuteShowPersonalChats()
-        {
-            ShowPersonalChatsOnly = true;
-            ShowNegotiationChats = false;
-            OnPropertyChanged(nameof(FilteredConversations));
-            EmptyMessage = FilteredConversations.Any() ? string.Empty : "Bu sekmede henüz mesajınız yok.";
-        }
-
-        [RelayCommand]
-        private void ExecuteShowNegotiationChats()
-        {
-            ShowPersonalChatsOnly = false;
-            ShowNegotiationChats = true;
-            OnPropertyChanged(nameof(FilteredConversations));
-            EmptyMessage = FilteredConversations.Any() ? string.Empty : "Bu sekmede henüz mesajınız yok.";
-        }
 
         [RelayCommand]
         private async Task RefreshConversationsAsync()

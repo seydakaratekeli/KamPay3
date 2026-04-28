@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:extensions="clr-namespace:KamPay.Extensions"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.EditServiceOfferPage"
+             x:DataType="vm:EditServiceOfferViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- HEADER -->
+        <Grid Grid.Row="0" HeightRequest="120">
+            <BoxView>
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" Padding="20,50,20,15">
+                <Border Grid.Column="0" 
+                        StrokeShape="RoundRectangle 20" 
+                        BackgroundColor="#33FFFFFF" 
+                        WidthRequest="40" 
+                        HeightRequest="40" 
+                        StrokeThickness="0"
+                        VerticalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoBackCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="←" 
+                           TextColor="White" 
+                           FontSize="24" 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center"/>
+                </Border>
+
+                <Label Grid.Column="1" 
+                       Text="İlan Düzenle" 
+                       FontSize="20" 
+                       FontAttributes="Bold" 
+                       TextColor="White" 
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center"/>
+            </Grid>
+        </Grid>
+
+        <!-- CONTENT -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20" Padding="20,20,20,40" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                
+                <!-- Başlık -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Hizmet Başlığı" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="12,8">
+                        <Entry Text="{Binding Offer.Title}" FontSize="15" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Açıklama -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Açıklama" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="12,8">
+                        <Editor Text="{Binding Offer.Description}" FontSize="15" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent" AutoSize="TextChanges" MinimumHeightRequest="100"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Kategori -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Kategori" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="12,0">
+                        <Picker ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" FontSize="15" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent">
+                            <Picker.ItemDisplayBinding>
+                                <Binding Converter="{StaticResource ServiceCategoryToTextConverter}"/>
+                            </Picker.ItemDisplayBinding>
+                        </Picker>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Fiyat -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Fiyat (₺)" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="12,8">
+                        <Entry Text="{Binding Offer.Price}" Keyboard="Numeric" FontSize="15" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Süre -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tahmini Süre (Saat)" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="12">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Button Grid.Column="0" Text="−" Command="{Binding DecrementTimeCreditsCommand}" BackgroundColor="{StaticResource Background}" TextColor="{StaticResource TextPrimary}" FontSize="20" CornerRadius="10" WidthRequest="40" HeightRequest="40"/>
+                            <Label Grid.Column="1" Text="{Binding Offer.TimeCredits, StringFormat='{0} saat'}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"/>
+                            <Button Grid.Column="2" Text="+" Command="{Binding IncrementTimeCreditsCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="20" CornerRadius="10" WidthRequest="40" HeightRequest="40"/>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Aktif/Pasif -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="İlan Durumu" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                        <Switch IsToggled="{Binding Offer.IsAvailable}" OnColor="{StaticResource Primary}"/>
+                        <Label Text="{Binding Offer.IsAvailable, StringFormat='{0}'}" FontSize="15" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <Button Text="Kaydet" 
+                        Command="{Binding UpdateOfferCommand}" 
+                        IsEnabled="{Binding IsUpdating, Converter={StaticResource InvertedBoolConverter}}" 
+                        BackgroundColor="{StaticResource Primary}" 
+                        TextColor="White" 
+                        FontAttributes="Bold" 
+                        FontSize="16" 
+                        CornerRadius="12" 
+                        HeightRequest="50" 
+                        Margin="0,20,0,0">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="8" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading -->
+        <Grid Grid.RowSpan="2" IsVisible="{Binding IsLoading}" BackgroundColor="{StaticResource Background}" ZIndex="1100" InputTransparent="False">
+            <ActivityIndicator IsRunning="True" Color="{StaticResource Primary}" WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

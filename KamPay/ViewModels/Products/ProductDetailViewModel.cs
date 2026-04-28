@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
@@ -50,7 +50,8 @@ namespace KamPay.ViewModels
 
         [ObservableProperty]
         private string productId = string.Empty;
-
+        [ObservableProperty]
+        private bool isFixedPriceSelected = false;
         [ObservableProperty]
         private Product? product;
 
@@ -318,12 +319,13 @@ namespace KamPay.ViewModels
                                 ActiveTransaction = updated;
                                 OnPropertyChanged(nameof(ActiveTransaction));
                                 KamPay.Helpers.AppLogger.DebugLog($"âœ… Transaction gÃ¼ncellendi: IsNegotiating={updated.IsNegotiating}, Status={updated.Status}");
+                                KamPay.Helpers.AppLogger.DebugLog($"✅ Transaction güncellendi: IsNegotiating={updated.IsNegotiating}, Status={updated.Status}");
                             }
                         });
                     },
                     error =>
                     {
-                        KamPay.Helpers.AppLogger.DebugLog($"âŒ Transaction listener hatasÄ±: {error.Message}");
+                        KamPay.Helpers.AppLogger.DebugLog($"❌ Transaction listener hatası: {error.Message}");
                     });
         }
 
@@ -334,11 +336,34 @@ namespace KamPay.ViewModels
 
             try
             {
-                IsLoading = true;
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null || currentUser.UserId == Product.UserId) return;
 
-                var conversationResult = await _messagingService.GetOrCreateConversationAsync(currentUser.UserId, Product.UserId, Product.ProductId);
+                if (Application.Current?.MainPage == null) return;
+
+                // Kullanıcıya sohbet türünü sor
+                var action = await Application.Current.MainPage.DisplayActionSheet(
+                    "Sohbet Türü Seçin",
+                    Res["Cancel"] ?? "İptal",
+                    null,
+                    "Genel Sohbet",
+                    "Ürün Hakkında (Pazarlık/Detay)");
+
+                if (action == (Res["Cancel"] ?? "İptal") || string.IsNullOrEmpty(action))
+                {
+                    return;
+                }
+
+                IsLoading = true;
+
+                string conversationType = action == "Genel Sohbet" ? "General" : "Negotiation";
+                string? productIdToPass = action == "Genel Sohbet" ? null : Product.ProductId;
+
+                var conversationResult = await _messagingService.GetOrCreateConversationAsync(
+                    currentUser.UserId, 
+                    Product.UserId, 
+                    productIdToPass, 
+                    conversationType);
 
                 if (conversationResult.Success)
                 {
@@ -346,8 +371,7 @@ namespace KamPay.ViewModels
                 }
                 else
                 {
-                    if (Application.Current?.MainPage != null)
-                        await Application.Current.MainPage.DisplayAlert(Res["Error"], conversationResult.Message, Res["Ok"]);
+                    await Application.Current.MainPage.DisplayAlert(Res["Error"], conversationResult.Message, Res["Ok"]);
                 }
             }
             catch (Exception ex)
@@ -421,16 +445,19 @@ namespace KamPay.ViewModels
                             }
                             isFixedPrice = false;
                         }
-
                         IsLoading = true;
-                        // SatÄ±ÅŸ iÃ§in talebi oluÅŸtur
-                        var saleResult = await _transactionService.CreateRequestAsync(Product, currentUser);
+                        // ✅ SORUN 1 FIX: isFixedPrice parametresini geçir
+                        var saleResult = await _transactionService.CreateRequestAsync(
+                            Product, currentUser, isFixedPriceRequest: isFixedPrice);
 
                         if (saleResult.Success)
                         {
                             ActiveTransaction = saleResult.Data;
                             HasActiveTransaction = true;
 
+                            // ✅ SORUN 1 FIX: ActiveTransaction'a flag yansıt (servis zaten set etti ama local nesne için)
+                            if (ActiveTransaction != null)
+                                ActiveTransaction.IsFixedPriceRequest = isFixedPrice;
                             // Hemen konuÅŸmayÄ± baÅŸlat
                             var convResult = await _transactionService.StartConversationForTransactionAsync(ActiveTransaction.TransactionId, currentUser.UserId);
 
@@ -450,7 +477,8 @@ namespace KamPay.ViewModels
                                     ReceiverId = Product.UserId,
                                     Content = statusNote,
                                     Type = MessageType.System,
-                                    ProductId = Product.ProductId
+                                    ProductId = Product.ProductId,
+                                    ConversationType = "Negotiation" // ✅ YENİ: Pazarlık sohbetine zorla
                                 };
                                 await _messagingService.SendMessageAsync(systemMessageRequest, currentUser);
                             }

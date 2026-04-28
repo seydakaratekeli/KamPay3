@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -22,7 +22,8 @@ namespace KamPay.ViewModels
         private readonly IUserProfileService _userProfileService;
         private readonly IUserStateService _userStateService;
         private readonly IMessagingService _messagingService;
-        private readonly IRealtimeSnapshotService<ServiceOffer> _loader; // ✅ Interface kullan
+        private readonly IRealtimeSnapshotService<ServiceOffer> _loader; 
+        private readonly KamPay.Services.Caching.ILocalDatabaseService<ServiceOffer> _cacheService;
 
         private IDisposable? _listener;
 
@@ -33,7 +34,6 @@ namespace KamPay.ViewModels
 
         // UI STATE
         [ObservableProperty] private bool isPostFormVisible;
-        [ObservableProperty] private bool isCustomerRequestFormVisible;
         [ObservableProperty] private bool isLoading;
         [ObservableProperty] private bool isPosting;
         [ObservableProperty] private bool isRefreshing;
@@ -45,23 +45,14 @@ namespace KamPay.ViewModels
         [ObservableProperty] private decimal servicePrice;
         [ObservableProperty] private int timeCredits = 1;
 
-        // FORM FIELDS (Customer Request)
-        [ObservableProperty] private string customerRequestTitle = "";
-        [ObservableProperty] private string customerRequestDescription = "";
-        [ObservableProperty] private ServiceCategory customerRequestCategory;
-        [ObservableProperty] private string customerRequestLocation = "";
-        [ObservableProperty] private decimal customerRequestBudgetMin;
-        [ObservableProperty] private decimal customerRequestBudgetMax;
-        [ObservableProperty] private DateTime customerRequestPreferredDate = DateTime.Now.AddDays(1);
-
         // FILTERS
         [ObservableProperty] private string searchText = "";
         [ObservableProperty] private ServiceCategory? filterCategory = null;
         [ObservableProperty] private string? priceSort = null;
 
         // DATA COLLECTIONS
-        public ObservableCollection<ServiceOffer> Services { get; } = new();
-        public ObservableCollection<ServiceOffer> FilteredServices { get; } = new();
+        public ObservableRangeCollection<ServiceOffer> Services { get; } = new();
+        public ObservableRangeCollection<ServiceOffer> FilteredServices { get; } = new();
 
         public List<ServiceCategory?> Categories { get; } =
             new List<ServiceCategory?> { null }
@@ -88,14 +79,16 @@ namespace KamPay.ViewModels
             IUserProfileService userProfileService,
             IUserStateService userStateService,
             IMessagingService messagingService,
-            IRealtimeSnapshotService<ServiceOffer> realtimeLoader) // ✅ DI ile inject
+            IRealtimeSnapshotService<ServiceOffer> realtimeLoader,
+            KamPay.Services.Caching.ILocalDatabaseService<ServiceOffer> cacheService)
         {
             _serviceService = serviceService;
             _authService = authService;
             _userProfileService = userProfileService;
             _userStateService = userStateService;
             _messagingService = messagingService;
-            _loader = realtimeLoader; // ✅ Artık DI'den geliyor
+            _loader = realtimeLoader;
+            _cacheService = cacheService;
 
             _userStateService.UserProfileChanged += OnUserProfileChanged;
 
@@ -151,50 +144,110 @@ namespace KamPay.ViewModels
 
                 IsLoading = true;
 
+                // 1) Load from local cache first (Offline Support & Speed)
+                try
+                {
+                    var cachedData = _cacheService.GetAll();
+                    if (cachedData != null && cachedData.Any())
+                    {
+                        var filteredCache = cachedData
+                            .Where(o => o.IsAvailable && (!FilterCategory.HasValue || o.Category == FilterCategory.Value))
+                            .OrderByDescending(o => o.CreatedAt)
+                            .ToList();
+
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            Services.Clear();
+                            _serviceIds.Clear();
+                            foreach (var service in filteredCache)
+                            {
+                                Services.Add(service);
+                                _serviceIds.Add(service.ServiceId);
+                            }
+                            ApplyFilter();
+                        });
+                        
+                        // We still continue to fetch fresh data to ensure we are up to date.
+                    }
+                }
+                catch (Exception ex)
+                {
+                    KamPay.Helpers.AppLogger.DebugLog("Cache Load Error: " + ex.Message);
+                }
+
+                // 2) Fetch fresh data
                 var result = await _serviceService.GetServiceOffersPagedAsync(
                     pageSize: 20,
                     lastKey: null,
                     category: FilterCategory
                 );
 
-                Services.Clear();
-                _serviceIds.Clear();
-
                 if (result.Success && result.Data != null)
-                {
-                    foreach (var service in result.Data)
-                    {
-                        if (service.IsAvailable)
-                        {
-                            Services.Add(service);
-                            _serviceIds.Add(service.ServiceId);
-                        }
-                    }
-
-                    Services.SortDescending(x => x.CreatedAt);
-                    
-                    if (result.Data.Any())
-                    {
-                        _lastLoadedKey = result.Data.Last().ServiceId;
-                    }
-                }
-
-                IsLoading = false;
-
-                ApplyFilter();
-
-                _listener = _loader.Listen(Constants.ServiceOffersCollection, evt =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        ApplyRealtimeEvent(evt);
+                        Services.Clear();
+                        _serviceIds.Clear();
+                        
+                        foreach (var service in result.Data)
+                        {
+                            if (service.IsAvailable)
+                            {
+                                Services.Add(service);
+                                _serviceIds.Add(service.ServiceId);
+                            }
+                        }
+
+                        var sortedList = Services.OrderByDescending(x => x.CreatedAt).ToList();
+                        Services.Clear();
+                        foreach (var item in sortedList)
+                        {
+                            Services.Add(item);
+                        }
+                        
+                        if (result.Data.Any())
+                        {
+                            _lastLoadedKey = result.Data.Last().ServiceId;
+                        }
+                        
+                        ApplyFilter();
+                    });
+
+                    // 3) Update local cache in background
+                    _ = Task.Run(() => 
+                    {
+                        try
+                        {
+                            if (FilterCategory == null) // Sadece genel liste geldiğinde temizleyip kaydediyoruz ki cache çok şişmesin
+                            {
+                                _cacheService.DeleteAll();
+                                _cacheService.InsertOrUpdateBulk(result.Data);
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            KamPay.Helpers.AppLogger.DebugLog("Cache Update Error: " + ex.Message);
+                        }
+                    });
+                }
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    IsLoading = false;
+
+                    _listener = _loader.Listen(Constants.ServiceOffersCollection, evt =>
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            ApplyRealtimeEvent(evt);
+                        });
                     });
                 });
             }
             catch (Exception ex)
             {
                 KamPay.Helpers.AppLogger.DebugLog("UltraFastLoadAsync Error: " + ex.Message);
-                IsLoading = false;
+                MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
             }
         }
 
@@ -328,9 +381,9 @@ namespace KamPay.ViewModels
             {
                 var t = SearchText.ToLower();
                 q = q.Where(s =>
-                    (s.Title ?? "").Contains(t, StringComparison.OrdinalIgnoreCase) ||
-                    (s.Description ?? "").Contains(t, StringComparison.OrdinalIgnoreCase) ||
-                    (s.ProviderName ?? "").Contains(t, StringComparison.OrdinalIgnoreCase)
+                    (s.Title ?? "").ToLower().Contains(t) ||
+                    (s.Description ?? "").ToLower().Contains(t) ||
+                    (s.ProviderName ?? "").ToLower().Contains(t)
                 );
             }
 
@@ -348,9 +401,12 @@ namespace KamPay.ViewModels
             else
                 q = q.OrderByDescending(s => s.CreatedAt);
 
-            FilteredServices.Clear();
-            foreach (var s in q)
-                FilteredServices.Add(s);
+            var items = q.ToList();
+            
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                FilteredServices.ReplaceRange(items);
+            });
         }
 
         [RelayCommand]
@@ -404,11 +460,6 @@ namespace KamPay.ViewModels
         [RelayCommand]
         private void ClosePostForm() => IsPostFormVisible = false;
 
-        [RelayCommand]
-        private void OpenCustomerRequestForm() => IsCustomerRequestFormVisible = true;
-
-        [RelayCommand]
-        private void CloseCustomerRequestForm() => IsCustomerRequestFormVisible = false;
 
         [RelayCommand]
         private async Task CreateServiceAsync()
@@ -496,149 +547,10 @@ namespace KamPay.ViewModels
         }
 
         [RelayCommand]
-        private async Task CreateCustomerRequestAsync()
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(CustomerRequestTitle))
-                {
-                    await DisplayAsync("Uyarı", "Başlık gerekli.");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(CustomerRequestDescription))
-                {
-                    await DisplayAsync("Uyarı", "Açıklama gerekli.");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(CustomerRequestLocation))
-                {
-                    await DisplayAsync("Uyarı", "Konum gerekli.");
-                    return;
-                }
-
-                if (CustomerRequestBudgetMin < 0 || CustomerRequestBudgetMax < 0)
-                {
-                    await DisplayAsync("Uyarı", "Bütçe 0 veya daha büyük olmalıdır.");
-                    return;
-                }
-
-                if (CustomerRequestBudgetMin > CustomerRequestBudgetMax)
-                {
-                    await DisplayAsync("Uyarı", "Minimum bütçe, maksimum bütçeden büyük olamaz.");
-                    return;
-                }
-
-                var user = await _authService.GetCurrentUserAsync();
-                if (user == null)
-                {
-                    await DisplayAsync("Hata", "Giriş yapılmamış.");
-                    return;
-                }
-
-                var profile = await _userProfileService.GetUserProfileAsync(user.UserId);
-                var img = profile?.Data?.ProfileImageUrl ?? "person_icon.svg";
-
-                IsPosting = true;
-
-                var customerRequest = new CustomerServiceRequest
-                {
-                    RequestId = Guid.NewGuid().ToString(),
-                    CustomerId = user.UserId,
-                    CustomerName = user.FullName,
-                    CustomerPhotoUrl = img,
-                    Title = CustomerRequestTitle,
-                    Description = CustomerRequestDescription,
-                    Category = CustomerRequestCategory,
-                    Location = CustomerRequestLocation,
-                    BudgetMin = CustomerRequestBudgetMin,
-                    BudgetMax = CustomerRequestBudgetMax,
-                    PreferredDate = CustomerRequestPreferredDate,
-                    Status = CustomerRequestStatus.Open,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    ProposalCount = 0
-                };
-
-                var result = await _serviceService.CreateCustomerRequestAsync(customerRequest);
-
-                if (result.Success)
-                {
-                    CustomerRequestTitle = "";
-                    CustomerRequestDescription = "";
-                    CustomerRequestLocation = "";
-                    CustomerRequestBudgetMin = 0;
-                    CustomerRequestBudgetMax = 0;
-                    CustomerRequestCategory = 0;
-                    CustomerRequestPreferredDate = DateTime.Now.AddDays(1);
-
-                    IsCustomerRequestFormVisible = false;
-
-                    await DisplayAsync("Başarılı", "Hizmet talebiniz oluşturuldu! Profesyonellerden teklifler almaya başlayacaksınız.");
-                }
-                else
-                {
-                    await DisplayAsync("Hata", result.Message ?? "Hata oluştu.");
-                }
-            }
-            catch (Exception ex)
-            {
-                await DisplayAsync("Hata", ex.Message);
-            }
-            finally
-            {
-                IsPosting = false;
-            }
-        }
-
-        [RelayCommand]
-        private async Task RequestServiceAsync(ServiceOffer offer)
+        private async Task GoToOfferDetailAsync(ServiceOffer offer)
         {
             if (offer == null) return;
-
-            var user = await _authService.GetCurrentUserAsync();
-            if (user == null)
-            {
-                await DisplayAsync("Hata", "Giriş yapılmalı.");
-                return;
-            }
-
-            if (offer.ProviderId == user.UserId)
-            {
-                await DisplayAsync("Bilgi", "Kendi hizmetinize talep gönderemezsiniz.");
-                return;
-            }
-
-            try
-            {
-                var msg = await Application.Current!.MainPage!.DisplayPromptAsync(
-                    "Hizmet Talebi",
-                    $"'{offer.Title}' için mesajınız:",
-                    "Gönder",
-                    "İptal",
-                    "Merhaba, hizmetinizle ilgileniyorum."
-                );
-
-                if (string.IsNullOrWhiteSpace(msg)) return;
-
-                IsPosting = true;
-
-                var res = await _serviceService.RequestServiceAsync(offer, user, msg);
-
-                if (res.Success)
-                    await DisplayAsync("Başarılı", res.Message);
-                else
-                    await DisplayAsync("Hata", res.Message ?? "Talep gönderilemedi.");
-            }
-            catch (Exception ex)
-            {
-                await DisplayAsync("Hata", ex.Message);
-            }
-            finally
-            {
-                IsPosting = false;
-            }
+            await Shell.Current.GoToAsync($"{nameof(Views.ServiceOfferDetailPage)}?offerId={offer.ServiceId}");
         }
 
         [RelayCommand]
@@ -666,7 +578,8 @@ namespace KamPay.ViewModels
                 var conversationResult = await _messagingService.GetOrCreateConversationAsync(
                     currentUser.UserId,
                     offer.ProviderId,
-                    offer.ServiceId);
+                    offer.ServiceId,
+                    "Negotiation");
 
                 if (conversationResult.Success && conversationResult.Data != null)
                 {

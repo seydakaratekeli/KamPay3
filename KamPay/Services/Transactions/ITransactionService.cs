@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using KamPay.Models;
 
@@ -14,7 +14,10 @@ namespace KamPay.Services.Transactions
         Task<ServiceResult<Transaction>> CreateTradeOfferAsync(Product product, string offeredProductId, string message, User buyer);
 
         // Bir bağış veya satış için istek oluşturur
-        Task<ServiceResult<Transaction>> CreateRequestAsync(Product product, User buyer);
+        Task<ServiceResult<Transaction>> CreateRequestAsync(
+            Product product,
+            User buyer,
+            bool isFixedPriceRequest = false);  // ✅ Ekle
 
         // Gelen bir teklife yanıt verir (Onayla/Reddet)
         Task<ServiceResult<Transaction>> RespondToOfferAsync(string transactionId, bool accept);

@@ -205,9 +205,6 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
 
                 builder.Services.AddSingleton<IStorageService, FirebaseStorageService>();
 
-                // ✅ YENİ: ARMUT MODELİ - Müşteri ve Profesyonel Yönetimi
-                builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
-                builder.Services.AddSingleton<IProviderProposalManager, ProviderProposalManager>();
                 
                 // IMessagingService (INotificationService ve FirebaseClient'a bağımlı)
                 builder.Services.AddSingleton<IMessagingService>(sp =>
@@ -218,10 +215,12 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 // ✅ YENİ: Mesaj medya koordinatörü
                 builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();
 
-                // IFavoriteService (INotificationService'e bağımlı)
+                // IFavoriteService (FirebaseClient ve INotificationService'e bağımlı)
                 builder.Services.AddSingleton<IFavoriteService>(sp =>
-                    new FirebaseFavoriteService(sp.GetRequiredService<INotificationService>()));
-                
+                    new FirebaseFavoriteService(
+                        sp.GetRequiredService<FirebaseClient>(),
+                        sp.GetRequiredService<INotificationService>()));
+
                 // IQRCodeService (IUserProfileService, IStorageService ve TransactionCompletionHelper'a bağımlı)
                 builder.Services.AddSingleton<IQRCodeService>(sp => 
                     new FirebaseQRCodeService(
@@ -239,6 +238,9 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddSingleton<IFirebaseObserverService, FirebaseObserverService>();
                 builder.Services.AddSingleton<IProductCacheService, ProductCacheService>();
                 builder.Services.AddSingleton<IReverseGeocodeService, ReverseGeocodeService>();
+                
+                // ✅ FAZ 7: Offline Caching Service
+                builder.Services.AddTransient(typeof(KamPay.Services.Caching.ILocalDatabaseService<>), typeof(KamPay.Services.Caching.LocalDatabaseService<>));
                 
                 // ISurpriseBoxService
                 builder.Services.AddSingleton<ISurpriseBoxService>(sp =>
@@ -261,6 +263,7 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddSingleton<ServiceRequestNegotiationService>();
                 builder.Services.AddSingleton<ServiceRequestCompletionService>();
                 builder.Services.AddSingleton<IServiceSharingService, ServiceSharingFacade>();
+            builder.Services.AddSingleton<IServiceReviewService, ServiceReviewService>();
 
                 // ? FAZ 3: Transaction Services (Temizlenmi� - Tek Sorumluluk)
                 // S�ra �nemli: CompletionService � PaymentService + NegotiationService � CrudService
@@ -339,17 +342,21 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddTransient<NotificationsViewModel>();
                 builder.Services.AddTransient<EditProductViewModel>();
                 builder.Services.AddTransient<AddProductViewModel>();
-                builder.Services.AddTransient<ProductListViewModel>();
+                builder.Services.AddSingleton<ProductListViewModel>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<TradeOfferViewModel>();
                 builder.Services.AddTransient<ProductDetailViewModel>();
-                builder.Services.AddTransient<MessagesViewModel>();
+                builder.Services.AddSingleton<MessagesViewModel>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<ChatViewModel>();
                 builder.Services.AddTransient<FavoritesViewModel>();
-                builder.Services.AddTransient<ProfileViewModel>();
+                builder.Services.AddSingleton<ProfileViewModel>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<QRCodeViewModel>();
                 builder.Services.AddTransient<SurpriseBoxViewModel>();
-                builder.Services.AddTransient<GoodDeedBoardViewModel>();
-                builder.Services.AddTransient<ServiceSharingViewModel>();
+                builder.Services.AddSingleton<GoodDeedBoardViewModel>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddSingleton<GoodDeedPostDetailViewModel>();
+                builder.Services.AddTransient<EditGoodDeedPostViewModel>();
+                builder.Services.AddSingleton<ServiceSharingViewModel>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddTransient<ServiceOfferDetailViewModel>();
+                builder.Services.AddTransient<EditServiceOfferViewModel>();
                 builder.Services.AddTransient<ServiceRequestsViewModel>();
                 builder.Services.AddTransient<ImageViewerViewModel>();
                 builder.Services.AddTransient<PaymentViewModel>();
@@ -368,21 +375,26 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddTransient<NotificationsPage>();
                 builder.Services.AddTransient<AddProductPage>();
                 builder.Services.AddTransient<EditProductPage>();
-                builder.Services.AddTransient<ProductListPage>();
+                builder.Services.AddSingleton<ProductListPage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<ProductDetailPage>();
                 builder.Services.AddTransient<ChatPage>();
-                builder.Services.AddTransient<MessagesPage>();
+                builder.Services.AddSingleton<MessagesPage>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddSingleton<NegotiationMessagesPage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<FavoritesPage>();
-                builder.Services.AddTransient<ProfilePage>();
+                builder.Services.AddSingleton<ProfilePage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<EditProfilePage>();
-                builder.Services.AddTransient<GoodDeedBoardPage>();
+                builder.Services.AddSingleton<GoodDeedBoardPage>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddTransient<GoodDeedPostDetailPage>();
+                builder.Services.AddTransient<EditGoodDeedPostPage>();
                 builder.Services.AddTransient<ImageViewerPage>();
                 builder.Services.AddTransient<OffersPage>();
                 builder.Services.AddTransient<PaymentPage>();
                 builder.Services.AddTransient<QRCodeDisplayPage>();
                 builder.Services.AddTransient<QRScannerPage>();
                 builder.Services.AddTransient<ServiceRequestsPage>();
-                builder.Services.AddTransient<ServiceSharingPage>();
+                builder.Services.AddSingleton<ServiceSharingPage>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddTransient<ServiceOfferDetailPage>();
+                builder.Services.AddTransient<EditServiceOfferPage>();
                 builder.Services.AddTransient<SurpriseBoxPage>();
                 builder.Services.AddTransient<TradeOfferView>();
 

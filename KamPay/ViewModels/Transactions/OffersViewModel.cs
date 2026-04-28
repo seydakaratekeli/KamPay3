@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Firebase.Database;
@@ -231,7 +231,8 @@ namespace KamPay.ViewModels
                     })
                     .OrderByDescending(t => t.CreatedAt)
                     .ToList();
-
+                // LoadInitialSnapshotAsync içinde, userOffers bulunduktan sonra:
+                Debug.WriteLine($"📸 Snapshot: {userOffers.Count} teklif — Incoming: {userOffers.Count(t => t.SellerId == userId)}, Outgoing: {userOffers.Count(t => t.BuyerId == userId)}");
                 // ✅ FAZ 7: Süresi dolmuş pazarlıkları arka planda iptal et (UI'ı bloke etmez)
                 _ = Task.Run(() => CheckAndExpireNegotiationsAsync(userOffers));
 
@@ -392,7 +393,9 @@ namespace KamPay.ViewModels
                             existing.ProposedPriceByBuyer != transaction.ProposedPriceByBuyer ||
                             existing.CounterOfferBySeller != transaction.CounterOfferBySeller ||
                             existing.AdditionalCashByRequester != transaction.AdditionalCashByRequester ||
-                            existing.CounterCashByOwner != transaction.CounterCashByOwner;
+                            existing.CounterCashByOwner != transaction.CounterCashByOwner ||
+                            existing.IsFixedPriceRequest != transaction.IsFixedPriceRequest; // ✅ SORUN 1 FIX
+
 
                         if (hasRealChange)
                         {
@@ -1071,7 +1074,7 @@ namespace KamPay.ViewModels
         private async Task AcceptNegotiatedPriceAsync(Transaction transaction)
         {
             if (transaction == null) return;
-            if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
+            if (Shell.Current?.CurrentPage == null) return;
             if (string.IsNullOrEmpty(_currentUserId)) return;
 
             try
@@ -1079,67 +1082,89 @@ namespace KamPay.ViewModels
                 var currentUser = await _authService.GetCurrentUserAsync();
                 if (currentUser == null)
                 {
-                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "Oturum bilgisi alÄ±namadÄ±.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Hata", "Oturum bilgisi alınamadı.", "Tamam");
                     return;
                 }
 
                 if (!transaction.IsNegotiating)
                 {
-                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Åu anda aktif bir pazarlÄ±k bulunmuyor.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Şu anda aktif bir pazarlık bulunmuyor.", "Tamam");
                     return;
                 }
 
-                string confirmMessage = "";
-                string confirmTitle = "";
+                // ✅ SORUN 4 FIX: Hem alıcı hem satıcı kabul edebilir — rol ayrımı serviste yapılıyor
+                bool isBuyer = transaction.BuyerId == _currentUserId;
+                bool isSeller = transaction.SellerId == _currentUserId;
+
+                if (!isBuyer && !isSeller)
+                {
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("⚠️ Yetkiniz Yok", "Bu işleme erişim yetkiniz yok.", "Tamam");
+                    return;
+                }
+
+                string confirmTitle;
+                string confirmMessage;
 
                 if (transaction.Type == ProductType.Satis)
                 {
-                    if (transaction.BuyerId != _currentUserId)
+                    if (isBuyer)
                     {
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ Yetkiniz Yok", "Sadece alÄ±cÄ± bu karÅŸÄ± teklifi onaylayabilir.", "Tamam");
-                        return;
+                        // Alıcı → satıcının karşı teklifini kabul eder
+                        if (!transaction.CounterOfferBySeller.HasValue)
+                        {
+                            await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Satıcının karşı teklifi bekleniyor.", "Tamam");
+                            return;
+                        }
+                        confirmTitle = "✅ Karşı Teklifi Onayla";
+                        confirmMessage = $"'{transaction.ProductTitle}' için satıcının karşı teklifini kabul ediyor musunuz?\n\n" +
+                                       $"💰 Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}₺\n" +
+                                       $"🔄 Satıcının Karşı Teklifi: {transaction.CounterOfferBySeller:N2}₺\n\n" +
+                                       $"✅ Onaylanan Fiyat: {transaction.CounterOfferBySeller:N2}₺";
                     }
-
-                    if (!transaction.CounterOfferBySeller.HasValue)
+                    else
                     {
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "SatÄ±cÄ±nÄ±n karÅŸÄ± teklifi bekleniyor.", "Tamam");
-                        return;
+                        // ✅ SORUN 4 FIX: Satıcı → alıcının teklifini kabul eder
+                        if (!transaction.ProposedPriceByBuyer.HasValue)
+                        {
+                            await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Alıcının teklifi bekleniyor.", "Tamam");
+                            return;
+                        }
+                        confirmTitle = "✅ Alıcının Teklifini Kabul Et";
+                        confirmMessage = $"'{transaction.ProductTitle}' için alıcının teklifini kabul ediyor musunuz?\n\n" +
+                                       $"💰 Alıcının Teklifi: {transaction.ProposedPriceByBuyer:N2}₺\n\n" +
+                                       $"✅ Onaylanan Fiyat: {transaction.ProposedPriceByBuyer:N2}₺";
                     }
-
-                    confirmTitle = "âœ… KarÅŸÄ± Teklifi Onayla";
-                    confirmMessage = $"'{transaction.ProductTitle}' iÃ§in satÄ±cÄ±nÄ±n karÅŸÄ± teklifini kabul ediyor musunuz?\n\n" +
-                                   $"ğŸ’° Sizin Teklifiniz: {transaction.ProposedPriceByBuyer:N2}â‚º\n" +
-                                   $"ğŸ”„ SatÄ±cÄ±nÄ±n KarÅŸÄ± Teklifi: {transaction.CounterOfferBySeller:N2}â‚º\n\n" +
-                                   $"âœ… Onaylanan Fiyat: {transaction.CounterOfferBySeller:N2}â‚º";
                 }
                 else if (transaction.Type == ProductType.Takas)
                 {
-                    if (transaction.BuyerId != _currentUserId)
+                    if (isBuyer)
                     {
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("âš ï¸ Yetkiniz Yok", "Sadece talep eden bu karÅŸÄ± teklifi onaylayabilir.", "Tamam");
-                        return;
+                        if (!transaction.CounterCashByOwner.HasValue)
+                        {
+                            await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Sahip'in karşı teklifi bekleniyor.", "Tamam");
+                            return;
+                        }
+                        confirmTitle = "✅ Karşı Teklifi Onayla";
+                        confirmMessage = $"'{transaction.ProductTitle}' için sahip'in ek nakit karşı teklifini kabul ediyor musunuz?\n\n" +
+                                       $"💰 Sizin Ek Nakit Teklifiniz: {transaction.AdditionalCashByRequester:N2}₺\n" +
+                                       $"🔄 Sahip'in Karşı Teklifi: {transaction.CounterCashByOwner:N2}₺\n\n" +
+                                       $"✅ Onaylanan Ek Nakit: {transaction.CounterCashByOwner:N2}₺";
                     }
-
-                    if (!transaction.CounterCashByOwner.HasValue)
+                    else
                     {
-                        await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Sahip'in karÅŸÄ± teklifi bekleniyor.", "Tamam");
-                        return;
+                        // ✅ SORUN 4 FIX: Satıcı takas teklifini kabul eder
+                        confirmTitle = "✅ Takas Teklifini Kabul Et";
+                        confirmMessage = $"'{transaction.ProductTitle}' takas teklifini kabul ediyor musunuz?\n\n" +
+                                       $"💰 Teklif Edilen Ek Nakit: {transaction.AdditionalCashByRequester:N2}₺";
                     }
-
-                    confirmTitle = "âœ… KarÅŸÄ± Teklifi Onayla";
-                    confirmMessage = $"'{transaction.ProductTitle}' iÃ§in sahip'in ek nakit karÅŸÄ± teklifini kabul ediyor musunuz?\n\n" +
-                                   $"ğŸ’° Sizin Ek Nakit Teklifiniz: {transaction.AdditionalCashByRequester:N2}â‚º\n" +
-                                   $"ğŸ”„ Sahip'in KarÅŸÄ± Teklifi: {transaction.CounterCashByOwner:N2}â‚º\n\n" +
-                                   $"âœ… Onaylanan Ek Nakit: {transaction.CounterCashByOwner:N2}â‚º";
                 }
                 else
                 {
-                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu iÅŸlem tÃ¼rÃ¼ iÃ§in pazarlÄ±k onayÄ± geÃ§erli deÄŸil.", "Tamam");
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("Bilgi", "Bu işlem türü için pazarlık onayı geçerli değil.", "Tamam");
                     return;
                 }
 
-                var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(confirmTitle, confirmMessage, "Evet, Kabul Ediyorum", "HayÄ±r");
-
+                var confirm = await Shell.Current.CurrentPage.DisplayAlertAsync(confirmTitle, confirmMessage, "Evet, Kabul Ediyorum", "Hayır");
                 if (!confirm) return;
 
                 IsLoading = true;
@@ -1148,15 +1173,11 @@ namespace KamPay.ViewModels
 
                 if (result.Success)
                 {
-                    Debug.WriteLine($"âœ… Firebase'e yazÄ±ldÄ±, listener gÃ¼ncelleyecek: {transaction.TransactionId}");
+                    var successMsg = isBuyer
+                        ? "Fiyat üzerinde anlaştınız! Satıcı son onayını verecek."
+                        : "✅ Pazarlık tamamlandı! Alıcı ödeme yapabilir.";
 
-                    await Shell.Current.CurrentPage.DisplayAlertAsync(
-                        "âœ… BaÅŸarÄ±lÄ±",
-                        transaction.Type == ProductType.Satis 
-                            ? "Fiyat Ã¼zerinde anlaÅŸtÄ±nÄ±z! SatÄ±cÄ± son onayÄ±nÄ± verecek." 
-                            : "Ek nakit tutarÄ± Ã¼zerinde anlaÅŸtÄ±nÄ±z! Sahip son onayÄ±nÄ± verecek.",
-                        "Harika!"
-                    );
+                    await Shell.Current.CurrentPage.DisplayAlertAsync("✅ Başarılı", successMsg, "Harika!");
                 }
                 else
                 {
@@ -1172,12 +1193,21 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
-
         [RelayCommand]
         private async Task ProposePriceAsync(Transaction transaction)
         {
             if (transaction == null || transaction.BuyerId != _currentUserId) return;
             if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
+
+            // ✅ Guard: Sabit fiyatlı taleplerde yeni teklif engellenir
+            if (transaction.IsFixedPriceRequest)
+            {
+                await Shell.Current.CurrentPage.DisplayAlertAsync(
+                    "ℹ️ Bilgi",
+                    "Bu talep liste fiyatı ile yapılmıştır. Fiyat teklifi gönderemezsiniz.",
+                    "Tamam");
+                return;
+            }
 
             try
             {
@@ -1297,6 +1327,16 @@ namespace KamPay.ViewModels
         {
             if (transaction == null || transaction.SellerId != _currentUserId) return;
             if (Shell.Current?.CurrentPage == null) return; // âœ… FAZ1: Modernize edildi
+
+            // ✅ Guard: Sabit fiyatlı taleplerde karşı teklif engellenir
+            if (transaction.IsFixedPriceRequest)
+            {
+                await Shell.Current.CurrentPage.DisplayAlertAsync(
+                    "ℹ️ Bilgi",
+                    "Bu talep liste fiyatı ile yapılmıştır. Karşı teklif gönderemezsiniz.\n\nKabul Et veya Reddet seçeneklerini kullanabilirsiniz.",
+                    "Tamam");
+                return;
+            }
 
             try
             {

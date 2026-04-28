@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.EditGoodDeedPostPage"
+             x:DataType="vm:EditGoodDeedPostViewModel"
+             Title="İlanı Düzenle"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <Border StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    BackgroundColor="White"
+                    Padding="20">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
+                </Border.Shadow>
+                
+                <VerticalStackLayout Spacing="15">
+                    
+                    <!-- Title -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Başlık" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                        <Entry Text="{Binding Title}" Placeholder="İlan başlığı" BackgroundColor="{StaticResource Background}" TextColor="{StaticResource TextPrimary}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Type -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Kategori" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                        <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="{StaticResource BorderColor}" Padding="10,0">
+                            <Picker ItemsSource="{Binding PostTypes}" SelectedItem="{Binding SelectedType}" TextColor="{StaticResource TextPrimary}">
+                                <Picker.ItemDisplayBinding>
+                                    <Binding Converter="{StaticResource PostTypeToTextConverter}" />
+                                </Picker.ItemDisplayBinding>
+                            </Picker>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Description -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Açıklama" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}"/>
+                        <Editor Text="{Binding Description}" Placeholder="İlan açıklaması" HeightRequest="150" AutoSize="TextChanges" BackgroundColor="{StaticResource Background}" TextColor="{StaticResource TextPrimary}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Buttons -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
+                        <Button Grid.Column="0" Text="İptal" Command="{Binding CancelCommand}" BackgroundColor="{StaticResource TextSecondary}" TextColor="White" CornerRadius="10"/>
+                        <Button Grid.Column="1" Text="Kaydet" Command="{Binding SaveCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}" CornerRadius="10"/>
+                    </Grid>
+
+                    <ActivityIndicator IsRunning="{Binding IsSaving}" IsVisible="{Binding IsSaving}" HorizontalOptions="Center" Margin="0,10,0,0"/>
+
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

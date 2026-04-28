@@ -8,9 +8,9 @@ using System.Diagnostics;
 namespace KamPay.Services;
 
 /// <summary>
-/// ?? ARMUT MODELÝ: Profesyonel teklif yönetimi implementasyonu
-/// ? Single Responsibility: Sadece profesyonellerin tekliflerinin CRUD iþlemleri
-/// ? Dependency Inversion: FirebaseClient ve diðer servislere baðýmlý
+/// ?? ARMUT MODELÄ°: Profesyonel teklif yÃ¶netimi implementasyonu
+/// ? Single Responsibility: Sadece profesyonellerin tekliflerinin CRUD iÅŸlemleri
+/// ? Dependency Inversion: FirebaseClient ve diÄŸer servislere baÄŸÄ±mlÄ±
 /// </summary>
 public class ProviderProposalManager : IProviderProposalManager
 {
@@ -51,10 +51,10 @@ public class ProviderProposalManager : IProviderProposalManager
                 .Child(proposal.ProposalId)
                 .PutAsync(proposal);
 
-            // Talepteki teklif sayýsýný artýr
+            // Talepteki teklif sayÄ±sÄ±nÄ± artÄ±r
             await _customerRequestManager.IncrementProposalCountAsync(proposal.CustomerRequestId);
 
-            // Müþteriye bildirim gönder
+            // MÃ¼ÅŸteriye bildirim gÃ¶nder
             var customerRequest = await _customerRequestManager.GetCustomerRequestByIdAsync(proposal.CustomerRequestId);
             if (customerRequest.Success && customerRequest.Data != null)
             {
@@ -63,7 +63,7 @@ public class ProviderProposalManager : IProviderProposalManager
                     UserId = customerRequest.Data.CustomerId,
                     Type = NotificationType.NewOffer,
                     Title = "Yeni Teklif",
-                    Message = $"{proposal.ProviderName} talebinize {proposal.Price:C} teklif gönderdi",
+                    Message = $"{proposal.ProviderName} talebinize {proposal.Price:C} teklif gÃ¶nderdi",
                     ActionUrl = $"CustomerRequestDetailsPage?requestId={proposal.CustomerRequestId}",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -71,13 +71,13 @@ public class ProviderProposalManager : IProviderProposalManager
                 await _notificationService.CreateNotificationAsync(notification);
             }
 
-            Debug.WriteLine($"? Teklif gönderildi: {proposal.ProposalId}");
-            return ServiceResult<ProviderProposal>.SuccessResult(proposal, "Teklif baþarýyla gönderildi!");
+            Debug.WriteLine($"? Teklif gÃ¶nderildi: {proposal.ProposalId}");
+            return ServiceResult<ProviderProposal>.SuccessResult(proposal, "Teklif baÅŸarÄ±yla gÃ¶nderildi!");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? SendProposalAsync hatasý: {ex.Message}");
-            return ServiceResult<ProviderProposal>.FailureResult("Teklif gönderilemedi", ex.Message);
+            Debug.WriteLine($"? SendProposalAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<ProviderProposal>.FailureResult("Teklif gÃ¶nderilemedi", ex.Message);
         }
     }
 
@@ -105,7 +105,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetProposalsForRequestAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetProposalsForRequestAsync hatasÄ±: {ex.Message}");
             return ServiceResult<List<ProviderProposal>>.FailureResult("Teklifler getirilemedi", ex.Message);
         }
     }
@@ -134,7 +134,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetMyProposalsAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetMyProposalsAsync hatasÄ±: {ex.Message}");
             return ServiceResult<List<ProviderProposal>>.FailureResult("Teklifler getirilemedi", ex.Message);
         }
     }
@@ -150,7 +150,7 @@ public class ProviderProposalManager : IProviderProposalManager
 
             if (proposal == null)
             {
-                return ServiceResult<ProviderProposal>.FailureResult("Teklif bulunamadý");
+                return ServiceResult<ProviderProposal>.FailureResult("Teklif bulunamadÄ±");
             }
 
             proposal.ProposalId = proposalId;
@@ -158,7 +158,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetProposalByIdAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetProposalByIdAsync hatasÄ±: {ex.Message}");
             return ServiceResult<ProviderProposal>.FailureResult("Teklif getirilemedi", ex.Message);
         }
     }
@@ -174,13 +174,31 @@ public class ProviderProposalManager : IProviderProposalManager
             var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
             if (proposal == null)
             {
-                return ServiceResult<bool>.FailureResult("Teklif bulunamadý");
+                return ServiceResult<bool>.FailureResult("Teklif bulunamadÄ±");
+            }
+
+            if (proposal.Status != ProposalStatus.Pending)
+            {
+                return ServiceResult<bool>.FailureResult("Sadece bekleyen teklifleri kabul edebilirsiniz.");
             }
 
             var requestResult = await _customerRequestManager.GetCustomerRequestByIdAsync(proposal.CustomerRequestId);
-            if (!requestResult.Success || requestResult.Data?.CustomerId != customerId)
+            if (!requestResult.Success || requestResult.Data == null)
             {
-                return ServiceResult<bool>.FailureResult("Bu iþlemi yapmaya yetkiniz yok");
+                return ServiceResult<bool>.FailureResult("BaÄŸlÄ± talep bulunamadÄ±.");
+            }
+
+            if (requestResult.Data.CustomerId != customerId)
+            {
+                return ServiceResult<bool>.FailureResult("Bu iÅŸlemi yapmaya yetkiniz yok");
+            }
+
+            if (requestResult.Data.Status == CustomerRequestStatus.ProviderSelected ||
+                requestResult.Data.Status == CustomerRequestStatus.InProgress ||
+                requestResult.Data.Status == CustomerRequestStatus.Completed ||
+                requestResult.Data.Status == CustomerRequestStatus.Cancelled)
+            {
+                return ServiceResult<bool>.FailureResult("Bu talep iÃ§in zaten bir teklif kabul edilmiÅŸ veya iÅŸlem sonlanmÄ±ÅŸ.");
             }
 
             proposal.Status = ProposalStatus.Accepted;
@@ -200,7 +218,7 @@ public class ProviderProposalManager : IProviderProposalManager
                 UserId = proposal.ProviderId,
                 Type = NotificationType.OfferAccepted,
                 Title = "Teklif Kabul Edildi",
-                Message = $"Teklifiniz kabul edildi! Müþteri ile iletiþime geçebilirsiniz.",
+                Message = $"Teklifiniz kabul edildi! MÃ¼ÅŸteri ile iletiÅŸime geÃ§ebilirsiniz.",
                 ActionUrl = $"ProposalDetailsPage?proposalId={proposalId}",
                 CreatedAt = DateTime.UtcNow
             };
@@ -211,7 +229,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? AcceptProposalAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? AcceptProposalAsync hatasÄ±: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Teklif kabul edilemedi", ex.Message);
         }
     }
@@ -227,17 +245,17 @@ public class ProviderProposalManager : IProviderProposalManager
             var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
             if (proposal == null)
             {
-                return ServiceResult<bool>.FailureResult("Teklif bulunamadý");
+                return ServiceResult<bool>.FailureResult("Teklif bulunamadÄ±");
             }
 
             var requestResult = await _customerRequestManager.GetCustomerRequestByIdAsync(proposal.CustomerRequestId);
             if (!requestResult.Success || requestResult.Data?.CustomerId != customerId)
             {
-                return ServiceResult<bool>.FailureResult("Bu iþlemi yapmaya yetkiniz yok");
+                return ServiceResult<bool>.FailureResult("Bu iÅŸlemi yapmaya yetkiniz yok");
             }
 
             proposal.Status = ProposalStatus.Rejected;
-            proposal.RejectionReason = reason ?? "Müþteri tarafýndan reddedildi";
+            proposal.RejectionReason = reason ?? "MÃ¼ÅŸteri tarafÄ±ndan reddedildi";
             proposal.RespondedAt = DateTime.UtcNow;
             proposal.UpdatedAt = DateTime.UtcNow;
             await proposalNode.PutAsync(proposal);
@@ -260,7 +278,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? RejectProposalAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? RejectProposalAsync hatasÄ±: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Teklif reddedilemedi", ex.Message);
         }
     }
@@ -276,30 +294,30 @@ public class ProviderProposalManager : IProviderProposalManager
             var proposal = await proposalNode.OnceSingleAsync<ProviderProposal>();
             if (proposal == null)
             {
-                return ServiceResult<bool>.FailureResult("Teklif bulunamadý");
+                return ServiceResult<bool>.FailureResult("Teklif bulunamadÄ±");
             }
 
             if (proposal.ProviderId != providerId)
             {
-                return ServiceResult<bool>.FailureResult("Bu iþlemi yapmaya yetkiniz yok");
+                return ServiceResult<bool>.FailureResult("Bu iÅŸlemi yapmaya yetkiniz yok");
             }
 
             if (proposal.Status != ProposalStatus.Pending)
             {
-                return ServiceResult<bool>.FailureResult("Sadece bekleyen teklifler geri çekilebilir");
+                return ServiceResult<bool>.FailureResult("Sadece bekleyen teklifler geri Ã§ekilebilir");
             }
 
             proposal.Status = ProposalStatus.Withdrawn;
             proposal.UpdatedAt = DateTime.UtcNow;
             await proposalNode.PutAsync(proposal);
 
-            Debug.WriteLine($"? Teklif geri çekildi: {proposalId}");
-            return ServiceResult<bool>.SuccessResult(true, "Teklif geri çekildi");
+            Debug.WriteLine($"? Teklif geri Ã§ekildi: {proposalId}");
+            return ServiceResult<bool>.SuccessResult(true, "Teklif geri Ã§ekildi");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? WithdrawProposalAsync hatasý: {ex.Message}");
-            return ServiceResult<bool>.FailureResult("Teklif geri çekilemedi", ex.Message);
+            Debug.WriteLine($"? WithdrawProposalAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<bool>.FailureResult("Teklif geri Ã§ekilemedi", ex.Message);
         }
     }
 
@@ -310,20 +328,25 @@ public class ProviderProposalManager : IProviderProposalManager
             var proposalResult = await GetProposalByIdAsync(proposalId);
             if (!proposalResult.Success || proposalResult.Data == null)
             {
-                return ServiceResult<ServiceRequest>.FailureResult("Teklif bulunamadý");
+                return ServiceResult<ServiceRequest>.FailureResult("Teklif bulunamadÄ±");
             }
 
             var proposal = proposalResult.Data;
 
+            if (proposal.IsContractCreated)
+            {
+                return ServiceResult<ServiceRequest>.FailureResult("Bu tekliften zaten bir sÃ¶zleÅŸme oluÅŸturulmuÅŸ.");
+            }
+
             if (proposal.Status != ProposalStatus.Accepted)
             {
-                return ServiceResult<ServiceRequest>.FailureResult("Sadece kabul edilmiþ tekliflerden sözleþme oluþturulabilir");
+                return ServiceResult<ServiceRequest>.FailureResult("Sadece kabul edilmiÅŸ tekliflerden sÃ¶zleÅŸme oluÅŸturulabilir");
             }
 
             var requestResult = await _customerRequestManager.GetCustomerRequestByIdAsync(proposal.CustomerRequestId);
             if (!requestResult.Success || requestResult.Data == null)
             {
-                return ServiceResult<ServiceRequest>.FailureResult("Talep bulunamadý");
+                return ServiceResult<ServiceRequest>.FailureResult("Talep bulunamadÄ±");
             }
 
             var customerRequest = requestResult.Data;
@@ -372,8 +395,8 @@ public class ProviderProposalManager : IProviderProposalManager
             {
                 UserId = proposal.ProviderId,
                 Type = NotificationType.ServiceCompleted,
-                Title = "Ýþ Baþladý",
-                Message = $"{customerRequest.Title} için iþ sözleþmesi oluþturuldu",
+                Title = "Ä°ÅŸ BaÅŸladÄ±",
+                Message = $"{customerRequest.Title} iÃ§in iÅŸ sÃ¶zleÅŸmesi oluÅŸturuldu",
                 ActionUrl = $"ServiceRequestDetailsPage?requestId={serviceRequest.RequestId}",
                 CreatedAt = DateTime.UtcNow
             };
@@ -382,8 +405,8 @@ public class ProviderProposalManager : IProviderProposalManager
             {
                 UserId = customerRequest.CustomerId,
                 Type = NotificationType.ServiceCompleted,
-                Title = "Ýþ Baþladý",
-                Message = $"{proposal.ProviderName} ile iþ sözleþmeniz oluþturuldu",
+                Title = "Ä°ÅŸ BaÅŸladÄ±",
+                Message = $"{proposal.ProviderName} ile iÅŸ sÃ¶zleÅŸmeniz oluÅŸturuldu",
                 ActionUrl = $"ServiceRequestDetailsPage?requestId={serviceRequest.RequestId}",
                 CreatedAt = DateTime.UtcNow
             };
@@ -393,13 +416,13 @@ public class ProviderProposalManager : IProviderProposalManager
                 _notificationService.CreateNotificationAsync(customerNotification)
             );
 
-            Debug.WriteLine($"? Hizmet sözleþmesi oluþturuldu: {serviceRequest.RequestId}");
-            return ServiceResult<ServiceRequest>.SuccessResult(serviceRequest, "Ýþ sözleþmesi oluþturuldu!");
+            Debug.WriteLine($"? Hizmet sÃ¶zleÅŸmesi oluÅŸturuldu: {serviceRequest.RequestId}");
+            return ServiceResult<ServiceRequest>.SuccessResult(serviceRequest, "Ä°ÅŸ sÃ¶zleÅŸmesi oluÅŸturuldu!");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? CreateServiceContractFromProposalAsync hatasý: {ex.Message}");
-            return ServiceResult<ServiceRequest>.FailureResult("Sözleþme oluþturulamadý", ex.Message);
+            Debug.WriteLine($"? CreateServiceContractFromProposalAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<ServiceRequest>.FailureResult("SÃ¶zleÅŸme oluÅŸturulamadÄ±", ex.Message);
         }
     }
 
@@ -420,15 +443,18 @@ public class ProviderProposalManager : IProviderProposalManager
                 if (proposalEntry.Key != acceptedProposalId && proposalEntry.Object.Status == ProposalStatus.Pending)
                 {
                     var proposal = proposalEntry.Object;
-                    proposal.Status = ProposalStatus.Rejected;
-                    proposal.RejectionReason = "Baþka bir teklif kabul edildi";
-                    proposal.RespondedAt = DateTime.UtcNow;
-                    proposal.UpdatedAt = DateTime.UtcNow;
+                    var patchData = new Dictionary<string, object>
+                    {
+                        { "Status", (int)ProposalStatus.Rejected },
+                        { "RejectionReason", "BaÅŸka bir teklif kabul edildi" },
+                        { "RespondedAt", DateTime.UtcNow.ToString("O") },
+                        { "UpdatedAt", DateTime.UtcNow.ToString("O") }
+                    };
 
                     var task = _firebaseClient
                         .Child(Constants.ProviderProposalsCollection)
                         .Child(proposalEntry.Key)
-                        .PutAsync(proposal);
+                        .PatchAsync(patchData);
 
                     tasksToReject.Add(task);
 
@@ -437,7 +463,7 @@ public class ProviderProposalManager : IProviderProposalManager
                         UserId = proposal.ProviderId,
                         Type = NotificationType.OfferRejected,
                         Title = "Teklif Reddedildi",
-                        Message = "Baþka bir teklif kabul edildiði için teklifiniz reddedildi",
+                        Message = "BaÅŸka bir teklif kabul edildiÄŸi iÃ§in teklifiniz reddedildi",
                         ActionUrl = $"ProposalDetailsPage?proposalId={proposalEntry.Key}",
                         CreatedAt = DateTime.UtcNow
                     };
@@ -453,7 +479,7 @@ public class ProviderProposalManager : IProviderProposalManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"?? RejectOtherProposals hatasý: {ex.Message}");
+            Debug.WriteLine($"?? RejectOtherProposals hatasÄ±: {ex.Message}");
         }
     }
 }

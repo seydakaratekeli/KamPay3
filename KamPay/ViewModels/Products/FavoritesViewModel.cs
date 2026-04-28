@@ -22,8 +22,7 @@ namespace KamPay.ViewModels
         private readonly IFavoriteService _favoriteService;
         private readonly IAuthenticationService _authService;
         private IDisposable? _favoritesSubscription;
-        private readonly FirebaseClient _firebaseClient = new(Constants.FirebaseRealtimeDbUrl);
-
+        private readonly FirebaseClient _firebaseClient;
         private bool _isInitialized = false;
         private readonly HashSet<string> _favoriteIds = new();
 
@@ -38,10 +37,11 @@ namespace KamPay.ViewModels
 
         public ObservableRangeCollection<Favorite> FavoriteItems { get; } = new();
 
-        public FavoritesViewModel(IFavoriteService favoriteService, IProductService productService, IAuthenticationService authService)
+        public FavoritesViewModel(IFavoriteService favoriteService, IAuthenticationService authService, FirebaseClient firebaseClient)
         {
             _favoriteService = favoriteService;
             _authService = authService;
+            _firebaseClient = firebaseClient;
         }
 
         public async Task InitializeAsync()

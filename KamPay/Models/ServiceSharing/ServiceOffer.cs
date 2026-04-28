@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
 
 
@@ -88,13 +88,25 @@ public class ServiceRequest
     public DateTime? NegotiationStartedAt { get; set; } // Pazarlık başlangıç tarihi
     public string NegotiationNotes { get; set; } = ""; // Pazarlık notları
     public int NegotiationRoundCount { get; set; } = 0; // Pazarlık turu sayısı
-    
+    public string LastOfferBy { get; set; } = ""; // Son teklifi yapan kişinin ID'si
+    public bool CreditsTransferred { get; set; } = false; // Krediler aktarıldı mı?
+
     /// <summary>
     /// Hesaplanan değer: Anlaşılan fiyat
-    /// Öncelik sırası: Sağlayıcının karşı teklifi → Talep edenin teklifi → Kilitli fiyat → Orijinal fiyat
-    /// Price non-nullable olduğu için null dönmez
+    /// Öncelik sırası: Son teklifi yapan kişinin teklifi → Karşı teklif → Talep edenin teklifi → Kilitli fiyat → Orijinal fiyat
     /// </summary>
-    public decimal AgreedPrice => CounterOfferByProvider ?? ProposedPriceByRequester ?? QuotedPrice ?? Price;
+    public decimal AgreedPrice 
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(LastOfferBy))
+            {
+                if (LastOfferBy == ProviderId && CounterOfferByProvider.HasValue) return CounterOfferByProvider.Value;
+                if (LastOfferBy == RequesterId && ProposedPriceByRequester.HasValue) return ProposedPriceByRequester.Value;
+            }
+            return CounterOfferByProvider ?? ProposedPriceByRequester ?? QuotedPrice ?? Price;
+        }
+    }
 }
 
 public enum ServiceRequestStatus
@@ -102,5 +114,6 @@ public enum ServiceRequestStatus
     Pending = 0,    // Beklemede
     Accepted = 1,   // Kabul Edildi
     Declined = 2,   // Reddedildi
-    Completed = 3   // Tamamlandı
+    Completed = 3,  // Tamamlandı
+    AwaitingConfirmation = 4 // Onay Bekliyor
 }

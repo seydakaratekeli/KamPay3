@@ -8,6 +8,7 @@
              xmlns:extensions="clr-namespace:KamPay.Extensions"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              x:Class="KamPay.Views.ServiceSharingPage"
+             x:Name="page"
              x:DataType="vm:ServiceSharingViewModel"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource Background}">
@@ -17,6 +18,7 @@
 
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:ServiceCategoryToTextConverter x:Key="ServiceCategoryToTextConverter" />
+            <converters:ServiceCategoryToIconConverter x:Key="ServiceCategoryToIconConverter" />
             <converters:DateTimeToTimeAgoConverter x:Key="DateTimeToTimeAgoConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -153,16 +155,25 @@
                                 <Shadow Brush="Black" Opacity="0.08" Radius="15" Offset="0,4"/>
                             </Border.Shadow>
                             <VerticalStackLayout Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">
-                                <Label Text="🔍" FontSize="70" HorizontalTextAlignment="Center"/>
+                                <Image Source="empty_state.png" WidthRequest="120" HeightRequest="120" HorizontalOptions="Center"/>
                                 <Label Text="{extensions:Translate NoResultsFound}" 
-                                       FontSize="16" 
-                                       TextColor="{StaticResource TextSecondary}" 
+                                       FontSize="18" 
+                                       TextColor="{StaticResource TextPrimary}" 
                                        HorizontalTextAlignment="Center"
                                        FontAttributes="Bold"/>
-                                <Label Text="{extensions:Translate ChangeFiltersHint}" 
+                                <Label Text="Farklı bir kategori veya kelime ile aramayı deneyin." 
                                        FontSize="14" 
-                                       TextColor="{StaticResource Primary}" 
+                                       TextColor="{StaticResource TextSecondary}" 
                                        HorizontalTextAlignment="Center"/>
+                                <Button Text="Filtreleri Temizle"
+                                        Command="{Binding ClearCategoryFilterCommand}"
+                                        BackgroundColor="{StaticResource PrimaryLight}"
+                                        TextColor="{StaticResource Primary}"
+                                        CornerRadius="10"
+                                        Margin="0,10,0,0"
+                                        Padding="15,0"
+                                        HeightRequest="40"
+                                        FontAttributes="Bold" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
@@ -170,39 +181,59 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:ServiceOffer">
-                        <Border StrokeShape="RoundRectangle 16"
-                                StrokeThickness="0"
-                                BackgroundColor="White"
-                                Margin="0,0,0,12"
-                                Padding="16">
+                        <Border StrokeShape="RoundRectangle 20"
+                                Margin="0,0,0,16"
+                                Padding="1">
+                            <Border.Stroke>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="{StaticResource PrimaryLight}" Offset="0.0"/>
+                                    <GradientStop Color="#E0E0E0" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Border.Stroke>
                             <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Radius="10" Opacity="0.1"/>
+                                <Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.08"/>
                             </Border.Shadow>
-                            <Grid RowDefinitions="Auto,Auto,Auto,1,Auto" RowSpacing="12">
-                                <!-- Title & Category -->
-                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                    <Label Grid.Column="0" 
-                                           Text="{Binding Title}" 
-                                           FontAttributes="Bold" 
-                                           FontSize="17" 
-                                           TextColor="{StaticResource TextPrimary}" 
-                                           LineBreakMode="TailTruncation" 
-                                           MaxLines="2" 
-                                           VerticalOptions="Center" />
-                                    <Border Grid.Column="1" 
-                                            BackgroundColor="#E3F2FD" 
-                                            Padding="10,5" 
-                                            StrokeThickness="0"
-                                            VerticalOptions="Start">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="10"/>
-                                        </Border.StrokeShape>
-                                        <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToTextConverter}}" 
-                                               FontSize="11" 
-                                               TextColor="{StaticResource Primary}" 
-                                               FontAttributes="Bold" />
-                                    </Border>
-                                </Grid>
+                            
+                            <!-- Kart İçeriği -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    StrokeThickness="0"
+                                    BackgroundColor="White"
+                                    Padding="16">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding BindingContext.GoToOfferDetailCommand, Source={x:Reference page}}" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+
+                                <Grid RowDefinitions="Auto,Auto,Auto,1,Auto" RowSpacing="12">
+                                    <!-- Title & Category -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <Label Grid.Column="0" 
+                                               Text="{Binding Title}" 
+                                               FontAttributes="Bold" 
+                                               FontSize="18" 
+                                               TextColor="{StaticResource TextPrimary}" 
+                                               LineBreakMode="TailTruncation" 
+                                               MaxLines="2" 
+                                               VerticalOptions="Center" />
+                                        
+                                        <!-- Kategori Chip -->
+                                        <Border Grid.Column="1" 
+                                                BackgroundColor="#F0F4F8" 
+                                                Padding="12,6" 
+                                                StrokeThickness="0"
+                                                VerticalOptions="Start">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="12"/>
+                                            </Border.StrokeShape>
+                                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                                <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToIconConverter}}" FontSize="12" VerticalOptions="Center"/>
+                                                <Label Text="{Binding Category, Converter={StaticResource ServiceCategoryToTextConverter}}" 
+                                                       FontSize="11" 
+                                                       TextColor="{StaticResource Primary}" 
+                                                       FontAttributes="Bold"
+                                                       VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                        </Border>
+                                    </Grid>
 
                                 <!-- Description -->
                                 <Label Grid.Row="1" 
@@ -263,15 +294,15 @@
                                                 HeightRequest="38"
                                                 StrokeThickness="0">
                                             <Border.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=MessageProviderCommand}" CommandParameter="{Binding .}"/>
+                                                <TapGestureRecognizer Command="{Binding BindingContext.MessageProviderCommand, Source={x:Reference page}}" CommandParameter="{Binding .}"/>
                                             </Border.GestureRecognizers>
                                             <Label Text="💬" 
                                                    FontSize="18"
                                                    HorizontalOptions="Center"
                                                    VerticalOptions="Center"/>
                                         </Border>
-                                        <Button Text="{extensions:Translate Request}" 
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ServiceSharingViewModel}}, Path=RequestServiceCommand}" 
+                                        <Button Text="İncele" 
+                                                Command="{Binding BindingContext.GoToOfferDetailCommand, Source={x:Reference page}}" 
                                                 CommandParameter="{Binding .}" 
                                                 BackgroundColor="{StaticResource Primary}" 
                                                 Padding="16,0" 
@@ -287,6 +318,7 @@
                                     </HorizontalStackLayout>
                                 </Grid>
                             </Grid>
+                        </Border>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -491,204 +523,7 @@
             </Border>
         </Grid>
 
-        <!-- 🎯 YENİ: CUSTOMER REQUEST FORM OVERLAY -->
-        <Grid Grid.RowSpan="2"
-              IsVisible="{Binding IsCustomerRequestFormVisible}"
-              BackgroundColor="#80000000"
-              ZIndex="999"
-              InputTransparent="False">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding CloseCustomerRequestFormCommand}" />
-            </Grid.GestureRecognizers>
-
-            <Border BackgroundColor="White" 
-                    VerticalOptions="End"
-                    StrokeShape="RoundRectangle 24,24,0,0" 
-                    MaximumHeightRequest="700"
-                    ZIndex="1000"
-                    InputTransparent="False">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer />
-                </Border.GestureRecognizers>
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,-4" Radius="20" Opacity="0.2"/>
-                </Border.Shadow>
-
-                <ScrollView>
-                    <VerticalStackLayout Spacing="20" Padding="24,30,24,20">
-                        <!-- Header -->
-                        <Grid>
-                            <Label Text="🔍 Hizmet Talebi Oluştur" 
-                                   FontSize="20" 
-                                   FontAttributes="Bold" 
-                                   HorizontalOptions="Center" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 20"
-                                    BackgroundColor="{StaticResource Background}"
-                                    WidthRequest="40"
-                                    HeightRequest="40"
-                                    HorizontalOptions="End"
-                                    StrokeThickness="0">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding CloseCustomerRequestFormCommand}"/>
-                                </Border.GestureRecognizers>
-                                <Label Text="✕" 
-                                       TextColor="{StaticResource TextSecondary}"
-                                       FontSize="20"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"/>
-                            </Border>
-                        </Grid>
-
-                        <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
-
-                        <!-- Request Title -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Talep Başlığı" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 12" 
-                                    StrokeThickness="1" 
-                                    Stroke="{StaticResource BorderColor}" 
-                                    Padding="12,8">
-                                <Entry Placeholder="Örn: Evim için elektrik tamiri lazım" 
-                                       Text="{Binding CustomerRequestTitle}" 
-                                       FontSize="15" 
-                                       TextColor="{StaticResource TextPrimary}"/>
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <!-- Request Description -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Açıklama" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 12" 
-                                    StrokeThickness="1" 
-                                    Stroke="{StaticResource BorderColor}" 
-                                    Padding="12,8">
-                                <Editor Placeholder="Hangi hizmeti arıyorsunuz? Detaylı açıklayın..." 
-                                        Text="{Binding CustomerRequestDescription}" 
-                                        FontSize="15" 
-                                        TextColor="{StaticResource TextPrimary}" 
-                                        AutoSize="TextChanges" 
-                                        MinimumHeightRequest="100" 
-                                        MaximumHeightRequest="150"/>
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <!-- Category -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Kategori" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 12" 
-                                    StrokeThickness="1" 
-                                    Stroke="{StaticResource BorderColor}" 
-                                    Padding="12,0">
-                                <Picker Title="Kategori Seçin" 
-                                        ItemsSource="{Binding Categories}" 
-                                        SelectedItem="{Binding CustomerRequestCategory}" 
-                                        FontSize="15" 
-                                        TextColor="{StaticResource TextPrimary}">
-                                    <Picker.ItemDisplayBinding>
-                                        <Binding Converter="{StaticResource ServiceCategoryToTextConverter}" />
-                                    </Picker.ItemDisplayBinding>
-                                </Picker>
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <!-- Location -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Konum" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 12" 
-                                    StrokeThickness="1" 
-                                    Stroke="{StaticResource BorderColor}" 
-                                    Padding="12,8">
-                                <Entry Placeholder="Örn: Bartın, Merkez" 
-                                       Text="{Binding CustomerRequestLocation}" 
-                                       FontSize="15" 
-                                       TextColor="{StaticResource TextPrimary}"/>
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <!-- Budget Range -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Bütçe Aralığı (₺)" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Border Grid.Column="0"
-                                        StrokeShape="RoundRectangle 12" 
-                                        StrokeThickness="1" 
-                                        Stroke="{StaticResource BorderColor}" 
-                                        Padding="12,8">
-                                    <Entry Placeholder="Min" 
-                                           Text="{Binding CustomerRequestBudgetMin}" 
-                                           Keyboard="Numeric"
-                                           FontSize="15" 
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                </Border>
-                                <Border Grid.Column="1"
-                                        StrokeShape="RoundRectangle 12" 
-                                        StrokeThickness="1" 
-                                        Stroke="{StaticResource BorderColor}" 
-                                        Padding="12,8">
-                                    <Entry Placeholder="Max" 
-                                           Text="{Binding CustomerRequestBudgetMax}" 
-                                           Keyboard="Numeric"
-                                           FontSize="15" 
-                                           TextColor="{StaticResource TextPrimary}"/>
-                                </Border>
-                            </Grid>
-                        </VerticalStackLayout>
-
-                        <!-- Preferred Date -->
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Tercih Edilen Tarih" 
-                                   FontSize="14" 
-                                   FontAttributes="Bold" 
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Border StrokeShape="RoundRectangle 12" 
-                                    StrokeThickness="1" 
-                                    Stroke="{StaticResource BorderColor}" 
-                                    Padding="12,8">
-                                <DatePicker Date="{Binding CustomerRequestPreferredDate}"
-                                            MinimumDate="{Binding Source={x:Static sys:DateTime.Now}}"
-                                            FontSize="15" 
-                                            TextColor="{StaticResource TextPrimary}"/>
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <!-- Submit Button -->
-                        <Button Text="Talep Oluştur" 
-                                Command="{Binding CreateCustomerRequestCommand}" 
-                                IsEnabled="{Binding IsPosting, Converter={StaticResource InvertedBoolConverter}}" 
-                                BackgroundColor="#FF6F00" 
-                                TextColor="White" 
-                                FontAttributes="Bold" 
-                                FontSize="16" 
-                                CornerRadius="12" 
-                                HeightRequest="50" 
-                                Margin="0,10,0,10">
-                            <Button.Shadow>
-                                <Shadow Brush="#FF6F00" Offset="0,4" Radius="8" Opacity="0.3"/>
-                            </Button.Shadow>
-                        </Button>
-                    </VerticalStackLayout>
-                </ScrollView>
-            </Border>
-        </Grid>
-
-        <!-- Floating Action Buttons (2 FAB) -->
-        <!-- 1️⃣ FAB: Hizmet Paylaş (Sağ Alt) -->
+        <!-- ✨ FAB: Hizmet Paylaş (Sağ Alt) -->
         <Border Grid.Row="1"
                 StrokeShape="RoundRectangle 32"
                 BackgroundColor="{StaticResource Primary}"
@@ -697,7 +532,7 @@
                 StrokeThickness="0"
                 VerticalOptions="End"
                 HorizontalOptions="End"
-                Margin="20,20,20,100"
+                Margin="20"
                 IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InvertedBoolConverter}}">
             <Border.Shadow>
                 <Shadow Brush="{StaticResource Primary}" Offset="0,8" Opacity="0.4" Radius="15"/>
@@ -713,38 +548,6 @@
                        TextColor="White" 
                        HorizontalOptions="Center"/>
                 <Label Text="Paylaş" 
-                       FontSize="9" 
-                       TextColor="White" 
-                       FontAttributes="Bold"
-                       HorizontalOptions="Center"/>
-            </VerticalStackLayout>
-        </Border>
-
-        <!-- 2️⃣ FAB: Talep Oluştur (Sağ Alt - Üstte) -->
-        <Border Grid.Row="1"
-                StrokeShape="RoundRectangle 32"
-                BackgroundColor="#FF6F00"
-                WidthRequest="64"
-                HeightRequest="64"
-                StrokeThickness="0"
-                VerticalOptions="End"
-                HorizontalOptions="End"
-                Margin="20"
-                IsVisible="{Binding IsPostFormVisible, Converter={StaticResource InvertedBoolConverter}}">
-            <Border.Shadow>
-                <Shadow Brush="#FF6F00" Offset="0,8" Opacity="0.4" Radius="15"/>
-            </Border.Shadow>
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding OpenCustomerRequestFormCommand}"/>
-            </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2" 
-                                 HorizontalOptions="Center" 
-                                 VerticalOptions="Center">
-                <Label Text="🔍" 
-                       FontSize="24" 
-                       TextColor="White" 
-                       HorizontalOptions="Center"/>
-                <Label Text="Talep" 
                        FontSize="9" 
                        TextColor="White" 
                        FontAttributes="Bold"
@@ -783,3 +586,4 @@
         </Grid>
     </Grid>
 </ContentPage>
+

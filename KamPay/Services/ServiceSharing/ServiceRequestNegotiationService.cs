@@ -42,6 +42,7 @@ namespace KamPay.Services.ServiceSharing
 
                 request.ProposedPriceByRequester = proposedPrice;
                 request.IsNegotiating = true;
+                request.LastOfferBy = currentUserId;
                 request.LastNegotiationDate = DateTime.UtcNow;
 
                 if (!request.NegotiationStartedAt.HasValue)
@@ -99,6 +100,7 @@ namespace KamPay.Services.ServiceSharing
 
                 request.CounterOfferByProvider = counterOffer;
                 request.IsNegotiating = true;
+                request.LastOfferBy = currentUserId;
                 request.LastNegotiationDate = DateTime.UtcNow;
 
                 if (!request.NegotiationStartedAt.HasValue)
@@ -159,7 +161,7 @@ namespace KamPay.Services.ServiceSharing
                 if (!request.IsNegotiating)
                     return ServiceResult<bool>.FailureResult("Aktif bir pazarlık bulunmuyor.");
 
-                decimal agreedPrice = request.CounterOfferByProvider ?? request.ProposedPriceByRequester ?? 0;
+                decimal agreedPrice = request.AgreedPrice;
 
                 if (agreedPrice <= 0)
                     return ServiceResult<bool>.FailureResult("Kabul edilecek bir teklif bulunamadı.");

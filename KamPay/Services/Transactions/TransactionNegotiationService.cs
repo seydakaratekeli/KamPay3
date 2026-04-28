@@ -67,6 +67,10 @@ namespace KamPay.Services
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
 
+                // ✅ Guard: Sabit fiyatlı taleplerde pazarlık yapılamaz
+                if (transaction.IsFixedPriceRequest)
+                    return ServiceResult<bool>.FailureResult("Bu işlem liste fiyatı ile satın alma talebidir. Pazarlık yapılamaz.");
+
                 // ✅ FAZ 2: Sıra kontrolü — alıcı üst üste teklif gönderemesin
                 // isInitialRequest=true ise ilk talep, sıra kontrolü atlanır
                 if (!isInitialRequest && !string.IsNullOrEmpty(transaction.LastActionBy) &&
@@ -170,6 +174,10 @@ namespace KamPay.Services
 
                 if (transaction.Status != TransactionStatus.Pending)
                     return ServiceResult<bool>.FailureResult("İşlem artık beklemede değil");
+
+                // ✅ Guard: Sabit fiyatlı taleplerde karşı teklif gönderilemez
+                if (transaction.IsFixedPriceRequest)
+                    return ServiceResult<bool>.FailureResult("Bu işlem liste fiyatı ile satın alma talebidir. Karşı teklif gönderilemez.");
 
                 // ✅ FAZ 2: Sıra kontrolü — satıcı da üst üste karşı teklif gönderemesin
                 if (!string.IsNullOrEmpty(transaction.LastActionBy) &&
@@ -544,12 +552,7 @@ catch (Exception reserveEx)
                     transaction.NegotiationNotes += (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n\n")
                         + negotiationSummary;
 
-                    // Satıcı kabul ederse direkt RespondToOfferAsync'e yönlendir
-                    // (QR oluşturma + ürün rezervasyonu + atomik güncelleme orada)
-                    await _firebaseClient
-                        .Child(Constants.TransactionsCollection)
-                        .Child(transactionId)
-                        .PutAsync(transaction);
+                   
 
                     if (!string.IsNullOrEmpty(transaction.ConversationId))
                     {
@@ -559,6 +562,12 @@ catch (Exception reserveEx)
                             agreedAmount, currentUserId, transaction.SellerName,
                             transaction.TransactionId, "SellerAccept");
                     }
+
+                    await _firebaseClient
+    .Child(Constants.TransactionsCollection)
+    .Child(transactionId)
+    .Child("NegotiationNotes")  // Sadece notes field'ı güncelle
+    .PutAsync(transaction.NegotiationNotes);
 
                     // Satıcının kabul etmesi = RespondToOfferAsync(accept=true) ile eşdeğer
                     // QR oluşturma ve ürün rezervasyonu için orijinal akışa yönlendir

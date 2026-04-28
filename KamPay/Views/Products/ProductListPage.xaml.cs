@@ -45,7 +45,7 @@ namespace KamPay.Views
         {
             base.OnDisappearing();
             // Sayfa kapanınca animasyonu durdur (kaynak sızıntısını önle)
-            Circle1.AbortAnimation("CircleRotation");
+            try { Circle1?.AbortAnimation("CircleRotation"); } catch { }
         }
 
         protected override void OnHandlerChanged()

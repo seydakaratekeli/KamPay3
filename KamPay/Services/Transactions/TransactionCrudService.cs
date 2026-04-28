@@ -85,7 +85,10 @@ namespace KamPay.Services
         //  TEKLIF OLUŞTURMA
         // ─────────────────────────────────────────────
 
-        public async Task<ServiceResult<Transaction>> CreateRequestAsync(Product product, User buyer)
+        public async Task<ServiceResult<Transaction>> CreateRequestAsync(
+    Product product,
+    User buyer,
+    bool isFixedPriceRequest = false)  // ✅ SORUN 1 FIX: Parametre ekle
         {
             try
             {
@@ -104,6 +107,9 @@ namespace KamPay.Services
                     Price = product.Price,
                     QuotedPrice = product.Price,
                     IsNegotiating = false,
+                    IsFixedPriceRequest = isFixedPriceRequest,  // ✅ SORUN 1 FIX: Liste fiyatıyla alım
+
+
                     NegotiationRoundCount = 0,
                     BuyerPhotoUrl = buyer.ProfileImageUrl ?? "default_avatar.png",
                     SellerPhotoUrl = product.UserPhotoUrl ?? "default_avatar.png"
@@ -444,8 +450,8 @@ namespace KamPay.Services
 
                 var otherUserId = transaction.BuyerId == currentUserId ? transaction.SellerId : transaction.BuyerId;
 
-                // ✅ FAZ 1 FIX: Kullanıcı çifti + ProductId bazında conversation ara
-                // Aynı iki kullanıcı arasında farklı ürünler için farklı conversation oluşturulur.
+                // ✅ FAZ 1 FIX: Kullanıcı çifti bazında Negotiation conversation ara
+                // Aynı iki kullanıcı arasında tüm ürünler için TEK bir Negotiation conversation kullanılır.
                 var existingConversations1 = await _firebaseClient
                     .Child(Constants.ConversationsCollection)
                     .OrderBy("User1Id").EqualTo(currentUserId)
@@ -454,7 +460,7 @@ namespace KamPay.Services
                 var existingWithOtherUser = existingConversations1
                     .FirstOrDefault(c => c.Object != null && c.Object.IsActive &&
                                         (c.Object.User2Id == otherUserId || c.Object.User1Id == otherUserId) &&
-                                        c.Object.ProductId == transaction.ProductId); // ✅ ProductId filtresi eklendi
+                                        c.Object.ConversationType == "Negotiation");
 
                 if (existingWithOtherUser == null)
                 {
@@ -466,14 +472,31 @@ namespace KamPay.Services
                     existingWithOtherUser = existingConversations2
                         .FirstOrDefault(c => c.Object != null && c.Object.IsActive &&
                                             (c.Object.User1Id == otherUserId || c.Object.User2Id == otherUserId) &&
-                                            c.Object.ProductId == transaction.ProductId); // ✅ ProductId filtresi eklendi
+                                            c.Object.ConversationType == "Negotiation");
                 }
 
                 if (existingWithOtherUser != null)
                 {
+                    // ✅ Silinmiş ama aynı tip konuşma varsa yeniden aktif et
+                    if ((existingWithOtherUser.Object.User1Id == currentUserId && existingWithOtherUser.Object.DeletedByUser1) ||
+                        (existingWithOtherUser.Object.User2Id == currentUserId && existingWithOtherUser.Object.DeletedByUser2))
+                    {
+                        if (existingWithOtherUser.Object.User1Id == currentUserId) existingWithOtherUser.Object.DeletedByUser1 = false;
+                        else existingWithOtherUser.Object.DeletedByUser2 = false;
+
+                        await _firebaseClient
+                            .Child(Constants.ConversationsCollection)
+                            .Child(existingWithOtherUser.Key)
+                            .PutAsync(existingWithOtherUser.Object);
+                    }
+
                     transaction.ConversationId = existingWithOtherUser.Key;
                     transaction.HasActiveConversation = true;
                     await _firebaseClient.Child(Constants.TransactionsCollection).Child(transactionId).PutAsync(transaction);
+                    
+                    // ✅ FAZ 2: Mevcut sohbet bile olsa ürün kartını gönder ki karşı taraf görsün
+                    await AddProductCardMessageAsync(existingWithOtherUser.Key, transaction);
+
                     return ServiceResult<string>.SuccessResult(existingWithOtherUser.Key, "Mevcut konuşma bulundu");
                 }
 
@@ -492,6 +515,7 @@ namespace KamPay.Services
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     IsActive = true,
+                    ConversationType = "Negotiation", // ✅ YENİ: Sohbet tipi Negotiation
                     // ✅ YENİ: Ürün bilgilerini conversation'a bağla
                     ProductId = transaction.ProductId,
                     ProductTitle = transaction.ProductTitle,
@@ -512,6 +536,9 @@ namespace KamPay.Services
 
                 await AddSystemMessageAsync(conversation.ConversationId,
                     $"{typeIcon} [{transaction.ProductTitle} - {typeText}]\n📝 Görüşme başlatıldı{priceInfo}{exchangeInfo}");
+
+                // ✅ FAZ 2: Ürün kartını gönder
+                await AddProductCardMessageAsync(conversation.ConversationId, transaction);
 
                 AppLogger.DebugLog($"✅ Yeni konuşma oluşturuldu: {conversation.ConversationId} (Ürün: {transaction.ProductTitle})");
                 return ServiceResult<string>.SuccessResult(conversation.ConversationId, "Konuşma başlatıldı");
@@ -563,6 +590,49 @@ namespace KamPay.Services
             catch (Exception ex)
             {
                 AppLogger.DebugLog($"❌ AddSystemMessageAsync hatası: {ex.Message}");
+            }
+        }
+
+        internal async Task AddProductCardMessageAsync(string conversationId, Transaction transaction)
+        {
+            try
+            {
+                var cardMessage = new Message
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    ConversationId = conversationId,
+                    SenderId = transaction.BuyerId,
+                    SenderName = transaction.BuyerName,
+                    Content = "Ürün satın alma/pazarlık talebi gönderildi.",
+                    SentAt = DateTime.UtcNow,
+                    IsRead = false,
+                    IsSystemMessage = false,
+                    Type = MessageType.ProductCard, // ✅ YENİ: ProductCard tipi
+                    ProductId = transaction.ProductId,
+                    ProductTitle = transaction.ProductTitle,
+                    ProductThumbnail = transaction.ProductThumbnailUrl,
+                    ProductPrice = transaction.Price
+                };
+
+                await _firebaseClient
+                    .Child(Constants.MessagesCollection)
+                    .Child(conversationId)
+                    .Child(cardMessage.MessageId)
+                    .PutAsync(cardMessage);
+
+                var conversationRef = _firebaseClient.Child(Constants.ConversationsCollection).Child(conversationId);
+                var conversation = await conversationRef.OnceSingleAsync<Conversation>();
+                if (conversation != null)
+                {
+                    conversation.LastMessage = "📦 İlan paylaşıldı";
+                    conversation.LastMessageTime = DateTime.UtcNow;
+                    conversation.UpdatedAt = DateTime.UtcNow;
+                    await conversationRef.PutAsync(conversation);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.DebugLog($"❌ AddProductCardMessageAsync hatası: {ex.Message}");
             }
         }
 

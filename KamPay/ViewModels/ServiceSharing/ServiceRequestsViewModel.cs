@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using KamPay.Models;
@@ -23,7 +23,8 @@ namespace KamPay.ViewModels
         private readonly IServiceSharingService _serviceService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
-        // âœ… DIP FIX: FirebaseClient artÄ±k DI'den geliyor (new keyword kaldÄ±rÄ±ldÄ±)
+        private readonly IServiceReviewService _reviewService;
+        // ✅ DIP FIX: FirebaseClient artık DI'den geliyor (new keyword kaldırıldı)
         private readonly FirebaseClient _firebaseClient;
         private IDisposable? _requestsSubscription;
         private string? _currentUserId;
@@ -71,12 +72,14 @@ namespace KamPay.ViewModels
             IServiceSharingService serviceService, 
             IAuthenticationService authService, 
             IUserStateService userStateService,
-            FirebaseClient firebaseClient) // âœ… DIP FIX: YENÄ° PARAMETRE
+            IServiceReviewService reviewService,
+            FirebaseClient firebaseClient) // ✅ DIP FIX: YENİ PARAMETRE
         {
             _serviceService = serviceService;
             _authService = authService;
             _userStateService = userStateService;
-            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // âœ… DIP FIX: DI'den inject
+            _reviewService = reviewService;
+            _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // ✅ DIP FIX: DI'den inject
 
             PaymentMethods = new ObservableCollection<PaymentOption>
             {
@@ -453,7 +456,42 @@ namespace KamPay.ViewModels
             IsLoading = true;
             var result = await _serviceService.RequesterConfirmServiceAsync(request.RequestId, currentUser.UserId);
             if (result.Success)
-                await Shell.Current.DisplayAlert("BaÅŸarÄ±lÄ±", result.Message, "Tamam");
+            {
+                await Shell.Current.DisplayAlert("Başarılı", result.Message, "Tamam");
+                
+                // Puanlama / Değerlendirme Popup'ı
+                string ratingStr = await Shell.Current.DisplayPromptAsync(
+                    "Değerlendirme",
+                    $"{request.ProviderName} hizmetinden memnun kaldınız mı? Lütfen 1 ile 5 arası bir puan verin:",
+                    "Gönder",
+                    "İptal",
+                    keyboard: Keyboard.Numeric,
+                    initialValue: "5"
+                );
+
+                if (!string.IsNullOrWhiteSpace(ratingStr) && int.TryParse(ratingStr, out int rating) && rating >= 1 && rating <= 5)
+                {
+                    string comment = await Shell.Current.DisplayPromptAsync(
+                        "Yorum (İsteğe bağlı)",
+                        "Profesyonel hakkında düşüncelerinizi paylaşmak ister misiniz?",
+                        "Kaydet",
+                        "Atla"
+                    );
+
+                    var review = new ServiceReview
+                    {
+                        RequestId = request.RequestId,
+                        ProviderId = request.ProviderId,
+                        ReviewerId = currentUser.UserId,
+                        ReviewerName = currentUser.FullName,
+                        Rating = rating,
+                        Comment = comment ?? ""
+                    };
+
+                    await _reviewService.CreateReviewAsync(review);
+                    await Shell.Current.DisplayAlert("Teşekkürler", "Değerlendirmeniz kaydedildi.", "Tamam");
+                }
+            }
             IsLoading = false;
             await LoadRequestsAsync();
         }

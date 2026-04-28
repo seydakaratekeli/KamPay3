@@ -74,22 +74,27 @@ namespace KamPay.Services.ServiceSharing
                 if (request.RequesterId != currentUserId)
                     return ServiceResult<bool>.FailureResult("Bu işlemi yapmaya yetkiniz yok.");
 
-                if (request.Status != ServiceRequestStatus.Accepted)
-                    return ServiceResult<bool>.FailureResult("Bu talep henüz onaylanmamış veya zaten tamamlanmış.");
+                if (request.Status == ServiceRequestStatus.Completed)
+                    return ServiceResult<bool>.FailureResult("Bu talep zaten tamamlanmış.");
 
-                var transferResult = await _userProfileService.TransferTimeCreditsAsync(
-                    request.RequesterId,
-                    request.ProviderId,
-                    request.TimeCreditValue,
-                    $"Hizmet tamamlandı: {request.ServiceTitle}"
-                );
-
-                if (!transferResult.Success)
+                if (request.TimeCreditValue > 0 && !request.CreditsTransferred)
                 {
-                    return ServiceResult<bool>.FailureResult($"Kredi transferi başarısız: {transferResult.Message}");
+                    var transferResult = await _userProfileService.TransferTimeCreditsAsync(
+                        request.RequesterId,
+                        request.ProviderId,
+                        request.TimeCreditValue,
+                        $"Hizmet tamamlandı: {request.ServiceTitle}"
+                    );
+
+                    if (!transferResult.Success)
+                    {
+                        return ServiceResult<bool>.FailureResult($"Kredi transferi başarısız: {transferResult.Message}");
+                    }
+                    request.CreditsTransferred = true;
                 }
 
                 request.Status = ServiceRequestStatus.Completed;
+                request.CompletedAt = DateTime.UtcNow;
                 await requestNode.PutAsync(request);
 
                 await _notificationService.CreateNotificationAsync(new Notification
@@ -126,6 +131,7 @@ namespace KamPay.Services.ServiceSharing
                 if (request.Price > 0 && request.PaymentStatus != ServicePaymentStatus.Paid)
                     return ServiceResult<bool>.FailureResult("Hizmet bedeli henüz ödenmemiş.");
 
+                request.Status = ServiceRequestStatus.AwaitingConfirmation;
                 request.UpdatedAt = DateTime.UtcNow;
                 await requestNode.PutAsync(request);
 
@@ -156,15 +162,24 @@ namespace KamPay.Services.ServiceSharing
                 if (request == null || request.RequesterId != requesterId)
                     return ServiceResult<bool>.FailureResult("Yetkisiz işlem.");
 
-                if (request.TimeCreditValue > 0)
+                if (request.Status == ServiceRequestStatus.Completed)
+                    return ServiceResult<bool>.FailureResult("Hizmet zaten tamamlanmış.");
+
+                if (request.Status != ServiceRequestStatus.AwaitingConfirmation && request.Status != ServiceRequestStatus.Accepted)
+                    return ServiceResult<bool>.FailureResult("Hizmet şu anda onaylanacak durumda değil.");
+
+                if (request.TimeCreditValue > 0 && !request.CreditsTransferred)
                 {
                     var transfer = await _userProfileService.TransferTimeCreditsAsync(
                         request.RequesterId, request.ProviderId, request.TimeCreditValue, $"Hizmet Onayı: {request.ServiceTitle}");
 
                     if (!transfer.Success) return ServiceResult<bool>.FailureResult("Kredi transferi başarısız: " + transfer.Message);
+                    
+                    request.CreditsTransferred = true;
                 }
 
                 request.Status = ServiceRequestStatus.Completed;
+                request.CompletedAt = DateTime.UtcNow;
                 request.UpdatedAt = DateTime.UtcNow;
                 await requestNode.PutAsync(request);
 

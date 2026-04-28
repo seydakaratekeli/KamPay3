@@ -205,6 +205,174 @@
                                             </Grid>
                                         </Border>
 
+                                        <!-- ✨ VISUAL TIMELINE -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" Margin="0,5">
+                                            <!-- Adım 1: Talep -->
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16" Fill="{StaticResource Primary}"/>
+                                                <Label Text="İletildi" FontSize="9" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                                            </VerticalStackLayout>
+                                            
+                                            <BoxView Grid.Column="1" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 2: Onay -->
+                                            <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="Onay" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+
+                                            <BoxView Grid.Column="3" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 3: İşlemde -->
+                                            <VerticalStackLayout Grid.Column="4" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="İşlemde" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+                                            
+                                            <BoxView Grid.Column="5" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 4: Tamamlandı -->
+                                            <VerticalStackLayout Grid.Column="6" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="#4CAF50"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="Bitti" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="TextColor" Value="#4CAF50"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+                                        </Grid>
+
                                         <Grid ColumnDefinitions="*,Auto">
                                             <Label Grid.Column="0"
                                                    Text="{Binding Price, StringFormat='{0} ₺'}"
@@ -319,6 +487,174 @@
                                         <Label Text="{Binding ProviderName, StringFormat='Sağlayıcı: {0}'}"
                                                FontSize="13"
                                                TextColor="{StaticResource TextSecondary}"/>
+
+                                        <!-- ✨ VISUAL TIMELINE -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto" Margin="0,5">
+                                            <!-- Adım 1: Talep -->
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16" Fill="{StaticResource Primary}"/>
+                                                <Label Text="İletildi" FontSize="9" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                                            </VerticalStackLayout>
+                                            
+                                            <BoxView Grid.Column="1" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 2: Onay -->
+                                            <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="Onay" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+
+                                            <BoxView Grid.Column="3" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="{StaticResource Primary}"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 3: İşlemde -->
+                                            <VerticalStackLayout Grid.Column="4" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="{StaticResource Primary}"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="İşlemde" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="TextColor" Value="{StaticResource Primary}"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+                                            
+                                            <BoxView Grid.Column="5" HeightRequest="2" VerticalOptions="Start" Margin="0,7,0,0">
+                                                <BoxView.Triggers>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Accepted">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                        <Setter Property="Color" Value="{StaticResource BorderColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="BoxView" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Color" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                </BoxView.Triggers>
+                                            </BoxView>
+
+                                            <!-- Adım 4: Tamamlandı -->
+                                            <VerticalStackLayout Grid.Column="6" Spacing="2" HorizontalOptions="Center">
+                                                <Ellipse WidthRequest="16" HeightRequest="16">
+                                                    <Ellipse.Triggers>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Ellipse" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Fill" Value="#4CAF50"/>
+                                                        </DataTrigger>
+                                                    </Ellipse.Triggers>
+                                                </Ellipse>
+                                                <Label Text="Bitti" FontSize="9">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Pending">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Accepted">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="AwaitingConfirmation">
+                                                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                                                            <Setter Property="FontAttributes" Value="None"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="TextColor" Value="#4CAF50"/>
+                                                            <Setter Property="FontAttributes" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+                                        </Grid>
 
                                         <Grid ColumnDefinitions="*,Auto">
                                             <Label Grid.Column="0"

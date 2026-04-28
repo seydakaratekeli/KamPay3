@@ -1,4 +1,4 @@
-using Firebase.Database;
+ï»¿using Firebase.Database;
 using Firebase.Database.Query;
 using KamPay.Helpers;
 using KamPay.Models;
@@ -7,9 +7,9 @@ using System.Diagnostics;
 namespace KamPay.Services;
 
 /// <summary>
-/// ?? ARMUT MODELÝ: Müþteri talep yönetimi implementasyonu
-/// ? Single Responsibility: Sadece müþteri hizmet taleplerinin CRUD iþlemleri
-/// ? Dependency Inversion: FirebaseClient ve INotificationService arayüzlerine baðýmlý
+/// ?? ARMUT MODELÄ°: MÃ¼ÅŸteri talep yÃ¶netimi implementasyonu
+/// ? Single Responsibility: Sadece mÃ¼ÅŸteri hizmet taleplerinin CRUD iÅŸlemleri
+/// ? Dependency Inversion: FirebaseClient ve INotificationService arayÃ¼zlerine baÄŸÄ±mlÄ±
 /// </summary>
 public class CustomerRequestManager : ICustomerRequestManager
 {
@@ -28,7 +28,7 @@ public class CustomerRequestManager : ICustomerRequestManager
     {
         try
         {
-            // Talep numarasý oluþtur
+            // Talep numarasÄ± oluÅŸtur
             if (string.IsNullOrWhiteSpace(request.RequestNumber))
             {
                 request.RequestNumber = $"CSR{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -44,13 +44,13 @@ public class CustomerRequestManager : ICustomerRequestManager
                 .Child(request.RequestId)
                 .PutAsync(request);
 
-            Debug.WriteLine($"? Müþteri talebi oluþturuldu: {request.RequestId}");
-            return ServiceResult<CustomerServiceRequest>.SuccessResult(request, "Talep baþarýyla oluþturuldu!");
+            Debug.WriteLine($"? MÃ¼ÅŸteri talebi oluÅŸturuldu: {request.RequestId}");
+            return ServiceResult<CustomerServiceRequest>.SuccessResult(request, "Talep baÅŸarÄ±yla oluÅŸturuldu!");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? CreateCustomerRequestAsync hatasý: {ex.Message}");
-            return ServiceResult<CustomerServiceRequest>.FailureResult("Talep oluþturulamadý", ex.Message);
+            Debug.WriteLine($"? CreateCustomerRequestAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<CustomerServiceRequest>.FailureResult("Talep oluÅŸturulamadÄ±", ex.Message);
         }
     }
 
@@ -94,7 +94,7 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetCustomerRequestsAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetCustomerRequestsAsync hatasÄ±: {ex.Message}");
             return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler getirilemedi", ex.Message);
         }
     }
@@ -110,7 +110,7 @@ public class CustomerRequestManager : ICustomerRequestManager
 
             if (category.HasValue)
             {
-                // Kategori filtresi varsa: EqualTo kullan (sunucu tarafý)
+                // Kategori filtresi varsa: EqualTo kullan (sunucu tarafÄ±)
                 items = await _firebaseClient
                     .Child(Constants.CustomerServiceRequestsCollection)
                     .OrderBy("Category")
@@ -127,7 +127,7 @@ public class CustomerRequestManager : ICustomerRequestManager
                     .OrderByDescending(r => r.CreatedAt)
                     .ToList();
 
-                // Ýstemci tarafý sayfalama
+                // Ä°stemci tarafÄ± sayfalama
                 if (!string.IsNullOrEmpty(lastKey))
                 {
                     var lastIndex = allRequests.FindIndex(r => r.RequestId == lastKey);
@@ -145,7 +145,7 @@ public class CustomerRequestManager : ICustomerRequestManager
             }
             else
             {
-                // Kategori filtresi yok: Sunucu tarafý hatalý pagination yerine güvenli istemci pagination
+                // Kategori filtresi yok: Sunucu tarafÄ± hatalÄ± pagination yerine gÃ¼venli istemci pagination
                 items = await _firebaseClient
                     .Child(Constants.CustomerServiceRequestsCollection)
                     .OnceAsync<CustomerServiceRequest>();
@@ -178,8 +178,8 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetCustomerRequestsPagedAsync hatasý: {ex.Message}");
-            return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler yüklenemedi", ex.Message);
+            Debug.WriteLine($"? GetCustomerRequestsPagedAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler yÃ¼klenemedi", ex.Message);
         }
     }
 
@@ -194,7 +194,7 @@ public class CustomerRequestManager : ICustomerRequestManager
 
             if (request == null)
             {
-                return ServiceResult<CustomerServiceRequest>.FailureResult("Talep bulunamadý");
+                return ServiceResult<CustomerServiceRequest>.FailureResult("Talep bulunamadÄ±");
             }
 
             request.RequestId = requestId;
@@ -202,7 +202,7 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetCustomerRequestByIdAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetCustomerRequestByIdAsync hatasÄ±: {ex.Message}");
             return ServiceResult<CustomerServiceRequest>.FailureResult("Talep getirilemedi", ex.Message);
         }
     }
@@ -226,12 +226,12 @@ public class CustomerRequestManager : ICustomerRequestManager
                 .OrderByDescending(r => r.CreatedAt)
                 .ToList();
 
-            Debug.WriteLine($"?? {requests.Count} talep getirildi (Müþteri: {customerId})");
+            Debug.WriteLine($"?? {requests.Count} talep getirildi (MÃ¼ÅŸteri: {customerId})");
             return ServiceResult<List<CustomerServiceRequest>>.SuccessResult(requests);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? GetMyCustomerRequestsAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? GetMyCustomerRequestsAsync hatasÄ±: {ex.Message}");
             return ServiceResult<List<CustomerServiceRequest>>.FailureResult("Talepler getirilemedi", ex.Message);
         }
     }
@@ -247,13 +247,13 @@ public class CustomerRequestManager : ICustomerRequestManager
                 .Child(request.RequestId)
                 .PutAsync(request);
 
-            Debug.WriteLine($"? Talep güncellendi: {request.RequestId}");
-            return ServiceResult<bool>.SuccessResult(true, "Talep güncellendi");
+            Debug.WriteLine($"? Talep gÃ¼ncellendi: {request.RequestId}");
+            return ServiceResult<bool>.SuccessResult(true, "Talep gÃ¼ncellendi");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? UpdateCustomerRequestAsync hatasý: {ex.Message}");
-            return ServiceResult<bool>.FailureResult("Talep güncellenemedi", ex.Message);
+            Debug.WriteLine($"? UpdateCustomerRequestAsync hatasÄ±: {ex.Message}");
+            return ServiceResult<bool>.FailureResult("Talep gÃ¼ncellenemedi", ex.Message);
         }
     }
 
@@ -269,12 +269,12 @@ public class CustomerRequestManager : ICustomerRequestManager
 
             if (request == null)
             {
-                return ServiceResult<bool>.FailureResult("Talep bulunamadý");
+                return ServiceResult<bool>.FailureResult("Talep bulunamadÄ±");
             }
 
             if (request.CustomerId != customerId)
             {
-                return ServiceResult<bool>.FailureResult("Bu iþlemi yapmaya yetkiniz yok");
+                return ServiceResult<bool>.FailureResult("Bu iÅŸlemi yapmaya yetkiniz yok");
             }
 
             request.Status = CustomerRequestStatus.Cancelled;
@@ -288,7 +288,7 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? CancelCustomerRequestAsync hatasý: {ex.Message}");
+            Debug.WriteLine($"? CancelCustomerRequestAsync hatasÄ±: {ex.Message}");
             return ServiceResult<bool>.FailureResult("Talep iptal edilemedi", ex.Message);
         }
     }
@@ -304,7 +304,7 @@ public class CustomerRequestManager : ICustomerRequestManager
             var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
             if (request == null)
             {
-                return ServiceResult<bool>.FailureResult("Talep bulunamadý");
+                return ServiceResult<bool>.FailureResult("Talep bulunamadÄ±");
             }
 
             request.ProposalCount++;
@@ -315,8 +315,8 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? IncrementProposalCount hatasý: {ex.Message}");
-            return ServiceResult<bool>.FailureResult("Sayaç güncellenemedi", ex.Message);
+            Debug.WriteLine($"? IncrementProposalCount hatasÄ±: {ex.Message}");
+            return ServiceResult<bool>.FailureResult("SayaÃ§ gÃ¼ncellenemedi", ex.Message);
         }
     }
 
@@ -334,7 +334,7 @@ public class CustomerRequestManager : ICustomerRequestManager
             var request = await requestNode.OnceSingleAsync<CustomerServiceRequest>();
             if (request == null)
             {
-                return ServiceResult<bool>.FailureResult("Talep bulunamadý");
+                return ServiceResult<bool>.FailureResult("Talep bulunamadÄ±");
             }
 
             request.Status = newStatus;
@@ -351,8 +351,8 @@ public class CustomerRequestManager : ICustomerRequestManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"? UpdateRequestStatus hatasý: {ex.Message}");
-            return ServiceResult<bool>.FailureResult("Durum güncellenemedi", ex.Message);
+            Debug.WriteLine($"? UpdateRequestStatus hatasÄ±: {ex.Message}");
+            return ServiceResult<bool>.FailureResult("Durum gÃ¼ncellenemedi", ex.Message);
         }
     }
 }

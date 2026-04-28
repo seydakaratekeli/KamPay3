@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +25,11 @@ public partial class GoodDeedPost : ObservableObject
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
+
+    public string? Location { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public PostStatus Status { get; set; }
+    public int ViewCount { get; set; }
 
     [ObservableProperty]
     private int likeCount;
@@ -88,6 +93,8 @@ public partial class GoodDeedPost : ObservableObject
         CommentCount = 0;
         UserProfileImageUrl = "default_avatar.png";
         Likes = new Dictionary<string, bool>();
+        Status = PostStatus.Active;
+        ViewCount = 0;
     }
 
     public void RefreshCommentsUI()
@@ -110,6 +117,14 @@ public partial class GoodDeedPost : ObservableObject
             IsLiked = false;
         }
     }
+}
+
+public enum PostStatus
+{
+    Active = 0,
+    Completed = 1,
+    Expired = 2,
+    Closed = 3
 }
 
 public enum PostType
