@@ -10,6 +10,7 @@ using Microsoft.Maui.Controls;
 using KamPay.Helpers;
 using KamPay.Services.Auth;
 using KamPay.Services.Products;
+using KamPay.Views.CampusGuide;
 
 namespace KamPay.ViewModels
 {
@@ -107,7 +108,15 @@ namespace KamPay.ViewModels
                     }
 
                     await Application.Current.MainPage.DisplayAlert(Res["Welcome"], result.Message ?? Res["LoginSuccess"], Res["Ok"]);
-                    await Shell.Current.GoToAsync("//MainApp");
+
+                    var targetRoute = result.Data?.Role switch
+                    {
+                        UserRole.BusinessOwner => nameof(BusinessDashboardPage),
+                        UserRole.Admin => nameof(AdminBusinessApplicationsPage),
+                        _ => "//MainApp"
+                    };
+
+                    await Shell.Current.GoToAsync(targetRoute);
                     ClearCredentials();
                 }
                 else
@@ -141,6 +150,12 @@ namespace KamPay.ViewModels
         {
             // YÄ±ÄŸÄ±nÄ± sÄ±fÄ±rlama
             await Shell.Current.GoToAsync(nameof(RegisterPage)); 
+        }
+
+        [RelayCommand]
+        private async Task GoToBusinessRegistrationAsync()
+        {
+            await Shell.Current.GoToAsync(nameof(BusinessRegistrationPage));
         }
 
         [RelayCommand]

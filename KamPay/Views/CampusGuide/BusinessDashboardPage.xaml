@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             x:Class="KamPay.Views.CampusGuide.BusinessDashboardPage"
+             x:DataType="vm:BusinessDashboardViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Padding="20,52,20,18" BackgroundColor="{StaticResource Primary}">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="İşletme Paneli" FontSize="26" FontAttributes="Bold" TextColor="White" />
+                <Label Text="{Binding Business.Name}" FontSize="14" TextColor="White" Opacity="0.9" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18" Spacing="14">
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{Binding StatusMessage}" FontSize="14" TextColor="{StaticResource TextPrimary}" />
+                        <Label Text="{Binding Business.Location}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button Text="İşletme Bilgilerini Düzenle"
+                        Command="{Binding EditProfileCommand}"
+                        IsVisible="{Binding HasBusiness}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White" />
+                <Button Text="Kampanyalarımı Yönet"
+                        Command="{Binding ManageCampaignsCommand}"
+                        IsVisible="{Binding HasVerifiedBusiness}"
+                        BackgroundColor="{StaticResource Secondary}"
+                        TextColor="White" />
+                <Button Text="Çıkış Yap"
+                        Command="{Binding LogoutCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Error}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

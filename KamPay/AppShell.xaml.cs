@@ -52,6 +52,7 @@ namespace KamPay
                         e.PropertyName == nameof(AppShellViewModel.HomeTitle) ||
                         e.PropertyName == nameof(AppShellViewModel.ServicesTitle) ||
                         e.PropertyName == nameof(AppShellViewModel.GoodDeedBoardTitle) ||
+                        e.PropertyName == nameof(AppShellViewModel.CampusGuideTitle) ||
                         e.PropertyName == nameof(AppShellViewModel.MessagesTitle) ||
                         e.PropertyName == nameof(AppShellViewModel.ProfileTitle))
                     {
@@ -82,6 +83,9 @@ namespace KamPay
                     
                     if (!string.IsNullOrEmpty(_viewModel.GoodDeedBoardTitle))
                         GoodDeedTab.Title = _viewModel.GoodDeedBoardTitle;
+
+                    if (!string.IsNullOrEmpty(_viewModel.CampusGuideTitle))
+                        CampusGuideTab.Title = _viewModel.CampusGuideTitle;
                     
                     if (!string.IsNullOrEmpty(_viewModel.MessagesTitle))
                         MessagesTab.Title = _viewModel.MessagesTitle;
@@ -110,6 +114,12 @@ namespace KamPay
             Routing.RegisterRoute(nameof(OffersPage), typeof(OffersPage));
             Routing.RegisterRoute(nameof(TradeOfferView), typeof(TradeOfferView));
             Routing.RegisterRoute(nameof(GoodDeedBoardPage), typeof(GoodDeedBoardPage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.BusinessDetailPage), typeof(KamPay.Views.CampusGuide.BusinessDetailPage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.BusinessRegistrationPage), typeof(KamPay.Views.CampusGuide.BusinessRegistrationPage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.BusinessDashboardPage), typeof(KamPay.Views.CampusGuide.BusinessDashboardPage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.EditBusinessProfilePage), typeof(KamPay.Views.CampusGuide.EditBusinessProfilePage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.MyCampaignsPage), typeof(KamPay.Views.CampusGuide.MyCampaignsPage));
+            Routing.RegisterRoute(nameof(KamPay.Views.CampusGuide.AdminBusinessApplicationsPage), typeof(KamPay.Views.CampusGuide.AdminBusinessApplicationsPage));
             Routing.RegisterRoute(nameof(GoodDeedPostDetailPage), typeof(GoodDeedPostDetailPage));
             Routing.RegisterRoute(nameof(EditGoodDeedPostPage), typeof(EditGoodDeedPostPage));
             Routing.RegisterRoute(nameof(ServiceSharingPage), typeof(ServiceSharingPage));

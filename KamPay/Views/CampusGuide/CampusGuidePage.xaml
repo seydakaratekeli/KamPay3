@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.CampusGuidePage"
+             x:DataType="vm:CampusGuideViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:MicroBusinessCategoryToTextConverter x:Key="MicroBusinessCategoryToTextConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="0" Padding="20,52,20,22">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{StaticResource Primary}" Offset="0" />
+                    <GradientStop Color="{StaticResource Secondary}" Offset="1" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Kampüs Rehberi"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="White" />
+                <Label Text="Doğrulanmış kampüs işletmeleri ve güncel duyuruları"
+                       FontSize="13"
+                       TextColor="White"
+                       Opacity="0.9" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Padding="15,14,15,8"
+              RowDefinitions="Auto,Auto,Auto"
+              RowSpacing="10">
+            <Border Grid.Row="0"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="14,0"
+                    HeightRequest="48">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Entry Text="{Binding SearchText}"
+                           Placeholder="İşletme, konum veya etiket ara"
+                           BackgroundColor="Transparent"
+                           TextColor="{StaticResource TextPrimary}"
+                           PlaceholderColor="{StaticResource TextSecondary}"
+                           FontSize="14" />
+                    <Label Grid.Column="1"
+                           Text="⌕"
+                           FontSize="22"
+                           TextColor="{StaticResource TextSecondary}"
+                           VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="14,0"
+                    HeightRequest="48">
+                <Picker ItemsSource="{Binding Categories}"
+                        SelectedItem="{Binding SelectedCategory}"
+                        Title="Kategori seç"
+                        FontSize="14"
+                        TextColor="{StaticResource TextPrimary}">
+                    <Picker.ItemDisplayBinding>
+                        <Binding Converter="{StaticResource MicroBusinessCategoryToTextConverter}" />
+                    </Picker.ItemDisplayBinding>
+                </Picker>
+            </Border>
+
+            <Grid Grid.Row="2"
+                  IsVisible="{Binding HasStatusMessage}"
+                  Padding="4,0">
+                <Label Text="{Binding StatusMessage}"
+                       TextColor="{StaticResource TextSecondary}"
+                       FontSize="12"
+                       LineBreakMode="WordWrap" />
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <RefreshView Command="{Binding RefreshCommand}"
+                         IsRefreshing="{Binding IsRefreshing}"
+                         RefreshColor="{StaticResource Primary}">
+                <CollectionView ItemsSource="{Binding FilteredBusinesses}"
+                                SelectionMode="None"
+                                Margin="15,4,15,15">
+                    <CollectionView.EmptyView>
+                        <Grid Padding="24"
+                              VerticalOptions="Center"
+                              HorizontalOptions="Center"
+                              IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                                <Label Text="Kampüs rehberi boş"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextPrimary}"
+                                       HorizontalTextAlignment="Center" />
+                                <Label Text="Doğrulanmış işletmeler yayınlandığında burada görünecek."
+                                       FontSize="13"
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:MicroBusiness">
+                            <Border BackgroundColor="White"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 14"
+                                    Padding="14"
+                                    Margin="0,0,0,12">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.08" />
+                                </Border.Shadow>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CampusGuideViewModel}}, Path=NavigateToBusinessDetailCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="72,*"
+                                      ColumnSpacing="14">
+                                    <Border WidthRequest="72"
+                                            HeightRequest="72"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 12"
+                                            BackgroundColor="{StaticResource Background}">
+                                        <Grid>
+                                            <Image Source="{Binding LogoUrl}"
+                                                   Aspect="AspectFill"
+                                                   IsVisible="{Binding HasLogo}" />
+                                            <Label Text="KG"
+                                                   IsVisible="{Binding HasLogo, Converter={StaticResource InvertedBoolConverter}}"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource Primary}"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center" />
+                                        </Grid>
+                                    </Border>
+
+                                    <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding Name}"
+                                                   FontSize="17"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource TextPrimary}"
+                                                   LineBreakMode="TailTruncation"
+                                                   MaxLines="1" />
+                                            <Border Grid.Column="1"
+                                                    BackgroundColor="#E8F5E9"
+                                                    StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 10"
+                                                    Padding="8,4">
+                                                <Label Text="Onaylı"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource Success}" />
+                                            </Border>
+                                        </Grid>
+
+                                        <Label Text="{Binding DisplayCategoryName}"
+                                               FontSize="12"
+                                               TextColor="{StaticResource Primary}"
+                                               FontAttributes="Bold" />
+                                        <Label Text="{Binding Description}"
+                                               FontSize="13"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               MaxLines="2"
+                                               LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding Location}"
+                                               FontSize="12"
+                                               TextColor="{StaticResource TextSecondary}"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <Grid IsVisible="{Binding IsLoading}"
+                  BackgroundColor="{StaticResource Background}">
+                <ActivityIndicator IsRunning="True"
+                                   Color="{StaticResource Primary}"
+                                   WidthRequest="44"
+                                   HeightRequest="44"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

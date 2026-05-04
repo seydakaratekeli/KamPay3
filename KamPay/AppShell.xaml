@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:KamPay.Views"
+    xmlns:campus="clr-namespace:KamPay.Views.CampusGuide"
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="False"
     CurrentItem="{x:Reference LoginShellContent}">
@@ -26,6 +27,10 @@
 
         <Tab x:Name="GoodDeedTab" Title="İyilik Panosu" Icon="good_board.svg">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
+        </Tab>
+
+        <Tab x:Name="CampusGuideTab" Title="Kampüs Rehberi" Icon="briefcase.svg">
+            <ShellContent ContentTemplate="{DataTemplate campus:CampusGuidePage}" Route="CampusGuidePage" />
         </Tab>
 
         <Tab x:Name="MessagesTab" Title="Mesajlar" Icon="message_icon.svg">

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.AdminBusinessApplicationsPage"
+             x:DataType="vm:AdminBusinessApplicationsViewModel"
+             Title="İşletme Onayları"
+             BackgroundColor="{StaticResource Background}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}" Margin="16" TextColor="{StaticResource Error}" />
+        <CollectionView Grid.Row="1" ItemsSource="{Binding PendingBusinesses}" Margin="16">
+            <CollectionView.EmptyView>
+                <Label Text="Bekleyen işletme başvurusu yok." HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:MicroBusiness">
+                    <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14" Margin="0,0,0,10">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="{Binding OwnerFullName}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding OwnerEmail}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding Location}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding Description}" FontSize="13" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Onayla"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AdminBusinessApplicationsViewModel}}, Path=VerifyCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="{StaticResource Success}"
+                                        TextColor="White" />
+                                <Button Text="Reddet"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AdminBusinessApplicationsViewModel}}, Path=RejectCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="{StaticResource Error}"
+                                        TextColor="White" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

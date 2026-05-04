@@ -2,6 +2,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace KamPay.Models
 {
+    public enum UserRole
+    {
+        Student = 0,
+        BusinessOwner = 1,
+        Admin = 2
+    }
+
     // ✅ ObservableObject ekleyerek UI bildirim yeteneği kazandırdık
     public partial class User : ObservableObject
     {
@@ -57,6 +64,12 @@ namespace KamPay.Models
 
         [ObservableProperty]
         private int donationPoints = 0;
+
+        [ObservableProperty]
+        private UserRole role = UserRole.Student;
+
+        [ObservableProperty]
+        private string businessId = string.Empty;
 
         public User() { }
 

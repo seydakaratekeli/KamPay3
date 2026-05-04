@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.BusinessDetailPage"
+             x:DataType="vm:BusinessDetailViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" HeightRequest="230">
+            <Image Source="{Binding Business.CoverImageUrl}"
+                   Aspect="AspectFill"
+                   IsVisible="{Binding Business.HasCoverImage}" />
+            <BoxView IsVisible="{Binding Business.HasCoverImage, Converter={StaticResource InvertedBoolConverter}}"
+                     Color="{StaticResource Primary}" />
+            <BoxView Color="#66000000" />
+
+            <Grid Padding="16,48,16,18"
+                  RowDefinitions="Auto,*">
+                <Border WidthRequest="42"
+                        HeightRequest="42"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 21"
+                        BackgroundColor="#CCFFFFFF"
+                        HorizontalOptions="Start">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoBackCommand}" />
+                    </Border.GestureRecognizers>
+                    <Label Text="‹"
+                           FontSize="34"
+                           TextColor="{StaticResource Primary}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Margin="0,-4,0,0" />
+                </Border>
+
+                <VerticalStackLayout Grid.Row="1"
+                                     Spacing="6"
+                                     VerticalOptions="End">
+                    <Label Text="{Binding Business.Name}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           MaxLines="2" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Border BackgroundColor="#E8F5E9"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 10"
+                                Padding="9,4">
+                            <Label Text="Onaylı işletme"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Success}" />
+                        </Border>
+                        <Border BackgroundColor="#CCFFFFFF"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 10"
+                                Padding="9,4">
+                            <Label Text="{Binding Business.DisplayCategoryName}"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Primary}" />
+                        </Border>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+        <RefreshView Grid.Row="1"
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     RefreshColor="{StaticResource Primary}">
+            <ScrollView>
+                <VerticalStackLayout Padding="16"
+                                     Spacing="14">
+                    <Border BackgroundColor="White"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14"
+                            Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="{Binding Business.Description}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextPrimary}"
+                                   LineBreakMode="WordWrap" />
+                            <BoxView HeightRequest="1" Color="{StaticResource BorderColor}" />
+                            <Label Text="{Binding Business.Location}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding Business.TagsText}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Primary}"
+                                   IsVisible="{Binding Business.HasTags}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border BackgroundColor="White"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14"
+                            Padding="16"
+                            IsVisible="{Binding Business.HasContactInfo}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="İletişim"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimary}" />
+                            <Label Text="{Binding Business.PhoneNumber}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding Business.InstagramUrl}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding Business.WebsiteUrl}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource TextSecondary}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Aktif Kampanyalar"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextPrimary}" />
+                        <ActivityIndicator Grid.Column="1"
+                                           IsVisible="{Binding IsLoading}"
+                                           IsRunning="{Binding IsLoading}"
+                                           Color="{StaticResource Primary}" />
+                    </Grid>
+
+                    <Label Text="{Binding StatusMessage}"
+                           IsVisible="{Binding HasStatusMessage}"
+                           FontSize="13"
+                           TextColor="{StaticResource TextSecondary}" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Campaigns}"
+                                         Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:Campaign">
+                                <Border BackgroundColor="White"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 14"
+                                        Padding="14">
+                                    <Grid ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="12">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Label Text="{Binding Title}"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource TextPrimary}" />
+                                            <Label Text="{Binding Description}"
+                                                   FontSize="13"
+                                                   TextColor="{StaticResource TextSecondary}"
+                                                   LineBreakMode="WordWrap" />
+                                            <Label Text="{Binding ValidUntilText}"
+                                                   FontSize="12"
+                                                   TextColor="{StaticResource Warning}"
+                                                   FontAttributes="Bold" />
+                                        </VerticalStackLayout>
+                                        <Border Grid.Column="1"
+                                                BackgroundColor="#FFF3E0"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                Padding="9,5"
+                                                VerticalOptions="Start"
+                                                IsVisible="{Binding HasBadge}">
+                                            <Label Text="{Binding BadgeText}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource Warning}" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

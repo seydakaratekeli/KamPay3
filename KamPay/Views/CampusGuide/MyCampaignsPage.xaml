@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:models="clr-namespace:KamPay.Models"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.MyCampaignsPage"
+             x:DataType="vm:MyCampaignsViewModel"
+             Title="Kampanyalarım"
+             BackgroundColor="{StaticResource Background}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Button Text="Yeni Kampanya" Command="{Binding NewCampaignCommand}" Margin="16" BackgroundColor="{StaticResource Primary}" TextColor="White" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Campaigns}" Margin="16,0,16,16">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Campaign">
+                    <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14" Margin="0,0,0,10">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}" />
+                            <Label Text="{Binding Description}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding ValidUntilText}" FontSize="12" TextColor="{StaticResource Warning}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Düzenle"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyCampaignsViewModel}}, Path=EditCampaignCommand}"
+                                        CommandParameter="{Binding .}" />
+                                <Button Text="Sil"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyCampaignsViewModel}}, Path=DeleteCampaignCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="{StaticResource Error}"
+                                        TextColor="White" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.RowSpan="2" IsVisible="{Binding IsFormVisible}" BackgroundColor="#80000000" Padding="18">
+            <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="18" VerticalOptions="Center">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Kampanya" FontSize="20" FontAttributes="Bold" />
+                        <Entry Placeholder="Başlık" Text="{Binding EditingCampaign.Title}" />
+                        <Editor Placeholder="Açıklama" Text="{Binding EditingCampaign.Description}" HeightRequest="90" />
+                        <Entry Placeholder="Rozet metni (%10 vb.)" Text="{Binding EditingCampaign.BadgeText}" />
+                        <DatePicker Date="{Binding EditingCampaign.StartsAt}" />
+                        <DatePicker Date="{Binding EditingCampaign.EndsAt}" />
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding EditingCampaign.IsActive}" />
+                            <Label Text="Aktif" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}" TextColor="{StaticResource Error}" />
+                        <Button Text="Kaydet" Command="{Binding SaveCampaignCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" />
+                        <Button Text="Vazgeç" Command="{Binding CloseFormCommand}" BackgroundColor="Transparent" TextColor="{StaticResource TextSecondary}" />
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

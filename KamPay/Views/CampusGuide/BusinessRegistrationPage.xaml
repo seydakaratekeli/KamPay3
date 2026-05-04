@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.BusinessRegistrationPage"
+             x:DataType="vm:BusinessRegistrationViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:MicroBusinessCategoryToTextConverter x:Key="MicroBusinessCategoryToTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Padding="20,52,20,18" BackgroundColor="{StaticResource Primary}">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="İşletme Başvurusu" FontSize="26" FontAttributes="Bold" TextColor="White" />
+                <Label Text="Kampüs rehberinde yer almak için başvuru oluşturun." FontSize="13" TextColor="White" Opacity="0.9" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18" Spacing="12">
+                <Entry Placeholder="Yetkili adı" Text="{Binding OwnerFirstName}" />
+                <Entry Placeholder="Yetkili soyadı" Text="{Binding OwnerLastName}" />
+                <Entry Placeholder="İşletme e-postası" Text="{Binding OwnerEmail}" Keyboard="Email" />
+                <Entry Placeholder="Yetkili telefon" Text="{Binding OwnerPhoneNumber}" Keyboard="Telephone" />
+                <Entry Placeholder="Şifre" Text="{Binding Password}" IsPassword="True" />
+                <Entry Placeholder="Şifre tekrar" Text="{Binding PasswordConfirm}" IsPassword="True" />
+
+                <BoxView HeightRequest="1" Color="{StaticResource Divider}" Margin="0,8" />
+
+                <Entry Placeholder="İşletme adı" Text="{Binding BusinessName}" />
+                <Editor Placeholder="İşletme açıklaması" Text="{Binding Description}" HeightRequest="90" AutoSize="TextChanges" />
+                <Picker ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Title="Kategori">
+                    <Picker.ItemDisplayBinding>
+                        <Binding Converter="{StaticResource MicroBusinessCategoryToTextConverter}" />
+                    </Picker.ItemDisplayBinding>
+                </Picker>
+                <Entry Placeholder="Kampüs içi konum" Text="{Binding Location}" />
+                <Entry Placeholder="Instagram URL (opsiyonel)" Text="{Binding InstagramUrl}" Keyboard="Url" />
+                <Entry Placeholder="Web sitesi (opsiyonel)" Text="{Binding WebsiteUrl}" Keyboard="Url" />
+
+                <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                        BackgroundColor="#FFEBEE" StrokeThickness="0" Padding="12">
+                    <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource Error}" FontSize="13" />
+                </Border>
+
+                <Button Text="Başvuruyu Gönder"
+                        Command="{Binding SubmitCommand}"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White" />
+                <Button Text="Girişe Dön"
+                        Command="{Binding GoToLoginCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

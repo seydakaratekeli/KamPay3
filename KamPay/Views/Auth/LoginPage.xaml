@@ -223,6 +223,17 @@
                             </Label>
                         </HorizontalStackLayout>
 
+                        <Label Text="İşletme başvurusu yap"
+                               TextColor="{StaticResource Secondary}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextDecorations="Underline">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToBusinessRegistrationCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+
                     </VerticalStackLayout>
                 </Border>
 

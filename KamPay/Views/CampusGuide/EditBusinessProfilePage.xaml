@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KamPay.ViewModels"
+             xmlns:converters="clr-namespace:KamPay.Converters"
+             x:Class="KamPay.Views.CampusGuide.EditBusinessProfilePage"
+             x:DataType="vm:EditBusinessProfileViewModel"
+             Title="İşletme Bilgileri"
+             BackgroundColor="{StaticResource Background}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:MicroBusinessCategoryToTextConverter x:Key="MicroBusinessCategoryToTextConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="18" Spacing="12">
+            <Entry Placeholder="İşletme adı" Text="{Binding Business.Name}" />
+            <Editor Placeholder="Açıklama" Text="{Binding Business.Description}" HeightRequest="100" AutoSize="TextChanges" />
+            <Picker ItemsSource="{Binding Categories}" SelectedItem="{Binding Business.Category}" Title="Kategori">
+                <Picker.ItemDisplayBinding>
+                    <Binding Converter="{StaticResource MicroBusinessCategoryToTextConverter}" />
+                </Picker.ItemDisplayBinding>
+            </Picker>
+            <Entry Placeholder="Konum" Text="{Binding Business.Location}" />
+            <Entry Placeholder="Telefon" Text="{Binding Business.PhoneNumber}" Keyboard="Telephone" />
+            <Entry Placeholder="Instagram URL" Text="{Binding Business.InstagramUrl}" Keyboard="Url" />
+            <Entry Placeholder="Web sitesi" Text="{Binding Business.WebsiteUrl}" Keyboard="Url" />
+            <Entry Placeholder="Logo URL" Text="{Binding Business.LogoUrl}" Keyboard="Url" />
+            <Entry Placeholder="Kapak görseli URL" Text="{Binding Business.CoverImageUrl}" Keyboard="Url" />
+
+            <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                    BackgroundColor="#FFEBEE" StrokeThickness="0" Padding="12">
+                <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource Error}" />
+            </Border>
+
+            <Button Text="Kaydet"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -27,6 +27,7 @@ using KamPay.Services.Messaging;
 using KamPay.Services.QRCode;
 using KamPay.Services.Products.Coordinators;
 using KamPay.Services.Transactions; // ✅ FAZ 3.2
+using KamPay.Services.CampusGuide;
 
 
 namespace KamPay
@@ -255,6 +256,13 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 // IGoodDeedService
                 builder.Services.AddSingleton<IGoodDeedService, FirebaseGoodDeedService>();
 
+                // Campus Guide services (read-only, cached)
+                builder.Services.AddSingleton<IMicroBusinessService, FirebaseMicroBusinessService>();
+                builder.Services.AddSingleton<ICampaignService, FirebaseCampaignService>();
+                builder.Services.AddSingleton<IBusinessRegistrationService, FirebaseBusinessRegistrationService>();
+                builder.Services.AddSingleton<IBusinessManagementService, FirebaseBusinessManagementService>();
+                builder.Services.AddSingleton<ICampaignManagementService, FirebaseCampaignManagementService>();
+
                 // ? FAZ 3.2: ServiceSharing Services Par�alama
                 builder.Services.AddSingleton<ServiceOfferService>();
                 builder.Services.AddSingleton<ICustomerRequestManager, CustomerRequestManager>();
@@ -352,6 +360,13 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddTransient<QRCodeViewModel>();
                 builder.Services.AddTransient<SurpriseBoxViewModel>();
                 builder.Services.AddSingleton<GoodDeedBoardViewModel>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddSingleton<CampusGuideViewModel>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddTransient<BusinessDetailViewModel>();
+                builder.Services.AddTransient<BusinessRegistrationViewModel>();
+                builder.Services.AddTransient<BusinessDashboardViewModel>();
+                builder.Services.AddTransient<EditBusinessProfileViewModel>();
+                builder.Services.AddTransient<MyCampaignsViewModel>();
+                builder.Services.AddTransient<AdminBusinessApplicationsViewModel>();
                 builder.Services.AddSingleton<GoodDeedPostDetailViewModel>();
                 builder.Services.AddTransient<EditGoodDeedPostViewModel>();
                 builder.Services.AddSingleton<ServiceSharingViewModel>(); // Tab sayfası - Singleton olmalı
@@ -384,6 +399,13 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddSingleton<ProfilePage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<EditProfilePage>();
                 builder.Services.AddSingleton<GoodDeedBoardPage>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddSingleton<KamPay.Views.CampusGuide.CampusGuidePage>(); // Tab sayfası - Singleton olmalı
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.BusinessDetailPage>();
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.BusinessRegistrationPage>();
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.BusinessDashboardPage>();
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.EditBusinessProfilePage>();
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.MyCampaignsPage>();
+                builder.Services.AddTransient<KamPay.Views.CampusGuide.AdminBusinessApplicationsPage>();
                 builder.Services.AddTransient<GoodDeedPostDetailPage>();
                 builder.Services.AddTransient<EditGoodDeedPostPage>();
                 builder.Services.AddTransient<ImageViewerPage>();

@@ -30,6 +30,8 @@ public static class Constants
     public const string ServiceOffersCollection = "service_offers";
     public const string ServiceRequestsCollection = "service_requests";
     public const string TransactionsCollection = "transactions";
+    public const string MicroBusinessesCollection = "micro_businesses";
+    public const string CampaignsCollection = "campaigns";
     
     // ✅ EKLEME: Ödeme simülasyonu için geçici OTP koleksiyonu
     // Not: Gerçek üretimde bu kısa ömürlü veriler Redis gibi bir cache'de tutulmalıdır
@@ -45,6 +47,7 @@ public static class Constants
     public const string ProfileImagesFolder = "profile_images";
     public const string MessageImagesFolder = "message_images";
     public const string DeliveryPhotosFolder = "deliveries"; 
+    public const string MicroBusinessImagesFolder = "micro_business_images";
 
     // ürün kurallar
     public const int MaxProductImages = 5;
@@ -90,6 +93,12 @@ public static class Constants
     ///     },
     ///     "good_deed_posts": {
     ///       ".indexOn": ["Type", "CreatedAt", "UserId"]
+    ///     },
+    ///     "micro_businesses": {
+    ///       ".indexOn": ["IsVerified", "IsActive", "Category", "DisplayOrder", "VerificationStatus", "OwnerUserId"]
+    ///     },
+    ///     "campaigns": {
+    ///       ".indexOn": ["BusinessId", "CreatedByUserId", "IsActive", "Status", "StartsAt", "EndsAt", "DisplayOrder"]
     ///     },
     ///     "transactions": {
     ///       ".indexOn": ["SellerId", "BuyerId", "Status", "CreatedAt"]

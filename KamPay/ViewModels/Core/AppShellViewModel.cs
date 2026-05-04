@@ -39,6 +39,9 @@ namespace KamPay.ViewModels
         private string goodDeedBoardTitle = string.Empty;
 
         [ObservableProperty]
+        private string campusGuideTitle = string.Empty;
+
+        [ObservableProperty]
         private string messagesTitle = string.Empty;
 
         [ObservableProperty]
@@ -65,6 +68,7 @@ namespace KamPay.ViewModels
             HomeTitle = "Ana Sayfa";
             ServicesTitle = "Hizmetler";
             GoodDeedBoardTitle = "Ä°yilik Panosu";
+            CampusGuideTitle = "Kampüs Rehberi";
             MessagesTitle = "Mesajlar";
             ProfileTitle = "Profil";
             FavoritesTitle = "Favoriler";
@@ -167,6 +171,7 @@ namespace KamPay.ViewModels
                 HomeTitle = GetLocalizedString(res, "Home", "Ana Sayfa");
                 ServicesTitle = GetLocalizedString(res, "Services", "Hizmetler");
                 GoodDeedBoardTitle = GetLocalizedString(res, "GoodDeedBoard", "Ä°yilik Panosu");
+                CampusGuideTitle = GetLocalizedString(res, "CampusGuide", "Kampüs Rehberi");
                 MessagesTitle = GetLocalizedString(res, "Messages", "Mesajlar");
                 ProfileTitle = GetLocalizedString(res, "Profile", "Profil");
                 FavoritesTitle = GetLocalizedString(res, "Favorites", "Favoriler");
