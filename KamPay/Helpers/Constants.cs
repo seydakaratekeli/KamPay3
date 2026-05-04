@@ -1,4 +1,4 @@
-namespace KamPay.Helpers;
+﻿namespace KamPay.Helpers;
 
 public static class Constants
 {
@@ -67,52 +67,6 @@ public static class Constants
     public const int PointsForSurpriseBox = 20;
     public const int PointsForServiceOffer = 10;
 
-    /// <summary>
-    /// ⚠️ KRİTİK: Bu indeksler Firebase Console'da tanımlanmalıdır!
-    /// 
-    /// Firebase Console → Realtime Database → Rules sekmesi → Aşağıdaki kuralları ekleyin:
-    /// 
-    /// {
-    ///   "rules": {
-    ///     ".read": "auth != null",
-    ///     ".write": "auth != null",
-    ///     "products": {
-    ///       ".indexOn": ["CategoryId", "CreatedAt", "Type", "Price", "UserId"]
-    ///     },
-    ///     "service_offers": {
-    ///       ".indexOn": ["Category", "CreatedAt", "ProviderId", "IsAvailable"]
-    ///     },
-    ///     "service_requests": {
-    ///       ".indexOn": ["ProviderId", "RequesterId", "Status", "RequestedAt"]
-    ///     },
-    ///     "customer_service_requests": {
-    ///       ".indexOn": ["Category", "CreatedAt", "CustomerId", "Status"]
-    ///     },
-    ///     "provider_proposals": {
-    ///       ".indexOn": ["CustomerRequestId", "ProviderId", "Status", "CreatedAt"]
-    ///     },
-    ///     "good_deed_posts": {
-    ///       ".indexOn": ["Type", "CreatedAt", "UserId"]
-    ///     },
-    ///     "micro_businesses": {
-    ///       ".indexOn": ["IsVerified", "IsActive", "Category", "DisplayOrder", "VerificationStatus", "OwnerUserId"]
-    ///     },
-    ///     "campaigns": {
-    ///       ".indexOn": ["BusinessId", "CreatedByUserId", "IsActive", "Status", "StartsAt", "EndsAt", "DisplayOrder"]
-    ///     },
-    ///     "transactions": {
-    ///       ".indexOn": ["SellerId", "BuyerId", "Status", "CreatedAt"]
-    ///     },
-    ///     "conversations": {
-    ///       ".indexOn": ["User1Id", "User2Id", "UpdatedAt"]
-    ///     }
-    ///   }
-    /// }
-    /// 
-    /// ⚠️ service_requests koleksiyonuna ProviderId ve RequesterId indexleri ZORUNLUDUR!
-    /// ServiceRequestsViewModel.LoadInitialSnapshotAsync bu alanlar üzerinden OrderBy sorgusu yapar.
-    /// Index yoksa FirebaseException fırlatılır ve uygulama çökebilir.
-    /// Bu indeksler olmadan sayfalama ve filtreleme ÇALIŞMAZ!
-    /// </summary>
+    
     public const string FirebaseIndexingNote = "See documentation above for required Firebase indexes";
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="KamPay.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -16,20 +16,20 @@
         Shell.FlyoutBehavior="Disabled" />
 
     <TabBar x:Name="MainTabBar" Route="MainApp">
-        <Tab x:Name="HomeTab" Title="Ana Sayfa" Icon="home_icon.svg">
+        <Tab x:Name="HomeTab" Title="KamPazar" Icon="home_icon.svg">
             <ShellContent ContentTemplate="{DataTemplate local:ProductListPage}" Route="ProductListPage" />
         </Tab>
 
-        <Tab x:Name="ServicesTab" Title="Hizmetler" Icon="briefcase.svg">
+        <Tab x:Name="ServicesTab" Title="KamHizmet" Icon="briefcase.svg">
             <ShellContent Title="Hizmet İlanları" ContentTemplate="{DataTemplate local:ServiceSharingPage}" Route="ServiceSharingPage" />
             <ShellContent Title="Hizmet Talepleri" ContentTemplate="{DataTemplate local:CustomerRequestsListPage}" Route="CustomerRequestsListPage" />
         </Tab>
 
-        <Tab x:Name="GoodDeedTab" Title="İyilik Panosu" Icon="good_board.svg">
+        <Tab x:Name="GoodDeedTab" Title="KamSosyal" Icon="good_board.svg">
             <ShellContent ContentTemplate="{DataTemplate local:GoodDeedBoardPage}" Route="GoodDeedBoardPage" />
         </Tab>
 
-        <Tab x:Name="CampusGuideTab" Title="Kampüs Rehberi" Icon="briefcase.svg">
+        <Tab x:Name="CampusGuideTab" Title="KamAvantaj" Icon="briefcase.svg">
             <ShellContent ContentTemplate="{DataTemplate campus:CampusGuidePage}" Route="CampusGuidePage" />
         </Tab>
 
