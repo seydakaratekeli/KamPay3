@@ -38,6 +38,7 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly ITransactionService _transactionService;
         private readonly IUserStateService _userStateService;
+        private readonly INegotiationOfferService _negotiationOfferService;
         // âœ… DIP FIX: FirebaseClient artÄ±k DI'den geliyor (new keyword kaldÄ±rÄ±ldÄ±)
         private readonly FirebaseClient _firebaseClient;
         private readonly INotificationService _notificationService;
@@ -96,7 +97,8 @@ namespace KamPay.ViewModels
             ITransactionService transactionService,
             IUserStateService userStateService,
             FirebaseClient firebaseClient,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            INegotiationOfferService negotiationOfferService)
         {
             _productService = productService;
             _authService = authService;
@@ -106,6 +108,7 @@ namespace KamPay.ViewModels
             _userStateService = userStateService;
             _firebaseClient = firebaseClient ?? throw new ArgumentNullException(nameof(firebaseClient)); // âœ… DIP FIX: DI'den inject
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            _negotiationOfferService = negotiationOfferService ?? throw new ArgumentNullException(nameof(negotiationOfferService));
 
             // KullanÄ±cÄ± profil deÄŸiÅŸikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -817,7 +820,9 @@ namespace KamPay.ViewModels
 
                     var productTransactions = transactions
                         .Select(t => t.Object)
-                        .Where(t => t.Status == TransactionStatus.Accepted || t.Status == TransactionStatus.Pending)
+                        .Where(t => t.Status == TransactionStatus.Accepted ||
+                                    t.Status == TransactionStatus.Pending ||
+                                    t.Status == TransactionStatus.Negotiating)
                         .ToList();
 
                     IsLoading = false;
@@ -882,47 +887,9 @@ namespace KamPay.ViewModels
             {
                 IsLoading = true;
 
-                // BUG-18 FIX: Urun satilmadan once bekleyen/kabul edilmis
-                // transaction'lari iptal et ve alicilara bildirim gonder.
-                try
-                {
-                    var pendingTransactions = await _firebaseClient
-                        .Child(Constants.TransactionsCollection)
-                        .OrderBy("ProductId")
-                        .EqualTo(ProductId)
-                        .OnceAsync<Transaction>();
-
-                    foreach (var txEntry in pendingTransactions)
-                    {
-                        var tx = txEntry.Object;
-                        tx.TransactionId = txEntry.Key;
-
-                        if (tx.Status == TransactionStatus.Pending || tx.Status == TransactionStatus.Accepted)
-                        {
-                            tx.Status = TransactionStatus.Cancelled;
-                            tx.UpdatedAt = DateTime.UtcNow;
-
-                            await _firebaseClient
-                                .Child(Constants.TransactionsCollection)
-                                .Child(tx.TransactionId)
-                                .PutAsync(tx);
-
-                            // Aliciya bildirim gonder
-                            await _notificationService.CreateNotificationAsync(new Notification
-                            {
-                                UserId = tx.BuyerId,
-                                Type = NotificationType.OfferRejected,
-                                Title = "Urun Satildi",
-                                Message = $"Uzerinde teklif verdiginiz '{tx.ProductTitle}' urunu uygulama disinda satildi.",
-                                ActionUrl = nameof(Views.OffersPage)
-                            });
-                        }
-                    }
-                }
-                catch (Exception cancelEx)
-                {
-                    KamPay.Helpers.AppLogger.DebugLog($"Bekleyen teklifler iptal edilirken hata: {cancelEx.Message}");
-                }
+                await CancelProductTransactionsAsync(
+                    "Urun Satildi",
+                    "Uzerinde teklif verdiginiz '{0}' urunu uygulama disinda satildi.");
 
                 var result = await _productService.MarkAsSoldAsync(ProductId);
 
@@ -956,6 +923,85 @@ namespace KamPay.ViewModels
                 IsLoading = false;
             }
         }
+
+        private async Task CancelProductTransactionsAsync(string notificationTitle, string notificationMessageFormat)
+        {
+            try
+            {
+                var pendingTransactions = await _firebaseClient
+                    .Child(Constants.TransactionsCollection)
+                    .OrderBy("ProductId")
+                    .EqualTo(ProductId)
+                    .OnceAsync<Transaction>();
+
+                foreach (var txEntry in pendingTransactions)
+                {
+                    var tx = txEntry.Object;
+                    if (tx == null)
+                        continue;
+
+                    tx.TransactionId = txEntry.Key;
+
+                    if (tx.Status != TransactionStatus.Pending &&
+                        tx.Status != TransactionStatus.Negotiating &&
+                        tx.Status != TransactionStatus.Accepted)
+                    {
+                        continue;
+                    }
+
+                    if (tx.IsNegotiating || tx.Status == TransactionStatus.Negotiating)
+                        await _negotiationOfferService.ExpireActiveOfferAsync(tx.TransactionId);
+
+                    var notes = tx.NegotiationNotes +
+                        (string.IsNullOrEmpty(tx.NegotiationNotes) ? "" : "\n") +
+                        $"Urun kapatildigi icin islem iptal edildi. [{DateTime.UtcNow:dd.MM.yyyy HH:mm}]";
+
+                    var updates = new Dictionary<string, object>
+                    {
+                        [$"{Constants.TransactionsCollection}/{tx.TransactionId}/Status"] = TransactionStatus.Cancelled,
+                        [$"{Constants.TransactionsCollection}/{tx.TransactionId}/IsNegotiating"] = false,
+                        [$"{Constants.TransactionsCollection}/{tx.TransactionId}/UpdatedAt"] = DateTime.UtcNow,
+                        [$"{Constants.TransactionsCollection}/{tx.TransactionId}/NegotiationNotes"] = notes
+                    };
+
+                    await ApplyMultiPathUpdatesAsync(updates);
+
+                    await _notificationService.CreateNotificationAsync(new Notification
+                    {
+                        UserId = tx.BuyerId,
+                        Type = NotificationType.OfferRejected,
+                        Title = notificationTitle,
+                        Message = string.Format(notificationMessageFormat, tx.ProductTitle),
+                        ActionUrl = nameof(Views.OffersPage)
+                    });
+                }
+            }
+            catch (Exception cancelEx)
+            {
+                KamPay.Helpers.AppLogger.DebugLog($"Bekleyen teklifler iptal edilirken hata: {cancelEx.Message}");
+            }
+        }
+
+        private async Task ApplyMultiPathUpdatesAsync(Dictionary<string, object> updates)
+        {
+            foreach (var update in updates)
+            {
+                var pathParts = update.Key
+                    .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                if (pathParts.Length == 0)
+                    continue;
+
+                var node = _firebaseClient.Child(pathParts[0]);
+                foreach (var part in pathParts.Skip(1))
+                {
+                    node = node.Child(part);
+                }
+
+                await node.PutAsync(update.Value);
+            }
+        }
+
         [RelayCommand]
         private async Task EditProductAsync()
         {
@@ -982,6 +1028,10 @@ namespace KamPay.ViewModels
             try
             {
                 IsLoading = true;
+
+                await CancelProductTransactionsAsync(
+                    "Urun Silindi",
+                    "Uzerinde teklif verdiginiz '{0}' urunu yayindan kaldirildi.");
 
                 var result = await _productService.DeleteProductAsync(ProductId);
 

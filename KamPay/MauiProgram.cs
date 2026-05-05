@@ -215,6 +215,11 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
 
                 // ✅ YENİ: Mesaj medya koordinatörü
                 builder.Services.AddSingleton<IMessageMediaCoordinator, MessageMediaCoordinator>();
+                builder.Services.AddTransient<IChatRealtimeService, ChatRealtimeService>();
+                builder.Services.AddSingleton<IChatCacheService, ChatCacheService>();
+                builder.Services.AddTransient<IChatMediaService, ChatMediaService>();
+                builder.Services.AddTransient<INegotiationChatService, NegotiationChatService>();
+                builder.Services.AddTransient<IChatNegotiationMigrationService, ChatNegotiationMigrationService>();
 
                 // IFavoriteService (FirebaseClient ve INotificationService'e bağımlı)
                 builder.Services.AddSingleton<IFavoriteService>(sp =>
@@ -277,12 +282,14 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 // S�ra �nemli: CompletionService � PaymentService + NegotiationService � CrudService
                 builder.Services.AddSingleton<TransactionCompletionService>();
                 builder.Services.AddSingleton<TransactionCrudService>();
+                builder.Services.AddSingleton<INegotiationOfferService, FirebaseNegotiationOfferService>();
                 builder.Services.AddSingleton<TransactionNegotiationService>(sp =>
                     new TransactionNegotiationService(
                         sp.GetRequiredService<Firebase.Database.FirebaseClient>(),
                         sp.GetRequiredService<INotificationService>(),
                         sp.GetRequiredService<TransactionCrudService>(),
-                        sp.GetRequiredService<IProductService>() // ✅ 4. Parametre (IProductService) EKLENDİ
+                        sp.GetRequiredService<IProductService>(),
+                        sp.GetRequiredService<INegotiationOfferService>()
 
                     ));
                 builder.Services.AddSingleton<TransactionPaymentService>(sp =>
@@ -355,6 +362,7 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddTransient<ProductDetailViewModel>();
                 builder.Services.AddSingleton<MessagesViewModel>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<ChatViewModel>();
+                builder.Services.AddTransient<NegotiationChatViewModel>();
                 builder.Services.AddTransient<FavoritesViewModel>();
                 builder.Services.AddSingleton<ProfileViewModel>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<QRCodeViewModel>();
@@ -393,6 +401,7 @@ builder.Services.AddSingleton<IProductService, Services.Products.ProductApiServi
                 builder.Services.AddSingleton<ProductListPage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<ProductDetailPage>();
                 builder.Services.AddTransient<ChatPage>();
+                builder.Services.AddTransient<NegotiationChatPage>();
                 builder.Services.AddSingleton<MessagesPage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddSingleton<NegotiationMessagesPage>(); // Tab sayfası - Singleton olmalı
                 builder.Services.AddTransient<FavoritesPage>();

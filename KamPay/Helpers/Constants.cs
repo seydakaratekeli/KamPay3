@@ -30,6 +30,7 @@ public static class Constants
     public const string ServiceOffersCollection = "service_offers";
     public const string ServiceRequestsCollection = "service_requests";
     public const string TransactionsCollection = "transactions";
+    public const string NegotiationOffersCollection = "negotiation_offers";
     public const string MicroBusinessesCollection = "micro_businesses";
     public const string CampaignsCollection = "campaigns";
     

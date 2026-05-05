@@ -92,6 +92,19 @@ namespace KamPay.Models
         // Pazarlık devam ediyor mu?
         public bool IsNegotiating { get; set; } = false;
 
+        // Yeni offer-chain modelinde transaction icindeki aktif teklif isaretcisi.
+        // Eski ProposedPriceByBuyer / CounterOfferBySeller alanlari migration boyunca korunur.
+        public string? CurrentActiveOfferId { get; set; }
+
+        [JsonIgnore]
+        public NegotiationOffer? ActiveNegotiationOffer { get; set; }
+
+        [JsonIgnore]
+        public List<NegotiationOffer> NegotiationOfferHistory { get; set; } = new();
+
+        [JsonIgnore]
+        public bool HasNegotiationOfferHistory => NegotiationOfferHistory.Any();
+
         // Son pazarlık tarihi
         public DateTime? LastNegotiationDate { get; set; }
 
@@ -132,10 +145,12 @@ namespace KamPay.Models
                 return Status switch
                 {
                     TransactionStatus.Pending => "Onay Bekliyor",
+                    TransactionStatus.Negotiating => "Pazarlık Devam Ediyor",
                     TransactionStatus.Accepted => "Kabul Edildi",
                     TransactionStatus.Rejected => "Reddedildi",
                     TransactionStatus.Completed => "Tamamlandı",
                     TransactionStatus.Cancelled => "İptal Edildi",
+                    TransactionStatus.Expired => "Süresi Doldu",
                     _ => "Bilinmiyor"
                 };
             }
@@ -186,6 +201,13 @@ namespace KamPay.Models
         {
             get
             {
+                if (ActiveNegotiationOffer != null &&
+                    (ActiveNegotiationOffer.Status == OfferStatus.Active ||
+                     ActiveNegotiationOffer.Status == OfferStatus.Accepted))
+                {
+                    return ActiveNegotiationOffer.Amount;
+                }
+
                 if (Type == ProductType.Satis)
                     return CounterOfferBySeller ?? ProposedPriceByBuyer ?? QuotedPrice;
                 else if (Type == ProductType.Takas)
@@ -199,11 +221,13 @@ namespace KamPay.Models
     // İşlem Durumu
     public enum TransactionStatus
     {
-        Pending,     // Teklif yapıldı, satıcının onayı bekliyor
-        Accepted,    // Teklif kabul edildi, teslimat/ödeme süreci bekleniyor
-        Rejected,    // Teklif reddedildi
-        Completed,   // İşlem (ödeme/teslimat) tamamlandı ve kapandı
-        Cancelled    // Taraflardan biri iptal etti
+        Pending = 0,     // Teklif yapıldı, satıcının onayı bekliyor
+        Accepted = 1,    // Teklif kabul edildi, teslimat/ödeme süreci bekleniyor
+        Rejected = 2,    // Teklif reddedildi
+        Completed = 3,   // İşlem (ödeme/teslimat) tamamlandı ve kapandı
+        Cancelled = 4,   // Taraflardan biri iptal etti
+        Negotiating = 5, // Pazarlık devam ediyor
+        Expired = 6      // Pazarlık süresi doldu
     }
 
     // Ödeme Durumu

@@ -21,6 +21,7 @@
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:IsAcceptedConverter x:Key="IsAcceptedConverter" />
             <converters:IsPendingConverter x:Key="IsPendingConverter" />
+            <converters:IsPendingOrNegotiatingConverter x:Key="IsPendingOrNegotiatingConverter" />
             <converters:ConfirmDonationButtonVisibilityConverter x:Key="ConfirmDonationButtonVisibilityConverter"/>
             <converters:SimulatePaymentButtonVisibilityConverter x:Key="SimulatePaymentButtonVisibilityConverter"/>
              <converters:AllTrueConverter x:Key="AllTrueConverter"/>
@@ -271,6 +272,43 @@
                                                 </Grid>
                                             </VerticalStackLayout>
                                         </Border>
+
+                                        <CollectionView ItemsSource="{Binding NegotiationOfferHistory}"
+                                                        IsVisible="{Binding HasNegotiationOfferHistory}"
+                                                        SelectionMode="None"
+                                                        HeightRequest="86">
+                                            <CollectionView.ItemsLayout>
+                                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="4"/>
+                                            </CollectionView.ItemsLayout>
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:NegotiationOffer">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                                                          ColumnSpacing="8"
+                                                          Padding="8,4"
+                                                          BackgroundColor="{StaticResource PrimaryLightBg}">
+                                                        <Label Grid.Column="0"
+                                                               Text="{Binding RoundNumber, StringFormat='#{0}'}"
+                                                               FontSize="11"
+                                                               FontAttributes="Bold"
+                                                               TextColor="{StaticResource Primary}"/>
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding ProposerName}"
+                                                               FontSize="11"
+                                                               TextColor="{StaticResource TextPrimary}"
+                                                               LineBreakMode="TailTruncation"/>
+                                                        <Label Grid.Column="2"
+                                                               Text="{Binding Amount, StringFormat='{0:N2} ₺'}"
+                                                               FontSize="11"
+                                                               FontAttributes="Bold"
+                                                               TextColor="{StaticResource TextPrimary}"/>
+                                                        <Label Grid.Column="3"
+                                                               Text="{Binding Status}"
+                                                               FontSize="10"
+                                                               TextColor="{StaticResource TextSecondary}"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
                                         
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">
@@ -341,7 +379,7 @@
                                                         CornerRadius="22"
                                                         FontSize="20"
                                                         Padding="0"
-                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingOrNegotiatingConverter}}"/>
 
                                                 <Button Text="✕"
                                                         Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.RejectOfferCommand}"
@@ -353,7 +391,7 @@
                                                         CornerRadius="22"
                                                         FontSize="20"
                                                         Padding="0"
-                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingConverter}}"/>
+                                                        IsVisible="{Binding Status, Converter={StaticResource IsPendingOrNegotiatingConverter}}"/>
                                             </HorizontalStackLayout>
                                         </Grid>
                                     </VerticalStackLayout>
@@ -511,6 +549,43 @@
                                                 </Grid>
                                             </VerticalStackLayout>
                                         </Border>
+
+                                        <CollectionView ItemsSource="{Binding NegotiationOfferHistory}"
+                                                        IsVisible="{Binding HasNegotiationOfferHistory}"
+                                                        SelectionMode="None"
+                                                        HeightRequest="86">
+                                            <CollectionView.ItemsLayout>
+                                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="4"/>
+                                            </CollectionView.ItemsLayout>
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:NegotiationOffer">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                                                          ColumnSpacing="8"
+                                                          Padding="8,4"
+                                                          BackgroundColor="{StaticResource PrimaryLightBg}">
+                                                        <Label Grid.Column="0"
+                                                               Text="{Binding RoundNumber, StringFormat='#{0}'}"
+                                                               FontSize="11"
+                                                               FontAttributes="Bold"
+                                                               TextColor="{StaticResource Primary}"/>
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding ProposerName}"
+                                                               FontSize="11"
+                                                               TextColor="{StaticResource TextPrimary}"
+                                                               LineBreakMode="TailTruncation"/>
+                                                        <Label Grid.Column="2"
+                                                               Text="{Binding Amount, StringFormat='{0:N2} ₺'}"
+                                                               FontSize="11"
+                                                               FontAttributes="Bold"
+                                                               TextColor="{StaticResource TextPrimary}"/>
+                                                        <Label Grid.Column="3"
+                                                               Text="{Binding Status}"
+                                                               FontSize="10"
+                                                               TextColor="{StaticResource TextSecondary}"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
 
                                         <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                             <HorizontalStackLayout Grid.Column="1" Spacing="8" HorizontalOptions="End">

@@ -2,6 +2,9 @@ using KamPay.ViewModels;
 using KamPay.Services;
 using KamPay.Resources;
 using KamPay.Services.Auth;
+using KamPay.Models;
+using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Maui.Networking;
 using System.Reflection;
 using System.Text.Json;
 
@@ -34,6 +37,7 @@ namespace KamPay
                 // MainPage'i önce ata
                 MainPage = appShell;
                 KamPay.Helpers.AppLogger.DebugLog("✓ MainPage (AppShell) atandı");
+                RegisterConnectivityMonitor();
 
                 // Localization'ı daha güvenli başlat - hata olsa bile devam et
                 _ = Task.Run(async () =>
@@ -136,6 +140,18 @@ namespace KamPay
 
             return licenseKey;
         }
+
+        private static void RegisterConnectivityMonitor()
+        {
+            Connectivity.ConnectivityChanged += (_, e) =>
+            {
+                if (e.NetworkAccess == NetworkAccess.Internet)
+                {
+                    WeakReferenceMessenger.Default.Send(new ConnectivityRestoredMessage());
+                }
+            };
+        }
+
         protected override async void OnStart()
         {
             base.OnStart();

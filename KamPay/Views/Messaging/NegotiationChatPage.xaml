@@ -6,7 +6,7 @@
              xmlns:converters="clr-namespace:KamPay.Converters"
              xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
              xmlns:syncfusion="clr-namespace:Syncfusion.Maui.ListView;assembly=Syncfusion.Maui.ListView"
-             x:Class="KamPay.Views.ChatPage"
+             x:Class="KamPay.Views.NegotiationChatPage"
              x:Name="chatPageRoot"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource Background}">
@@ -18,13 +18,13 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
         <Grid Grid.Row="0" x:Name="HeaderSection">
             <BoxView>
                 <BoxView.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="{StaticResource Primary}" Offset="0.0"/>
-                        <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0"/>
+                        <GradientStop Color="#FF8A00" Offset="0.0"/>
+                        <GradientStop Color="#E65100" Offset="1.0"/>
                     </LinearGradientBrush>
                 </BoxView.Background>
             </BoxView>
@@ -38,7 +38,7 @@
                      VerticalOptions="Start"
                      Margin="0,-60,-60,0"/>
 
-            <Grid Padding="15,10,15,15" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+            <Grid Padding="15,10,15,15" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
                 <Border Grid.Column="0"
                         StrokeShape="RoundRectangle 20"
                         BackgroundColor="#FFFFFF33"
@@ -79,29 +79,95 @@
                            TextColor="White"
                            LineBreakMode="TailTruncation"
                            MaxLines="1"/>
-                    <Label FontSize="12" TextColor="White" Opacity="0.85">
-                        <Label.Triggers>
-                            <DataTrigger TargetType="Label" Binding="{Binding IsOtherUserTyping}" Value="True">
-                                <Setter Property="Text" Value="yaziyor..."/>
-                                <Setter Property="FontAttributes" Value="Italic"/>
-                            </DataTrigger>
-                            <DataTrigger TargetType="Label" Binding="{Binding IsOtherUserTyping}" Value="False">
-                                <Setter Property="Text" Value="{Binding OnlineStatusText}"/>
-                                <Setter Property="FontAttributes" Value="None"/>
-                            </DataTrigger>
-                        </Label.Triggers>
-                    </Label>
+                    <Label Text="{Binding OnlineStatusText}"
+                           FontSize="12"
+                           TextColor="White"
+                           Opacity="0.85"/>
                 </VerticalStackLayout>
+
+                <Border Grid.Column="3"
+                        StrokeShape="RoundRectangle 14"
+                        BackgroundColor="#FFF3E0"
+                        StrokeThickness="0"
+                        Padding="10,5"
+                        VerticalOptions="Center">
+                    <Label Text="Pazarlik"
+                           FontSize="11"
+                           TextColor="#E65100"
+                           FontAttributes="Bold"/>
+                </Border>
             </Grid>
         </Grid>
 
-        <RefreshView Grid.Row="1"
+        <ScrollView Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Never"
+                    BackgroundColor="#FFF8F0"
+                    Padding="10,7">
+            <HorizontalStackLayout Spacing="8">
+                <Border Padding="10,6"
+                        StrokeShape="RoundRectangle 16"
+                        Stroke="#FF8A00"
+                        BackgroundColor="#FFE0B2">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SelectAllMessagesCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="Tum Mesajlar"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="#E65100"/>
+                </Border>
+
+                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ActiveTransactions}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:Transaction">
+                            <Border Padding="10,6"
+                                    StrokeShape="RoundRectangle 16"
+                                    Stroke="#FF8A00"
+                                    BackgroundColor="White">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectTransactionChipCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="1">
+                                    <Label Text="{Binding ProductTitle}"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="#E65100"
+                                           MaximumWidthRequest="140"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding StatusText}"
+                                           FontSize="10"
+                                           TextColor="{StaticResource TextSecondary}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <Border Grid.Row="2"
+                BackgroundColor="#FFF3E0"
+                Padding="10,5"
+                StrokeThickness="0"
+                Margin="15,10,15,0"
+                StrokeShape="RoundRectangle 8"
+                IsVisible="{Binding HasActiveTransaction}">
+            <Label Text="{Binding ActiveTransaction.RemainingRoundsText}"
+                   FontSize="12"
+                   TextColor="#E65100"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center"/>
+        </Border>
+
+        <RefreshView Grid.Row="3"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshMessagesCommand}"
-                     RefreshColor="{StaticResource Primary}"
+                     RefreshColor="#FF8A00"
                      IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
             <syncfusion:SfListView x:Name="MessagesListView"
-                                   ItemsSource="{Binding Messages}"
+                                   ItemsSource="{Binding FilteredMessages}"
                                    AutoFitMode="Height"
                                    SelectionMode="None"
                                    Margin="15,10">
@@ -120,6 +186,60 @@
                                        FontSize="12"
                                        HorizontalTextAlignment="Center"
                                        FontAttributes="Bold"/>
+                            </Border>
+
+                            <Border Padding="12"
+                                    StrokeShape="RoundRectangle 16"
+                                    StrokeThickness="0"
+                                    BackgroundColor="#FFF3E0"
+                                    MaximumWidthRequest="290"
+                                    HorizontalOptions="Center"
+                                    IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Negotiation}">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="{Binding NegotiationAction}"
+                                           FontAttributes="Bold"
+                                           FontSize="12"
+                                           TextColor="#E65100"
+                                           HorizontalTextAlignment="Center"
+                                           TextTransform="Uppercase"/>
+                                    <Label Text="{Binding Content}"
+                                           LineBreakMode="WordWrap"
+                                           TextColor="{StaticResource TextPrimary}"
+                                           FontSize="15"
+                                           HorizontalTextAlignment="Center"
+                                           FontAttributes="Bold"/>
+                                    <HorizontalStackLayout Spacing="10"
+                                                           HorizontalOptions="Center"
+                                                           IsVisible="{Binding IsActiveOffer}">
+                                        <Button Text="Kabul Et"
+                                                BackgroundColor="#4CAF50"
+                                                TextColor="White"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontSize="12"
+                                                Padding="10,0"
+                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.AcceptOfferCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                        <Button Text="Karsi Teklif"
+                                                BackgroundColor="#FF8A00"
+                                                TextColor="White"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontSize="12"
+                                                Padding="10,0"
+                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.ProposeOfferCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                        <Button Text="Reddet"
+                                                BackgroundColor="#EF5350"
+                                                TextColor="White"
+                                                HeightRequest="36"
+                                                CornerRadius="18"
+                                                FontSize="12"
+                                                Padding="10,0"
+                                                Command="{Binding Source={x:Reference chatPageRoot}, Path=BindingContext.RejectOfferCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
                             </Border>
 
                             <Border Padding="12"
@@ -159,7 +279,7 @@
                                         </Image>
                                         <ActivityIndicator IsRunning="{Binding IsImageLoading}"
                                                            IsVisible="{Binding IsImageLoading}"
-                                                           Color="{StaticResource Primary}"
+                                                           Color="#FF8A00"
                                                            VerticalOptions="Center"
                                                            HorizontalOptions="Center"/>
                                     </Grid>
@@ -179,21 +299,6 @@
                                             </Style>
                                         </Label.Style>
                                     </Label>
-
-                                    <Label Text="{Binding TimeText}"
-                                           FontSize="10"
-                                           HorizontalOptions="End">
-                                        <Label.Style>
-                                            <Style TargetType="Label">
-                                                <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger TargetType="Label" Binding="{Binding IsSentByMe}" Value="True">
-                                                        <Setter Property="TextColor" Value="#E3F2FD"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Label.Style>
-                                    </Label>
                                 </VerticalStackLayout>
                             </Border>
                         </Grid>
@@ -202,7 +307,7 @@
             </syncfusion:SfListView>
         </RefreshView>
 
-        <Border Grid.Row="2"
+        <Border Grid.Row="4"
                 IsVisible="{Binding IsOtherUserTyping}"
                 HorizontalOptions="Start"
                 Margin="20,0,20,4"
@@ -216,13 +321,30 @@
                    FontAttributes="Italic"/>
         </Border>
 
-        <Border Grid.Row="3"
+        <Border Grid.Row="5"
                 Padding="15,12"
                 StrokeThickness="0"
                 BackgroundColor="White"
                 x:Name="MessageInputSection">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
                 <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 24"
+                        BackgroundColor="#FFF3E0"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        StrokeThickness="0">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ProposeOfferCommand}"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="$"
+                           FontSize="22"
+                           TextColor="#E65100"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                </Border>
+
+                <Border Grid.Column="1"
                         StrokeShape="RoundRectangle 24"
                         BackgroundColor="#E3F2FD"
                         WidthRequest="48"
@@ -237,7 +359,7 @@
                            VerticalOptions="Center"/>
                 </Border>
 
-                <Border Grid.Column="1"
+                <Border Grid.Column="2"
                         Padding="14,0"
                         StrokeShape="RoundRectangle 24"
                         StrokeThickness="1"
@@ -252,13 +374,12 @@
                            FontSize="15"
                            TextColor="{StaticResource TextPrimary}"
                            PlaceholderColor="{StaticResource TextSecondary}"
-                           BackgroundColor="Transparent"
-                           x:Name="MessageEntry"/>
+                           BackgroundColor="Transparent"/>
                 </Border>
 
-                <Border Grid.Column="2"
+                <Border Grid.Column="3"
                         StrokeShape="RoundRectangle 24"
-                        BackgroundColor="{StaticResource Primary}"
+                        BackgroundColor="#FF8A00"
                         WidthRequest="48"
                         HeightRequest="48"
                         StrokeThickness="0">
@@ -275,13 +396,13 @@
             </Grid>
         </Border>
 
-        <Grid Grid.RowSpan="4"
+        <Grid Grid.RowSpan="6"
               IsVisible="{Binding IsLoading}"
               BackgroundColor="{StaticResource Background}"
               ZIndex="1100"
               InputTransparent="False">
             <ActivityIndicator IsRunning="True"
-                               Color="{StaticResource Primary}"
+                               Color="#FF8A00"
                                WidthRequest="48"
                                HeightRequest="48"
                                HorizontalOptions="Center"

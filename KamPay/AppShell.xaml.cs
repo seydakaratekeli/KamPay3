@@ -1,4 +1,4 @@
-// KamPay/AppShell.xaml.cs
+﻿// KamPay/AppShell.xaml.cs
 
 using KamPay.Views;
 using KamPay.ViewModels;
@@ -109,6 +109,7 @@ namespace KamPay
             Routing.RegisterRoute(nameof(EditProductPage), typeof(EditProductPage));
             Routing.RegisterRoute(nameof(ProductDetailPage), typeof(ProductDetailPage));
             Routing.RegisterRoute(nameof(ChatPage), typeof(ChatPage));
+            Routing.RegisterRoute(nameof(NegotiationChatPage), typeof(NegotiationChatPage));
             Routing.RegisterRoute(nameof(NotificationsPage), typeof(NotificationsPage));
             Routing.RegisterRoute(nameof(FavoritesPage), typeof(FavoritesPage));
             Routing.RegisterRoute(nameof(OffersPage), typeof(OffersPage));

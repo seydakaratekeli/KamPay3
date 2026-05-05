@@ -26,6 +26,7 @@ namespace KamPay.ViewModels
         private readonly ITransactionService _transactionService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
+        private readonly INegotiationOfferService _negotiationOfferService;
         private IDisposable? _allOffersSubscription;
         private readonly FirebaseClient _firebaseClient;
 
@@ -48,12 +49,18 @@ namespace KamPay.ViewModels
         [ObservableProperty] private bool hasIncomingOffers = false;
         [ObservableProperty] private bool hasOutgoingOffers = false;
 
-        public OffersViewModel(ITransactionService transactionService, IAuthenticationService authService, IUserStateService userStateService, FirebaseClient firebaseClient)
+        public OffersViewModel(
+            ITransactionService transactionService,
+            IAuthenticationService authService,
+            IUserStateService userStateService,
+            FirebaseClient firebaseClient,
+            INegotiationOfferService negotiationOfferService)
         {
             _transactionService = transactionService;
             _authService = authService;
             _userStateService = userStateService;
             _firebaseClient = firebaseClient;
+            _negotiationOfferService = negotiationOfferService;
             _userStateService.UserProfileChanged += OnUserProfileChanged;
             
             // âœ… PaymentCompleted mesajÄ±nÄ± dinle
@@ -168,12 +175,12 @@ namespace KamPay.ViewModels
                 .Subscribe(
                     events =>
                     {
-                        MainThread.InvokeOnMainThreadAsync(() =>
+                        MainThread.InvokeOnMainThreadAsync(async () =>
                         {
                             try
                             {
                                 _loadingTimeoutCts?.Cancel();
-                                ProcessOfferBatch(events, userId);
+                                await ProcessOfferBatchAsync(events, userId);
 
                                 if (!_initialLoadComplete && ContainsRealOffer(events, userId))
                                 {
@@ -231,6 +238,8 @@ namespace KamPay.ViewModels
                     })
                     .OrderByDescending(t => t.CreatedAt)
                     .ToList();
+
+                await EnrichTransactionsWithNegotiationOffersAsync(userOffers);
                 // LoadInitialSnapshotAsync içinde, userOffers bulunduktan sonra:
                 Debug.WriteLine($"📸 Snapshot: {userOffers.Count} teklif — Incoming: {userOffers.Count(t => t.SellerId == userId)}, Outgoing: {userOffers.Count(t => t.BuyerId == userId)}");
                 // ✅ FAZ 7: Süresi dolmuş pazarlıkları arka planda iptal et (UI'ı bloke etmez)
@@ -316,7 +325,44 @@ namespace KamPay.ViewModels
             );
         }
 
-        private void ProcessOfferBatch(IList<FirebaseEvent<Transaction>> events, string userId)
+        private async Task EnrichTransactionsWithNegotiationOffersAsync(IEnumerable<Transaction> transactions)
+        {
+            foreach (var transaction in transactions)
+                await EnrichTransactionWithNegotiationOffersAsync(transaction);
+        }
+
+        private async Task EnrichTransactionWithNegotiationOffersAsync(Transaction transaction)
+        {
+            if (transaction.Type != ProductType.Satis && transaction.Type != ProductType.Takas)
+                return;
+
+            if (string.IsNullOrWhiteSpace(transaction.TransactionId))
+                return;
+
+            try
+            {
+                transaction.ActiveNegotiationOffer = await _negotiationOfferService
+                    .GetActiveOfferAsync(transaction.TransactionId);
+
+                transaction.NegotiationOfferHistory = await _negotiationOfferService
+                    .GetOfferHistoryAsync(transaction.TransactionId);
+
+                if (!transaction.NegotiationOfferHistory.Any() &&
+                    transaction.ActiveNegotiationOffer != null)
+                {
+                    transaction.NegotiationOfferHistory = new List<NegotiationOffer>
+                    {
+                        transaction.ActiveNegotiationOffer
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Negotiation offer cache yuklenemedi ({transaction.TransactionId}): {ex.Message}");
+            }
+        }
+
+        private async Task ProcessOfferBatchAsync(IList<FirebaseEvent<Transaction>> events, string userId)
         {
             bool hasIncomingChanges = false;
             bool hasOutgoingChanges = false;
@@ -336,6 +382,8 @@ namespace KamPay.ViewModels
                     Debug.WriteLine($"âš ï¸ Hizmet transaction'Ä± atlanÄ±yor: {transaction.TransactionId}");
                     continue;
                 }
+
+                await EnrichTransactionWithNegotiationOffersAsync(transaction);
 
                 if (transaction.SellerId == userId)
                 {
@@ -392,6 +440,7 @@ namespace KamPay.ViewModels
                             existing.QuotedPrice != transaction.QuotedPrice ||
                             existing.ProposedPriceByBuyer != transaction.ProposedPriceByBuyer ||
                             existing.CounterOfferBySeller != transaction.CounterOfferBySeller ||
+                            existing.CurrentActiveOfferId != transaction.CurrentActiveOfferId ||
                             existing.AdditionalCashByRequester != transaction.AdditionalCashByRequester ||
                             existing.CounterCashByOwner != transaction.CounterCashByOwner ||
                             existing.IsFixedPriceRequest != transaction.IsFixedPriceRequest; // ✅ SORUN 1 FIX
@@ -593,7 +642,7 @@ namespace KamPay.ViewModels
                 // AcceptNegotiatedPriceAsync artık Status=Accepted yapmıyor;
                 // pazarlık bitmişse (IsNeg=false) ama Status hala Pending ise buraya düşer.
                 if (transaction.Type == ProductType.Satis && !transaction.IsNegotiating && transaction.QuotedPrice > 0
-                    && transaction.Status == TransactionStatus.Pending)
+                    && (transaction.Status == TransactionStatus.Pending || transaction.Status == TransactionStatus.Negotiating))
                 {
                     var message = accept
                         ? $"'{transaction.ProductTitle}' iÃ§in {transaction.BuyerName} tarafÄ±ndan gÃ¶nderilen satÄ±n alma talebini kabul ediyor musunuz?\n\nğŸ’° SatÄ±ÅŸ FiyatÄ±: {transaction.QuotedPrice:N2}â‚º"
@@ -927,7 +976,7 @@ namespace KamPay.ViewModels
                 var expiredNegotiations = transactions
                     .Where(t =>
                         t.IsNegotiating &&
-                        t.Status == TransactionStatus.Pending &&
+                        (t.Status == TransactionStatus.Pending || t.Status == TransactionStatus.Negotiating) &&
                         KamPay.Helpers.NegotiationRules.IsNegotiationExpired(t.NegotiationStartedAt))
                     .ToList();
 
@@ -941,8 +990,11 @@ namespace KamPay.ViewModels
                     {
                         // Pazarlığı durdur ama transaction'ı iptal etme — sadece IsNegotiating=false yap
                         // Status Pending kalır, taraflar hâlâ kabul/red yapabilir
-                        transaction.IsNegotiating = false;
-                        transaction.UpdatedAt = DateTime.UtcNow;
+                        var expireResult = await _negotiationOfferService
+                            .ExpireActiveOfferAsync(transaction.TransactionId);
+
+                        if (!expireResult.Success)
+                            Debug.WriteLine($"FAZ 7: Offer expire sonucu basarisiz: {expireResult.Message}");
                         transaction.NegotiationNotes +=
                             (string.IsNullOrEmpty(transaction.NegotiationNotes) ? "" : "\n") +
                             $"⏰ Pazarlık süresi doldu ({KamPay.Helpers.NegotiationRules.NegotiationTimeoutHours} saat). " +
@@ -951,7 +1003,8 @@ namespace KamPay.ViewModels
                         await _firebaseClient
                             .Child(Constants.TransactionsCollection)
                             .Child(transaction.TransactionId)
-                            .PutAsync(transaction);
+                            .Child("NegotiationNotes")
+                            .PutAsync(transaction.NegotiationNotes);
 
                         // Bildirim gönderme: _transactionService üzerinden yapılamıyorsa
                         // INotificationService'i OffersViewModel'e inject ederek kullanabilirsiniz.

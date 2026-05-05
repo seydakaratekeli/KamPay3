@@ -54,6 +54,22 @@ namespace KamPay.Converters
             // ── SATIŞ ──
             if (transaction.Type == ProductType.Satis)
             {
+                if (!string.IsNullOrEmpty(transaction.LastActionBy))
+                {
+                    var activeAmount = transaction.LastActionBy == transaction.SellerId
+                        ? transaction.CounterOfferBySeller
+                        : transaction.ProposedPriceByBuyer;
+
+                    if (activeAmount.HasValue)
+                    {
+                        var proposerText = transaction.LastActionBy == currentUserId
+                            ? "Son teklifiniz"
+                            : "Karşı tarafın son teklifi";
+
+                        return $"{proposerText}: {activeAmount:N2}₺";
+                    }
+                }
+
                 // Satıcı perspektifi
                 if (transaction.SellerId == currentUserId)
                 {
@@ -78,6 +94,22 @@ namespace KamPay.Converters
             // ── TAKAS ──
             else if (transaction.Type == ProductType.Takas)
             {
+                if (!string.IsNullOrEmpty(transaction.LastActionBy))
+                {
+                    var activeAmount = transaction.LastActionBy == transaction.SellerId
+                        ? transaction.CounterCashByOwner
+                        : transaction.AdditionalCashByRequester;
+
+                    if (activeAmount.HasValue)
+                    {
+                        var proposerText = transaction.LastActionBy == currentUserId
+                            ? "Son ek nakit teklifiniz"
+                            : "Karşı tarafın son ek nakit teklifi";
+
+                        return $"{proposerText}: {activeAmount:N2}₺";
+                    }
+                }
+
                 // Sahip (Satıcı) perspektifi
                 if (transaction.SellerId == currentUserId)
                 {

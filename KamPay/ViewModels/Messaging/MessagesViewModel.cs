@@ -678,7 +678,11 @@ namespace KamPay.ViewModels
                 var photo = Uri.EscapeDataString(conversation.OtherUserPhotoUrl ?? string.Empty);
                 var name = Uri.EscapeDataString(conversation.OtherUserName ?? string.Empty);
 
-                var navigationParameter = $"{nameof(ChatPage)}?conversationId={conversation.ConversationId}&otherUserPhoto={photo}&otherUserName={name}";
+                var pageName = conversation.IsNegotiationConversation
+                    ? nameof(NegotiationChatPage)
+                    : nameof(ChatPage);
+
+                var navigationParameter = $"{pageName}?conversationId={conversation.ConversationId}&otherUserPhoto={photo}&otherUserName={name}";
                 KamPay.Helpers.AppLogger.DebugLog($"ğŸš€ Navigation: {navigationParameter}");
 
                 await Shell.Current.GoToAsync(navigationParameter);

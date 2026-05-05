@@ -1,6 +1,6 @@
 # KamPay - Proje Bağlam Dosyası (claude.md)
 
-> **Son Güncelleme:** 2026-05-04
+> **Son Güncelleme:** 2026-05-05
 > Bu dosya, AI asistanların her oturumda codebase taraması yapmasını önlemek için hazırlanmıştır.
 
 ---
@@ -585,3 +585,135 @@ cd KamPay && dotnet build -f net10.0-android
 | `FirebaseAuthService.cs` | ~1400 | Tüm auth işlemleri |
 | `ServiceSharingPage.xaml` | ~1000 | Hizmet paylaşımı UI |
 | `MessagesViewModel.cs` | ~1000 | Mesajlaşma listesi |
+
+---
+
+## 16. Negotiation System (2026-05-05)
+
+Bu oturumda ürün alış/satış ve takas pazarlığı için kalıcı teklif zinciri mimarisi eklendi. Yeni çalışmalarda pazarlık durumunu yalnızca `Transaction` üzerindeki legacy scalar alanlardan okumak yerine aktif teklif + geçmiş modelini birlikte kullan.
+
+### Ana Model ve Koleksiyon
+
+- `Models/Transactions/NegotiationOffer.cs` yeni pazarlık teklif modelidir.
+- `OfferStatus`: `Active`, `Accepted`, `Rejected`, `Expired`, `Superseded`, `Cancelled`.
+- `ProposerRole`: `Buyer`, `Seller`.
+- Firebase koleksiyonu: `negotiation_offers`.
+- `Constants.NegotiationOffersCollection = "negotiation_offers"`.
+- Firebase indexleri: `Status`, `CreatedAt`, `ProposerId`.
+
+### Transaction Entegrasyonu
+
+- `TransactionStatus.Negotiating = 5`, `Expired = 6` olarak tanımlıdır.
+- `Transaction.CurrentActiveOfferId` aktif teklifin Firebase id'sini tutar.
+- UI için `Transaction.ActiveNegotiationOffer`, `NegotiationOfferHistory`, `HasNegotiationOfferHistory` alanları kullanılır.
+- `Transaction.AgreedAmount`, önce aktif kabul edilmiş `NegotiationOffer` tutarını, sonra legacy `NegotiatedPrice` alanını dikkate alır.
+
+### Servis Mimarisi
+
+- `INegotiationOfferService` pazarlık akışı için ana interface'tir.
+- `FirebaseNegotiationOfferService` teklif oluşturma, kabul, red, expire, aktif teklif ve geçmiş okuma operasyonlarını yönetir.
+- `TransactionNegotiationService` artık doğrudan Firebase yazımı yapan ana servis değil; pazarlık işlemlerini `INegotiationOfferService` üzerinden delege eder.
+- Yeni servis `MauiProgram.cs` içinde `AddSingleton<INegotiationOfferService, FirebaseNegotiationOfferService>()` ile kayıtlıdır ve transaction servislerinden önce/uygun sırada enjekte edilir.
+
+### Akış Kuralları
+
+- Her yeni aktif teklif, önceki aktif teklifi `Superseded` yapar.
+- Aynı kullanıcı kendi son aktif teklifini kabul edemez.
+- Mesajlaşma tarafında pasif/eskimiş teklifler kabul edilemez.
+- Kabul/red/expire öncesinde transaction tekrar okunur; `LastActionBy`, `NegotiationRoundCount` ve `CurrentActiveOfferId` ile stale write guard uygulanır.
+- Ürün satıldı veya silindi durumlarında bekleyen/negotiating/accepted transaction'lar iptal edilir, aktif pazarlık teklifleri expire edilir ve ilgili alıcılara bildirim gönderilir.
+
+### UI ve Converter Notları
+
+- `OffersViewModel`, transaction'ları aktif teklif ve teklif geçmişiyle zenginleştirir.
+- `OffersPage.xaml`, gelen/giden teklif kartlarında `NegotiationOfferHistory` listesini gösterir.
+- `CanAcceptNegotiationConverter`, kendi teklifini kabul etmeyi engeller ve aktif teklif id'si ile legacy alanları birlikte kontrol eder.
+- `NegotiationStatusTextConverter`, aynı anda hem satış hem takas teklifini aktif gibi göstermemek için `LastActionBy` ve aktif teklif bilgisini kullanır.
+- `IsPendingOrNegotiatingConverter`, pending ve negotiating durumlarında aksiyon butonlarını gösterir.
+
+### Test ve Dokümantasyon
+
+- Senaryo matrisi: `DOCS/negotiation_system_test_matrix.md`.
+- Firebase kuralları/index notları: `DOCS/firebase_rules.md`.
+- Doğrulama komutu:
+
+```powershell
+dotnet build KamPay\KamPay.csproj -f net10.0-windows10.0.19041.0 --no-restore -v:minimal /clp:ErrorsOnly
+```
+
+---
+
+## 17. Chat Realtime System (2026-05-05)
+
+Bu oturumda chat sistemi icin realtime, lifecycle, servis ayrimi ve negotiation chat route duzenlemeleri yapildi. Yeni calismalarda mesaj yuklemeyi yalnizca Firebase `AsObservable()` initial dump akisini beklemeye birakma; once snapshot, sonra realtime listener kullan.
+
+### Ana Dosyalar
+
+- `Services/Messaging/IChatRealtimeService.cs`
+- `Services/Messaging/ChatRealtimeService.cs`
+- `Services/Messaging/IChatCacheService.cs`
+- `Services/Messaging/ChatCacheService.cs`
+- `Services/Messaging/IChatMediaService.cs`
+- `Services/Messaging/ChatMediaService.cs`
+- `Services/Messaging/INegotiationChatService.cs`
+- `Services/Messaging/NegotiationChatService.cs`
+- `ViewModels/Messaging/NegotiationChatViewModel.cs`
+- `Views/Messaging/NegotiationChatPage.xaml` / `.xaml.cs`
+- `Models/EventMessages/ConnectivityRestoredMessage.cs`
+
+### Realtime Akisi
+
+- `ChatRealtimeService.LoadAndListenAsync()` once son 50 mesaji `OnceAsync + LimitToLast(50)` ile yukler.
+- Snapshot UI'a yansidiktan sonra `AsObservable<Message>()` ile realtime dinleme baslar.
+- Delete eventleri ve soft-delete (`Message.IsDeleted`) islenir.
+- Duplicate mesajlar `_knownMessageIds` ve `_messageLookup` ile elenir.
+- Eski mesajlar `LoadOlderMessagesAsync()` ile sayfali yuklenir.
+
+### Lifecycle ve Connectivity
+
+- `ChatPage.OnDisappearing()` artik ViewModel'i dispose etmez; `PauseRealtimeListeners()` cagrilir.
+- `ChatPage.OnAppearing()` `ResumeRealtimeListeners()` ile listener'i geri baslatir.
+- `App.xaml.cs`, `Connectivity.ConnectivityChanged` ile internet geri geldiginde `ConnectivityRestoredMessage` yollar.
+- `ChatViewModel`, `ConnectivityRestoredMessage` aldiginda realtime listener'i yeniden baslatir.
+
+### Chat / Negotiation Ayrimi
+
+- `ChatPage` normal sohbetler icin kullanilir.
+- `NegotiationChatPage`, negotiation conversation icin ayri route olarak kayitlidir.
+- `MessagesViewModel.ConversationTappedAsync`, `Conversation.IsNegotiationConversation` true ise `NegotiationChatPage`e gider.
+- `NegotiationChatViewModel`, `ChatViewModel` kalitimi kullanmaz; ortak mesajlasma islerini kompozisyonla icindeki normal chat oturumuna delege eder, pazarlik state ve komutlarini kendi yonetir.
+- `INegotiationChatService`, teklif/kabul/red islemlerinde `INegotiationOfferService` odaklidir; transaction facade uyumluluk ve orkestrasyon katmani olarak kalir.
+
+### Servis Kayitlari
+
+`MauiProgram.cs` icinde su servisler kayitlidir:
+
+```csharp
+builder.Services.AddTransient<IChatRealtimeService, ChatRealtimeService>();
+builder.Services.AddSingleton<IChatCacheService, ChatCacheService>();
+builder.Services.AddTransient<IChatMediaService, ChatMediaService>();
+builder.Services.AddTransient<INegotiationChatService, NegotiationChatService>();
+builder.Services.AddTransient<IChatNegotiationMigrationService, ChatNegotiationMigrationService>();
+builder.Services.AddTransient<NegotiationChatViewModel>();
+builder.Services.AddTransient<NegotiationChatPage>();
+```
+
+`AppShell.xaml.cs` icinde `NegotiationChatPage` route'u kayitlidir.
+
+### Firebase ve Performans Notlari
+
+- `conversations` indexleri: `User1Id`, `User2Id`, `LastMessageTime`, `ConversationType`, `UpdatedAt`.
+- `messages` indexi: `SentAt`.
+- `negotiation_offers` indexleri: `Status`, `CreatedAt`, `ProposerId`, `TransactionId`.
+- `FirebaseNegotiationOfferService` root-level `PatchAsync` kullanmaz; Firebase SDK uyumlulugu icin multi-path update'leri tek tek `PutAsync` olarak uygular.
+- `IChatRealtimeService` transient olmalidir; her chat sayfasi kendi listener state'ini tasir.
+- `IChatCacheService` singleton olabilir; cache uygulama boyunca paylasilir.
+- Realtime listener eklerken mutlaka dispose/stop yolu ekle.
+
+### Final Clean Architecture Notlari
+
+- `ChatViewModel` artik yalnizca normal sohbet sorumlulugundadir; transaction chipleri, `FilteredMessages`, aktif pazarlik state'i ve teklif komutlari burada bulunmaz.
+- `ChatPage.xaml` normal sohbet ekranidir; pazarlik kartlari ve teklif butonlari bu ekranda yer almaz.
+- `NegotiationChatPage.xaml`, pazarlik sohbeti icin ayrilmis ekrandir; aktif islem chipleri, teklif kartlari, kabul/red/karsi teklif komutlari burada kalir.
+- Legacy general sohbetlerde kalmis `MessageType.Negotiation` mesajlari icin `IChatNegotiationMigrationService.BackfillLegacyNegotiationMessagesAsync()` idempotent backfill saglar. Varsayilan `dryRun = true`; destructive silme yapmaz, mesajlari negotiation conversation'a kopyalar ve transaction `ConversationId` alanini node bazli gunceller.
+- Normal chat media akisi `IChatMediaService` uzerinden ilerler; `ChatViewModel.Media` icinde eski unreachable Firebase Storage blogu tutulmaz.

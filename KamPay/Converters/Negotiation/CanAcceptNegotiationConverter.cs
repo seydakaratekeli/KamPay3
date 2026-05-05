@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using KamPay.Models;
+using KamPay.Services;
 using Microsoft.Maui.Controls;
 
 namespace KamPay.Converters
@@ -15,9 +16,18 @@ namespace KamPay.Converters
             if (!transaction.IsNegotiating)
                 return false;
 
+            var currentUserId = ConverterHelpers.GetCurrentUserId();
+            if (!string.IsNullOrEmpty(currentUserId) &&
+                transaction.LastActionBy == currentUserId)
+            {
+                return false;
+            }
+
             if (transaction.Type == ProductType.Satis)
             {
-                return transaction.CounterOfferBySeller.HasValue && transaction.CounterOfferBySeller.Value > 0;
+                return !string.IsNullOrEmpty(transaction.CurrentActiveOfferId)
+                    || (transaction.ProposedPriceByBuyer.HasValue && transaction.ProposedPriceByBuyer.Value > 0)
+                    || (transaction.CounterOfferBySeller.HasValue && transaction.CounterOfferBySeller.Value > 0);
             }
             else if (transaction.Type == ProductType.Takas)
             {

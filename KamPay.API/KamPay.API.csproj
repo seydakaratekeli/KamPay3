@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,8 @@
   <ItemGroup>
     <Content Remove="appsettings - Kopyala.Development.json" />
     <Content Remove="appsettings - Kopyala.json" />
+    <Content Remove="appsettings.Development.json" />
+    <Content Remove="appsettings.example.json" />
   </ItemGroup>
 
   <ItemGroup>

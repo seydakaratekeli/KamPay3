@@ -48,6 +48,15 @@ namespace KamPay.ViewModels
             };
 
             _conversationCache[conversationId] = state;
+            _chatCacheService.Set(conversationId, new ChatConversationState
+            {
+                Messages = state.Messages,
+                Conversation = state.Conversation,
+                OtherUserName = state.OtherUserName,
+                OtherUserPhoto = state.OtherUserPhoto,
+                CachedAt = state.CachedAt,
+                LastAccessedAt = state.LastAccessedAt
+            });
             KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€™Â¾ Cache'e kaydedildi: {conversationId} ({state.Messages.Count} mesaj)");
         }
 
@@ -69,21 +78,18 @@ namespace KamPay.ViewModels
             state.LastAccessedAt = DateTime.UtcNow;
 
             Messages.Clear();
+            _knownMessageIds.Clear();
+            _messageLookup.Clear();
             foreach (var msg in state.Messages)
             {
                 Messages.Add(msg);
+                TrackKnownMessage(msg);
             }
 
             Conversation = state.Conversation;
             OtherUserName = state.OtherUserName;
             OtherUserPhoto = state.OtherUserPhoto;
-
-            if (Conversation != null)
-            {
-                IsNegotiationChat = Conversation.IsNegotiationConversation;
-            }
-
-            // Listener'Ã„Â± yeniden baÃ…Å¸lat
+// Listener'Ã„Â± yeniden baÃ…Å¸lat
             StartListeningToMessages();
             StartListeningToTyping();
 
@@ -94,10 +100,14 @@ namespace KamPay.ViewModels
         //  Mevcut konuÃ…Å¸mayÃ„Â± temizle
         private void CleanupCurrentConversation()
         {
-            _messagesSubscription?.Dispose();
-            _messagesSubscription = null;
+            _chatRealtimeService.StopListening();
             _isListenerActive = false;
             _initialLoadComplete = false;
+            _knownMessageIds.Clear();
+            _messageLookup.Clear();
+
+            _typingSubscription?.Dispose();
+            _typingSubscription = null;
         }
 
 

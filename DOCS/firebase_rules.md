@@ -53,7 +53,14 @@
     "transactions": {
       ".read": true,
       ".write": true,
-      ".indexOn": ["SellerId", "BuyerId", "ProductId", "ConversationId"]
+      ".indexOn": ["SellerId", "BuyerId", "ProductId", "ConversationId", "Status"]
+    },
+    "negotiation_offers": {
+      ".read": true,
+      ".write": true,
+      "$transactionId": {
+        ".indexOn": ["Status", "CreatedAt", "ProposerId", "TransactionId"]
+      }
     },
     "good_deed_posts": {
       ".read": true,

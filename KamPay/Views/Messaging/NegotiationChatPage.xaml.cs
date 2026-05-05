@@ -1,22 +1,20 @@
-using KamPay.ViewModels;
-using KamPay.Models;
 using CommunityToolkit.Mvvm.Messaging;
-using Syncfusion.Maui.ListView;
+using KamPay.Helpers;
+using KamPay.Models;
+using KamPay.ViewModels;
 
 namespace KamPay.Views
 {
-    public partial class ChatPage : ContentPage
+    public partial class NegotiationChatPage : ContentPage
     {
-        private readonly ChatViewModel _viewModel;
-        private bool _hasAnimated = false;
+        private readonly NegotiationChatViewModel _viewModel;
+        private bool _hasAnimated;
 
-        public ChatPage(ChatViewModel viewModel)
+        public NegotiationChatPage(NegotiationChatViewModel viewModel)
         {
             InitializeComponent();
             _viewModel = viewModel;
             BindingContext = _viewModel;
-
-            //  Yeni mesaj geldiğinde scroll mesajını dinle
             RegisterScrollMessenger();
         }
 
@@ -26,7 +24,6 @@ namespace KamPay.Views
             RegisterScrollMessenger();
             _viewModel.ResumeRealtimeListeners();
 
-            // Animasyonları çalıştır
             if (!_hasAnimated)
             {
                 _hasAnimated = true;
@@ -34,7 +31,6 @@ namespace KamPay.Views
                 await AnimatePageAsync();
             }
 
-            // Sayfa göründüğünde son mesaja kaydır (biraz gecikmeyle)
             _ = Task.Run(async () =>
             {
                 await Task.Delay(500);
@@ -42,30 +38,30 @@ namespace KamPay.Views
             });
         }
 
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            WeakReferenceMessenger.Default.Unregister<ScrollToChatMessage>(this);
+            _viewModel.PauseRealtimeListeners();
+        }
+
         private async Task AnimatePageAsync()
         {
-            // Reset states
             HeaderSection.Opacity = 0;
             HeaderSection.TranslationY = -20;
             MessageInputSection.Opacity = 0;
             MessageInputSection.TranslationY = 20;
-
-            // Background animation
             AnimateBackgroundCircle();
 
-            // Header animation
             await Task.WhenAll(
                 HeaderSection.FadeTo(1, 500, Easing.CubicOut),
-                HeaderSection.TranslateTo(0, 0, 500, Easing.CubicOut)
-            );
+                HeaderSection.TranslateTo(0, 0, 500, Easing.CubicOut));
 
             await Task.Delay(100);
 
-            // Message input animation
             await Task.WhenAll(
                 MessageInputSection.FadeTo(1, 500, Easing.CubicOut),
-                MessageInputSection.TranslateTo(0, 0, 500, Easing.CubicOut)
-            );
+                MessageInputSection.TranslateTo(0, 0, 500, Easing.CubicOut));
         }
 
         private void AnimateBackgroundCircle()
@@ -90,49 +86,31 @@ namespace KamPay.Views
             });
         }
 
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-            // Messenger'ı temizle
-            WeakReferenceMessenger.Default.Unregister<ScrollToChatMessage>(this);
-
-            // ViewModel'i dispose et
-            _viewModel.PauseRealtimeListeners();
-        }
-
         private void RegisterScrollMessenger()
         {
             WeakReferenceMessenger.Default.Unregister<ScrollToChatMessage>(this);
-            WeakReferenceMessenger.Default.Register<ScrollToChatMessage>(this, (r, message) =>
-            {
-                ScrollToLastMessage();
-            });
+            WeakReferenceMessenger.Default.Register<ScrollToChatMessage>(this, (_, _) => ScrollToLastMessage());
         }
 
-        //  Son mesaja otomatik kaydırma
         private void ScrollToLastMessage()
         {
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 try
                 {
-                    // Biraz bekle, mesajların yüklenmesi için
                     await Task.Delay(100);
-
-                    if (_viewModel.Messages.Count > 0)
+                    var count = _viewModel.FilteredMessages.Cast<Message>().Count();
+                    if (count > 0)
                     {
-                        var lastMessage = _viewModel.Messages.Last();
-                        // Syncfusion SfListView ScrollTo kullanımı
-                        if (_viewModel.Messages.Count > 0)
-                        {
-                            var index = _viewModel.Messages.Count - 1;
-                            MessagesListView.ItemsLayout.ScrollToRowIndex(index, Microsoft.Maui.Controls.ScrollToPosition.End, true);
-                        }
+                        MessagesListView.ItemsLayout.ScrollToRowIndex(
+                            count - 1,
+                            Microsoft.Maui.Controls.ScrollToPosition.End,
+                            true);
                     }
                 }
                 catch (Exception ex)
                 {
-                    KamPay.Helpers.AppLogger.DebugLog($"Scroll hatası: {ex.Message}");
+                    AppLogger.DebugLog($"Negotiation scroll hatasi: {ex.Message}");
                 }
             });
         }

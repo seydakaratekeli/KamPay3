@@ -140,40 +140,16 @@ namespace KamPay.ViewModels
                 InsertMessageSorted(tempMessage);
                 WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(tempMessage));
 
-                // 2Ã¯Â¸ÂÃ¢Æ’Â£ Firebase Storage'a yÃƒÂ¼kle
-                var uploadResult = await _storageService.UploadMessageImageAsync(imagePath, ConversationId);
+                var mediaResult = await _chatMediaService.SendImageMessageAsync(
+                    imagePath,
+                    ConversationId,
+                    Conversation,
+                    _currentUser);
 
-                if (!uploadResult.Success)
+                if (!mediaResult.Success)
                 {
                     Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", uploadResult.Message ?? "GÃƒÂ¶rsel yÃƒÂ¼klenemedi.", "Tamam");
-                    return;
-                }
-
-                // 3Ã¯Â¸ÂÃ¢Æ’Â£ Mesaj olarak gÃƒÂ¶nder
-                var receiverId = Conversation.GetOtherUserId(_currentUser.UserId);
-                if (string.IsNullOrEmpty(receiverId))
-                {
-                    Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", "AlÃ„Â±cÃ„Â± bilgisi bulunamadÃ„Â±.", "Tamam");
-                    return;
-                }
-
-                var request = new SendMessageRequest
-                {
-                    ReceiverId = receiverId,
-                    Content = "ÄŸÅ¸â€œÂ· FotoÃ„Å¸raf",
-                    Type = MessageType.Image,
-                    ProductId = Conversation.ProductId,
-                    ImageUrl = uploadResult.Data
-                };
-
-                var sendResult = await _messagingService.SendMessageAsync(request, _currentUser);
-
-                if (!sendResult.Success)
-                {
-                    Messages.Remove(tempMessage);
-                    await Application.Current!.MainPage!.DisplayAlert("Hata", sendResult.Message ?? "Mesaj gÃƒÂ¶nderilemedi.", "Tamam");
+                    await Application.Current!.MainPage!.DisplayAlert("Hata", mediaResult.Message ?? "Gorsel gonderilemedi.", "Tamam");
                 }
             }
             catch (Exception ex)

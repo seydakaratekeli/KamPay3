@@ -205,7 +205,8 @@ namespace KamPay.Services
                 if (transaction == null)
                     return ServiceResult<Transaction>.FailureResult("İşlem bulunamadı.");
 
-                if (transaction.Status != TransactionStatus.Pending)
+                if (transaction.Status != TransactionStatus.Pending &&
+                    transaction.Status != TransactionStatus.Negotiating)
                     return ServiceResult<Transaction>.SuccessResult(transaction, "Bu teklif zaten yanıtlanmış.");
 
                 transaction.Status = accept ? TransactionStatus.Accepted : TransactionStatus.Rejected;
@@ -213,7 +214,28 @@ namespace KamPay.Services
 
                 if (!accept)
                 {
-                    await transactionNode.PutAsync(transaction);
+                    var rejectUpdates = new Dictionary<string, object>
+                    {
+                        [$"{Constants.TransactionsCollection}/{transactionId}"] = transaction
+                    };
+
+                    if (!string.IsNullOrEmpty(transaction.CurrentActiveOfferId))
+                    {
+                        var activeOffer = await _firebaseClient
+                            .Child(Constants.NegotiationOffersCollection)
+                            .Child(transactionId)
+                            .Child(transaction.CurrentActiveOfferId)
+                            .OnceSingleAsync<NegotiationOffer>();
+
+                        if (activeOffer != null)
+                        {
+                            activeOffer.Status = OfferStatus.Rejected;
+                            activeOffer.RespondedAt = DateTime.UtcNow;
+                            rejectUpdates[$"{Constants.NegotiationOffersCollection}/{transactionId}/{activeOffer.OfferId}"] = activeOffer;
+                        }
+                    }
+
+                    await ApplyMultiPathUpdatesAsync(rejectUpdates);
                     await _notificationService.CreateNotificationAsync(new Notification
                     {
                         UserId = transaction.BuyerId,
@@ -248,7 +270,7 @@ namespace KamPay.Services
                     atomicUpdates[$"{Constants.DeliveryQRCodesCollection}/{qr.QRCodeId}"] = qr;
                 }
 
-                await _firebaseClient.Child("/").PatchAsync(atomicUpdates);
+                await ApplyMultiPathUpdatesAsync(atomicUpdates);
                 AppLogger.DebugLog("✅ Atomik işlem tamamlandı (Transaction + QR Kodlar).");
 
                 // ✅ FAZ 5: Aynı ürün için diğer pending transaction'ları otomatik reddet
@@ -312,7 +334,9 @@ namespace KamPay.Services
                     if (t.Key == acceptedTransactionId) continue;
 
                     // Sadece Pending olanları reddet
-                    if (t.Object == null || t.Object.Status != TransactionStatus.Pending) continue;
+                    if (t.Object == null ||
+                        (t.Object.Status != TransactionStatus.Pending &&
+                         t.Object.Status != TransactionStatus.Negotiating)) continue;
 
                     var rejectedTransaction = t.Object;
                     rejectedTransaction.Status = TransactionStatus.Rejected;
@@ -320,6 +344,27 @@ namespace KamPay.Services
                     rejectedTransaction.UpdatedAt = DateTime.UtcNow;
                     rejectedTransaction.NegotiationNotes += (string.IsNullOrEmpty(rejectedTransaction.NegotiationNotes) ? "" : "\n")
                         + "⚠️ Ürün başka bir alıcıya satıldı.";
+
+                    if (!string.IsNullOrEmpty(rejectedTransaction.CurrentActiveOfferId))
+                    {
+                        var activeOffer = await _firebaseClient
+                            .Child(Constants.NegotiationOffersCollection)
+                            .Child(t.Key)
+                            .Child(rejectedTransaction.CurrentActiveOfferId)
+                            .OnceSingleAsync<NegotiationOffer>();
+
+                        if (activeOffer != null)
+                        {
+                            activeOffer.Status = OfferStatus.Expired;
+                            activeOffer.RespondedAt = DateTime.UtcNow;
+
+                            await _firebaseClient
+                                .Child(Constants.NegotiationOffersCollection)
+                                .Child(t.Key)
+                                .Child(activeOffer.OfferId)
+                                .PutAsync(activeOffer);
+                        }
+                    }
 
                     await _firebaseClient
                         .Child(Constants.TransactionsCollection)
@@ -357,6 +402,26 @@ namespace KamPay.Services
         // ─────────────────────────────────────────────
         //  LİSTELEME
         // ─────────────────────────────────────────────
+
+        private async Task ApplyMultiPathUpdatesAsync(Dictionary<string, object> updates)
+        {
+            foreach (var update in updates)
+            {
+                var pathParts = update.Key
+                    .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                if (pathParts.Length == 0)
+                    continue;
+
+                var node = _firebaseClient.Child(pathParts[0]);
+                foreach (var part in pathParts.Skip(1))
+                {
+                    node = node.Child(part);
+                }
+
+                await node.PutAsync(update.Value);
+            }
+        }
 
         public async Task<ServiceResult<List<Transaction>>> GetIncomingOffersAsync(string userId)
         {

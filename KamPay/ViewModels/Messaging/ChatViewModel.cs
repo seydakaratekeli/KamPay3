@@ -15,7 +15,6 @@ using KamPay.Helpers;
 using System.Reactive.Linq;
 using KamPay.Services.Auth;
 using KamPay.Services.Messaging;
-using KamPay.Services.Transactions;
 
 namespace KamPay.ViewModels
 {
@@ -27,10 +26,11 @@ namespace KamPay.ViewModels
         private readonly IMessagingService _messagingService;
         private readonly IAuthenticationService _authService;
         private readonly IUserStateService _userStateService;
-        private readonly IStorageService _storageService;
         private readonly IUserProfileService _userProfileService;
-        private readonly ITransactionService _transactionService; // Ã¢Å“â€¦ EKLENEN
         private readonly FirebaseClient _firebaseClient;
+        private readonly IChatRealtimeService _chatRealtimeService;
+        private readonly IChatCacheService _chatCacheService;
+        private readonly IChatMediaService _chatMediaService;
         private User? _currentUser;
         private static LocalizationResourceManager Res => LocalizationResourceManager.Instance;
         
@@ -39,13 +39,13 @@ namespace KamPay.ViewModels
         private const int MaxCacheAgeMinutes = 15;
         private const int MaxCachedConversations = 10;
 
-        private IDisposable? _messagesSubscription;
         private bool _isListenerActive = false;
         private string? _activeConversationId;
         private bool _initialLoadComplete = false;
+        private readonly HashSet<string> _knownMessageIds = new();
+        private readonly Dictionary<string, Message> _messageLookup = new();
         private IDisposable? _typingSubscription;
         private System.Timers.Timer? _typingDebounceTimer;
-        private const string NullTransactionFilter = "__ALL__";
 
         [ObservableProperty]
         private string conversationId = string.Empty;
@@ -80,42 +80,6 @@ namespace KamPay.ViewModels
         public ObservableRangeCollection<Message> Messages { get; set; } = new();
         public Conversation? Conversation { get; set; }
 
-        [ObservableProperty]
-        private Transaction? activeTransaction;
-
-        [ObservableProperty]
-        private bool hasActiveTransaction;
-
-        [ObservableProperty]
-        private string selectedTransactionId = string.Empty;
-
-        // âœ… BUG-3/4 FIX: Ã‡oklu transaction desteÄŸi
-        // AynÄ± conversation'da birden fazla Ã¼rÃ¼n iÃ§in aktif pazarlÄ±k tutulabilir
-        public ObservableRangeCollection<Transaction> ActiveTransactions { get; } = new();
-        [ObservableProperty]
-        private bool hasActiveTransactions;
-
-        private string _selectedFilterTransactionId = NullTransactionFilter;
-        public string SelectedFilterTransactionId
-        {
-            get => _selectedFilterTransactionId;
-            set
-            {
-                if (SetProperty(ref _selectedFilterTransactionId, value))
-                {
-                    OnPropertyChanged(nameof(FilteredMessages));
-                }
-            }
-        }
-
-        public IEnumerable<Message> FilteredMessages =>
-            SelectedFilterTransactionId == NullTransactionFilter
-                ? Messages
-                : Messages.Where(m =>
-                    m.RelatedTransactionId == SelectedFilterTransactionId ||
-                    m.Type == MessageType.System ||
-                    m.Type == MessageType.Negotiation);
-
         private bool _isOtherUserTyping;
         public bool IsOtherUserTyping
         {
@@ -123,23 +87,12 @@ namespace KamPay.ViewModels
             set => SetProperty(ref _isOtherUserTyping, value);
         }
 
-        private bool _showAllChipSelected = true;
-        public bool ShowAllChipSelected
-        {
-            get => _showAllChipSelected;
-            set => SetProperty(ref _showAllChipSelected, value);
-        }
-
-
         private bool _isOtherUserOnline;
         public bool IsOtherUserOnline
         {
             get => _isOtherUserOnline;
             set => SetProperty(ref _isOtherUserOnline, value);
         }
-
-        [ObservableProperty]
-        private bool isNegotiationChat;
 
         private string _onlineStatusText = string.Empty;
         public string OnlineStatusText
@@ -152,18 +105,20 @@ namespace KamPay.ViewModels
             IMessagingService messagingService,
             IAuthenticationService authService,
             IUserStateService userStateService,
-            IStorageService storageService,
             IUserProfileService userProfileService,
-            ITransactionService transactionService, // Ã¢Å“â€¦ EKLENEN
-            FirebaseClient firebaseClient)
+            FirebaseClient firebaseClient,
+            IChatRealtimeService chatRealtimeService,
+            IChatCacheService chatCacheService,
+            IChatMediaService chatMediaService)
         {
             _messagingService = messagingService;
             _authService = authService;
             _userStateService = userStateService;
-            _storageService = storageService;
             _userProfileService = userProfileService;
-            _transactionService = transactionService; // Ã¢Å“â€¦ EKLENEN
             _firebaseClient = firebaseClient;
+            _chatRealtimeService = chatRealtimeService;
+            _chatCacheService = chatCacheService;
+            _chatMediaService = chatMediaService;
 
             // KullanÃ„Â±cÃ„Â± profil deÃ„Å¸iÃ…Å¸ikliklerini dinle
             _userStateService.UserProfileChanged += OnUserProfileChanged;
@@ -172,8 +127,10 @@ namespace KamPay.ViewModels
             _cacheCleanupTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
             _cacheCleanupTimer.Elapsed += (s, e) => CleanupOldCache();
             _cacheCleanupTimer.Start();
-            Messages.CollectionChanged += (_, _) =>
-    OnPropertyChanged(nameof(FilteredMessages));
+            WeakReferenceMessenger.Default.Register<ConnectivityRestoredMessage>(this, (_, _) =>
+            {
+                MainThread.BeginInvokeOnMainThread(ResumeRealtimeListeners);
+            });
         }
 
         private void OnUserProfileChanged(object? sender, User updatedUser)
@@ -270,7 +227,6 @@ namespace KamPay.ViewModels
                     IsLoading = false;
 
                     await _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
-                    await LoadActiveTransactionsAsync(_currentUser.UserId);
                     return;
                 }
 
@@ -353,14 +309,22 @@ namespace KamPay.ViewModels
                         await EnsureOtherUserPhotoAsync();
 
                         // Ã¢Å“â€¦ LOAD ACTIVE TRANSACTION (Daha gÃƒÂ¼venli yÃƒÂ¶ntem)
-                        // âœ… Aktif transaction'larÄ± tek yerden yÃ¼kle
-                        await LoadActiveTransactionsAsync(_currentUser.UserId);
                     }
                     else
                     {
                         KamPay.Helpers.AppLogger.DebugLog($"âš ï¸ Conversation bulunamadÄ±: {ConversationId}");
                     }
                 }
+                await LoadInitialMessagesSnapshotAsync();
+                _activeConversationId = ConversationId;
+                _initialLoadComplete = true;
+                IsLoading = false;
+
+                if (_currentUser != null)
+                {
+                    await _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
+                }
+
                 // 3Ã¯Â¸ÂÃ¢Æ’Â£ Scroll to bottom
                 WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
 
@@ -400,10 +364,7 @@ namespace KamPay.ViewModels
                 Messages.Clear();
 
                 _initialLoadComplete = false;
-                StartListeningToMessages();
-                StartListeningToTyping();
-
-                await Task.Delay(500);
+                await LoadChatAsync();
             }
             catch (Exception ex)
             {
@@ -431,23 +392,28 @@ namespace KamPay.ViewModels
             if (tempMessage != null)
             {
                 Messages.Remove(tempMessage);
+                _knownMessageIds.Remove(tempMessage.MessageId);
+                _messageLookup.Remove(tempMessage.MessageId);
             }
 
             if (Messages.Count == 0)
             {
                 Messages.Add(newMessage);
+                TrackKnownMessage(newMessage);
                 return;
             }
 
             if (Messages[Messages.Count - 1].SentAt <= newMessage.SentAt)
             {
                 Messages.Add(newMessage);
+                TrackKnownMessage(newMessage);
                 return;
             }
 
             if (Messages[0].SentAt >= newMessage.SentAt)
             {
                 Messages.Insert(0, newMessage);
+                TrackKnownMessage(newMessage);
                 return;
             }
 
@@ -462,6 +428,7 @@ namespace KamPay.ViewModels
                 if (Messages[mid].SentAt == newMessage.SentAt)
                 {
                     Messages.Insert(mid + 1, newMessage);
+                    TrackKnownMessage(newMessage);
                     return;
                 }
                 else if (Messages[mid].SentAt < newMessage.SentAt)
@@ -475,6 +442,7 @@ namespace KamPay.ViewModels
             }
 
             Messages.Insert(left, newMessage);
+            TrackKnownMessage(newMessage);
         }
 
 
@@ -487,6 +455,88 @@ namespace KamPay.ViewModels
             SaveToCache(ConversationId);
             CleanupCurrentConversation();
             await Shell.Current.GoToAsync("..");
+        }
+
+        public void PauseRealtimeListeners()
+        {
+            if (!string.IsNullOrEmpty(ConversationId))
+            {
+                SaveToCache(ConversationId);
+            }
+            _chatRealtimeService.StopListening();
+            _isListenerActive = false;
+
+            _typingSubscription?.Dispose();
+            _typingSubscription = null;
+            _typingDebounceTimer?.Stop();
+
+            if (_currentUser != null && !string.IsNullOrEmpty(ConversationId))
+            {
+                _ = _firebaseClient
+                    .Child("typing")
+                    .Child(ConversationId)
+                    .Child(_currentUser.UserId)
+                    .PutAsync(false);
+            }
+        }
+
+        public void ResumeRealtimeListeners()
+        {
+            if (string.IsNullOrEmpty(ConversationId) || _disposed)
+            {
+                return;
+            }
+
+            StartListeningToMessages();
+            StartListeningToTyping();
+        }
+
+        private async Task LoadInitialMessagesSnapshotAsync()
+        {
+            if (string.IsNullOrEmpty(ConversationId))
+            {
+                return;
+            }
+
+            var snapshot = await _firebaseClient
+                .Child(Constants.MessagesCollection)
+                .Child(ConversationId)
+                .OrderByKey()
+                .LimitToLast(50)
+                .OnceAsync<Message>();
+
+            var loadedMessages = snapshot
+                .Where(item => item.Object != null && !item.Object.IsDeleted)
+                .Select(item =>
+                {
+                    var message = item.Object;
+                    message.MessageId = item.Key;
+                    message.IsSentByMe = _currentUser != null && message.SenderId == _currentUser.UserId;
+                    return message;
+                })
+                .OrderBy(message => message.SentAt)
+                .ToList();
+
+            Messages.Clear();
+            _knownMessageIds.Clear();
+            _messageLookup.Clear();
+
+            foreach (var message in loadedMessages)
+            {
+                Messages.Add(message);
+                TrackKnownMessage(message);
+            }
+
+            KamPay.Helpers.AppLogger.DebugLog($"Snapshot mesaj yuklendi: {ConversationId} ({loadedMessages.Count})");
+        }
+
+        private void TrackKnownMessage(Message message)
+        {
+            if (!string.IsNullOrEmpty(message.MessageId) && !message.MessageId.StartsWith("temp_", StringComparison.Ordinal))
+            {
+                _knownMessageIds.Add(message.MessageId);
+                _messageLookup[message.MessageId] = message;
+            }
         }
 
 
@@ -505,6 +555,7 @@ namespace KamPay.ViewModels
 
                 // Event subscription'Ã„Â± temizle
                 _userStateService.UserProfileChanged -= OnUserProfileChanged;
+                WeakReferenceMessenger.Default.Unregister<ConnectivityRestoredMessage>(this);
 
                 if (!string.IsNullOrEmpty(_activeConversationId))
                 {
@@ -512,8 +563,7 @@ namespace KamPay.ViewModels
                 }
 
                 // Ã¢Å“â€¦ EKLEME: Listener temizliÃ„Å¸i
-                _messagesSubscription?.Dispose();
-                _messagesSubscription = null;
+                _chatRealtimeService.StopListening();
                 _isListenerActive = false;
                 _initialLoadComplete = false;
 

@@ -22,20 +22,42 @@ namespace KamPay.ViewModels
     public partial class ChatViewModel
     {
         [RelayCommand]
-        private void SelectAllMessages()
+        private async Task LoadOlderMessagesAsync()
         {
-            SelectedFilterTransactionId = NullTransactionFilter;
-            ShowAllChipSelected = true;
+            if (IsLoading || _currentUser == null || string.IsNullOrEmpty(ConversationId) || Messages.Count == 0)
+                return;
 
-            foreach (var t in ActiveTransactions)
-                t.IsChipSelected = false;
+            try
+            {
+                IsLoading = true;
+                var beforeMessageId = Messages.First().MessageId;
+                var olderMessages = await _chatRealtimeService.LoadOlderMessagesAsync(
+                    ConversationId,
+                    beforeMessageId,
+                    _currentUser.UserId);
 
-            OnPropertyChanged(nameof(FilteredMessages));
+                foreach (var message in olderMessages.OrderByDescending(m => m.SentAt))
+                {
+                    if (_knownMessageIds.Contains(message.MessageId))
+                        continue;
+
+                    Messages.Insert(0, message);
+                    TrackKnownMessage(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                KamPay.Helpers.AppLogger.DebugLog($"Eski mesajlar yuklenemedi: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
 
         //  : 200ms buffer + batch processing
-        private void StartListeningToMessages()
+        private async void StartListeningToMessages()
         {
             if (_isListenerActive)
             {
@@ -46,54 +68,72 @@ namespace KamPay.ViewModels
             KamPay.Helpers.AppLogger.DebugLog($" Real-time listener baÃ…Å¸latÃ„Â±ldÃ„Â±: {ConversationId}");
 
             //  : Sistem mesajlarÃ„Â±nÃ„Â± da dahil et
-            _messagesSubscription = _firebaseClient
-                .Child(Constants.MessagesCollection)
-                .Child(ConversationId)
-                .AsObservable<Message>()
-                .Where(e => e.Object != null && !e.Object.IsDeleted) // Sadece silinen mesajlarÃ„Â± filtrele
-                .Buffer(TimeSpan.FromMilliseconds(200))
-                .Where(batch => batch.Any())
-                .Subscribe(
-                    events =>
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            try
-                            {
-                                //  DEBUG: Sistem mesajÃ„Â± kontrolÃƒÂ¼
-                                foreach (var e in events)
-                                {
-                                    if (e.Object != null && (e.Object.Type == MessageType.System || e.Object.IsSystemMessage))
-                                    {
-                                        KamPay.Helpers.AppLogger.DebugLog($"ÄŸÅ¸â€œâ€¹ Realtime sistem mesajÃ„Â±: {e.Object.Content}");
-                                    }
-                                }
-                                
-                                ProcessMessageBatch(events);
-                            }
-                            catch (Exception ex)
-                            {
-                                KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ Message batch hatasÃ„Â±: {ex.Message}");
-                            }
-                            finally
-                            {
-                                if (!_initialLoadComplete)
-                                {
-                                    _initialLoadComplete = true;
-                                    IsLoading = false;
+            _isListenerActive = true;
 
-                                    WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
-                                }
-                            }
-                        });
-                    },
-                    error =>
+            try
+            {
+                if (_currentUser == null || string.IsNullOrEmpty(ConversationId))
+                    return;
+
+                var latestMessages = await _chatRealtimeService.LoadAndListenAsync(
+                    ConversationId,
+                    _currentUser.UserId,
+                    message =>
                     {
-                        KamPay.Helpers.AppLogger.DebugLog($"Ã¢ÂÅ’ Firebase message listener hatasÃ„Â±: {error.Message}");
-                        MainThread.BeginInvokeOnMainThread(() => IsLoading = false);
+                        InsertMessageSorted(message);
+                        if (!message.IsSentByMe)
+                        {
+                            _ = _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser.UserId);
+                        }
+
+                        if (_initialLoadComplete)
+                        {
+                            WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(message));
+                        }
+                    },
+                    message =>
+                    {
+                        _messageLookup.TryGetValue(message.MessageId, out var existing);
+                        if (existing != null)
+                        {
+                            var index = Messages.IndexOf(existing);
+                            Messages[index] = message;
+                            TrackKnownMessage(message);
+                        }
+                    },
+                    messageId =>
+                    {
+                        _messageLookup.TryGetValue(messageId, out var existing);
+                        if (existing != null)
+                        {
+                            Messages.Remove(existing);
+                        }
+
+                        _knownMessageIds.Remove(messageId);
+                        _messageLookup.Remove(messageId);
                     });
 
-            _isListenerActive = true;
+                Messages.Clear();
+                _knownMessageIds.Clear();
+                _messageLookup.Clear();
+                foreach (var message in latestMessages)
+                {
+                    Messages.Add(message);
+                    TrackKnownMessage(message);
+                }
+
+                _initialLoadComplete = true;
+                IsLoading = false;
+                WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(null));
+                return;
+            }
+            catch (Exception ex)
+            {
+                _isListenerActive = false;
+                IsLoading = false;
+                KamPay.Helpers.AppLogger.DebugLog($"Chat realtime service hatasi: {ex.Message}");
+                return;
+            }
         }
 
 
@@ -104,6 +144,7 @@ namespace KamPay.ViewModels
             var otherUserId = Conversation.GetOtherUserId(_currentUser.UserId);
             if (string.IsNullOrEmpty(otherUserId)) return;
 
+            _typingSubscription?.Dispose();
             _typingSubscription = _firebaseClient
                 .Child("typing")
                 .Child(ConversationId)
@@ -143,60 +184,6 @@ namespace KamPay.ViewModels
             };
             _typingDebounceTimer.Start();
         }
-
-
-        //  Batch processing
-        private void ProcessMessageBatch(IList<Firebase.Database.Streaming.FirebaseEvent<Message>> events)
-        {
-            bool shouldScroll = false;
-            Message? lastNewMessage = null;
-
-            foreach (var e in events)
-            {
-                var message = e.Object;
-                if (message == null) continue;
-
-                message.MessageId = e.Key;
-                message.IsSentByMe = message.SenderId == _currentUser!.UserId;
-
-                var existingMessage = Messages.FirstOrDefault(m => m.MessageId == message.MessageId);
-
-                if (e.EventType == Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate)
-                {
-                    if (existingMessage != null)
-                    {
-                        var index = Messages.IndexOf(existingMessage);
-                        Messages[index] = message;
-                    }
-                    else
-                    {
-                        InsertMessageSorted(message);
-
-                        if (!message.IsSentByMe)
-                        {
-                            _ = _messagingService.MarkMessagesAsReadAsync(ConversationId, _currentUser!.UserId);
-                        }
-
-                        shouldScroll = true;
-                        lastNewMessage = message;
-                    }
-                }
-                else if (e.EventType == Firebase.Database.Streaming.FirebaseEventType.Delete)
-                {
-                    if (existingMessage != null)
-                    {
-                        Messages.Remove(existingMessage);
-                    }
-                }
-            }
-
-            if (shouldScroll && lastNewMessage != null && _initialLoadComplete)
-            {
-                WeakReferenceMessenger.Default.Send(new ScrollToChatMessage(lastNewMessage));
-            }
-        }
-
-
         [RelayCommand]
         private async Task SendMessageAsync()
         {
