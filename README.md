@@ -62,6 +62,8 @@ Ayrıntılı yapı için repository içindeki klasörleri inceleyin.
 - `KamPay.API/firebase-admin.json` — Backend için Firebase Admin SDK credential (commit etmeyin).
 - `KamPay/appsettings.json` ve `KamPay.API/appsettings.json` içinde JwtSettings ve FirebaseDatabase bağlantı ayarları bulunur; prod/dev ayrımı için `appsettings.Development.json` kullanın.
 
+<img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/917fbe68-0e40-4136-9422-7ab295cf863b" />   <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/df4844d5-9fe2-43e1-b10a-06698045e16a" />
+
 
      
  
