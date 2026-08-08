@@ -1,13 +1,13 @@
 {
   "type": "service_account",
-  "project_id": "kampay-b006d",
-  "private_key_id": "4acbb298ef4924d1060fd966ef6b0e92de0dd817",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDZnmBjV3hmXucm\nUxa13Yo1CJxJFF2pUlu9P4T7/hhooPguwzWBtYTGuut7l5nl3xuvKAEjB8lTy8G5\nHpfpbc6LUHqKm452C0APoj55mAUICljLDw5/s+P+g1w84bzYGkvx4tnwY+6aICAO\n15JcRvmI1/rsxZdviY1AzhP3PCdyHJzRTbOr/YsplCP5YRdYD8ALFZhbOVY81EO4\nLB/92Imvqp0lBruXpRi5lr7VgMbzop4Qef0cpua+UdaLihVnyr6K0SVepb5ZrWiV\nscKElN03rhUwpIeuCMa+e8bMBFgI8bpXPRhpC6ZI6X2bEr49fTbMuooNVZkTWKw+\nYoalzL0/AgMBAAECggEAGRPLTLdYNwfJqvIZObTsB8d/EbF98j9SNgvl/GSgFcfd\nlwSaG7aPX0KhVJk4PAlKoekXaceBwkfGgll4V7HL2DmvyAg7/EtjQvSchBuUvNlL\nDn9PhD92ea5T3eovflcCwxQ0BCPSlkKMdIQP/X/qTS7XtMWM+WadofGoKFiaEmfr\nnXNMhBK3w5LyPFJQy0HuULsq0cPMCN+zeX5aYRQ8aSolDl5sf7s1orOJCfajAIF7\niyfpfs8Wf23Kzirczsn4OeUJrXsBT2MNA3+4/QdTFLev/1TPzXkILtBLpaKKMij6\n/81+VaOQdb/wfXU26e+VKCP+bgzR/X8V5IjCzS7DvQKBgQDufHpohvT43MNwklam\nf4BIi4U2/qfAP9N278zo5qqwebLCQfXbLMQoUk1jIMCAzRMepkuHCAxPhmdDzeQj\nqq08JWXCDJAFEEOClPQaXWPaJ0f/NXqLuYSc4f0PiVOoHp99F2AgOakgEKOLTa+Z\n/VQgHyTeeFefgY7L+IQcCw87YwKBgQDpmZbn+1CKoRsOToIuFQxzRFQeu4uzPeLo\nTQkujmpeBOe9lQMHP16nFgiyNnFcl3T1vDK4uKMQ5KSMw9FJ717LqLbRokwXXJ8Q\ngj0LVxKLr83iWsASiFZ7NZnhZFJPkOehtlRolEo+oPsE5Jd49J1Am4A3YqVPDdWI\n8W+jnczTdQKBgCfj5k2plTwzIPWpZJkA5qI7xBKI0eJUSriwL6QdQRu3n3Diu47n\nk//ylEMqbUieBL6xrhxt+jErGAa9X5WfrM5MqxKkK0rNh51F8Paf/F23CFHlzhOk\n+kuLeVqp67ZJOQAhctCxFFrqrZBVdDPbrcCZtP8JPg7OCuaPMPnH18plAoGAdZqP\ncKcDe2d0WZWI0G5kYDuMJhTBVjHX5J+z+a5VOpQ5nyY/6gwrOO9M3XuvQrA1f+mJ\nl5nM7ppNhVioKxLJpLqBn7SXnkNRCVyoIudpPM37VvPdMvdUop7vo5uAHPKUysMi\nZ6wQXMtq1KHI6GouKPKgcEHHe685S8JRNAwjrGkCgYEApvgGAY77qezWBd2z08+H\nMizb3cT1kYg964nIH/s/EeHw8oLGfU9rpCnDD0euo8dLAPRKA12WzdIl83FaB/fC\nTfGzxocsB2HCxvHMG5LXVtlX+hSog38INRBLFMPUNThCxgc47I5mxpox79YFS6VQ\npqHKD0jMq/Sq/VZq6cJS/Dw=\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@kampay-b006d.iam.gserviceaccount.com",
-  "client_id": "107061333614142268458",
+   "project_id": "YOUR_FIREBASE_PROJECT_ID",
+  "private_key_id": "YOUR_PRIVATE_KEY_ID",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-xxxxx@YOUR_FIREBASE_PROJECT_ID.iam.gserviceaccount.com",
+  "client_id": "YOUR_CLIENT_ID",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40kampay-b006d.iam.gserviceaccount.com",
+   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xxxxx%40YOUR_FIREBASE_PROJECT_ID.iam.gserviceaccount.com",
   "universe_domain": "googleapis.com"
 }
