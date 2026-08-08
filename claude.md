@@ -1,8 +1,6 @@
 # KamPay - Proje Bağlam Dosyası (claude.md)
 
 > **Son Güncelleme:** 2026-05-05
-> Bu dosya, AI asistanların her oturumda codebase taraması yapmasını önlemek için hazırlanmıştır.
-
 ---
 
 ## 1. Proje Özeti
