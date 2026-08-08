@@ -62,16 +62,12 @@ Ayrıntılı yapı için repository içindeki klasörleri inceleyin.
 - `KamPay.API/firebase-admin.json` — Backend için Firebase Admin SDK credential (commit etmeyin).
 - `KamPay/appsettings.json` ve `KamPay.API/appsettings.json` içinde JwtSettings ve FirebaseDatabase bağlantı ayarları bulunur; prod/dev ayrımı için `appsettings.Development.json` kullanın.
 
-<img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/917fbe68-0e40-4136-9422-7ab295cf863b" />   <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/df4844d5-9fe2-43e1-b10a-06698045e16a" />
+- 
+Ekran Görüntüleri
 
+<img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/917fbe68-0e40-4136-9422-7ab295cf863b" />   <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/df4844d5-9fe2-43e1-b10a-06698045e16a" />    <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/a4a577f3-87d4-472c-b341-275732995f3f" />   <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/a600f9bd-dd8e-4baf-a397-ffb03f75bb82" />   <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/59989000-9df0-4cfb-a137-a6b0bbae0c8b" />     <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/dca407cb-ec3a-4ad4-8159-48913cba0651" />    <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/01a5cb32-4663-4c57-a298-3e1030c22038" />     <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/64982d30-2bd1-4133-8480-6c3c4a1e2a92" />    <img width="177" height="384" alt="image" src="https://github.com/user-attachments/assets/d7df560c-36b0-4a1e-b4b9-4ef25763386e" />
 
-     
  
-  
- 
- 
-  
-
 
 
 ## Geliştirme Notları
